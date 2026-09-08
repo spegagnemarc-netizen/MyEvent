@@ -17,6 +17,9 @@ button:disabled{opacity:.5}
 .msg{background:#142b3d;padding:10px;border-radius:14px;margin:8px 0}.me{background:#126fdf;margin-left:15%}
 .err{color:#ff9999}.ok{color:#7ee2a8}
 .notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}
+
+.memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -67,6 +70,11 @@ button:disabled{opacity:.5}
 <button class="secondary" id="shareInviteBtn">Partager</button>
 </div>
 <p id="inviteMsg" class="muted"></p>
+</div>
+
+<div class="card">
+<h2>👥 Participants <span id="memberCount" class="muted"></span></h2>
+<div id="members"><p class="muted">Chargement des participants…</p></div>
 </div>
 
 <div class="card" id="joinCard">
@@ -187,7 +195,7 @@ async function show(u){
     global('Connecté • événement actif : '+event.name,'ok');
     updateInviteUI();
     await handleJoinLink();
-    await Promise.all([loadMessages(),loadPolls()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
     subscribeRealtime();
   }catch(e){
     global(e.message||String(e),'err');
@@ -245,7 +253,7 @@ async function joinEvent(code){
     msg('joinMsg','Événement rejoint : '+event.name,'ok');
     global('Événement actif : '+event.name,'ok');
     updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
     subscribeRealtime();
   }catch(e){msg('joinMsg','Erreur : '+(e.message||String(e)),'err')}
   finally{setBusy('joinBtn',false,'Rejoindre')}
@@ -279,11 +287,41 @@ async function createEvent(){
     msg('eventmsg','Événement créé : '+event.name,'ok');
     global('Événement actif : '+event.name,'ok');
     updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
     subscribeRealtime();
   }catch(e){
     msg('eventmsg','Erreur : '+(e.message||String(e)),'err');
   }finally{setBusy('eventBtn',false,'Créer')}
+}
+
+async function loadMembers(){
+  if(!event)return;
+  const r=await sb.from('event_members').select('user_id,nickname,role,status,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true});
+  if(r.error){ $('members').innerHTML='<p class="err">'+esc(r.error.message)+'</p>'; return; }
+  const members=r.data||[];
+  $('memberCount').textContent='· '+members.length+' participant'+(members.length>1?'s':'');
+  if(!members.length){ $('members').innerHTML='<p class="muted">Aucun participant pour le moment.</p>'; return; }
+
+  const ids=members.map(m=>m.user_id).filter(Boolean);
+  let profiles=[];
+  if(ids.length){
+    const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);
+    if(!pr.error) profiles=pr.data||[];
+  }
+  const pmap=new Map(profiles.map(p=>[p.id,p]));
+
+  $('members').innerHTML=members.map(m=>{
+    const p=pmap.get(m.user_id)||{};
+    const name=m.nickname||p.display_name||p.username||'Membre';
+    const avatar=p.avatar||'';
+    const initial=esc(name.charAt(0).toUpperCase());
+    const badge=m.role==='owner'?'Organisateur':'Participant';
+    return '<div class="memberRow">'+
+      '<div class="avatar">'+(avatar?'<img src="'+esc(avatar)+'" alt="">':initial)+'</div>'+
+      '<div class="memberInfo"><b>'+esc(name)+'</b><span>'+badge+(m.status&&m.status!=='active'?' · '+esc(m.status):'')+'</span></div>'+
+      (m.user_id===user.id?'<span class="youBadge">Moi</span>':'')+
+      '</div>';
+  }).join('');
 }
 
 async function loadMessages(){
@@ -414,6 +452,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},()=>loadMembers())
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
     });
