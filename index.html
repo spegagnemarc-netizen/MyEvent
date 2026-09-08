@@ -235,7 +235,7 @@ async function joinEvent(code){
     if(r.error)throw r.error;
     const row=r.data?.[0];
     if(!row)throw new Error('Événement introuvable.');
-    event={id:row.event_id,name:row.event_name,location:row.event_location,invite_code:code};
+    event={id:row.joined_event_id ?? row.event_id,name:row.event_name,location:row.event_location,invite_code:code};
     $('ename').value=event.name||'';
     $('place').value=event.location||'';
     updateInviteUI();
