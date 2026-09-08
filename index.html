@@ -16,7 +16,7 @@ button:disabled{opacity:.5}
 .muted{color:#9eb2c4;font-size:13px}.hidden{display:none}
 .msg{background:#142b3d;padding:10px;border-radius:14px;margin:8px 0}.me{background:#126fdf;margin-left:15%}
 .err{color:#ff9999}.ok{color:#7ee2a8}
-.notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}
+.notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}
 </style>
 </head>
 <body>
@@ -340,6 +340,31 @@ async function createPoll(){
   finally{setBusy('pollBtn',false,'Créer le sondage')}
 }
 
+async function vote(pollId, optionId, button){
+  if(!user || !event){
+    global('Connecte-toi pour voter.','err');
+    return;
+  }
+  document.querySelectorAll('.voteBtn').forEach(b=>b.disabled=true);
+  try{
+    // Un seul vote par personne et par sondage.
+    // Si un vote existe déjà, il est remplacé par le nouveau choix.
+    const r=await sb.from('poll_votes').upsert({
+      poll_id:pollId,
+      option_id:optionId,
+      user_id:user.id
+    },{onConflict:'poll_id,user_id'});
+    if(r.error) throw r.error;
+    global('Vote enregistré ✓','ok');
+    await loadPolls();
+  }catch(e){
+    global('Erreur vote : '+(e.message||String(e)),'err');
+    await loadPolls();
+  }finally{
+    document.querySelectorAll('.voteBtn').forEach(b=>b.disabled=false);
+  }
+}
+
 async function loadPolls(){
   if(!event)return;
   const r=await sb.from('polls').select('*,poll_options(*)')
@@ -347,40 +372,38 @@ async function loadPolls(){
   if(r.error){$('polls').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
 
   const polls=r.data||[];
-  $('polls').innerHTML=polls.map(p=>
-    '<div class="card"><b>'+esc(p.question)+'</b>'+
-    '<p class="muted">Choisis une réponse :</p>'+
-    (p.poll_options||[]).map(o=>
-      '<button class="secondary voteBtn" data-poll="'+p.id+'" data-option="'+o.id+"' style='display:block;width:100%;margin-top:7px'>"+esc(o.option_text)+"</button>"
-    ).join('')+'</div>'
-  ).join('');
+  if(!polls.length){$('polls').innerHTML='<p class="muted">Aucun sondage pour le moment.</p>';return}
+
+  const ids=polls.map(p=>p.id);
+  const vr=await sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',ids);
+  if(vr.error){$('polls').innerHTML='<p class="err">Résultats indisponibles : '+esc(vr.error.message)+'</p>';return}
+  const votes=vr.data||[];
+
+  $('polls').innerHTML=polls.map(p=>{
+    const pv=votes.filter(v=>v.poll_id===p.id);
+    const mine=pv.find(v=>v.user_id===user.id)?.option_id;
+    const total=pv.length;
+    const options=(p.poll_options||[]).map(o=>{
+      const count=pv.filter(v=>v.option_id===o.id).length;
+      const pct=total?Math.round(count*100/total):0;
+      const selected=mine===o.id?' selectedVote':'';
+      return '<div class="pollOption">'+
+        '<button class="secondary voteBtn'+selected+'" data-poll="'+p.id+'" data-option="'+o.id+'">'+
+        (mine===o.id?'✓ ':'')+esc(o.option_text)+
+        '<span class="pollCount">'+count+' vote'+(count>1?'s':'')+' · '+pct+'%</span>'+
+        '</button>'+ 
+        '<div class="pollBar"><div class="pollBarFill" style="width:'+pct+'%"></div></div>'+ 
+        '</div>';
+    }).join('');
+    return '<div class="card"><b>'+esc(p.question)+'</b>'+ 
+      '<p class="muted">Choisis une réponse · '+total+' vote'+(total>1?'s':'')+'</p>'+options+'</div>';
+  }).join('');
 
   document.querySelectorAll('.voteBtn').forEach(b=>{
     b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
   });
 }
 
-async function vote(p,o,button){
-  if(!user||!event)return;
-  try{
-    document.querySelectorAll('.voteBtn[data-poll="'+p+'"]').forEach(b=>b.disabled=true);
-    const r=await sb.from('poll_votes').upsert(
-      {poll_id:p,option_id:o,user_id:user.id},
-      {onConflict:'poll_id,user_id'}
-    );
-    if(r.error)throw r.error;
-    document.querySelectorAll('.voteBtn[data-poll="'+p+'"]').forEach(b=>{
-      b.classList.remove('selectedVote');
-      b.disabled=false;
-    });
-    button.classList.add('selectedVote');
-    button.textContent='✓ '+button.textContent;
-    global('Vote enregistré.','ok');
-  }catch(e){
-    document.querySelectorAll('.voteBtn[data-poll="'+p+'"]').forEach(b=>b.disabled=false);
-    global('Erreur vote : '+(e.message||String(e)),'err');
-  }
-}
 
 function subscribeRealtime(){
   if(!sb||!event)return;
