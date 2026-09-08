@@ -20,7 +20,7 @@ button:disabled{opacity:.5}
 .eventList{display:grid;gap:8px}.eventCard{background:#0b1824;border:1px solid #28445b;border-radius:14px;padding:12px;cursor:pointer}.eventCard.active{outline:2px solid #278cff}.eventCard b{display:block;font-size:16px}.eventCard span{display:block;color:#9eb2c4;font-size:13px;margin-top:4px}
 
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
+.profileEditor{display:flex;align-items:center;gap:12px}.profileAvatar{width:72px;height:72px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;overflow:hidden;flex:none}.profileAvatar img{width:100%;height:100%;object-fit:cover}.memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
 .mediaGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.mediaItem{position:relative;background:#0b1824;border-radius:14px;overflow:hidden;border:1px solid #28445b;min-height:150px}.mediaItem img,.mediaItem video{width:100%;height:180px;display:block;object-fit:cover}.mediaMeta{padding:7px 9px;color:#9eb2c4;font-size:12px}.deleteMedia{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.7);padding:7px 9px;border-radius:10px;font-size:12px}
 
 /* Navigation de l’événement */
@@ -61,6 +61,20 @@ button:disabled{opacity:.5}
 <b id="who">Utilisateur</b>
 <button class="secondary" id="logoutBtn">Déconnexion</button>
 <div id="globalmsg" class="notice muted">Prêt.</div>
+</div>
+
+<div class="card">
+<h2>👤 Mon profil</h2>
+<div class="profileEditor">
+<div id="profileAvatar" class="profileAvatar">?</div>
+<div style="flex:1;min-width:0">
+<input id="profileName" placeholder="Nom affiché">
+<input id="profileUsername" placeholder="Pseudo">
+<input id="avatarInput" type="file" accept="image/*">
+</div>
+</div>
+<button id="saveProfileBtn">Enregistrer mon profil</button>
+<p id="profileMsg" class="muted"></p>
 </div>
 
 <div class="card">
@@ -206,6 +220,44 @@ async function login(){
   }catch(e){msg('authmsg',e.message||String(e),'err')}
 }
 
+function renderProfile(p){
+const name=p?.display_name||p?.username||user?.email?.split('@')[0]||'Membre';
+$('profileName').value=p?.display_name||name;
+$('profileUsername').value=p?.username||'';
+const av=p?.avatar||'';
+$('profileAvatar').innerHTML=av?'<img src="'+esc(av)+'" alt="Avatar">':esc(name.charAt(0).toUpperCase());
+}
+
+async function saveProfile(){
+if(!user||!sb)return;
+const name=$('profileName').value.trim()||user.email.split('@')[0];
+const username=$('profileUsername').value.trim()||name;
+setBusy('saveProfileBtn',true,'Enregistrement…');
+try{
+let avatar='';
+const current=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();
+if(current.error)throw current.error;
+avatar=current.data?.avatar||'';
+const file=$('avatarInput').files?.[0];
+if(file){
+if(file.size>10*1024*1024)throw new Error('La photo dépasse 10 Mo.');
+if(!file.type.startsWith('image/'))throw new Error('Choisis une image.');
+const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-zA-Z0-9]/g,'')||'jpg';
+const path=user.id+'/'+crypto.randomUUID()+'.'+ext;
+const up=await sb.storage.from('profile-avatars').upload(path,file,{upsert:false,contentType:file.type});
+if(up.error)throw up.error;
+const pu=sb.storage.from('profile-avatars').getPublicUrl(path);
+avatar=pu.data.publicUrl;
+}
+const r=await sb.from('profiles').upsert({id:user.id,display_name:name,username:username,avatar:avatar},{onConflict:'id'}).select().single();
+if(r.error)throw r.error;
+$('who').textContent=name; renderProfile(r.data); $('avatarInput').value='';
+msg('profileMsg','Profil enregistré ✓','ok');
+await loadMembers();
+}catch(e){msg('profileMsg','Erreur : '+(e.message||String(e)),'err')}
+finally{setBusy('saveProfileBtn',false,'Enregistrer mon profil')}
+}
+
 async function show(u){
   user=u;
   $('auth').classList.add('hidden');
@@ -223,7 +275,11 @@ async function show(u){
       },{onConflict:'id'}).select().single();
       if(pr.error) throw new Error('Création du profil : '+pr.error.message);
       $('who').textContent=name;
-    }else $('who').textContent=p.data.display_name||u.email;
+      renderProfile({display_name:name,username:name,avatar:''});
+    }else {
+      $('who').textContent=p.data.display_name||p.data.username||u.email;
+      renderProfile(p.data);
+    }
 
     const events=await loadEvents();
     await handleJoinLink();
@@ -676,6 +732,7 @@ $('sendBtn').addEventListener('click',sendMessage);
 $('pollBtn').addEventListener('click',createPoll);
 $('mediaBtn').addEventListener('click',uploadMedia);
 $('logoutBtn').addEventListener('click',logout);
+$('saveProfileBtn').addEventListener('click',saveProfile);
 $('copyInviteBtn').addEventListener('click',copyInvite);
 $('shareInviteBtn').addEventListener('click',shareInvite);
 $('joinBtn').addEventListener('click',()=>joinEvent($('joinCode').value));
