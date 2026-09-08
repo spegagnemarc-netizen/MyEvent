@@ -27,8 +27,8 @@ button:disabled{opacity:.5}
 <h2>Connexion</h2>
 <p class="muted">Project URL déjà renseignée. Ta clé reste dans ton navigateur.</p>
 <input id="url" value="https://nxxvadbliinhvkirqkkl.supabase.co">
-<input id="key" type="password" placeholder="Publishable key (sb_publishable_…)">
-<button id="connectBtn">Connecter</button>
+<input id="key" type="password" placeholder="Publishable key (sb_publishable_…)" autocomplete="off">
+<button id="connectBtn" class="hidden">Connecter</button>
 <p id="status" class="muted"></p>
 </section>
 
@@ -111,14 +111,14 @@ function setBusy(id,busy,label){
   if(label) b.textContent=label;
 }
 
+const SUPABASE_URL='https://nxxvadbliinhvkirqkkl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_jBqcZF0k-mNBp5HJGxniTQ_gcjkPgMn';
+
 async function connect(){
   msg('status','Connexion à Supabase…');
   try{
-    const url=$('url').value.trim();
-    const key=$('key').value.trim();
-    if(!url || !key) throw new Error('Il manque la Publishable key Supabase.');
     if(!window.supabase) throw new Error('La bibliothèque Supabase ne s’est pas chargée. Recharge la page.');
-    sb=window.supabase.createClient(url,key);
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
     const r=await sb.auth.getSession();
     if(r.error) throw r.error;
     $('setup').classList.add('hidden');
@@ -366,6 +366,7 @@ async function vote(p,o){
 async function logout(){await sb.auth.signOut();location.reload()}
 
 $('connectBtn').addEventListener('click',connect);
+window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
 $('eventBtn').addEventListener('click',createEvent);
