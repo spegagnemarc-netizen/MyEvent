@@ -240,13 +240,25 @@ async function loadEvents(){
     const active=e.id===savedId?' active':'';
     const mine=e.creator_id===user.id;
     return '<div class="eventCard'+active+'" data-event-id="'+e.id+'">'+
-      '<b>'+esc(e.name||'Événement sans nom')+'</b>'+
-      '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<div style="flex:1;min-width:0"><b>'+esc(e.name||'Événement sans nom')+'</b>'+
+      '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span></div>'+
+      (mine?'<button class="secondary deleteEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Supprimer</button>':'')+
+      '</div>'+
       '</div>';
   }).join('') : '<p class="muted">Aucun groupe pour le moment.</p>';
 
   document.querySelectorAll('.eventCard').forEach(card=>{
-    card.addEventListener('click',()=>selectEvent(card.dataset.eventId));
+    card.addEventListener('click',(ev)=>{
+      if(ev.target.closest('.deleteEventBtn')) return;
+      selectEvent(card.dataset.eventId);
+    });
+  });
+  document.querySelectorAll('.deleteEventBtn').forEach(btn=>{
+    btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      deleteEvent(btn.dataset.id);
+    });
   });
 
   $('eventListMsg').textContent=events.length ? events.length+' événement'+(events.length>1?'s':'') : '';
@@ -279,6 +291,46 @@ function updateInviteUI(){
     $('inviteLink').value=link;
   }else{
     $('inviteLink').value='';
+  }
+}
+
+async function deleteEvent(id){
+  if(!user||!sb||!id)return;
+  const target=document.querySelector('.eventCard[data-event-id="'+id+'"] b')?.textContent||'cet événement';
+  if(!confirm('Supprimer définitivement « '+target+' » ?\n\nLes messages, sondages, participants et médias liés seront supprimés. Cette action est irréversible.')) return;
+
+  const btn=document.querySelector('.deleteEventBtn[data-id="'+id+'"]');
+  if(btn){btn.disabled=true;btn.textContent='Suppression…';}
+  try{
+    // On tente aussi de supprimer les fichiers médias du stockage.
+    const mr=await sb.from('media').select('storage_path').eq('event_id',id);
+    if(!mr.error && (mr.data||[]).length){
+      await sb.storage.from('event-media').remove((mr.data||[]).map(x=>x.storage_path).filter(Boolean));
+    }
+
+    const r=await sb.rpc('delete_event',{p_event_id:id});
+    if(r.error) throw r.error;
+
+    if(event?.id===id){
+      if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+      event=null;
+      localStorage.removeItem('myevent_active_'+user.id);
+      $('ename').value=''; $('place').value=''; $('inviteLink').value='';
+    }
+    await loadEvents();
+    const remaining=await sb.from('events').select('id').eq('creator_id',user.id).limit(1);
+    const saved=localStorage.getItem('myevent_active_'+user.id);
+    if(!event && !remaining.error && remaining.data?.length) await selectEvent(remaining.data[0].id);
+    else if(!event){
+      $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
+      $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+    }
+    global('Événement supprimé.','ok');
+  }catch(e){
+    global('Suppression impossible : '+(e.message||String(e)),'err');
+    if(btn){btn.disabled=false;btn.textContent='Supprimer';}
   }
 }
 
