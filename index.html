@@ -17,6 +17,7 @@ button:disabled{opacity:.5}
 .msg{background:#142b3d;padding:10px;border-radius:14px;margin:8px 0}.me{background:#126fdf;margin-left:15%}
 .err{color:#ff9999}.ok{color:#7ee2a8}
 .notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}
+.eventList{display:grid;gap:8px}.eventCard{background:#0b1824;border:1px solid #28445b;border-radius:14px;padding:12px;cursor:pointer}.eventCard.active{outline:2px solid #278cff}.eventCard b{display:block;font-size:16px}.eventCard span{display:block;color:#9eb2c4;font-size:13px;margin-top:4px}
 
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
@@ -52,6 +53,13 @@ button:disabled{opacity:.5}
 <b id="who">Utilisateur</b>
 <button class="secondary" id="logoutBtn">Déconnexion</button>
 <div id="globalmsg" class="notice muted">Prêt.</div>
+</div>
+
+<div class="card">
+<h2>📋 Mes événements</h2>
+<p class="muted">Retrouve automatiquement tous les groupes auxquels tu participes.</p>
+<div id="eventList" class="eventList"><p class="muted">Chargement…</p></div>
+<p id="eventListMsg" class="muted"></p>
 </div>
 
 <div class="card">
@@ -170,7 +178,7 @@ async function show(u){
   user=u;
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
-  global('Chargement de ton événement…');
+  global('Chargement de tes événements…');
 
   try{
     const p=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
@@ -185,31 +193,82 @@ async function show(u){
       $('who').textContent=name;
     }else $('who').textContent=p.data.display_name||u.email;
 
-    const e=await sb.from('events').select('*').eq('creator_id',u.id).order('created_at',{ascending:false}).limit(1);
-    if(e.error) throw new Error('Événement : '+e.error.message);
-
-    if(e.data?.length){
-      event=e.data[0];
-    }else{
-      const x=await sb.from('events').insert({
-        creator_id:u.id,name:'Mon premier événement'
-      }).select().single();
-      if(x.error) throw new Error('Création de l’événement initial : '+x.error.message);
-      event=x.data;
-      const m=await sb.from('event_members').upsert({
-        event_id:event.id,user_id:u.id,role:'owner'
-      },{onConflict:'event_id,user_id'});
-      if(m.error) throw new Error('Membre : '+m.error.message);
-    }
-
-    global('Connecté • événement actif : '+event.name,'ok');
-    updateInviteUI();
+    const events=await loadEvents();
     await handleJoinLink();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
-    subscribeRealtime();
+
+    const savedId=localStorage.getItem('myevent_active_'+u.id);
+    const target=(savedId && events.some(e=>e.id===savedId)) ? savedId : events[0]?.id;
+
+    if(target){
+      await selectEvent(target);
+    }else{
+      event=null;
+      $('ename').value=''; $('place').value='';
+      updateInviteUI();
+      $('members').innerHTML='<p class="muted">Aucun événement pour le moment.</p>';
+      $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
+      $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      global('Aucun événement pour le moment. Crée ou rejoins un groupe.','ok');
+    }
   }catch(e){
     global(e.message||String(e),'err');
   }
+}
+
+async function loadEvents(){
+  const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
+  if(owned.error) throw new Error('Événements : '+owned.error.message);
+
+  const memberships=await sb.from('event_members').select('event_id').eq('user_id',user.id);
+  if(memberships.error) throw new Error('Groupes : '+memberships.error.message);
+
+  const memberIds=(memberships.data||[]).map(x=>x.event_id).filter(Boolean);
+  let memberEvents=[];
+  if(memberIds.length){
+    const r=await sb.from('events').select('*').in('id',memberIds);
+    if(r.error) throw new Error('Groupes : '+r.error.message);
+    memberEvents=r.data||[];
+  }
+
+  const map=new Map();
+  [...(owned.data||[]),...memberEvents].forEach(e=>map.set(e.id,e));
+  const events=Array.from(map.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+  const savedId=localStorage.getItem('myevent_active_'+user.id);
+  $('eventList').innerHTML=events.length ? events.map(e=>{
+    const active=e.id===savedId?' active':'';
+    const mine=e.creator_id===user.id;
+    return '<div class="eventCard'+active+'" data-event-id="'+e.id+'">'+
+      '<b>'+esc(e.name||'Événement sans nom')+'</b>'+
+      '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span>'+
+      '</div>';
+  }).join('') : '<p class="muted">Aucun groupe pour le moment.</p>';
+
+  document.querySelectorAll('.eventCard').forEach(card=>{
+    card.addEventListener('click',()=>selectEvent(card.dataset.eventId));
+  });
+
+  $('eventListMsg').textContent=events.length ? events.length+' événement'+(events.length>1?'s':'') : '';
+  return events;
+}
+
+async function selectEvent(id){
+  if(!id)return;
+  const r=await sb.from('events').select('*').eq('id',id).maybeSingle();
+  if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
+  if(!r.data) throw new Error('Cet événement n’est plus accessible.');
+
+  event=r.data;
+  localStorage.setItem('myevent_active_'+user.id,event.id);
+  $('ename').value=event.name||'';
+  $('place').value=event.location||'';
+  updateInviteUI();
+
+  document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
+  global('Événement actif : '+event.name,'ok');
+  await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  subscribeRealtime();
 }
 
 function updateInviteUI(){
@@ -255,16 +314,11 @@ async function joinEvent(code){
     if(r.error)throw r.error;
     const row=r.data?.[0];
     if(!row)throw new Error('Événement introuvable.');
-    event={id:row.joined_event_id ?? row.event_id,name:row.event_name,location:row.event_location,invite_code:code};
-    $('ename').value=event.name||'';
-    $('place').value=event.location||'';
-    updateInviteUI();
+    const joinedId=row.joined_event_id ?? row.event_id;
     $('joinCode').value='';
-    msg('joinMsg','Événement rejoint : '+event.name,'ok');
-    global('Événement actif : '+event.name,'ok');
-    updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
-    subscribeRealtime();
+    msg('joinMsg','Événement rejoint : '+(row.event_name||'Événement'),'ok');
+    await loadEvents();
+    await selectEvent(joinedId);
   }catch(e){msg('joinMsg','Erreur : '+(e.message||String(e)),'err')}
   finally{setBusy('joinBtn',false,'Rejoindre')}
 }
@@ -295,10 +349,8 @@ async function createEvent(){
     if(m.error) throw m.error;
 
     msg('eventmsg','Événement créé : '+event.name,'ok');
-    global('Événement actif : '+event.name,'ok');
-    updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
-    subscribeRealtime();
+    await loadEvents();
+    await selectEvent(event.id);
   }catch(e){
     msg('eventmsg','Erreur : '+(e.message||String(e)),'err');
   }finally{setBusy('eventBtn',false,'Créer')}
