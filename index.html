@@ -818,6 +818,8 @@ $('logoutBtn').addEventListener('click',logout);
 document.querySelectorAll('.avatarChoice').forEach(b=>b.addEventListener('click',()=>{ $('avatarInput').value=''; setAvatarChoice(b.dataset.avatar); document.querySelectorAll('.builderChoice').forEach(x=>x.classList.remove('selected')); $('profileAvatar').innerHTML='<div class="profileAvatar" style="font-size:36px">'+esc(b.dataset.avatar)+'</div>'; }));
 document.querySelectorAll('.builderChoice').forEach(b=>b.addEventListener('click',()=>{ $('avatarInput').value=''; document.querySelectorAll('.avatarChoice').forEach(x=>x.classList.remove('selected')); avatarDesign[b.dataset.group]=b.dataset.value; renderCustomAvatar(); $('profileAvatar').innerHTML='<img src="'+customAvatarData()+'" alt="Avatar personnalisé">'; }));
 $('avatarInput').addEventListener('change',()=>{if($('avatarInput').files?.length){document.querySelectorAll('.avatarChoice,.builderChoice').forEach(b=>b.classList.remove('selected')); $('profileAvatar').innerHTML='<span>📷</span>'; }});
+$('aiAvatarInput').addEventListener('change',()=>{ if($('aiAvatarInput').files?.length) previewAiPhoto($('aiAvatarInput').files[0]); });
+$('generateAiAvatarBtn').addEventListener('click',generateAiAvatar);
 $('saveProfileBtn').addEventListener('click',saveProfile);
 $('copyInviteBtn').addEventListener('click',copyInvite);
 $('shareInviteBtn').addEventListener('click',shareInvite);
