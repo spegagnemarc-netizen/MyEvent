@@ -20,6 +20,7 @@ button:disabled{opacity:.5}
 
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
+.mediaGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.mediaItem{position:relative;background:#0b1824;border-radius:14px;overflow:hidden;border:1px solid #28445b;min-height:150px}.mediaItem img,.mediaItem video{width:100%;height:180px;display:block;object-fit:cover}.mediaMeta{padding:7px 9px;color:#9eb2c4;font-size:12px}.deleteMedia{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.7);padding:7px 9px;border-radius:10px;font-size:12px}
 </style>
 </head>
 <body>
@@ -99,6 +100,15 @@ button:disabled{opacity:.5}
 <input id="options" placeholder="Choix séparés par des virgules">
 <button id="pollBtn">Créer le sondage</button>
 <div id="polls"></div>
+</div>
+
+<div class="card">
+<h2>📸 Photos & vidéos</h2>
+<p class="muted">Partage des souvenirs avec les participants de l’événement.</p>
+<input id="mediaInput" type="file" accept="image/*,video/*" multiple>
+<button id="mediaBtn">📤 Ajouter</button>
+<p id="mediaMsg" class="muted"></p>
+<div id="mediaGrid" class="mediaGrid"></div>
 </div>
 </section>
 </div>
@@ -195,7 +205,7 @@ async function show(u){
     global('Connecté • événement actif : '+event.name,'ok');
     updateInviteUI();
     await handleJoinLink();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
     subscribeRealtime();
   }catch(e){
     global(e.message||String(e),'err');
@@ -253,7 +263,7 @@ async function joinEvent(code){
     msg('joinMsg','Événement rejoint : '+event.name,'ok');
     global('Événement actif : '+event.name,'ok');
     updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
     subscribeRealtime();
   }catch(e){msg('joinMsg','Erreur : '+(e.message||String(e)),'err')}
   finally{setBusy('joinBtn',false,'Rejoindre')}
@@ -287,7 +297,7 @@ async function createEvent(){
     msg('eventmsg','Événement créé : '+event.name,'ok');
     global('Événement actif : '+event.name,'ok');
     updateInviteUI();
-    await Promise.all([loadMessages(),loadPolls(),loadMembers()]);
+    await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
     subscribeRealtime();
   }catch(e){
     msg('eventmsg','Erreur : '+(e.message||String(e)),'err');
@@ -403,6 +413,65 @@ async function vote(pollId, optionId, button){
   }
 }
 
+async function uploadMedia(){
+  if(!event||!user){msg('mediaMsg','Connecte-toi et sélectionne un événement.','err');return}
+  const files=Array.from($('mediaInput').files||[]);
+  if(!files.length){msg('mediaMsg','Choisis au moins une photo ou une vidéo.','err');return}
+  if(files.some(f=>f.size>100*1024*1024)){msg('mediaMsg','Un fichier dépasse 100 Mo.','err');return}
+  setBusy('mediaBtn',true,'Envoi…');
+  try{
+    for(const file of files){
+      const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path=event.id+'/'+user.id+'/'+crypto.randomUUID()+'-'+safe;
+      const up=await sb.storage.from('event-media').upload(path,file,{upsert:false,contentType:file.type});
+      if(up.error) throw up.error;
+      const ins=await sb.from('media').insert({
+        event_id:event.id,user_id:user.id,storage_path:path,media_type:file.type.startsWith('video/')?'video':'image'
+      });
+      if(ins.error){
+        await sb.storage.from('event-media').remove([path]);
+        throw ins.error;
+      }
+    }
+    $('mediaInput').value='';
+    msg('mediaMsg','Souvenir(s) ajouté(s) ✓','ok');
+    await loadMedia();
+  }catch(e){msg('mediaMsg','Erreur : '+(e.message||String(e)),'err')}
+  finally{setBusy('mediaBtn',false,'📤 Ajouter')}
+}
+
+async function deleteMedia(id,path){
+  if(!confirm('Supprimer ce média ?'))return;
+  try{
+    const d=await sb.from('media').delete().eq('id',id).eq('user_id',user.id);
+    if(d.error)throw d.error;
+    const st=await sb.storage.from('event-media').remove([path]);
+    if(st.error)throw st.error;
+    await loadMedia();
+  }catch(e){msg('mediaMsg','Erreur suppression : '+(e.message||String(e)),'err')}
+}
+
+async function loadMedia(){
+  if(!event)return;
+  const r=await sb.from('media').select('id,user_id,storage_path,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false});
+  if(r.error){$('mediaGrid').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
+  const items=r.data||[];
+  if(!items.length){$('mediaGrid').innerHTML='<p class="muted">Aucune photo ou vidéo pour le moment.</p>';return}
+  const urls=await Promise.all(items.map(async m=>{
+    const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
+    return [m,x.data?.signedUrl||''];
+  }));
+  $('mediaGrid').innerHTML=urls.map(([m,url])=>{
+    if(!url)return '';
+    const mine=m.user_id===user.id;
+    const media=m.media_type==='video'
+      ? '<video src="'+esc(url)+'" controls playsinline preload="metadata"></video>'
+      : '<img src="'+esc(url)+'" alt="Souvenir" loading="lazy">';
+    return '<div class="mediaItem">'+media+(mine?'<button class="deleteMedia" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'">Supprimer</button>':'')+'<div class="mediaMeta">'+(mine?'Moi':'Membre')+'</div></div>';
+  }).join('');
+  document.querySelectorAll('.deleteMedia').forEach(b=>b.addEventListener('click',()=>deleteMedia(b.dataset.id,b.dataset.path)));
+}
+
 async function loadPolls(){
   if(!event)return;
   const r=await sb.from('polls').select('*,poll_options(*)')
@@ -453,6 +522,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},()=>loadMembers())
+    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},()=>loadMedia())
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
     });
@@ -468,6 +538,7 @@ $('loginBtn').addEventListener('click',login);
 $('eventBtn').addEventListener('click',createEvent);
 $('sendBtn').addEventListener('click',sendMessage);
 $('pollBtn').addEventListener('click',createPoll);
+$('mediaBtn').addEventListener('click',uploadMedia);
 $('logoutBtn').addEventListener('click',logout);
 $('copyInviteBtn').addEventListener('click',copyInvite);
 $('shareInviteBtn').addEventListener('click',shareInvite);
