@@ -22,6 +22,14 @@ button:disabled{opacity:.5}
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .memberRow:last-child{border-bottom:0}.avatar{width:42px;height:42px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.memberInfo{flex:1;min-width:0}.memberInfo b{display:block;font-size:16px}.memberInfo span{display:block;color:#9eb2c4;font-size:13px;margin-top:3px}.youBadge{font-size:12px;background:#278cff;padding:5px 8px;border-radius:10px}
 .mediaGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.mediaItem{position:relative;background:#0b1824;border-radius:14px;overflow:hidden;border:1px solid #28445b;min-height:150px}.mediaItem img,.mediaItem video{width:100%;height:180px;display:block;object-fit:cover}.mediaMeta{padding:7px 9px;color:#9eb2c4;font-size:12px}.deleteMedia{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.7);padding:7px 9px;border-radius:10px;font-size:12px}
+
+/* Navigation de l’événement */
+.eventTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px;position:sticky;top:8px;z-index:5}
+.eventTab{padding:12px 8px;border:1px solid #28465e;background:#0a1823;color:#a9b9c8;border-radius:14px;font-weight:700;font-size:14px}
+.eventTab.active{background:#1683ff;color:#fff;border-color:#1683ff}
+.tabPanel{display:none}
+.tabPanel.active{display:block}
+@media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 </style>
 </head>
 <body>
@@ -81,7 +89,14 @@ button:disabled{opacity:.5}
 <p id="inviteMsg" class="muted"></p>
 </div>
 
-<div class="card">
+<div class="eventTabs" role="tablist" aria-label="Navigation de l’événement">
+<button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion</button>
+<button class="eventTab" data-tab="polls" role="tab">📊 Sondages</button>
+<button class="eventTab" data-tab="media" role="tab">📸 Photos</button>
+<button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
+</div>
+
+<div class="card tabPanel" data-panel="members">
 <h2>👥 Participants <span id="memberCount" class="muted"></span></h2>
 <div id="members"><p class="muted">Chargement des participants…</p></div>
 </div>
@@ -93,7 +108,7 @@ button:disabled{opacity:.5}
 <p id="joinMsg" class="muted"></p>
 </div>
 
-<div class="card">
+<div class="card tabPanel active" data-panel="discussion">
 <h2>💬 Discussion</h2>
 <div id="messages"></div>
 <div class="row">
@@ -102,7 +117,7 @@ button:disabled{opacity:.5}
 </div>
 </div>
 
-<div class="card">
+<div class="card tabPanel" data-panel="polls">
 <h2>📊 Sondage</h2>
 <input id="question" placeholder="Question">
 <input id="options" placeholder="Choix séparés par des virgules">
@@ -110,7 +125,7 @@ button:disabled{opacity:.5}
 <div id="polls"></div>
 </div>
 
-<div class="card">
+<div class="card tabPanel" data-panel="media">
 <h2>📸 Photos & vidéos</h2>
 <p class="muted">Partage des souvenirs avec les participants de l’événement.</p>
 <input id="mediaInput" type="file" accept="image/*,video/*" multiple>
@@ -125,6 +140,23 @@ button:disabled{opacity:.5}
 <script>
 let sb=null,user=null,event=null;
 let realtimeChannel=null;
+
+
+function showEventTab(name){
+  document.querySelectorAll('.eventTab').forEach(btn=>{
+    const active=btn.dataset.tab===name;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-selected',active?'true':'false');
+  });
+  document.querySelectorAll('.tabPanel').forEach(panel=>{
+    panel.classList.toggle('active',panel.dataset.panel===name);
+  });
+}
+
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.eventTab');
+  if(btn) showEventTab(btn.dataset.tab);
+});
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
