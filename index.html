@@ -34,7 +34,7 @@ button:disabled{opacity:.5}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
-.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}.pollCloseBtn{margin-top:10px;width:100%}.pollClosed{border-color:#6b7d8b}.pollClosedLabel{display:inline-block;margin:8px 0 0;padding:5px 9px;border:1px solid #6b7d8b;border-radius:999px;color:#b9c7d2;font-size:13px}
 </style>
 </head>
 <body>
@@ -991,9 +991,13 @@ async function vote(pollId, optionId, button){
     global('Connecte-toi pour voter.','err');
     return;
   }
+  const card=button?.closest('[data-poll-card]');
+  if(card?.dataset.closed==='true'){
+    global('Ce sondage est fermé 🔒','err');
+    return;
+  }
   document.querySelectorAll('.voteBtn').forEach(b=>b.disabled=true);
   try{
-    const card=button?.closest('[data-poll-card]');
     const allowMultiple=card?.dataset.allowMultiple==='true';
 
     const existing=await sb.from('poll_votes')
@@ -1107,6 +1111,19 @@ async function loadMedia(){
   await loadUnreadMediaCount();
 }
 
+async function closePoll(pollId){
+  if(!user||!event)return;
+  const poll=await sb.from('polls').select('id,question,creator_id,closed_at').eq('id',pollId).eq('event_id',event.id).single();
+  if(poll.error){global('Impossible de fermer le sondage : '+poll.error.message,'err');return}
+  if(poll.data.creator_id!==user.id){global('Seul le créateur du sondage peut le fermer.','err');return}
+  if(poll.data.closed_at){global('Ce sondage est déjà fermé.','err');return}
+  if(!confirm('Fermer le sondage « '+poll.data.question+' » ?\n\nLes votes seront arrêtés, mais les résultats resteront visibles.'))return;
+  const r=await sb.rpc('close_poll',{p_poll_id:pollId});
+  if(r.error){global('Erreur fermeture : '+r.error.message,'err');return}
+  global('Sondage fermé 🔒','ok');
+  await loadPolls();
+}
+
 async function loadPolls(){
   if(!event)return;
 
@@ -1171,10 +1188,16 @@ async function loadPolls(){
         '</div>';
     }).join('');
     const mode=p.allow_multiple?'Plusieurs réponses possibles':'Une seule réponse';
-    return '<div class="card" data-poll-card data-allow-multiple="'+(p.allow_multiple?'true':'false')+'" data-poll-question="'+esc(p.question)+'">'+
-      '<b>'+esc(p.question)+'</b>'+ 
-      '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+
+    const closed=!!p.closed_at;
+    const isCreator=!!user&&p.creator_id===user.id;
+    const status=closed?'<span class="pollClosedLabel">🔒 Sondage terminé</span>':'';
+    const closeButton=(!closed&&isCreator)?'<button type="button" class="secondary pollCloseBtn" data-close-poll="'+p.id+'">🔒 Fermer le sondage</button>':'';
+    const safeOptions=closed?options.replaceAll('class="secondary voteBtn','class="secondary voteBtn').replaceAll('<button type="button" class="secondary voteBtn','<button disabled type="button" class="secondary voteBtn'):options;
+    return '<div class="card'+(closed?' pollClosed':'')+'" data-poll-card data-closed="'+(closed?'true':'false')+'" data-allow-multiple="'+(p.allow_multiple?'true':'false')+'" data-poll-question="'+esc(p.question)+'">'+
+      '<b>'+esc(p.question)+'</b>'+status+
+      '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+safeOptions+
       '<button type="button" class="secondary pollAnalyzeBtn" data-analyze-poll="'+p.id+'">✨ Analyser les résultats</button>'+ 
+      closeButton+
       '<div class="pollAiBox hidden" id="pollAi-'+p.id+'"></div></div>';
   }).join('');
 
@@ -1183,6 +1206,9 @@ async function loadPolls(){
   });
   document.querySelectorAll('.pollAnalyzeBtn').forEach(b=>{
     b.addEventListener('click',()=>analyzePollResults(b.dataset.analyzePoll));
+  });
+  document.querySelectorAll('.pollCloseBtn').forEach(b=>{
+    b.addEventListener('click',()=>closePoll(b.dataset.closePoll));
   });
   await loadUnreadPollCount();
 }
