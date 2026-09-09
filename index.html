@@ -600,6 +600,10 @@ async function joinEvent(code){
     const joinedId=row.joined_event_id ?? row.event_id;
     $('joinCode').value='';
     msg('joinMsg','Événement rejoint : '+(row.event_name||'Événement'),'ok');
+    // Ce nouvel abonnement appartient à cet appareil. Un autre appareil
+    // connecté au même compte pourra donc recevoir la notification.
+    const jm=await sb.from('event_members').select('user_id,joined_at').eq('event_id',joinedId).eq('user_id',user.id).order('joined_at',{ascending:false}).limit(1).maybeSingle();
+    if(!jm.error && jm.data?.joined_at) rememberLocalCreated('members',user.id+'|'+jm.data.joined_at);
     await loadEvents();
     await selectEvent(joinedId);
   }catch(e){msg('joinMsg','Erreur : '+(e.message||String(e)),'err')}
@@ -779,6 +783,26 @@ function setUnreadBadge(id,count){
   badge.classList.toggle('hidden',count===0);
 }
 
+function localCreatedKey(type){
+  return event&&user ? 'myevent_local_'+type+'_'+user.id+'_'+event.id : '';
+}
+
+function localCreatedSet(type){
+  try{return new Set(JSON.parse(localStorage.getItem(localCreatedKey(type))||'[]'));}catch{return new Set();}
+}
+
+function rememberLocalCreated(type,id){
+  if(!id)return;
+  const key=localCreatedKey(type); if(!key)return;
+  const set=localCreatedSet(type); set.add(String(id));
+  const arr=[...set].slice(-300);
+  localStorage.setItem(key,JSON.stringify(arr));
+}
+
+function isLocallyCreated(type,id){
+  return localCreatedSet(type).has(String(id));
+}
+
 async function initializeUnreadMarkers(){
   if(!event||!user)return;
   // Lors de la première ouverture d'un événement, on mémorise l'état existant
@@ -786,17 +810,17 @@ async function initializeUnreadMarkers(){
   // considéré comme nouveau au lieu d'être absorbé par l'initialisation.
   const pollKey=unreadStorageKey('polls');
   if(!localStorage.getItem(pollKey)){
-    const r=await sb.from('polls').select('created_at').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:false}).limit(1);
+    const r=await sb.from('polls').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
     if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(pollKey,r.data[0].created_at);
   }
   const mediaKey=unreadStorageKey('media');
   if(!localStorage.getItem(mediaKey)){
-    const r=await sb.from('media').select('created_at').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(1);
+    const r=await sb.from('media').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
     if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(mediaKey,r.data[0].created_at);
   }
   const memberKey=unreadStorageKey('members');
   if(!localStorage.getItem(memberKey)){
-    const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(1);
+    const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
     if(!r.error && r.data?.[0]?.joined_at) localStorage.setItem(memberKey,r.data[0].joined_at);
   }
 }
@@ -805,10 +829,10 @@ async function loadUnreadPollCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('polls');
   const saved=localStorage.getItem(key);
-  const q=sb.from('polls').select('id,created_at,creator_id').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:true});
+  const q=sb.from('polls').select('id,created_at,creator_id').eq('event_id',event.id).order('created_at',{ascending:true});
   const r=await q;
   if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
-  const rows=r.data||[];
+  const rows=(r.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
   if(!saved){
     const latest=rows.at(-1)?.created_at;
     if(latest)localStorage.setItem(key,latest);
@@ -829,9 +853,9 @@ async function loadUnreadMediaCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('media');
   const saved=localStorage.getItem(key);
-  const r=await sb.from('media').select('id,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:true});
+  const r=await sb.from('media').select('id,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:true});
   if(r.error){console.warn('Comptage des photos non lues:',r.error.message);return;}
-  const rows=r.data||[];
+  const rows=(r.data||[]).filter(x=>!isLocallyCreated('media',x.id));
   if(!saved){
     const latest=rows.at(-1)?.created_at;
     if(latest)localStorage.setItem(key,latest);
@@ -850,7 +874,7 @@ async function markMediaRead(){
 
 async function markMembersRead(){
   if(!event||!user)return;
-  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(1);
+  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
   if(!r.error && r.data?.[0]?.joined_at)localStorage.setItem(unreadStorageKey('members'),r.data[0].joined_at);
 }
 
@@ -883,8 +907,9 @@ async function sendMessage(){
   try{
     const r=await sb.from('messages').insert({
       event_id:event.id,user_id:user.id,content:c
-    });
+    }).select('id').single();
     if(r.error) throw r.error;
+    rememberLocalCreated('messages',r.data?.id);
     $('message').value='';
     await loadMessages();
   }catch(e){alert('Erreur message : '+(e.message||String(e)))}
@@ -902,6 +927,7 @@ async function createPoll(){
       event_id:event.id,creator_id:user.id,question:q
     }).select().single();
     if(p.error) throw p.error;
+    rememberLocalCreated('polls',p.data?.id);
 
     for(const x of o){
       const r=await sb.from('poll_options').insert({
@@ -956,11 +982,12 @@ async function uploadMedia(){
       if(up.error) throw up.error;
       const ins=await sb.from('media').insert({
         event_id:event.id,user_id:user.id,storage_path:path,media_type:file.type.startsWith('video/')?'video':'image'
-      });
+      }).select('id').single();
       if(ins.error){
         await sb.storage.from('event-media').remove([path]);
         throw ins.error;
       }
+      rememberLocalCreated('media',ins.data?.id);
     }
     $('mediaInput').value='';
     msg('mediaMsg','Souvenir(s) ajouté(s) ✓','ok');
@@ -1095,13 +1122,14 @@ async function refreshNotifications(showSummary=false){
   try{
     const mr=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
     const lastRead=mr.data?.last_read_at||null;
-    let mcq=sb.from('messages').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('user_id',user.id);
+    let mcq=sb.from('messages').select('id,created_at,user_id',{count:'exact'}).eq('event_id',event.id);
     if(lastRead)mcq=mcq.gt('created_at',lastRead);
     const mcres=await mcq;
-    const unreadMessages=mcres.count||0;
-    let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(10);
+    const unreadMessages=(mcres.data||[]).filter(x=>!isLocallyCreated('messages',x.id)).length;
+    let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(lastRead)mq=mq.gt('created_at',lastRead);
-    const mres=await mq, msgs=mres.data||[];
+    const mres=await mq;
+    const msgs=(mres.data||[]).filter(x=>!isLocallyCreated('messages',x.id)).slice(0,10);
     if(unreadMessages){
       const ids=[...new Set(msgs.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
@@ -1112,9 +1140,9 @@ async function refreshNotifications(showSummary=false){
     }
 
     const pk=unreadStorageKey('polls'), ps=localStorage.getItem(pk);
-    let pq=sb.from('polls').select('id,question,created_at,creator_id').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:false}).limit(10);
+    let pq=sb.from('polls').select('id,question,created_at,creator_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(ps)pq=pq.gt('created_at',ps);
-    const pres=await pq, polls=pres.data||[];
+    const pres=await pq, polls=(pres.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
     if(polls.length){
       const ids=[...new Set(polls.map(x=>x.creator_id).filter(Boolean))]; let profiles=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
@@ -1125,9 +1153,9 @@ async function refreshNotifications(showSummary=false){
     }
 
     const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
-    let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(20);
+    let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(ms)medq=medq.gt('created_at',ms);
-    const medres=await medq, media=medres.data||[];
+    const medres=await medq, media=(medres.data||[]).filter(x=>!isLocallyCreated('media',x.id));
     if(media.length){
       const ids=[...new Set(media.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
@@ -1138,9 +1166,9 @@ async function refreshNotifications(showSummary=false){
     }
 
     const memKey=unreadStorageKey('members'), memSaved=localStorage.getItem(memKey);
-    let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(20);
+    let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(50);
     if(memSaved)memq=memq.gt('joined_at',memSaved);
-    const memres=await memq, members=memres.data||[];
+    const memres=await memq, members=(memres.data||[]).filter(x=>!isLocallyCreated('members',x.user_id+'|'+x.joined_at));
     // À la première ouverture, les membres déjà présents ne sont pas considérés comme nouveaux.
     if(!memSaved){
       const latest=members[0]?.joined_at;
