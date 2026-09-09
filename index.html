@@ -231,6 +231,7 @@ button:disabled{opacity:.5}
 <script>
 let sb=null,user=null,event=null;
 let realtimeChannel=null;
+let notificationPollTimer=null;
 
 
 function showEventTab(name){
@@ -772,8 +773,17 @@ async function markDiscussionRead(){
   if(badge){badge.textContent='0';badge.classList.add('hidden');}
 }
 
+function getDeviceId(){
+  let id=localStorage.getItem('myevent_device_id');
+  if(!id){
+    id=(crypto?.randomUUID?.()||('d_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2)));
+    localStorage.setItem('myevent_device_id',id);
+  }
+  return id;
+}
+
 function unreadStorageKey(type){
-  return user&&event ? 'myevent_'+type+'_read_'+user.id+'_'+event.id : '';
+  return user&&event ? 'myevent_v4_'+type+'_read_'+getDeviceId()+'_'+event.id : '';
 }
 
 function setUnreadBadge(id,count){
@@ -805,23 +815,13 @@ function isLocallyCreated(type,id){
 
 async function initializeUnreadMarkers(){
   if(!event||!user)return;
-  // Lors de la première ouverture d'un événement, on mémorise l'état existant
-  // avant de charger les listes. Ainsi, le prochain sondage/photo est bien
-  // considéré comme nouveau au lieu d'être absorbé par l'initialisation.
-  const pollKey=unreadStorageKey('polls');
-  if(!localStorage.getItem(pollKey)){
-    const r=await sb.from('polls').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
-    if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(pollKey,r.data[0].created_at);
-  }
-  const mediaKey=unreadStorageKey('media');
-  if(!localStorage.getItem(mediaKey)){
-    const r=await sb.from('media').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
-    if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(mediaKey,r.data[0].created_at);
-  }
-  const memberKey=unreadStorageKey('members');
-  if(!localStorage.getItem(memberKey)){
-    const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
-    if(!r.error && r.data?.[0]?.joined_at) localStorage.setItem(memberKey,r.data[0].joined_at);
+  // Chaque appareil possède son propre point de départ.
+  // Les nouveautés créées après cette ouverture seront donc détectées
+  // même si un autre téléphone utilise le même compte MyEvent.
+  const now=new Date().toISOString();
+  for(const type of ['polls','media','members']){
+    const key=unreadStorageKey(type);
+    if(!localStorage.getItem(key)) localStorage.setItem(key,now);
   }
 }
 
@@ -829,23 +829,16 @@ async function loadUnreadPollCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('polls');
   const saved=localStorage.getItem(key);
-  const q=sb.from('polls').select('id,created_at,creator_id').eq('event_id',event.id).order('created_at',{ascending:true});
-  const r=await q;
+  if(!saved){setUnreadBadge('pollBadge',0);return;}
+  const r=await sb.from('polls').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
   if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
   const rows=(r.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
-  if(!saved){
-    const latest=rows.at(-1)?.created_at;
-    if(latest)localStorage.setItem(key,latest);
-    setUnreadBadge('pollBadge',0);
-    return;
-  }
-  setUnreadBadge('pollBadge',rows.filter(x=>x.created_at>saved).length);
+  setUnreadBadge('pollBadge',rows.length);
 }
 
 async function markPollsRead(){
   if(!event||!user)return;
-  const r=await sb.from('polls').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
-  if(!r.error && r.data?.[0]?.created_at)localStorage.setItem(unreadStorageKey('polls'),r.data[0].created_at);
+  localStorage.setItem(unreadStorageKey('polls'),new Date().toISOString());
   setUnreadBadge('pollBadge',0);
 }
 
@@ -853,29 +846,22 @@ async function loadUnreadMediaCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('media');
   const saved=localStorage.getItem(key);
-  const r=await sb.from('media').select('id,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:true});
+  if(!saved){setUnreadBadge('mediaBadge',0);return;}
+  const r=await sb.from('media').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
   if(r.error){console.warn('Comptage des photos non lues:',r.error.message);return;}
   const rows=(r.data||[]).filter(x=>!isLocallyCreated('media',x.id));
-  if(!saved){
-    const latest=rows.at(-1)?.created_at;
-    if(latest)localStorage.setItem(key,latest);
-    setUnreadBadge('mediaBadge',0);
-    return;
-  }
-  setUnreadBadge('mediaBadge',rows.filter(x=>x.created_at>saved).length);
+  setUnreadBadge('mediaBadge',rows.length);
 }
 
 async function markMediaRead(){
   if(!event||!user)return;
-  const r=await sb.from('media').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
-  if(!r.error && r.data?.[0]?.created_at)localStorage.setItem(unreadStorageKey('media'),r.data[0].created_at);
+  localStorage.setItem(unreadStorageKey('media'),new Date().toISOString());
   setUnreadBadge('mediaBadge',0);
 }
 
 async function markMembersRead(){
   if(!event||!user)return;
-  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
-  if(!r.error && r.data?.[0]?.joined_at)localStorage.setItem(unreadStorageKey('members'),r.data[0].joined_at);
+  localStorage.setItem(unreadStorageKey('members'),new Date().toISOString());
 }
 
 async function loadMessages(){
@@ -1201,13 +1187,16 @@ function subscribeRealtime(){
   if(!sb||!event)return;
   if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
 
+  if(notificationPollTimer) clearInterval(notificationPollTimer);
+  notificationPollTimer=setInterval(()=>{ if(event&&user) refreshNotifications(false); },4000);
+
   realtimeChannel=sb.channel('event-'+event.id)
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},async()=>{ await loadMembers(); await refreshNotifications(false); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="media"]')?.classList.contains('active')) await markMediaRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await refreshNotifications(false); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
     });
