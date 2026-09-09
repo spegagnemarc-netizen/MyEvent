@@ -16,7 +16,7 @@ button:disabled{opacity:.5}
 .muted{color:#9eb2c4;font-size:13px}.hidden{display:none}
 .msg{background:#142b3d;padding:10px;border-radius:14px;margin:8px 0}.me{background:#126fdf;margin-left:15%}
 .err{color:#ff9999}.ok{color:#7ee2a8}
-.notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}
+.notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}.checkRow{display:flex;align-items:center;gap:8px;margin:10px 0;color:#9db0c1;font-size:14px}.checkRow input{width:auto;margin:0}
 .eventList{display:grid;gap:8px}.eventCard{background:#0b1824;border:1px solid #28445b;border-radius:14px;padding:12px;cursor:pointer}.eventCard.active{outline:2px solid #278cff}.eventCard b{display:block;font-size:16px}.eventCard span{display:block;color:#9eb2c4;font-size:13px;margin-top:4px}
  .eventHero{overflow:hidden;padding:0}.eventCover{height:150px;background:linear-gradient(135deg,#145da0,#278cff 55%,#6d3bd1);display:flex;align-items:flex-end;padding:16px;position:relative}.eventCover.hasImage{background-size:cover;background-position:center}.eventCover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.72));}.eventHeroContent{position:relative;z-index:1;width:100%}.eventHeroName{font-size:25px;font-weight:850;margin:0 0 4px}.eventHeroMeta{font-size:13px;color:#d5e2ec}.eventStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}.eventStat{background:#0b1824;border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center}.eventStat b{display:block;font-size:17px}.eventStat span{display:block;color:#9eb2c4;font-size:11px;margin-top:3px}.eventDescription{padding:0 14px 14px;color:#b8c8d5;font-size:13px;line-height:1.45}.eventActions{display:flex;gap:8px;padding:0 14px 14px}.eventActions button{flex:1}.editEventBox{border:1px solid #315b78;background:#0b1824}.editEventBox summary{cursor:pointer;font-weight:750;list-style:none}.editEventBox summary::-webkit-details-marker{display:none}.countdown{color:#91d0ff;font-weight:750;margin-top:5px}.fieldRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.smallLabel{display:block;color:#9eb2c4;font-size:12px;margin:3px 0 5px}.coverPreview{height:90px;border-radius:12px;background:#102131 center/cover no-repeat;border:1px solid #28445b;margin:8px 0}.
 
@@ -204,6 +204,7 @@ button:disabled{opacity:.5}
 <h2>📊 Sondage</h2>
 <input id="question" placeholder="Question">
 <input id="options" placeholder="Choix séparés par des virgules">
+<label class="checkRow"><input id="allowMultiple" type="checkbox"> Autoriser plusieurs réponses</label>
 <button id="pollBtn">Créer le sondage</button>
 <div id="polls"></div>
 </div>
@@ -959,12 +960,13 @@ async function sendMessage(){
 async function createPoll(){
   if(!event){alert('Aucun événement actif. Recharge la page.');return}
   const q=$('question').value.trim();
-  const o=$('options').value.split(',').map(x=>x.trim()).filter(Boolean);
+  const o=[...new Set($('options').value.split(',').map(x=>x.trim()).filter(Boolean))];
+  const allowMultiple=!!$('allowMultiple')?.checked;
   if(!q||o.length<2){alert('Question + au moins 2 choix');return}
   setBusy('pollBtn',true,'Création…');
   try{
     const p=await sb.from('polls').insert({
-      event_id:event.id,creator_id:user.id,question:q
+      event_id:event.id,creator_id:user.id,question:q,allow_multiple:allowMultiple
     }).select().single();
     if(p.error) throw p.error;
     rememberLocalCreated('polls',p.data?.id);
@@ -977,6 +979,7 @@ async function createPoll(){
     }
     $('question').value='';
     $('options').value='';
+    if($('allowMultiple'))$('allowMultiple').checked=false;
     await loadPolls();
     global('Sondage créé.','ok');
   }catch(e){alert('Erreur sondage : '+(e.message||String(e)))}
@@ -990,15 +993,30 @@ async function vote(pollId, optionId, button){
   }
   document.querySelectorAll('.voteBtn').forEach(b=>b.disabled=true);
   try{
-    // Un seul vote par personne et par sondage.
-    // Si un vote existe déjà, il est remplacé par le nouveau choix.
-    const r=await sb.from('poll_votes').upsert({
-      poll_id:pollId,
-      option_id:optionId,
-      user_id:user.id
-    },{onConflict:'poll_id,user_id'});
-    if(r.error) throw r.error;
-    global('Vote enregistré ✓','ok');
+    const card=button?.closest('[data-poll-card]');
+    const allowMultiple=card?.dataset.allowMultiple==='true';
+    const existing=await sb.from('poll_votes').select('id,option_id').eq('poll_id',pollId).eq('user_id',user.id);
+    if(existing.error) throw existing.error;
+    const mine=existing.data||[];
+
+    if(allowMultiple){
+      const current=mine.find(v=>v.option_id===optionId);
+      if(current){
+        const d=await sb.from('poll_votes').delete().eq('id',current.id).eq('user_id',user.id);
+        if(d.error) throw d.error;
+        global('Choix retiré ✓','ok');
+      }else{
+        const ins=await sb.from('poll_votes').insert({poll_id:pollId,option_id:optionId,user_id:user.id});
+        if(ins.error) throw ins.error;
+        global('Choix enregistré ✓','ok');
+      }
+    }else{
+      const d=await sb.from('poll_votes').delete().eq('poll_id',pollId).eq('user_id',user.id);
+      if(d.error) throw d.error;
+      const ins=await sb.from('poll_votes').insert({poll_id:pollId,option_id:optionId,user_id:user.id});
+      if(ins.error) throw ins.error;
+      global('Vote enregistré ✓','ok');
+    }
     await loadPolls();
   }catch(e){
     global('Erreur vote : '+(e.message||String(e)),'err');
@@ -1086,22 +1104,24 @@ async function loadPolls(){
 
   $('polls').innerHTML=polls.map(p=>{
     const pv=votes.filter(v=>v.poll_id===p.id);
-    const mine=pv.find(v=>v.user_id===user.id)?.option_id;
-    const total=pv.length;
+    const mine=pv.filter(v=>v.user_id===user.id).map(v=>v.option_id);
+    const totalVotes=pv.length;
+    const voterCount=new Set(pv.map(v=>v.user_id)).size;
     const options=(p.poll_options||[]).map(o=>{
       const count=pv.filter(v=>v.option_id===o.id).length;
-      const pct=total?Math.round(count*100/total):0;
-      const selected=mine===o.id?' selectedVote':'';
+      const pct=voterCount?Math.round(count*100/voterCount):0;
+      const selected=mine.includes(o.id)?' selectedVote':'';
       return '<div class="pollOption">'+
         '<button class="secondary voteBtn'+selected+'" data-poll="'+p.id+'" data-option="'+o.id+'">'+
-        (mine===o.id?'✓ ':'')+esc(o.option_text)+
+        (mine.includes(o.id)?'✓ ':'')+esc(o.option_text)+
         '<span class="pollCount">'+count+' vote'+(count>1?'s':'')+' · '+pct+'%</span>'+
         '</button>'+ 
         '<div class="pollBar"><div class="pollBarFill" style="width:'+pct+'%"></div></div>'+ 
         '</div>';
     }).join('');
-    return '<div class="card"><b>'+esc(p.question)+'</b>'+ 
-      '<p class="muted">Choisis une réponse · '+total+' vote'+(total>1?'s':'')+'</p>'+options+'</div>';
+    const mode=p.allow_multiple?'Plusieurs réponses possibles':'Une seule réponse';
+    return '<div class="card" data-poll-card data-allow-multiple="'+(p.allow_multiple?'true':'false')+'"><b>'+esc(p.question)+'</b>'+ 
+      '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+'</div>';
   }).join('');
 
   document.querySelectorAll('.voteBtn').forEach(b=>{
