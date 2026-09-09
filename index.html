@@ -34,7 +34,7 @@ button:disabled{opacity:.5}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
-.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
 </style>
 </head>
 <body>
@@ -1171,14 +1171,46 @@ async function loadPolls(){
         '</div>';
     }).join('');
     const mode=p.allow_multiple?'Plusieurs réponses possibles':'Une seule réponse';
-    return '<div class="card" data-poll-card data-allow-multiple="'+(p.allow_multiple?'true':'false')+'"><b>'+esc(p.question)+'</b>'+ 
-      '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+'</div>';
+    return '<div class="card" data-poll-card data-allow-multiple="'+(p.allow_multiple?'true':'false')+'" data-poll-question="'+esc(p.question)+'">'+
+      '<b>'+esc(p.question)+'</b>'+ 
+      '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+
+      '<button type="button" class="secondary pollAnalyzeBtn" data-analyze-poll="'+p.id+'">✨ Analyser les résultats</button>'+ 
+      '<div class="pollAiBox hidden" id="pollAi-'+p.id+'"></div></div>';
   }).join('');
 
   document.querySelectorAll('.voteBtn').forEach(b=>{
     b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
   });
+  document.querySelectorAll('.pollAnalyzeBtn').forEach(b=>{
+    b.addEventListener('click',()=>analyzePollResults(b.dataset.analyzePoll));
+  });
   await loadUnreadPollCount();
+}
+
+async function analyzePollResults(pollId){
+  const box=$('pollAi-'+pollId), button=document.querySelector('[data-analyze-poll=\"'+pollId+'\"]');
+  if(!box||!button||!event)return;
+  box.classList.remove('hidden');
+  box.innerHTML='<b>✨ Analyse du groupe</b><p>Analyse des résultats…</p>';
+  button.disabled=true;
+  try{
+    const pr=await sb.from('polls').select('id,question,allow_multiple').eq('id',pollId).eq('event_id',event.id).single();
+    if(pr.error)throw pr.error;
+    const ors=await sb.from('poll_options').select('id,option_text').eq('poll_id',pollId);
+    if(ors.error)throw ors.error;
+    const vrs=await sb.from('poll_votes').select('option_id,user_id').eq('poll_id',pollId);
+    if(vrs.error)throw vrs.error;
+    const options=ors.data||[], votes=vrs.data||[];
+    const voterCount=new Set(votes.map(v=>v.user_id)).size;
+    const results=options.map(o=>({text:o.option_text,votes:votes.filter(v=>v.option_id===o.id).length}));
+    const r=await fetch('/api/analyze-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventName:event.name||'Événement',poll:{question:pr.data.question,allow_multiple:!!pr.data.allow_multiple,voterCount,totalVotes:votes.length,results}})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data?.error||'Erreur du service IA.');
+    box.innerHTML='<b>✨ Analyse du groupe</b><p>'+esc(data.analysis||'Aucune analyse disponible.')+'</p>';
+  }catch(e){
+    console.warn('Analyse sondage:',e.message||e);
+    box.innerHTML='<b>✨ Analyse du groupe</b><p class="err">'+esc(e.message||'Impossible d’analyser ce sondage.')+'</p>';
+  }finally{button.disabled=false;}
 }
 
 
@@ -1266,7 +1298,25 @@ async function refreshNotifications(showSummary=false){
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=polls[0], fp=pmap.get(first.creator_id)||{};
       const creator=fp.display_name||fp.username||'Un membre';
       items.push({icon:'📊',tab:'polls',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:creator+' : '+(first.question||'Nouveau sondage'),time:first.created_at});
-      context.polls=polls.slice().reverse().map(x=>({question:x.question||'',created_at:x.created_at}));
+      const pollIds=polls.map(x=>x.id);
+      let pollOptions=[];
+      if(pollIds.length){
+        const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds);
+        if(!ors.error)pollOptions=ors.data||[];
+      }
+      let pollVotes=[];
+      if(pollIds.length){
+        const vrs=await sb.from('poll_votes').select('poll_id,option_id').in('poll_id',pollIds);
+        if(!vrs.error)pollVotes=vrs.data||[];
+      }
+      context.polls=polls.slice().reverse().map(x=>({
+        question:x.question||'',
+        created_at:x.created_at,
+        results:pollOptions.filter(o=>o.poll_id===x.id).map(o=>({
+          text:o.option_text,
+          votes:pollVotes.filter(v=>v.poll_id===x.id&&v.option_id===o.id).length
+        }))
+      }));
     }
 
     const vk=unreadStorageKey('votes'), vs=localStorage.getItem(vk);
@@ -1274,7 +1324,7 @@ async function refreshNotifications(showSummary=false){
       const pr=await sb.from('polls').select('id,question').eq('event_id',event.id).eq('creator_id',user.id);
       if(!pr.error && pr.data?.length){
         const pollIds=pr.data.map(x=>x.id);
-        const vr=await sb.from('poll_votes').select('poll_id,user_id,created_at').in('poll_id',pollIds).neq('user_id',user.id).gt('created_at',vs).order('created_at',{ascending:false}).limit(50);
+        const vr=await sb.from('poll_votes').select('poll_id,user_id,option_id,created_at').in('poll_id',pollIds).neq('user_id',user.id).gt('created_at',vs).order('created_at',{ascending:false}).limit(50);
         const votes=vr.error?[]:(vr.data||[]);
         if(votes.length){
           const vmap=new Map((pr.data||[]).map(p=>[p.id,p]));
@@ -1284,7 +1334,21 @@ async function refreshNotifications(showSummary=false){
           const pmap=new Map(profiles.map(p=>[p.id,p])); const person=pmap.get(first.user_id)||{};
           const voter=person.display_name||person.username||'Un participant';
           items.push({icon:'🗳️',tab:'polls',title:votes.length+(votes.length>1?' nouveaux votes':' nouveau vote'),detail:voter+' a voté à « '+(vp.question||'Sondage')+' »',time:first.created_at});
-          context.polls.push(...votes.map(x=>({question:(vmap.get(x.poll_id)||{}).question||'Sondage',created_at:x.created_at,kind:'vote'})));
+          const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds);
+          const options=ors.error?[]:(ors.data||[]);
+          const counts=new Map();
+          votes.forEach(v=>counts.set(v.option_id,(counts.get(v.option_id)||0)+1));
+          const optionMap=new Map(options.map(o=>[o.id,o]));
+          const grouped=new Map();
+          votes.forEach(v=>{
+            if(!grouped.has(v.poll_id))grouped.set(v.poll_id,[]);
+            grouped.get(v.poll_id).push(v);
+          });
+          grouped.forEach((list,pollId)=>{
+            const poll=vmap.get(pollId)||{};
+            const allOptions=options.filter(o=>o.poll_id===pollId).map(o=>({text:o.option_text,votes:counts.get(o.id)||0}));
+            context.polls.push({question:poll.question||'Sondage',created_at:list[0]?.created_at,kind:'vote',results:allOptions});
+          });
         }
       }
     }
