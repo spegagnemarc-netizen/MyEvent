@@ -18,6 +18,7 @@ button:disabled{opacity:.5}
 .err{color:#ff9999}.ok{color:#7ee2a8}
 .notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}
 .eventList{display:grid;gap:8px}.eventCard{background:#0b1824;border:1px solid #28445b;border-radius:14px;padding:12px;cursor:pointer}.eventCard.active{outline:2px solid #278cff}.eventCard b{display:block;font-size:16px}.eventCard span{display:block;color:#9eb2c4;font-size:13px;margin-top:4px}
+ .eventHero{overflow:hidden;padding:0}.eventCover{height:150px;background:linear-gradient(135deg,#145da0,#278cff 55%,#6d3bd1);display:flex;align-items:flex-end;padding:16px;position:relative}.eventCover.hasImage{background-size:cover;background-position:center}.eventCover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.72));}.eventHeroContent{position:relative;z-index:1;width:100%}.eventHeroName{font-size:25px;font-weight:850;margin:0 0 4px}.eventHeroMeta{font-size:13px;color:#d5e2ec}.eventStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}.eventStat{background:#0b1824;border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center}.eventStat b{display:block;font-size:17px}.eventStat span{display:block;color:#9eb2c4;font-size:11px;margin-top:3px}.eventDescription{padding:0 14px 14px;color:#b8c8d5;font-size:13px;line-height:1.45}.eventActions{display:flex;gap:8px;padding:0 14px 14px}.eventActions button{flex:1}.editEventBox{border:1px solid #315b78;background:#0b1824}.editEventBox summary{cursor:pointer;font-weight:750;list-style:none}.editEventBox summary::-webkit-details-marker{display:none}.countdown{color:#91d0ff;font-weight:750;margin-top:5px}.fieldRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.smallLabel{display:block;color:#9eb2c4;font-size:12px;margin:3px 0 5px}.coverPreview{height:90px;border-radius:12px;background:#102131 center/cover no-repeat;border:1px solid #28445b;margin:8px 0}.
 
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .profileEditor{display:flex;align-items:center;gap:12px}.profileAvatar{width:72px;height:72px;border-radius:50%;background:#173047;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;overflow:hidden;flex:none}.profileAvatar img{width:100%;height:100%;object-fit:cover}.memberRow:last-child{border-bottom:0}.avatarEmoji{font-size:24px}.avatarChoices{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.avatarChoice{width:44px;height:44px;padding:0;background:#0b1824;border:1px solid #2b465d;border-radius:50%;font-size:24px}.avatarChoice.selected{outline:2px solid #278cff}.avatarBuilder{margin:8px 0 12px;padding:12px;background:#0b1824;border:1px solid #28445b;border-radius:14px}.builderTitle{font-weight:700;margin-bottom:8px}.builderGroup{margin:8px 0}.builderGroupLabel{display:block;color:#9eb2c4;font-size:12px;margin-bottom:5px}.builderChoices{display:flex;gap:6px;flex-wrap:wrap}.builderChoice{min-width:42px;height:38px;padding:5px 8px;background:#102131;border:1px solid #2b465d;border-radius:10px;font-size:18px}.builderChoice.selected{outline:2px solid #278cff}.customAvatarPreview{width:92px;height:92px;border-radius:50%;margin:8px auto 12px;overflow:hidden;border:2px solid #28445b}.customAvatarPreview img{width:100%;height:100%;display:block}
@@ -110,13 +111,51 @@ button:disabled{opacity:.5}
 <p id="eventListMsg" class="muted"></p>
 </div>
 
-<div class="card">
-<h2>🎉 Événement</h2>
+<div id="eventHeroCard" class="card eventHero hidden">
+  <div id="eventCover" class="eventCover">
+    <div class="eventHeroContent">
+      <div id="eventHeroName" class="eventHeroName">Mon événement</div>
+      <div id="eventHeroMeta" class="eventHeroMeta">📍 Lieu · 📅 Date</div>
+      <div id="eventCountdown" class="countdown"></div>
+    </div>
+  </div>
+  <div id="eventDescription" class="eventDescription hidden"></div>
+  <div class="eventStats">
+    <div class="eventStat"><b id="statMembers">0</b><span>Participants</span></div>
+    <div class="eventStat"><b id="statMessages">0</b><span>Messages</span></div>
+    <div class="eventStat"><b id="statPhotos">0</b><span>Souvenirs</span></div>
+  </div>
+  <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button></div>
+</div>
+
+<div class="card" id="createEventCard">
+<h2>🎉 Créer un événement</h2>
 <input id="ename" placeholder="Nom de l’événement">
-<input id="place" placeholder="Lieu">
+<div class="fieldRow">
+  <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
+  <div><label class="smallLabel" for="place">Lieu</label><input id="place" placeholder="Lieu"></div>
+</div>
+<textarea id="eventDescriptionInput" placeholder="Description de l’événement…" rows="3"></textarea>
+<input id="eventCoverUrlInput" placeholder="URL de la photo de couverture (optionnel)">
 <button id="eventBtn">Créer</button>
 <p id="eventmsg" class="muted"></p>
 </div>
+
+<details id="editEventBox" class="card editEventBox hidden">
+  <summary>✏️ Modifier l’événement</summary>
+  <div style="margin-top:12px">
+    <input id="editEventName" placeholder="Nom de l’événement">
+    <div class="fieldRow">
+      <div><label class="smallLabel" for="editEventDate">Date</label><input id="editEventDate" type="datetime-local"></div>
+      <div><label class="smallLabel" for="editEventPlace">Lieu</label><input id="editEventPlace" placeholder="Lieu"></div>
+    </div>
+    <textarea id="editEventDescription" placeholder="Description" rows="4"></textarea>
+    <input id="editEventCoverUrl" placeholder="URL de la photo de couverture (optionnel)">
+    <div id="editCoverPreview" class="coverPreview hidden"></div>
+    <button id="saveEventBtn">💾 Enregistrer les modifications</button>
+    <p id="editEventMsg" class="muted"></p>
+  </div>
+</details>
 
 <div class="card" id="inviteCard">
 <h2>👥 Inviter</h2>
@@ -368,6 +407,7 @@ async function show(u){
     }else{
       event=null;
       $('ename').value=''; $('place').value='';
+      renderEventHero();
       updateInviteUI();
       $('members').innerHTML='<p class="muted">Aucun événement pour le moment.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
@@ -439,11 +479,15 @@ async function selectEvent(id){
   localStorage.setItem('myevent_active_'+user.id,event.id);
   $('ename').value=event.name||'';
   $('place').value=event.location||'';
+  renderEventHero();
   updateInviteUI();
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
+  $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
+  $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
   subscribeRealtime();
 }
 
@@ -547,29 +591,100 @@ async function handleJoinLink(){
   }
 }
 
+function toLocalDateTime(value){
+  if(!value)return '';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return '';
+  const pad=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function formatEventDate(value){
+  if(!value)return 'Date à définir';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return 'Date à définir';
+  return new Intl.DateTimeFormat('fr-FR',{dateStyle:'medium',timeStyle:'short'}).format(d);
+}
+function updateCountdown(){
+  if(!event?.event_date){$('eventCountdown').textContent='';return;}
+  const diff=new Date(event.event_date).getTime()-Date.now();
+  if(diff<=0){$('eventCountdown').textContent='🎉 C’est aujourd’hui !';return;}
+  const total=Math.floor(diff/1000), days=Math.floor(total/86400), hours=Math.floor(total%86400/3600), mins=Math.floor(total%3600/60);
+  $('eventCountdown').textContent=days>0?'⏳ Dans '+days+' j '+hours+' h':hours>0?'⏳ Dans '+hours+' h '+mins+' min':'⏳ Dans '+mins+' min';
+}
+let countdownTimer=null;
+function renderEventHero(){
+  if(!event){$('eventHeroCard').classList.add('hidden');$('editEventBox').classList.add('hidden');$('createEventCard').classList.remove('hidden');return;}
+  $('eventHeroCard').classList.remove('hidden');
+  $('createEventCard').classList.add('hidden');
+  $('eventHeroName').textContent=event.name||'Événement';
+  $('eventHeroMeta').textContent=(event.location?'📍 '+event.location+' · ':'')+'📅 '+formatEventDate(event.event_date);
+  $('eventDescription').textContent=event.description||'';
+  $('eventDescription').classList.toggle('hidden',!event.description);
+  const cover=event.cover_url||'';
+  $('eventCover').classList.toggle('hasImage',!!cover);
+  $('eventCover').style.backgroundImage=cover?'url("'+String(cover).replace(/"/g,'%22')+'")':'';
+  const mine=event.creator_id===user.id;
+  $('eventActions').classList.toggle('hidden',!mine);
+  $('editEventBox').classList.toggle('hidden',!mine);
+  if(mine){
+    $('editEventName').value=event.name||'';
+    $('editEventDate').value=toLocalDateTime(event.event_date);
+    $('editEventPlace').value=event.location||'';
+    $('editEventDescription').value=event.description||'';
+    $('editEventCoverUrl').value=event.cover_url||'';
+    updateEditCoverPreview();
+  }
+  updateCountdown();
+  if(!countdownTimer)countdownTimer=setInterval(updateCountdown,30000);
+}
+function updateEditCoverPreview(){
+  const url=$('editEventCoverUrl').value.trim();
+  $('editCoverPreview').classList.toggle('hidden',!url);
+  $('editCoverPreview').style.backgroundImage=url?'url("'+url.replace(/"/g,'%22')+'")':'';
+}
+async function saveEvent(){
+  if(!event||event.creator_id!==user.id)return;
+  const name=$('editEventName').value.trim();
+  if(!name){msg('editEventMsg','Indique un nom d’événement.','err');return}
+  setBusy('saveEventBtn',true,'Enregistrement…');
+  try{
+    const r=await sb.from('events').update({
+      name,
+      description:$('editEventDescription').value.trim()||null,
+      location:$('editEventPlace').value.trim()||null,
+      event_date:$('editEventDate').value?new Date($('editEventDate').value).toISOString():null,
+      cover_url:$('editEventCoverUrl').value.trim()||null
+    }).eq('id',event.id).select().single();
+    if(r.error)throw r.error;
+    event=r.data;
+    $('ename').value=event.name||'';$('place').value=event.location||'';
+    renderEventHero();
+    await loadEvents();
+    msg('editEventMsg','Événement modifié ✓','ok');
+    global('Les informations de l’événement sont à jour.','ok');
+  }catch(e){msg('editEventMsg','Erreur : '+(e.message||String(e)),'err')}
+  finally{setBusy('saveEventBtn',false,'💾 Enregistrer les modifications')}
+}
 async function createEvent(){
   if(!user || !sb){msg('eventmsg','Pas connecté à Supabase.','err');return}
-  const n=$('ename').value.trim(), place=$('place').value.trim();
+  const n=$('ename').value.trim(), place=$('place').value.trim(), description=$('eventDescriptionInput').value.trim(), cover=$('eventCoverUrlInput').value.trim();
   if(!n){msg('eventmsg','Indique un nom d’événement.','err');return}
   setBusy('eventBtn',true,'Création…');
   try{
     const r=await sb.from('events').insert({
-      creator_id:user.id,name:n,location:place,invite_code:undefined
+      creator_id:user.id,name:n,location:place||null,description:description||null,
+      event_date:$('eventDate').value?new Date($('eventDate').value).toISOString():null,cover_url:cover||null
     }).select().single();
     if(r.error) throw r.error;
     event=r.data;
-
-    const m=await sb.from('event_members').upsert({
-      event_id:event.id,user_id:user.id,role:'owner'
-    },{onConflict:'event_id,user_id'});
+    const m=await sb.from('event_members').upsert({event_id:event.id,user_id:user.id,role:'owner'},{onConflict:'event_id,user_id'});
     if(m.error) throw m.error;
-
     msg('eventmsg','Événement créé : '+event.name,'ok');
+    $('eventDescriptionInput').value='';$('eventDate').value='';$('eventCoverUrlInput').value='';
     await loadEvents();
     await selectEvent(event.id);
-  }catch(e){
-    msg('eventmsg','Erreur : '+(e.message||String(e)),'err');
-  }finally{setBusy('eventBtn',false,'Créer')}
+  }catch(e){msg('eventmsg','Erreur : '+(e.message||String(e)),'err')}
+  finally{setBusy('eventBtn',false,'Créer')}
 }
 
 async function loadMembers(){
@@ -578,6 +693,7 @@ async function loadMembers(){
   if(r.error){ $('members').innerHTML='<p class="err">'+esc(r.error.message)+'</p>'; return; }
   const members=r.data||[];
   $('memberCount').textContent='· '+members.length+' participant'+(members.length>1?'s':'');
+  $('statMembers').textContent=members.length;
   if(!members.length){ $('members').innerHTML='<p class="muted">Aucun participant pour le moment.</p>'; return; }
 
   const ids=members.map(m=>m.user_id).filter(Boolean);
@@ -619,6 +735,7 @@ async function loadMessages(){
       avatarHtml(av,'messageAvatar')+
       '<div class="messageBody"><div class="messageMeta">'+esc(name)+'</div>'+esc(m.content)+'</div></div>';
   }).join('');
+  if($('statMessages'))$('statMessages').textContent=rows.length;
 }
 
 async function sendMessage(){
@@ -745,6 +862,7 @@ async function loadMedia(){
     return '<div class="mediaItem">'+media+(mine?'<button class="deleteMedia" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'">Supprimer</button>':'')+'<div class="mediaMeta">'+(mine?'Moi':'Membre')+'</div></div>';
   }).join('');
   document.querySelectorAll('.deleteMedia').forEach(b=>b.addEventListener('click',()=>deleteMedia(b.dataset.id,b.dataset.path)));
+  if($('statPhotos'))$('statPhotos').textContent=items.length;
 }
 
 async function loadPolls(){
@@ -811,6 +929,9 @@ window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
 $('eventBtn').addEventListener('click',createEvent);
+$('saveEventBtn').addEventListener('click',saveEvent);
+$('editEventToggle').addEventListener('click',()=>{ $('editEventBox').open=true; $('editEventBox').scrollIntoView({behavior:'smooth',block:'start'}); });
+$('editEventCoverUrl').addEventListener('input',updateEditCoverPreview);
 $('sendBtn').addEventListener('click',sendMessage);
 $('pollBtn').addEventListener('click',createPoll);
 $('mediaBtn').addEventListener('click',uploadMedia);
