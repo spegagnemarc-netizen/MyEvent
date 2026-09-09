@@ -34,7 +34,7 @@ button:disabled{opacity:.5}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
-.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:grid;grid-template-columns:1fr 1fr;margin-top:12px}.notificationActions button{width:100%}}@media(max-width:700px){.notificationHead{display:block}.notificationHead button{width:100%;margin-top:12px}}
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}
 </style>
 </head>
 <body>
@@ -1093,7 +1093,11 @@ async function refreshNotifications(showSummary=false){
     let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(20);
     if(memSaved)memq=memq.gt('joined_at',memSaved);
     const memres=await memq, members=memres.data||[];
-    if(members.length){
+    // À la première ouverture, les membres déjà présents ne sont pas considérés comme nouveaux.
+    if(!memSaved){
+      const latest=members[0]?.joined_at;
+      if(latest)localStorage.setItem(memKey,latest);
+    } else if(members.length){
       const ids=[...new Set(members.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=members[0], fp=pmap.get(first.user_id)||{};
@@ -1127,7 +1131,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
-    .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},()=>loadMembers())
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},async()=>{ await loadMembers(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="media"]')?.classList.contains('active')) await markMediaRead(); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
