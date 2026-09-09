@@ -995,25 +995,44 @@ async function vote(pollId, optionId, button){
   try{
     const card=button?.closest('[data-poll-card]');
     const allowMultiple=card?.dataset.allowMultiple==='true';
-    const existing=await sb.from('poll_votes').select('poll_id,option_id,user_id').eq('poll_id',pollId).eq('user_id',user.id);
+
+    const existing=await sb.from('poll_votes')
+      .select('poll_id,option_id,user_id')
+      .eq('poll_id',pollId)
+      .eq('user_id',user.id);
     if(existing.error) throw existing.error;
     const mine=existing.data||[];
 
     if(allowMultiple){
       const current=mine.find(v=>v.option_id===optionId);
       if(current){
-        const d=await sb.from('poll_votes').delete().eq('poll_id',pollId).eq('option_id',current.option_id).eq('user_id',user.id);
+        const d=await sb.from('poll_votes').delete()
+          .eq('poll_id',pollId)
+          .eq('option_id',optionId)
+          .eq('user_id',user.id);
         if(d.error) throw d.error;
         global('Choix retiré ✓','ok');
       }else{
-        const ins=await sb.from('poll_votes').insert({poll_id:pollId,option_id:optionId,user_id:user.id});
+        const ins=await sb.from('poll_votes').insert({
+          poll_id:pollId,
+          option_id:optionId,
+          user_id:user.id
+        });
         if(ins.error) throw ins.error;
         global('Choix enregistré ✓','ok');
       }
     }else{
-      const d=await sb.from('poll_votes').delete().eq('poll_id',pollId).eq('user_id',user.id);
+      // Une seule réponse : on remplace proprement l'ancien vote.
+      const d=await sb.from('poll_votes').delete()
+        .eq('poll_id',pollId)
+        .eq('user_id',user.id);
       if(d.error) throw d.error;
-      const ins=await sb.from('poll_votes').insert({poll_id:pollId,option_id:optionId,user_id:user.id});
+
+      const ins=await sb.from('poll_votes').insert({
+        poll_id:pollId,
+        option_id:optionId,
+        user_id:user.id
+      });
       if(ins.error) throw ins.error;
       global('Vote enregistré ✓','ok');
     }
@@ -1090,16 +1109,48 @@ async function loadMedia(){
 
 async function loadPolls(){
   if(!event)return;
-  const r=await sb.from('polls').select('*,poll_options(*)')
-    .eq('event_id',event.id).order('created_at',{ascending:false});
-  if(r.error){$('polls').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
 
-  const polls=r.data||[];
-  if(!polls.length){$('polls').innerHTML='<p class="muted">Aucun sondage pour le moment.</p>';return}
+  // On récupère les sondages et leurs choix séparément.
+  // Cela évite l'erreur Supabase « more than one relationship was found »
+  // provoquée par plusieurs relations entre polls et poll_options.
+  const pr=await sb.from('polls')
+    .select('*')
+    .eq('event_id',event.id)
+    .order('created_at',{ascending:false});
+  if(pr.error){
+    $('polls').innerHTML='<p class="err">'+esc(pr.error.message)+'</p>';
+    return;
+  }
+
+  const polls=pr.data||[];
+  if(!polls.length){
+    $('polls').innerHTML='<p class="muted">Aucun sondage pour le moment.</p>';
+    await loadUnreadPollCount();
+    return;
+  }
 
   const ids=polls.map(p=>p.id);
-  const vr=await sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',ids);
-  if(vr.error){$('polls').innerHTML='<p class="err">Résultats indisponibles : '+esc(vr.error.message)+'</p>';return}
+  const or=await sb.from('poll_options')
+    .select('id,poll_id,option_text')
+    .in('poll_id',ids);
+  if(or.error){
+    $('polls').innerHTML='<p class="err">Choix du sondage indisponibles : '+esc(or.error.message)+'</p>';
+    return;
+  }
+
+  const optionsByPoll=new Map();
+  for(const o of (or.data||[])){
+    if(!optionsByPoll.has(o.poll_id)) optionsByPoll.set(o.poll_id,[]);
+    optionsByPoll.get(o.poll_id).push(o);
+  }
+
+  const vr=await sb.from('poll_votes')
+    .select('poll_id,option_id,user_id')
+    .in('poll_id',ids);
+  if(vr.error){
+    $('polls').innerHTML='<p class="err">Résultats indisponibles : '+esc(vr.error.message)+'</p>';
+    return;
+  }
   const votes=vr.data||[];
 
   $('polls').innerHTML=polls.map(p=>{
@@ -1107,7 +1158,7 @@ async function loadPolls(){
     const mine=pv.filter(v=>v.user_id===user.id).map(v=>v.option_id);
     const totalVotes=pv.length;
     const voterCount=new Set(pv.map(v=>v.user_id)).size;
-    const options=(p.poll_options||[]).map(o=>{
+    const options=(optionsByPoll.get(p.id)||[]).map(o=>{
       const count=pv.filter(v=>v.option_id===o.id).length;
       const pct=voterCount?Math.round(count*100/voterCount):0;
       const selected=mine.includes(o.id)?' selectedVote':'';
@@ -1124,13 +1175,9 @@ async function loadPolls(){
       '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+'</div>';
   }).join('');
 
-  // Délégation d'événement : le clic reste fiable même après chaque rechargement des sondages.
-  $('polls').onclick = async (e) => {
-    const b = e.target.closest('.voteBtn');
-    if(!b || b.disabled) return;
-    e.preventDefault();
-    await vote(b.dataset.poll, b.dataset.option, b);
-  };
+  document.querySelectorAll('.voteBtn').forEach(b=>{
+    b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
+  });
   await loadUnreadPollCount();
 }
 
