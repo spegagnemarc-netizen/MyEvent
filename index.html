@@ -29,6 +29,7 @@ button:disabled{opacity:.5}
 .eventTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px;position:sticky;top:8px;z-index:5}
 .eventTab{padding:12px 8px;border:1px solid #28465e;background:#0a1823;color:#a9b9c8;border-radius:14px;font-weight:700;font-size:14px}
 .eventTab.active{background:#1683ff;color:#fff;border-color:#1683ff}
+.unreadBadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:3px;border-radius:10px;background:#ff4d6d;color:#fff;font-size:11px;font-weight:800}
 .tabPanel{display:none}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
@@ -169,7 +170,7 @@ button:disabled{opacity:.5}
 </div>
 
 <div class="eventTabs" role="tablist" aria-label="Navigation de l’événement">
-<button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion</button>
+<button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion <span id="discussionBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="polls" role="tab">📊 Sondages</button>
 <button class="eventTab" data-tab="media" role="tab">📸 Photos</button>
 <button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
@@ -234,7 +235,11 @@ function showEventTab(name){
 
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.eventTab');
-  if(btn) showEventTab(btn.dataset.tab);
+  if(btn){
+    const tab=btn.dataset.tab;
+    showEventTab(tab);
+    if(tab==='discussion') markDiscussionRead();
+  }
 });
 
 const $=id=>document.getElementById(id);
@@ -485,6 +490,7 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  await markDiscussionRead();
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
   $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
   $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
@@ -718,6 +724,33 @@ async function loadMembers(){
   }).join('');
 }
 
+async function loadUnreadCount(){
+  if(!event||!user)return;
+  const r=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+  if(r.error){
+    console.warn('Lecture des messages non lus:',r.error.message);
+    return;
+  }
+  const lastRead=r.data?.last_read_at||null;
+  let q=sb.from('messages').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('user_id',user.id);
+  if(lastRead) q=q.gt('created_at',lastRead);
+  const c=await q;
+  if(c.error){console.warn('Comptage des messages non lus:',c.error.message);return;}
+  const count=c.count||0;
+  const badge=$('discussionBadge');
+  if(!badge)return;
+  badge.textContent=count>99?'99+':String(count);
+  badge.classList.toggle('hidden',count===0);
+}
+
+async function markDiscussionRead(){
+  if(!event||!user)return;
+  const r=await sb.from('message_reads').upsert({event_id:event.id,user_id:user.id,last_read_at:new Date().toISOString()},{onConflict:'event_id,user_id'});
+  if(r.error){console.warn('Marquage comme lu:',r.error.message);return;}
+  const badge=$('discussionBadge');
+  if(badge){badge.textContent='0';badge.classList.add('hidden');}
+}
+
 async function loadMessages(){
   if(!event)return;
   const r=await sb.from('messages').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
@@ -736,6 +769,7 @@ async function loadMessages(){
       '<div class="messageBody"><div class="messageMeta">'+esc(name)+'</div>'+esc(m.content)+'</div></div>';
   }).join('');
   if($('statMessages'))$('statMessages').textContent=rows.length;
+  await loadUnreadCount();
 }
 
 async function sendMessage(){
@@ -910,7 +944,7 @@ function subscribeRealtime(){
   if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
 
   realtimeChannel=sb.channel('event-'+event.id)
-    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},()=>loadMessages())
+    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); if(document.querySelector('.eventTab[data-tab="discussion"]')?.classList.contains('active')) await markDiscussionRead(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
