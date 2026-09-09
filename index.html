@@ -181,13 +181,6 @@ button:disabled{opacity:.5}
 <div id="members"><p class="muted">Chargement des participants…</p></div>
 </div>
 
-<div class="card" id="joinCard">
-<h2>🔗 Rejoindre un événement</h2>
-<input id="joinCode" placeholder="Code d’invitation">
-<button id="joinBtn">Rejoindre</button>
-<p id="joinMsg" class="muted"></p>
-</div>
-
 <div class="card tabPanel active" data-panel="discussion">
 <h2>💬 Discussion</h2>
 <div id="messages"></div>
@@ -213,6 +206,14 @@ button:disabled{opacity:.5}
 <p id="mediaMsg" class="muted"></p>
 <div id="mediaGrid" class="mediaGrid"></div>
 </div>
+
+<div class="card" id="joinCard">
+<h2>🔗 Rejoindre un événement</h2>
+<input id="joinCode" placeholder="Code d’invitation">
+<button id="joinBtn">Rejoindre</button>
+<p id="joinMsg" class="muted"></p>
+</div>
+
 </section>
 </div>
 
@@ -241,6 +242,8 @@ document.addEventListener('click',e=>{
     if(tab==='discussion') markDiscussionRead();
     if(tab==='polls') markPollsRead();
     if(tab==='media') markMediaRead();
+    const panel=document.querySelector('.tabPanel[data-panel="'+tab+'"]');
+    if(panel) setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),40);
   }
 });
 
