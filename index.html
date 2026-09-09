@@ -1112,7 +1112,7 @@ async function loadPolls(){
       const pct=voterCount?Math.round(count*100/voterCount):0;
       const selected=mine.includes(o.id)?' selectedVote':'';
       return '<div class="pollOption">'+
-        '<button class="secondary voteBtn'+selected+'" data-poll="'+p.id+'" data-option="'+o.id+'">'+
+        '<button type="button" class="secondary voteBtn'+selected+'" data-poll="'+p.id+'" data-option="'+o.id+'">'+
         (mine.includes(o.id)?'✓ ':'')+esc(o.option_text)+
         '<span class="pollCount">'+count+' vote'+(count>1?'s':'')+' · '+pct+'%</span>'+
         '</button>'+ 
@@ -1124,9 +1124,13 @@ async function loadPolls(){
       '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+'</div>';
   }).join('');
 
-  document.querySelectorAll('.voteBtn').forEach(b=>{
-    b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
-  });
+  // Délégation d'événement : le clic reste fiable même après chaque rechargement des sondages.
+  $('polls').onclick = async (e) => {
+    const b = e.target.closest('.voteBtn');
+    if(!b || b.disabled) return;
+    e.preventDefault();
+    await vote(b.dataset.poll, b.dataset.option, b);
+  };
   await loadUnreadPollCount();
 }
 
