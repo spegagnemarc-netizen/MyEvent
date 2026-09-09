@@ -34,7 +34,7 @@ button:disabled{opacity:.5}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
-.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}@media(max-width:700px){.notificationHead{display:block}.notificationHead button{width:100%;margin-top:12px}}
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:grid;grid-template-columns:1fr 1fr;margin-top:12px}.notificationActions button{width:100%}}@media(max-width:700px){.notificationHead{display:block}.notificationHead button{width:100%;margin-top:12px}}
 </style>
 </head>
 <body>
@@ -181,7 +181,7 @@ button:disabled{opacity:.5}
 <div class="card notificationCenter" id="notificationCenter">
   <div class="notificationHead">
     <div><h2>🔔 Notifications</h2><p class="muted">Les nouveautés de ton événement, au même endroit.</p></div>
-    <button class="secondary" id="missedBtn">✨ Qu’est-ce que j’ai raté ?</button>
+    <div class="notificationActions"><button class="secondary" id="markNotificationsReadBtn">✓ Tout marquer comme lu</button><button class="secondary" id="missedBtn">✨ Qu’est-ce que j’ai raté ?</button></div>
   </div>
   <div id="notificationList" class="notificationList"><p class="muted">Chargement de l’activité…</p></div>
 </div>
@@ -1014,9 +1014,26 @@ async function loadPolls(){
 }
 
 
+function formatNotificationTime(value){
+  if(!value)return '';
+  try{return new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value));}
+  catch{return '';}
+}
+
 function renderNotificationList(items, summary=''){
   const box=$('notificationList'); if(!box)return;
-  box.innerHTML=(items.length?items.map(x=>'<div class="notificationItem"><div class="notificationIcon">'+x.icon+'</div><div><b>'+esc(x.title)+'</b><span>'+esc(x.detail)+'</span></div></div>').join(''):'<div class="notificationEmpty muted">Aucune nouvelle activité.</div>')+(summary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+summary+'</div></div>':'');
+  const html=items.length
+    ? items.map(x=>'<div class="notificationItem" data-tab="'+esc(x.tab||'')+'">'+
+        '<div class="notificationIcon">'+x.icon+'</div><div><b>'+esc(x.title)+'</b>'+
+        '<span class="notificationDetail">'+esc(x.detail)+'</span>'+
+        (x.time?'<span class="notificationTime">'+esc(formatNotificationTime(x.time))+'</span>':'')+
+        '</div></div>').join('')
+    : '<div class="notificationEmpty muted">Aucune nouvelle activité.</div>';
+  box.innerHTML=html+(summary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+summary+'</div></div>':'');
+  box.querySelectorAll('.notificationItem[data-tab]').forEach(item=>item.addEventListener('click',async()=>{
+    const tab=item.dataset.tab;
+    if(tab){showEventTab(tab); const panel=document.querySelector('.tabPanel[data-panel="'+tab+'"]'); if(panel)setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),40);}
+  }));
 }
 
 async function generateMissedAiSummary(context){
@@ -1044,41 +1061,61 @@ async function generateMissedAiSummary(context){
 
 async function refreshNotifications(showSummary=false){
   if(!event||!user)return;
-  const items=[], summary=[];
-  const context={eventName:event.name||'Événement',messages:[],polls:[],mediaCount:0,members:[]};
+  const items=[], context={eventName:event.name||'Événement',messages:[],polls:[],mediaCount:0,members:[]};
   try{
     const mr=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
     const lastRead=mr.data?.last_read_at||null;
-    let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(5);
+    let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(10);
     if(lastRead)mq=mq.gt('created_at',lastRead);
     const mres=await mq, msgs=mres.data||[];
-    context.messages=msgs.map(x=>({content:x.content||'',created_at:x.created_at}));
-    if(msgs.length){items.push({icon:'💬',title:msgs.length+(msgs.length>1?' nouveaux messages':' nouveau message'),detail:(msgs[0].content||'').slice(0,90)});summary.push('<li>💬 '+msgs.length+' message'+(msgs.length>1?'s':'')+' non lu'+(msgs.length>1?'s':'')+'</li>');}
+    if(msgs.length){
+      const ids=[...new Set(msgs.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
+      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      const pmap=new Map(profiles.map(p=>[p.id,p])); const first=msgs[0], fp=pmap.get(first.user_id)||{};
+      const sender=first.user_id===user.id?'Moi':(fp.display_name||fp.username||'Un membre');
+      items.push({icon:'💬',tab:'discussion',title:msgs.length+(msgs.length>1?' nouveaux messages':' nouveau message'),detail:sender+' : '+(first.content||'').slice(0,100),time:first.created_at});
+      context.messages=msgs.slice().reverse().map(x=>({content:x.content||'',created_at:x.created_at}));
+    }
 
     const pk=unreadStorageKey('polls'), ps=localStorage.getItem(pk);
     let pq=sb.from('polls').select('id,question,created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(10);
     if(ps)pq=pq.gt('created_at',ps);
     const pres=await pq, polls=pres.data||[];
-    context.polls=polls.map(x=>({question:x.question||'',created_at:x.created_at}));
-    if(polls.length){items.push({icon:'📊',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:polls[0].question||'Nouveau sondage'});summary.push('<li>📊 '+polls.length+' nouveau'+(polls.length>1?'x':'')+' sondage'+(polls.length>1?'s':'')+'</li>');}
+    if(polls.length){items.push({icon:'📊',tab:'polls',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:polls[0].question||'Nouveau sondage',time:polls[0].created_at});context.polls=polls.map(x=>({question:x.question||'',created_at:x.created_at}));}
 
     const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
-    let medq=sb.from('media').select('id,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(20);
+    let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(20);
     if(ms)medq=medq.gt('created_at',ms);
     const medres=await medq, media=medres.data||[];
-    context.mediaCount=media.length;
-    if(media.length){items.push({icon:'📸',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:media.some(x=>x.media_type==='video')?'Photo(s) et/ou vidéo(s) ajoutée(s)':'Nouvelle photo ajoutée'});summary.push('<li>📸 '+media.length+' nouveau'+(media.length>1?'x':'')+' souvenir'+(media.length>1?'s':'')+'</li>');}
+    if(media.length){items.push({icon:'📸',tab:'media',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:media.some(x=>x.media_type==='video')?'Photo(s) et/ou vidéo(s) ajoutée(s)':'Nouvelle photo ajoutée',time:media[0].created_at});context.mediaCount=media.length;}
 
-    if(showSummary){
-      const joined=await sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(10);
-      if(!joined.error && joined.data?.length){
-        context.members=joined.data.filter(x=>x.joined_at && (!lastRead || x.joined_at>lastRead)).map(x=>({joined_at:x.joined_at}));
-      }
+    const memKey=unreadStorageKey('members'), memSaved=localStorage.getItem(memKey);
+    let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(20);
+    if(memSaved)memq=memq.gt('joined_at',memSaved);
+    const memres=await memq, members=memres.data||[];
+    if(members.length){
+      const ids=[...new Set(members.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
+      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      const pmap=new Map(profiles.map(p=>[p.id,p])); const first=members[0], fp=pmap.get(first.user_id)||{};
+      const name=first.user_id===user.id?'Toi':(fp.display_name||fp.username||'Un participant');
+      items.push({icon:'👥',tab:'members',title:members.length+(members.length>1?' nouveaux participants':' nouveau participant'),detail:name+' a rejoint l’événement',time:first.joined_at});
+      context.members=members.map(x=>({joined_at:x.joined_at}));
     }
-    renderNotificationList(items,showSummary?'':'');
+
+    items.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
+    renderNotificationList(items);
     if(showSummary) await generateMissedAiSummary(context);
-  }catch(e){console.warn('Notifications:',e.message||e);}
+  }catch(e){console.warn('Notifications:',e.message||e);renderNotificationList([]);}
 }
+
+async function markAllNotificationsRead(){
+  if(!event||!user)return;
+  await markDiscussionRead(); await markPollsRead(); await markMediaRead();
+  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
+  if(!r.error && r.data?.[0]?.joined_at)localStorage.setItem(unreadStorageKey('members'),r.data[0].joined_at);
+  await refreshNotifications(false);
+}
+
 
 
 function subscribeRealtime(){
@@ -1099,6 +1136,7 @@ function subscribeRealtime(){
 
 
 $('missedBtn').addEventListener('click',()=>refreshNotifications(true));
+$('markNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
 
 async function logout(){await sb.auth.signOut();location.reload()}
 
