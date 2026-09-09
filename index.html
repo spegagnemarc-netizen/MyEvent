@@ -502,6 +502,7 @@ async function selectEvent(id){
   $('place').value=event.location||'';
   renderEventHero();
   updateInviteUI();
+  await initializeUnreadMarkers();
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
@@ -776,6 +777,28 @@ function setUnreadBadge(id,count){
   if(!badge)return;
   badge.textContent=count>99?'99+':String(count);
   badge.classList.toggle('hidden',count===0);
+}
+
+async function initializeUnreadMarkers(){
+  if(!event||!user)return;
+  // Lors de la première ouverture d'un événement, on mémorise l'état existant
+  // avant de charger les listes. Ainsi, le prochain sondage/photo est bien
+  // considéré comme nouveau au lieu d'être absorbé par l'initialisation.
+  const pollKey=unreadStorageKey('polls');
+  if(!localStorage.getItem(pollKey)){
+    const r=await sb.from('polls').select('created_at').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:false}).limit(1);
+    if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(pollKey,r.data[0].created_at);
+  }
+  const mediaKey=unreadStorageKey('media');
+  if(!localStorage.getItem(mediaKey)){
+    const r=await sb.from('media').select('created_at').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(1);
+    if(!r.error && r.data?.[0]?.created_at) localStorage.setItem(mediaKey,r.data[0].created_at);
+  }
+  const memberKey=unreadStorageKey('members');
+  if(!localStorage.getItem(memberKey)){
+    const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(1);
+    if(!r.error && r.data?.[0]?.joined_at) localStorage.setItem(memberKey,r.data[0].joined_at);
+  }
 }
 
 async function loadUnreadPollCount(){
