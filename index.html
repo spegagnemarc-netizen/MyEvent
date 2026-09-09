@@ -128,7 +128,7 @@ button:disabled{opacity:.5}
     <div class="eventStat"><b id="statMessages">0</b><span>Messages</span></div>
     <div class="eventStat"><b id="statPhotos">0</b><span>Souvenirs</span></div>
   </div>
-  <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button></div>
+  <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button><button id="leaveEventBtn" class="secondary hidden">🚪 Quitter l’événement</button></div>
 </div>
 
 <div class="card" id="createEventCard">
@@ -469,7 +469,7 @@ async function loadEvents(){
       '<div style="display:flex;align-items:center;gap:8px">'+
       '<div style="flex:1;min-width:0"><b>'+esc(e.name||'Événement sans nom')+'</b>'+
       '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span></div>'+
-      (mine?'<button class="secondary deleteEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Supprimer</button>':'')+
+      (mine?'<button class="secondary deleteEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Supprimer</button>':'<button class="secondary leaveEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Quitter</button>')+
       '</div>'+
       '</div>';
   }).join('') : '<p class="muted">Aucun groupe pour le moment.</p>';
@@ -484,6 +484,12 @@ async function loadEvents(){
     btn.addEventListener('click',(ev)=>{
       ev.stopPropagation();
       deleteEvent(btn.dataset.id);
+    });
+  });
+  document.querySelectorAll('.leaveEventBtn').forEach(btn=>{
+    btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      leaveEvent(btn.dataset.id);
     });
   });
 
@@ -563,6 +569,37 @@ async function deleteEvent(id){
   }catch(e){
     global('Suppression impossible : '+(e.message||String(e)),'err');
     if(btn){btn.disabled=false;btn.textContent='Supprimer';}
+  }
+}
+
+async function leaveEvent(id){
+  if(!user||!sb||!id)return;
+  const target=document.querySelector('.eventCard[data-event-id="'+id+'"] b')?.textContent||'cet événement';
+  if(!confirm('Quitter « '+target+' » ?\n\nTu ne recevras plus les nouveautés de cet événement. Tu pourras le rejoindre à nouveau avec son lien d’invitation.')) return;
+  const btn=document.querySelector('.leaveEventBtn[data-id="'+id+'"]');
+  if(btn){btn.disabled=true;btn.textContent='Quitter…';}
+  try{
+    const r=await sb.rpc('leave_event',{p_event_id:id});
+    if(r.error) throw r.error;
+    if(event?.id===id){
+      if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+      if(notificationPollTimer) {clearInterval(notificationPollTimer);notificationPollTimer=null;}
+      event=null;
+      localStorage.removeItem('myevent_active_'+user.id);
+      $('eventHeroCard').classList.add('hidden');
+      $('eventActions').classList.add('hidden');
+      $('editEventBox').classList.add('hidden');
+      $('inviteLink').value='';
+      $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
+      $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+    }
+    await loadEvents();
+    global('Tu as quitté l’événement.','ok');
+  }catch(e){
+    global('Impossible de quitter : '+(e.message||String(e)),'err');
+    if(btn){btn.disabled=false;btn.textContent='Quitter';}
   }
 }
 
@@ -652,7 +689,9 @@ function renderEventHero(){
   $('eventCover').classList.toggle('hasImage',!!cover);
   $('eventCover').style.backgroundImage=cover?'url("'+String(cover).replace(/"/g,'%22')+'")':'';
   const mine=event.creator_id===user.id;
-  $('eventActions').classList.toggle('hidden',!mine);
+  $('eventActions').classList.remove('hidden');
+  $('editEventToggle').classList.toggle('hidden',!mine);
+  $('leaveEventBtn').classList.toggle('hidden',mine);
   $('editEventBox').classList.toggle('hidden',!mine);
   if(mine){
     $('editEventName').value=event.name||'';
@@ -819,7 +858,7 @@ async function initializeUnreadMarkers(){
   // Les nouveautés créées après cette ouverture seront donc détectées
   // même si un autre téléphone utilise le même compte MyEvent.
   const now=new Date().toISOString();
-  for(const type of ['polls','media','members']){
+  for(const type of ['polls','media','members','votes']){
     const key=unreadStorageKey(type);
     if(!localStorage.getItem(key)) localStorage.setItem(key,now);
   }
@@ -829,16 +868,31 @@ async function loadUnreadPollCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('polls');
   const saved=localStorage.getItem(key);
-  if(!saved){setUnreadBadge('pollBadge',0);return;}
-  const r=await sb.from('polls').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
-  if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
-  const rows=(r.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
-  setUnreadBadge('pollBadge',rows.length);
+  let pollCount=0;
+  if(saved){
+    const r=await sb.from('polls').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
+    if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
+    pollCount=(r.data||[]).filter(x=>!isLocallyCreated('polls',x.id)).length;
+  }
+
+  let voteCount=0;
+  const voteSaved=localStorage.getItem(unreadStorageKey('votes'));
+  if(voteSaved){
+    const pr=await sb.from('polls').select('id').eq('event_id',event.id).eq('creator_id',user.id);
+    if(!pr.error && pr.data?.length){
+      const ids=pr.data.map(x=>x.id);
+      const vr=await sb.from('poll_votes').select('poll_id,user_id,created_at').in('poll_id',ids).neq('user_id',user.id).gt('created_at',voteSaved);
+      if(!vr.error) voteCount=(vr.data||[]).length;
+    }
+  }
+  setUnreadBadge('pollBadge',pollCount+voteCount);
 }
 
 async function markPollsRead(){
   if(!event||!user)return;
-  localStorage.setItem(unreadStorageKey('polls'),new Date().toISOString());
+  const now=new Date().toISOString();
+  localStorage.setItem(unreadStorageKey('polls'),now);
+  localStorage.setItem(unreadStorageKey('votes'),now);
   setUnreadBadge('pollBadge',0);
 }
 
@@ -1144,6 +1198,26 @@ async function refreshNotifications(showSummary=false){
       context.polls=polls.slice().reverse().map(x=>({question:x.question||'',created_at:x.created_at}));
     }
 
+    const vk=unreadStorageKey('votes'), vs=localStorage.getItem(vk);
+    if(vs){
+      const pr=await sb.from('polls').select('id,question').eq('event_id',event.id).eq('creator_id',user.id);
+      if(!pr.error && pr.data?.length){
+        const pollIds=pr.data.map(x=>x.id);
+        const vr=await sb.from('poll_votes').select('poll_id,user_id,created_at').in('poll_id',pollIds).neq('user_id',user.id).gt('created_at',vs).order('created_at',{ascending:false}).limit(50);
+        const votes=vr.error?[]:(vr.data||[]);
+        if(votes.length){
+          const vmap=new Map((pr.data||[]).map(p=>[p.id,p]));
+          const first=votes[0], vp=vmap.get(first.poll_id)||{};
+          const ids=[...new Set(votes.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
+          if(ids.length){const pfr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pfr.error)profiles=pfr.data||[];}
+          const pmap=new Map(profiles.map(p=>[p.id,p])); const person=pmap.get(first.user_id)||{};
+          const voter=person.display_name||person.username||'Un participant';
+          items.push({icon:'🗳️',tab:'polls',title:votes.length+(votes.length>1?' nouveaux votes':' nouveau vote'),detail:voter+' a voté à « '+(vp.question||'Sondage')+' »',time:first.created_at});
+          context.polls.push(...votes.map(x=>({question:(vmap.get(x.poll_id)||{}).question||'Sondage',created_at:x.created_at,kind:'vote'})));
+        }
+      }
+    }
+
     const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
     let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(ms)medq=medq.gt('created_at',ms);
@@ -1200,7 +1274,7 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
-    .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
+    .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},async()=>{ await loadPolls(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},async()=>{ await loadMembers(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await refreshNotifications(false); })
     .subscribe((status)=>{
@@ -1220,6 +1294,7 @@ $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
 $('eventBtn').addEventListener('click',createEvent);
 $('saveEventBtn').addEventListener('click',saveEvent);
+$('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
 $('editEventToggle').addEventListener('click',()=>{ $('editEventBox').open=true; $('editEventBox').scrollIntoView({behavior:'smooth',block:'start'}); });
 $('editEventCoverUrl').addEventListener('input',updateEditCoverPreview);
 $('sendBtn').addEventListener('click',sendMessage);
