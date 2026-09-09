@@ -1065,15 +1065,19 @@ async function refreshNotifications(showSummary=false){
   try{
     const mr=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
     const lastRead=mr.data?.last_read_at||null;
+    let mcq=sb.from('messages').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('user_id',user.id);
+    if(lastRead)mcq=mcq.gt('created_at',lastRead);
+    const mcres=await mcq;
+    const unreadMessages=mcres.count||0;
     let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(10);
     if(lastRead)mq=mq.gt('created_at',lastRead);
     const mres=await mq, msgs=mres.data||[];
-    if(msgs.length){
+    if(unreadMessages){
       const ids=[...new Set(msgs.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=msgs[0], fp=pmap.get(first.user_id)||{};
       const sender=first.user_id===user.id?'Moi':(fp.display_name||fp.username||'Un membre');
-      items.push({icon:'💬',tab:'discussion',title:msgs.length+(msgs.length>1?' nouveaux messages':' nouveau message'),detail:sender+' : '+(first.content||'').slice(0,100),time:first.created_at});
+      items.push({icon:'💬',tab:'discussion',title:unreadMessages+(unreadMessages>1?' nouveaux messages':' nouveau message'),detail:sender+' : '+(first.content||'').slice(0,100)+(unreadMessages>10?' · aperçu des 10 derniers':'') ,time:first.created_at});
       context.messages=msgs.slice().reverse().map(x=>({content:x.content||'',created_at:x.created_at}));
     }
 
@@ -1127,7 +1131,7 @@ function subscribeRealtime(){
   if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
 
   realtimeChannel=sb.channel('event-'+event.id)
-    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="discussion"]')?.classList.contains('active')) await markDiscussionRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
