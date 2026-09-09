@@ -1063,7 +1063,9 @@ function formatNotificationTime(value){
   catch{return '';}
 }
 
-function renderNotificationList(items, summary=''){
+let missedSummaryHtml='';
+
+function renderNotificationList(items, summary=null){
   const box=$('notificationList'); if(!box)return;
   const html=items.length
     ? items.map(x=>'<div class="notificationItem" data-tab="'+esc(x.tab||'')+'">'+
@@ -1072,7 +1074,8 @@ function renderNotificationList(items, summary=''){
         (x.time?'<span class="notificationTime">'+esc(formatNotificationTime(x.time))+'</span>':'')+
         '</div></div>').join('')
     : '<div class="notificationEmpty muted">Aucune nouvelle activité.</div>';
-  box.innerHTML=html+(summary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+summary+'</div></div>':'');
+  const finalSummary = summary===null ? missedSummaryHtml : summary;
+  box.innerHTML=html+(finalSummary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+finalSummary+'</div></div>':'');
   box.querySelectorAll('.notificationItem[data-tab]').forEach(item=>item.addEventListener('click',async()=>{
     const tab=item.dataset.tab;
     if(tab){showEventTab(tab); const panel=document.querySelector('.tabPanel[data-panel="'+tab+'"]'); if(panel)setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),40);}
@@ -1082,23 +1085,26 @@ function renderNotificationList(items, summary=''){
 async function generateMissedAiSummary(context){
   const box=$('notificationList');
   if(!box)return;
+  missedSummaryHtml='<p class="muted">Analyse de l’activité…</p>';
   const previous=box.querySelector('.missedSummary');
   if(previous)previous.remove();
   const wrap=document.createElement('div');
   wrap.className='missedSummary';
-  wrap.innerHTML='<b>✨ Ce que tu as raté</b><p class="muted">Analyse de l’activité…</p>';
+  wrap.innerHTML='<b>✨ Ce que tu as raté</b>'+missedSummaryHtml;
   box.appendChild(wrap);
   try{
     const r=await fetch('/api/summarize-event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventName:event?.name||'Événement',context})});
     const data=await r.json();
     if(!r.ok)throw new Error(data?.error||'Erreur du service IA.');
-    wrap.innerHTML='<b>✨ Ce que tu as raté</b><div>'+esc(data.summary||'Aucun résumé disponible.')+'</div>';
+    missedSummaryHtml='<div>'+esc(data.summary||'Aucun résumé disponible.')+'</div>';
+    wrap.innerHTML='<b>✨ Ce que tu as raté</b>'+missedSummaryHtml;
   }catch(e){
     console.warn('Résumé IA:',e.message||e);
     const fallback=context.messages.length||context.polls.length||context.mediaCount||context.members.length
       ? '• '+(context.messages.length?context.messages.length+' nouveau(x) message(s). ':'')+(context.polls.length?context.polls.length+' nouveau(x) sondage(s). ':'')+(context.mediaCount?context.mediaCount+' nouveau(x) souvenir(s). ':'')+(context.members.length?context.members.length+' nouveau(x) participant(s).':'')
       : '• Rien de nouveau à rattraper.';
-    wrap.innerHTML='<b>✨ Ce que tu as raté</b><div>'+esc(fallback)+'</div><p class="muted">Le résumé IA sera disponible dès que le service est configuré.</p>';
+    missedSummaryHtml='<div>'+esc(fallback)+'</div><p class="muted">Le résumé IA sera disponible dès que le service est configuré.</p>';
+    wrap.innerHTML='<b>✨ Ce que tu as raté</b>'+missedSummaryHtml;
   }
 }
 
@@ -1203,7 +1209,7 @@ function subscribeRealtime(){
 }
 
 
-$('missedBtn').addEventListener('click',()=>refreshNotifications(true));
+$('missedBtn').addEventListener('click',()=>{ missedSummaryHtml=''; refreshNotifications(true); });
 $('markNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
 
 async function logout(){await sb.auth.signOut();location.reload()}
