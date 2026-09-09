@@ -33,6 +33,8 @@ button:disabled{opacity:.5}
 .tabPanel{display:none}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
+
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}@media(max-width:700px){.notificationHead{display:block}.notificationHead button{width:100%;margin-top:12px}}
 </style>
 </head>
 <body>
@@ -174,6 +176,14 @@ button:disabled{opacity:.5}
 <button class="eventTab" data-tab="polls" role="tab">📊 Sondages <span id="pollBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="media" role="tab">📸 Photos <span id="mediaBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
+</div>
+
+<div class="card notificationCenter" id="notificationCenter">
+  <div class="notificationHead">
+    <div><h2>🔔 Notifications</h2><p class="muted">Les nouveautés de ton événement, au même endroit.</p></div>
+    <button class="secondary" id="missedBtn">✨ Qu’est-ce que j’ai raté ?</button>
+  </div>
+  <div id="notificationList" class="notificationList"><p class="muted">Chargement de l’activité…</p></div>
 </div>
 
 <div class="card tabPanel" data-panel="members">
@@ -495,6 +505,7 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  await refreshNotifications(false);
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
   $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
   $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
@@ -1003,22 +1014,58 @@ async function loadPolls(){
 }
 
 
+function renderNotificationList(items, summary=''){
+  const box=$('notificationList'); if(!box)return;
+  box.innerHTML=(items.length?items.map(x=>'<div class="notificationItem"><div class="notificationIcon">'+x.icon+'</div><div><b>'+esc(x.title)+'</b><span>'+esc(x.detail)+'</span></div></div>').join(''):'<div class="notificationEmpty muted">Aucune nouvelle activité.</div>')+(summary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><ul>'+summary+'</ul></div>':'');
+}
+
+async function refreshNotifications(showSummary=false){
+  if(!event||!user)return;
+  const items=[], summary=[];
+  try{
+    const mr=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+    const lastRead=mr.data?.last_read_at||null;
+    let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(5);
+    if(lastRead)mq=mq.gt('created_at',lastRead);
+    const mres=await mq, msgs=mres.data||[];
+    if(msgs.length){items.push({icon:'💬',title:msgs.length+(msgs.length>1?' nouveaux messages':' nouveau message'),detail:(msgs[0].content||'').slice(0,90)});summary.push('<li>💬 '+msgs.length+' message'+(msgs.length>1?'s':'')+' non lu'+(msgs.length>1?'s':'')+'</li>');}
+
+    const pk=unreadStorageKey('polls'), ps=localStorage.getItem(pk);
+    let pq=sb.from('polls').select('id,question,created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(10);
+    if(ps)pq=pq.gt('created_at',ps);
+    const pres=await pq, polls=pres.data||[];
+    if(polls.length){items.push({icon:'📊',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:polls[0].question||'Nouveau sondage'});summary.push('<li>📊 '+polls.length+' nouveau'+(polls.length>1?'x':'')+' sondage'+(polls.length>1?'s':'')+'</li>');}
+
+    const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
+    let medq=sb.from('media').select('id,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(20);
+    if(ms)medq=medq.gt('created_at',ms);
+    const medres=await medq, media=medres.data||[];
+    if(media.length){items.push({icon:'📸',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:media.some(x=>x.media_type==='video')?'Photo(s) et/ou vidéo(s) ajoutée(s)':'Nouvelle photo ajoutée'});summary.push('<li>📸 '+media.length+' nouveau'+(media.length>1?'x':'')+' souvenir'+(media.length>1?'s':'')+'</li>');}
+
+    if(showSummary && !summary.length)summary.push('<li>✅ Rien de nouveau à rattraper.</li>');
+    renderNotificationList(items,showSummary?summary.join(''):'');
+  }catch(e){console.warn('Notifications:',e.message||e);}
+}
+
+
 function subscribeRealtime(){
   if(!sb||!event)return;
   if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
 
   realtimeChannel=sb.channel('event-'+event.id)
-    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); if(document.querySelector('.eventTab[data-tab="discussion"]')?.classList.contains('active')) await markDiscussionRead(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="discussion"]')?.classList.contains('active')) await markDiscussionRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},()=>loadMembers())
-    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); if(document.querySelector('.eventTab[data-tab="media"]')?.classList.contains('active')) await markMediaRead(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await refreshNotifications(false); if(document.querySelector('.eventTab[data-tab="media"]')?.classList.contains('active')) await markMediaRead(); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
     });
 }
 
+
+$('missedBtn').addEventListener('click',()=>refreshNotifications(true));
 
 async function logout(){await sb.auth.signOut();location.reload()}
 
