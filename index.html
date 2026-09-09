@@ -1189,7 +1189,6 @@ function formatNotificationTime(value){
 }
 
 let missedSummaryHtml='';
-let missedSummaryVisible=false;
 
 function renderNotificationList(items, summary=null){
   const box=$('notificationList'); if(!box)return;
@@ -1201,7 +1200,7 @@ function renderNotificationList(items, summary=null){
         '</div></div>').join('')
     : '<div class="notificationEmpty muted">Aucune nouvelle activité.</div>';
   const finalSummary = summary===null ? missedSummaryHtml : summary;
-  box.innerHTML=html+((missedSummaryVisible && finalSummary)?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+finalSummary+'</div></div>':'');
+  box.innerHTML=html+(finalSummary?'<div class="missedSummary"><b>✨ Ce que tu as raté</b><div>'+finalSummary+'</div></div>':'');
   box.querySelectorAll('.notificationItem[data-tab]').forEach(item=>item.addEventListener('click',async()=>{
     const tab=item.dataset.tab;
     if(tab){showEventTab(tab); const panel=document.querySelector('.tabPanel[data-panel="'+tab+'"]'); if(panel)setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),40);}
@@ -1211,8 +1210,7 @@ function renderNotificationList(items, summary=null){
 async function generateMissedAiSummary(context){
   const box=$('notificationList');
   if(!box)return;
-  missedSummaryVisible=true;
-  missedSummaryHtml='<p class="muted">Analyse de l’activité…</p>'; 
+  missedSummaryHtml='<p class="muted">Analyse de l’activité…</p>';
   const previous=box.querySelector('.missedSummary');
   if(previous)previous.remove();
   const wrap=document.createElement('div');
@@ -1356,7 +1354,7 @@ function subscribeRealtime(){
 }
 
 
-$('missedBtn').addEventListener('click',()=>{ missedSummaryHtml=''; missedSummaryVisible=true; refreshNotifications(true); });
+$('missedBtn').addEventListener('click',()=>{ missedSummaryHtml=''; refreshNotifications(true); });
 $('markNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
 
 async function logout(){await sb.auth.signOut();location.reload()}
