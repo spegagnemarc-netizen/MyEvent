@@ -171,8 +171,8 @@ button:disabled{opacity:.5}
 
 <div class="eventTabs" role="tablist" aria-label="Navigation de l’événement">
 <button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion <span id="discussionBadge" class="unreadBadge hidden">0</span></button>
-<button class="eventTab" data-tab="polls" role="tab">📊 Sondages</button>
-<button class="eventTab" data-tab="media" role="tab">📸 Photos</button>
+<button class="eventTab" data-tab="polls" role="tab">📊 Sondages <span id="pollBadge" class="unreadBadge hidden">0</span></button>
+<button class="eventTab" data-tab="media" role="tab">📸 Photos <span id="mediaBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
 </div>
 
@@ -239,6 +239,8 @@ document.addEventListener('click',e=>{
     const tab=btn.dataset.tab;
     showEventTab(tab);
     if(tab==='discussion') markDiscussionRead();
+    if(tab==='polls') markPollsRead();
+    if(tab==='media') markMediaRead();
   }
 });
 
@@ -490,7 +492,6 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
-  await markDiscussionRead();
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
   $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
   $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
@@ -751,6 +752,64 @@ async function markDiscussionRead(){
   if(badge){badge.textContent='0';badge.classList.add('hidden');}
 }
 
+function unreadStorageKey(type){
+  return user&&event ? 'myevent_'+type+'_read_'+user.id+'_'+event.id : '';
+}
+
+function setUnreadBadge(id,count){
+  const badge=$(id);
+  if(!badge)return;
+  badge.textContent=count>99?'99+':String(count);
+  badge.classList.toggle('hidden',count===0);
+}
+
+async function loadUnreadPollCount(){
+  if(!event||!user)return;
+  const key=unreadStorageKey('polls');
+  const saved=localStorage.getItem(key);
+  const q=sb.from('polls').select('id,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  const r=await q;
+  if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
+  const rows=r.data||[];
+  if(!saved){
+    const latest=rows.at(-1)?.created_at;
+    if(latest)localStorage.setItem(key,latest);
+    setUnreadBadge('pollBadge',0);
+    return;
+  }
+  setUnreadBadge('pollBadge',rows.filter(x=>x.created_at>saved).length);
+}
+
+async function markPollsRead(){
+  if(!event||!user)return;
+  const r=await sb.from('polls').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+  if(!r.error && r.data?.[0]?.created_at)localStorage.setItem(unreadStorageKey('polls'),r.data[0].created_at);
+  setUnreadBadge('pollBadge',0);
+}
+
+async function loadUnreadMediaCount(){
+  if(!event||!user)return;
+  const key=unreadStorageKey('media');
+  const saved=localStorage.getItem(key);
+  const r=await sb.from('media').select('id,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  if(r.error){console.warn('Comptage des photos non lues:',r.error.message);return;}
+  const rows=r.data||[];
+  if(!saved){
+    const latest=rows.at(-1)?.created_at;
+    if(latest)localStorage.setItem(key,latest);
+    setUnreadBadge('mediaBadge',0);
+    return;
+  }
+  setUnreadBadge('mediaBadge',rows.filter(x=>x.created_at>saved).length);
+}
+
+async function markMediaRead(){
+  if(!event||!user)return;
+  const r=await sb.from('media').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+  if(!r.error && r.data?.[0]?.created_at)localStorage.setItem(unreadStorageKey('media'),r.data[0].created_at);
+  setUnreadBadge('mediaBadge',0);
+}
+
 async function loadMessages(){
   if(!event)return;
   const r=await sb.from('messages').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
@@ -897,6 +956,7 @@ async function loadMedia(){
   }).join('');
   document.querySelectorAll('.deleteMedia').forEach(b=>b.addEventListener('click',()=>deleteMedia(b.dataset.id,b.dataset.path)));
   if($('statPhotos'))$('statPhotos').textContent=items.length;
+  await loadUnreadMediaCount();
 }
 
 async function loadPolls(){
@@ -936,6 +996,7 @@ async function loadPolls(){
   document.querySelectorAll('.voteBtn').forEach(b=>{
     b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
   });
+  await loadUnreadPollCount();
 }
 
 
@@ -945,11 +1006,11 @@ function subscribeRealtime(){
 
   realtimeChannel=sb.channel('event-'+event.id)
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); if(document.querySelector('.eventTab[data-tab="discussion"]')?.classList.contains('active')) await markDiscussionRead(); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},()=>loadPolls())
+    .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); if(document.querySelector('.eventTab[data-tab="polls"]')?.classList.contains('active')) await markPollsRead(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},()=>loadPolls())
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},()=>loadMembers())
-    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},()=>loadMedia())
+    .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); if(document.querySelector('.eventTab[data-tab="media"]')?.classList.contains('active')) await markMediaRead(); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
     });
