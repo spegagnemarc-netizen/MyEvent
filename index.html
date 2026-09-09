@@ -252,6 +252,7 @@ document.addEventListener('click',e=>{
     if(tab==='discussion') markDiscussionRead();
     if(tab==='polls') markPollsRead();
     if(tab==='media') markMediaRead();
+    if(tab==='members') markMembersRead();
     const panel=document.querySelector('.tabPanel[data-panel="'+tab+'"]');
     if(panel) setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'start'}),40);
   }
@@ -781,7 +782,7 @@ async function loadUnreadPollCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('polls');
   const saved=localStorage.getItem(key);
-  const q=sb.from('polls').select('id,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  const q=sb.from('polls').select('id,created_at,creator_id').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:true});
   const r=await q;
   if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
   const rows=r.data||[];
@@ -805,7 +806,7 @@ async function loadUnreadMediaCount(){
   if(!event||!user)return;
   const key=unreadStorageKey('media');
   const saved=localStorage.getItem(key);
-  const r=await sb.from('media').select('id,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  const r=await sb.from('media').select('id,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:true});
   if(r.error){console.warn('Comptage des photos non lues:',r.error.message);return;}
   const rows=r.data||[];
   if(!saved){
@@ -822,6 +823,12 @@ async function markMediaRead(){
   const r=await sb.from('media').select('created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
   if(!r.error && r.data?.[0]?.created_at)localStorage.setItem(unreadStorageKey('media'),r.data[0].created_at);
   setUnreadBadge('mediaBadge',0);
+}
+
+async function markMembersRead(){
+  if(!event||!user)return;
+  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(1);
+  if(!r.error && r.data?.[0]?.joined_at)localStorage.setItem(unreadStorageKey('members'),r.data[0].joined_at);
 }
 
 async function loadMessages(){
@@ -1082,19 +1089,33 @@ async function refreshNotifications(showSummary=false){
     }
 
     const pk=unreadStorageKey('polls'), ps=localStorage.getItem(pk);
-    let pq=sb.from('polls').select('id,question,created_at').eq('event_id',event.id).order('created_at',{ascending:false}).limit(10);
+    let pq=sb.from('polls').select('id,question,created_at,creator_id').eq('event_id',event.id).neq('creator_id',user.id).order('created_at',{ascending:false}).limit(10);
     if(ps)pq=pq.gt('created_at',ps);
     const pres=await pq, polls=pres.data||[];
-    if(polls.length){items.push({icon:'📊',tab:'polls',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:polls[0].question||'Nouveau sondage',time:polls[0].created_at});context.polls=polls.map(x=>({question:x.question||'',created_at:x.created_at}));}
+    if(polls.length){
+      const ids=[...new Set(polls.map(x=>x.creator_id).filter(Boolean))]; let profiles=[];
+      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      const pmap=new Map(profiles.map(p=>[p.id,p])); const first=polls[0], fp=pmap.get(first.creator_id)||{};
+      const creator=fp.display_name||fp.username||'Un membre';
+      items.push({icon:'📊',tab:'polls',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:creator+' : '+(first.question||'Nouveau sondage'),time:first.created_at});
+      context.polls=polls.slice().reverse().map(x=>({question:x.question||'',created_at:x.created_at}));
+    }
 
     const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
-    let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(20);
+    let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).neq('user_id',user.id).order('created_at',{ascending:false}).limit(20);
     if(ms)medq=medq.gt('created_at',ms);
     const medres=await medq, media=medres.data||[];
-    if(media.length){items.push({icon:'📸',tab:'media',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:media.some(x=>x.media_type==='video')?'Photo(s) et/ou vidéo(s) ajoutée(s)':'Nouvelle photo ajoutée',time:media[0].created_at});context.mediaCount=media.length;}
+    if(media.length){
+      const ids=[...new Set(media.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
+      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      const pmap=new Map(profiles.map(p=>[p.id,p])); const first=media[0], fp=pmap.get(first.user_id)||{};
+      const creator=fp.display_name||fp.username||'Un membre';
+      items.push({icon:'📸',tab:'media',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:creator+' : '+(media.some(x=>x.media_type==='video')?'photo(s) et/ou vidéo(s) ajoutée(s)':'nouvelle photo ajoutée'),time:first.created_at});
+      context.mediaCount=media.length;
+    }
 
     const memKey=unreadStorageKey('members'), memSaved=localStorage.getItem(memKey);
-    let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(20);
+    let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).neq('user_id',user.id).order('joined_at',{ascending:false}).limit(20);
     if(memSaved)memq=memq.gt('joined_at',memSaved);
     const memres=await memq, members=memres.data||[];
     // À la première ouverture, les membres déjà présents ne sont pas considérés comme nouveaux.
@@ -1119,8 +1140,7 @@ async function refreshNotifications(showSummary=false){
 async function markAllNotificationsRead(){
   if(!event||!user)return;
   await markDiscussionRead(); await markPollsRead(); await markMediaRead();
-  const r=await sb.from('event_members').select('joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(1);
-  if(!r.error && r.data?.[0]?.joined_at)localStorage.setItem(unreadStorageKey('members'),r.data[0].joined_at);
+  await markMembersRead();
   await refreshNotifications(false);
 }
 
