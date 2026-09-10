@@ -35,7 +35,18 @@ button:disabled{opacity:.5}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
-.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.collapsibleCard{overflow:hidden}.collapsibleCard>summary{cursor:pointer;list-style:none;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none;min-height:56px;padding:14px 16px;margin:-1px}.collapsibleCard>summary::-webkit-details-marker{display:none}.collapsibleCard>summary::after{content:'⌄';font-size:20px;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}.collapsibleCard:not([open])>summary::after{transform:rotate(-90deg)}.collapsibleCard>summary:active{transform:scale(.995)}.collapsibleBody{margin:12px 16px 16px}.editEventBox>summary{font-size:18px}.editEventBox .collapsibleBody{margin-top:12px}.eventHero>summary{padding-bottom:14px}.eventHero[open]>summary{margin-bottom:0}.tabPanel>summary{font-size:18px}.tabPanel .collapsibleBody{margin-top:12px}.tabPanel:not(.active){display:none}.tabPanel.active{display:block}.tabPanel[open]>summary{margin-bottom:0}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}.locationInputRow{display:flex;gap:8px;align-items:stretch}.locationInputRow input{flex:1;min-width:0}.locationBtn{white-space:nowrap;padding:0 12px}.smallHint{margin-top:6px;font-size:12px}.locationMap{margin-top:10px;border:1px solid #28445b;border-radius:14px;overflow:hidden;background:#0b1824}.locationMap.hidden{display:none}.locationMap iframe{display:block;width:100%;height:150px;border:0}.locationMapBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:12px;color:#9eb2c4}.locationMapBar a{color:#fff;text-decoration:none;background:#142b3d;border:1px solid #36536a;border-radius:9px;padding:6px 9px}@media(max-width:600px){.fieldRow{grid-template-columns:1fr}.locationInputRow{display:block}.locationBtn{width:100%;margin-top:8px;min-height:42px}}
+.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.collapsibleCard{overflow:hidden}.collapsibleCard>summary{cursor:pointer;list-style:none;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none;min-height:56px;padding:14px 16px;margin:-1px}.collapsibleCard>summary::-webkit-details-marker{display:none}.collapsibleCard>summary::after{content:'⌄';font-size:20px;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}.collapsibleCard:not([open])>summary::after{transform:rotate(-90deg)}.collapsibleCard>summary:active{transform:scale(.995)}
+/* Format uniforme des sections : même logique visuelle que les boutons Discussion / Sondages / Photos / Participants */
+.uniformToggle{overflow:hidden;padding:0}
+.uniformToggle>summary{cursor:pointer;list-style:none;min-height:0;height:auto;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;margin:0;background:#0a1823;border:0;border-radius:14px;color:#f4f7fa;font-size:18px;font-weight:800;line-height:1.2;user-select:none;-webkit-user-select:none}
+.uniformToggle>summary::-webkit-details-marker{display:none}
+.uniformToggle>summary::after{content:'⌄';font-size:21px;line-height:1;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}
+.uniformToggle:not([open])>summary::after{transform:rotate(-90deg)}
+.uniformToggle>summary:active{transform:scale(.995)}
+.uniformToggle[open]>summary{border-radius:14px}
+.uniformToggle .collapsibleBody,.uniformToggle>div[style*="margin-top"]{margin:12px 16px 16px}
+@media(max-width:430px){.uniformToggle>summary{font-size:17px;padding:15px 16px}}
+.collapsibleBody{margin:12px 16px 16px}.editEventBox>summary{font-size:18px}.editEventBox .collapsibleBody{margin-top:12px}.eventHero>summary{padding-bottom:14px}.eventHero[open]>summary{margin-bottom:0}.tabPanel>summary{font-size:18px}.tabPanel .collapsibleBody{margin-top:12px}.tabPanel:not(.active){display:none}.tabPanel.active{display:block}.tabPanel[open]>summary{margin-bottom:0}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}.locationInputRow{display:flex;gap:8px;align-items:stretch}.locationInputRow input{flex:1;min-width:0}.locationBtn{white-space:nowrap;padding:0 12px}.smallHint{margin-top:6px;font-size:12px}.locationMap{margin-top:10px;border:1px solid #28445b;border-radius:14px;overflow:hidden;background:#0b1824}.locationMap.hidden{display:none}.locationMap iframe{display:block;width:100%;height:150px;border:0}.locationMapBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:12px;color:#9eb2c4}.locationMapBar a{color:#fff;text-decoration:none;background:#142b3d;border:1px solid #36536a;border-radius:9px;padding:6px 9px}@media(max-width:600px){.fieldRow{grid-template-columns:1fr}.locationInputRow{display:block}.locationBtn{width:100%;margin-top:8px;min-height:42px}}
 </style>
 </head>
 <body>
@@ -144,7 +155,7 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details id="createEventCard" class="card editEventBox createEventBox">
+<details id="createEventCard" class="card editEventBox createEventBox uniformToggle">
   <summary>🎉 Créer un événement</summary>
   <div style="margin-top:12px">
     <input id="ename" placeholder="Nom de l’événement">
@@ -159,7 +170,7 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details id="editEventBox" class="card editEventBox hidden">
+<details id="editEventBox" class="card editEventBox hidden uniformToggle">
   <summary>✏️ Modifier l’événement</summary>
   <div style="margin-top:12px">
     <input id="editEventName" placeholder="Nom de l’événement">
@@ -175,7 +186,7 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details class="card collapsibleCard" id="inviteCard" open>
+<details class="card collapsibleCard uniformToggle" id="inviteCard" open>
 <summary>👥 Inviter</summary>
 <div class="collapsibleBody">
 <p class="muted">Partage ce lien pour permettre à quelqu’un de rejoindre cet événement.</p>
@@ -195,7 +206,7 @@ button:disabled{opacity:.5}
 <button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
 </div>
 
-<details class="card notificationCenter collapsibleCard" id="notificationCenter" open>
+<details class="card notificationCenter collapsibleCard uniformToggle" id="notificationCenter" open>
   <summary>🔔 Notifications</summary>
   <div class="collapsibleBody">
   <div class="notificationHead">
@@ -206,7 +217,7 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details class="card tabPanel collapsibleCard" data-panel="members">
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="members">
 <summary>👥 Participants <span id="memberCount" class="muted"></span></summary>
 <div class="collapsibleBody">
 <div id="members"><p class="muted">Chargement des participants…</p></div>
@@ -231,7 +242,7 @@ button:disabled{opacity:.5}
 </div>
 </details>
 
-<details class="card tabPanel collapsibleCard" data-panel="polls">
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="polls">
 <summary>📊 Sondage</summary>
 <div class="collapsibleBody">
 <input id="question" placeholder="Question">
@@ -242,7 +253,7 @@ button:disabled{opacity:.5}
 </div>
 </details>
 
-<details class="card tabPanel collapsibleCard" data-panel="media">
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="media">
 <summary>📸 Photos & vidéos</summary>
 <div class="collapsibleBody">
 <p class="muted">Partage des souvenirs avec les participants de l’événement.</p>
@@ -253,7 +264,7 @@ button:disabled{opacity:.5}
 </div>
 </details>
 
-<details class="card collapsibleCard" id="joinCard" open>
+<details class="card collapsibleCard uniformToggle" id="joinCard" open>
 <summary>🔗 Rejoindre un événement</summary>
 <div class="collapsibleBody">
 <input id="joinCode" placeholder="Code d’invitation">
