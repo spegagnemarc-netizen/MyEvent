@@ -35,7 +35,7 @@ button:disabled{opacity:.5}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
-.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none;width:100%;box-sizing:border-box}.profileSettingsCard.profileSettingsVisible{display:block}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}</style>
+.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}</style>
 </head>
 <body>
 <div class="app">
@@ -111,9 +111,6 @@ button:disabled{opacity:.5}
 </div>
 <button id="saveProfileBtn">Enregistrer mon profil</button>
 <p id="profileMsg" class="muted"></p>
-</div>
-</div>
-</div>
 </div>
 
 <div class="card">
@@ -306,7 +303,7 @@ async function connect(){
     if(r.error) throw r.error;
     $('setup').classList.add('hidden');
     if(r.data.session) await show(r.data.session.user);
-    else $('auth').classList.remove('hidden');
+    else { $('main').classList.add('hidden'); $('auth').classList.remove('hidden'); }
   }catch(e){
     msg('status',e.message||String(e),'err');
   }
@@ -1789,7 +1786,20 @@ function subscribeRealtime(){
 $('missedBtn').addEventListener('click',()=>{ missedSummaryHtml=''; refreshNotifications(true); });
 $('markNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
 
-async function logout(){await sb.auth.signOut();location.reload()}
+async function logout(){
+  try{
+    if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+    if(notificationPollTimer){clearInterval(notificationPollTimer);notificationPollTimer=null;}
+    await sb.auth.signOut();
+    user=null; event=null;
+    $('main').classList.add('hidden');
+    $('auth').classList.remove('hidden');
+    $('profileSettingsCard').classList.remove('profileSettingsVisible','profileSettingsOpen');
+    window.scrollTo(0,0);
+  }catch(e){
+    alert('Erreur de déconnexion : '+(e.message||String(e)));
+  }
+}
 
 $('connectBtn').addEventListener('click',connect);
 window.addEventListener('load',()=>connect());
