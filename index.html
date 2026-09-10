@@ -360,6 +360,21 @@ document.addEventListener('click',e=>{
 });
 
 const $=id=>document.getElementById(id);
+function ensureMediaGrid(){
+  let el=$('mediaGrid');
+  if(el)return el;
+  const panel=document.querySelector('.tabPanel[data-panel=\"media\"]');
+  if(!panel)return null;
+  el=document.createElement('div');
+  el.id='mediaGrid';
+  el.className='mediaGrid';
+  panel.appendChild(el);
+  return el;
+}
+function setMediaGridHtml(html){
+  const el=ensureMediaGrid();
+  if(el) el.innerHTML=html;
+}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CHAT_BG_KEY_PREFIX='myevent_chat_bg_';
 function chatBgKey(){return event?.id?CHAT_BG_KEY_PREFIX+event.id:''}
@@ -592,7 +607,7 @@ async function show(u){
       $('members').innerHTML='<p class="muted">Aucun événement pour le moment.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
-      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      setMediaGridHtml('<p class="muted">Aucun événement sélectionné.</p>');
       global('Aucun événement pour le moment. Crée ou rejoins un groupe.','ok');
     }
   }catch(e){
@@ -671,6 +686,7 @@ async function selectEvent(id){
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
+  ensureMediaGrid();
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
   await refreshNotifications(false);
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
@@ -721,7 +737,7 @@ async function deleteEvent(id){
       $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
-      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      setMediaGridHtml('<p class="muted">Aucun événement sélectionné.</p>');
     }
     global('Événement supprimé.','ok');
   }catch(e){
@@ -751,7 +767,7 @@ async function leaveEvent(id){
       $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
-      $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
+      setMediaGridHtml('<p class="muted">Aucun événement sélectionné.</p>');
     }
     await loadEvents();
     global('Tu as quitté l’événement.','ok');
@@ -1646,21 +1662,21 @@ async function deleteMedia(id,path){
 async function loadMedia(){
   if(!event)return;
   const r=await sb.from('media').select('id,user_id,storage_path,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false});
-  if(r.error){$('mediaGrid').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
+  if(r.error){setMediaGridHtml('<p class="err">'+esc(r.error.message)+'</p>');return}
   const items=(r.data||[]).filter(m=>m.media_type!=='audio');
-  if(!items.length){$('mediaGrid').innerHTML='<p class="muted">Aucune photo ou vidéo pour le moment.</p>';return}
+  if(!items.length){setMediaGridHtml('<p class="muted">Aucune photo ou vidéo pour le moment.</p>');return}
   const urls=await Promise.all(items.map(async m=>{
     const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
     return [m,x.data?.signedUrl||''];
   }));
-  $('mediaGrid').innerHTML=urls.map(([m,url])=>{
+  setMediaGridHtml(urls.map(([m,url])=>{
     if(!url)return '';
     const mine=m.user_id===user.id;
     const media=m.media_type==='video'
       ? '<video src="'+esc(url)+'" controls playsinline preload="metadata"></video>'
       : '<img src="'+esc(url)+'" alt="Souvenir" loading="lazy">';
     return '<div class="mediaItem">'+media+(mine?'<button class="deleteMedia" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'">Supprimer</button>':'')+'<div class="mediaMeta">'+(mine?'Moi':'Membre')+'</div></div>';
-  }).join('');
+  }).join(''));
   document.querySelectorAll('.deleteMedia').forEach(b=>b.addEventListener('click',()=>deleteMedia(b.dataset.id,b.dataset.path)));
   if($('statPhotos'))$('statPhotos').textContent=items.length;
   await loadUnreadMediaCount();
