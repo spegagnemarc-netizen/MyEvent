@@ -311,6 +311,15 @@ button:disabled{opacity:.5}
   </div>
   <button type="button" class="secondary" id="resetChatThemeBtn" style="width:100%;margin-top:13px">↩️ Réinitialiser le thème</button>
 </div>
+<div class="card tabPanel" data-panel="media">
+<h2>📸 Photos & vidéos</h2>
+<p class="muted">Partage des souvenirs avec les participants de l’événement.</p>
+<input id="mediaInput" type="file" accept="image/*,video/*" multiple>
+<button id="mediaBtn">📤 Ajouter</button>
+<p id="mediaMsg" class="muted"></p>
+<div id="mediaGrid" class="mediaGrid"></div>
+</div>
+
 <div class="card" id="joinCard">
 <h2>🔗 Rejoindre un événement</h2>
 <input id="joinCode" placeholder="Code d’invitation">
@@ -1134,7 +1143,7 @@ async function loadMessages(){
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   const voiceUrls=await Promise.all(voices.map(async m=>{
-    const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
+    const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
     return {...m,url:x.data?.signedUrl||''};
   }));
   const all=[
@@ -1641,7 +1650,7 @@ async function loadMedia(){
   const items=(r.data||[]).filter(m=>m.media_type!=='audio');
   if(!items.length){$('mediaGrid').innerHTML='<p class="muted">Aucune photo ou vidéo pour le moment.</p>';return}
   const urls=await Promise.all(items.map(async m=>{
-    const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
+    const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
     return [m,x.data?.signedUrl||''];
   }));
   $('mediaGrid').innerHTML=urls.map(([m,url])=>{
