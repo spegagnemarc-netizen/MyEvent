@@ -35,7 +35,7 @@ button:disabled{opacity:.5}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
-</style>
+.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}</style>
 </head>
 <body>
 <div class="app">
@@ -63,15 +63,21 @@ button:disabled{opacity:.5}
 
 <section id="main" class="hidden">
 <div class="card">
-<b id="who">Utilisateur</b>
-<button class="secondary" id="logoutBtn">Déconnexion</button>
+<div class="profileQuickAccess">
+  <div id="profileAvatar" class="profileAvatar profileAvatarTrigger" title="Maintiens appuyé pour ouvrir ton profil">?</div>
+  <div style="flex:1;min-width:0">
+    <b id="who">Utilisateur</b>
+    <div class="muted profileHint">Maintiens ta photo de profil pour modifier ton profil</div>
+  </div>
+  <button class="secondary" id="logoutBtn">Déconnexion</button>
+</div>
 <div id="globalmsg" class="notice muted">Prêt.</div>
 </div>
 
-<div class="card">
+<div class="card hidden" id="profileSettingsCard">
 <h2>👤 Mon profil</h2>
 <div class="profileEditor">
-<div id="profileAvatar" class="profileAvatar">?</div>
+<div style="flex:1;min-width:0">
 <div style="flex:1;min-width:0">
 <input id="profileName" placeholder="Nom affiché">
 <input id="profileUsername" placeholder="Pseudo">
@@ -1149,6 +1155,8 @@ let voiceTouchActive=false;
 let voiceTouchStartX=0;
 let voiceTouchStartY=0;
 let voiceTouchCancelled=false;
+let voiceHoldTimer=null;
+let voiceHoldStarted=false;
 
 function setVoiceCancelHint(show){
   const h=$('voiceCancelHint');
@@ -1242,21 +1250,27 @@ async function sendVoice(){
 (function bindVoiceHold(){
   const btn=$('voiceBtn');
   if(!btn)return;
-  btn.addEventListener('touchstart',async e=>{
+  btn.addEventListener('touchstart',e=>{
     if(e.touches.length!==1)return;
     e.preventDefault();
     voiceTouchActive=true;
     voiceTouchCancelled=false;
+    voiceHoldStarted=false;
     voiceTouchStartX=e.touches[0].clientX;
     voiceTouchStartY=e.touches[0].clientY;
-    if(!(mediaRecorder&&mediaRecorder.state==='recording')) await toggleVoiceRecording();
+    clearTimeout(voiceHoldTimer);
+    voiceHoldTimer=setTimeout(async()=>{
+      if(!voiceTouchActive || voiceTouchCancelled)return;
+      voiceHoldStarted=true;
+      if(!(mediaRecorder&&mediaRecorder.state==='recording')) await toggleVoiceRecording();
+    },300);
   },{passive:false});
   btn.addEventListener('touchmove',e=>{
     if(!voiceTouchActive||!e.touches.length)return;
     e.preventDefault();
     const dx=e.touches[0].clientX-voiceTouchStartX;
     const dy=Math.abs(e.touches[0].clientY-voiceTouchStartY);
-    if(mediaRecorder&&mediaRecorder.state==='recording' && dx<-80 && dy<100){
+    if(voiceHoldStarted && mediaRecorder&&mediaRecorder.state==='recording' && dx<-80 && dy<100){
       btn.classList.add('cancelZone');
       setVoiceCancelHint(true);
     }else{
@@ -1270,14 +1284,20 @@ async function sendVoice(){
     const dx=(e.changedTouches[0]?.clientX||voiceTouchStartX)-voiceTouchStartX;
     const dy=Math.abs((e.changedTouches[0]?.clientY||voiceTouchStartY)-voiceTouchStartY);
     voiceTouchActive=false;
+    clearTimeout(voiceHoldTimer);
+    voiceHoldTimer=null;
     btn.classList.remove('cancelZone');
     if(mediaRecorder&&mediaRecorder.state==='recording'){
       if(dx<-80 && dy<100) cancelVoiceFromGesture();
       else toggleVoiceRecording();
     }
+    voiceHoldStarted=false;
   },{passive:false});
   btn.addEventListener('touchcancel',()=>{
     voiceTouchActive=false;
+    clearTimeout(voiceHoldTimer);
+    voiceHoldTimer=null;
+    voiceHoldStarted=false;
     btn.classList.remove('cancelZone');
     if(mediaRecorder&&mediaRecorder.state==='recording') cancelVoiceFromGesture();
   },{passive:true});
@@ -1785,6 +1805,37 @@ $('cancelRecordingBtn')?.addEventListener('click',cancelVoiceRecording);
 $('pollBtn').addEventListener('click',createPoll);
 $('mediaBtn').addEventListener('click',uploadMedia);
 $('logoutBtn').addEventListener('click',logout);
+
+// Accès discret au profil : appui long sur la photo de profil
+let profileLongPressTimer=null;
+let profileLongPressTriggered=false;
+const profileTrigger=$('profileAvatar');
+if(profileTrigger){
+  const openProfileSettings=()=>{
+    const card=$('profileSettingsCard');
+    if(!card)return;
+    card.classList.toggle('hidden');
+    card.classList.toggle('profileSettingsOpen');
+    if(!card.classList.contains('hidden')) card.scrollIntoView({behavior:'smooth',block:'start'});
+  };
+  const startProfileLongPress=(e)=>{
+    profileLongPressTriggered=false;
+    clearTimeout(profileLongPressTimer);
+    profileLongPressTimer=setTimeout(()=>{
+      profileLongPressTriggered=true;
+      openProfileSettings();
+      if(navigator.vibrate) navigator.vibrate(20);
+    },550);
+  };
+  const cancelProfileLongPress=()=>{clearTimeout(profileLongPressTimer); profileLongPressTimer=null;};
+  profileTrigger.addEventListener('pointerdown',startProfileLongPress);
+  profileTrigger.addEventListener('pointerup',cancelProfileLongPress);
+  profileTrigger.addEventListener('pointercancel',cancelProfileLongPress);
+  profileTrigger.addEventListener('pointerleave',cancelProfileLongPress);
+  profileTrigger.addEventListener('contextmenu',e=>e.preventDefault());
+  profileTrigger.addEventListener('click',e=>{if(profileLongPressTriggered){e.preventDefault();e.stopPropagation();profileLongPressTriggered=false;}});
+}
+
 document.querySelectorAll('.avatarChoice').forEach(b=>b.addEventListener('click',()=>{ $('avatarInput').value=''; setAvatarChoice(b.dataset.avatar); document.querySelectorAll('.builderChoice').forEach(x=>x.classList.remove('selected')); $('profileAvatar').innerHTML='<div class="profileAvatar" style="font-size:36px">'+esc(b.dataset.avatar)+'</div>'; }));
 document.querySelectorAll('.builderChoice').forEach(b=>b.addEventListener('click',()=>{ $('avatarInput').value=''; document.querySelectorAll('.avatarChoice').forEach(x=>x.classList.remove('selected')); avatarDesign[b.dataset.group]=b.dataset.value; renderCustomAvatar(); $('profileAvatar').innerHTML='<img src="'+customAvatarData()+'" alt="Avatar personnalisé">'; }));
 $('avatarInput').addEventListener('change',()=>{if($('avatarInput').files?.length){document.querySelectorAll('.avatarChoice,.builderChoice').forEach(b=>b.classList.remove('selected')); $('profileAvatar').innerHTML='<span>📷</span>'; }});
