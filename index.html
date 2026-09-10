@@ -311,6 +311,13 @@ button:disabled{opacity:.5}
   </div>
   <button type="button" class="secondary" id="resetChatThemeBtn" style="width:100%;margin-top:13px">↩️ Réinitialiser le thème</button>
 </div>
+<div class="card" id="joinCard">
+<h2>🔗 Rejoindre un événement</h2>
+<input id="joinCode" placeholder="Code d’invitation">
+<button id="joinBtn">Rejoindre</button>
+<p id="joinMsg" class="muted"></p>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let sb=null,user=null,event=null;
@@ -792,7 +799,7 @@ async function joinEvent(code){
 
 async function handleJoinLink(){
   const code=new URLSearchParams(location.search).get('join');
-  if(code){
+  if(code && $('joinCode')){
     $('joinCode').value=code;
     msg('joinMsg','Lien d’invitation détecté. Appuie sur « Rejoindre ».','ok');
   }
@@ -2111,8 +2118,8 @@ $('generateAiAvatarBtn').addEventListener('click',generateAiAvatar);
 $('saveProfileBtn').addEventListener('click',saveProfile);
 $('copyInviteBtn').addEventListener('click',copyInvite);
 $('shareInviteBtn').addEventListener('click',shareInvite);
-$('joinBtn').addEventListener('click',()=>joinEvent($('joinCode').value));
-$('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinEvent($('joinCode').value)});
+$('joinBtn')?.addEventListener('click',()=>joinEvent($('joinCode')?.value||''));
+$('joinCode')?.addEventListener('keydown',e=>{if(e.key==='Enter')joinEvent($('joinCode')?.value||'')});
 
 document.querySelectorAll('[data-bubble-style]').forEach(b=>b.addEventListener('click',()=>applyBubbleTheme(b.dataset.bubbleStyle, $('bubbleTransparencyRange')?.value||8)));
 $('bubbleTransparencyRange')?.addEventListener('input',e=>applyBubbleTheme($('discussionPanel')?.dataset.bubbleStyle||'classic',e.target.value));
