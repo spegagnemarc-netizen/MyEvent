@@ -1894,7 +1894,7 @@ $('editEventCoverFile')?.addEventListener('change',()=>{
 $('saveEventBtn').addEventListener('click',saveEvent);
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
 $('editEventToggle').addEventListener('click',()=>{ $('editEventBox').open=true; $('editEventBox').scrollIntoView({behavior:'smooth',block:'start'}); });
-$('editEventCoverUrl').addEventListener('input',updateEditCoverPreview);
+
 $('sendBtn').addEventListener('click',sendMessage);
 let lastVoiceTouch=0;
 $('voiceBtn').addEventListener('touchstart',()=>{lastVoiceTouch=Date.now()},{passive:true});
