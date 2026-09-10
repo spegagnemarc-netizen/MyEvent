@@ -208,6 +208,9 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 .callAlertMessage button{min-height:38px;padding:8px 14px;font-size:13px}
 @media(max-width:430px){.compactOverlayControls{gap:6px}.compactOverlayControls .callIconBtn{flex-basis:42px;width:42px;height:42px;min-height:42px}.compactOverlayControls .compactCallSelect{height:42px;min-height:42px;font-size:11px;padding:6px 7px}}
 
+
+/* V10 — une seule alerte d'appel visible dans la discussion */
+.callAlertMessage{max-width:92%;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -1257,6 +1260,12 @@ async function loadMessages(){
     ...rows.map(m=>({kind:'message',created_at:m.created_at,data:m})),
     ...voiceUrls.map(m=>({kind:'voice',created_at:m.created_at,data:m}))
   ].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  // Un seul bandeau d'appel doit être visible : on conserve uniquement
+  // l'annonce la plus récente du salon, même si plusieurs essais ont créé
+  // plusieurs messages techniques dans la base.
+  const callAlertIds=new Set(all.filter(item=>item.kind==='message' && typeof item.data.content==='string' && item.data.content.startsWith('[[MYEVENT_GROUP_CALL]]')).map(item=>item.data.id));
+  const latestCallAlert=[...all].reverse().find(item=>callAlertIds.has(item.data?.id));
+  const latestCallAlertId=latestCallAlert?.data?.id||null;
   $('messages').innerHTML=all.map(item=>{
     const m=item.data;
     const p=pmap.get(m.user_id)||{};
@@ -1264,6 +1273,7 @@ async function loadMessages(){
     const name=mine?'Moi':(p.display_name||p.username||'Membre');
     const av=p.avatar||'';
     if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_GROUP_CALL]]')){
+      if(m.id!==latestCallAlertId)return '';
       let callLabel='Appel de groupe';
       try{ const payload=JSON.parse(m.content.slice('[[MYEVENT_GROUP_CALL]]'.length)); callLabel=payload?.eventName||callLabel; }catch{}
       return '<div class="callAlertMessage" data-call-alert="'+esc(m.id)+'">'+
