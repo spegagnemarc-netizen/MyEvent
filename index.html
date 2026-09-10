@@ -193,6 +193,21 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 .callPipVideo{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01}
 @media(max-width:600px){.callStage{grid-template-columns:1fr}.callStage.mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.callStage.mode-two .callTile.local{width:32%;right:14px;bottom:128px}.callOverlayControls button,.callOverlayControls select{flex:1 1 calc(50% - 8px)}}
 
+
+/* V9 — salon d’appel compact */
+.compactCallActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.compactCallActions button{min-height:40px;padding:8px 10px;font-size:13px}
+.compactCallActions button.hidden{display:none!important}
+.compactOverlayControls{display:flex;align-items:center;justify-content:center;gap:8px;padding-top:8px}
+.compactOverlayControls .callIconBtn{flex:0 0 44px;width:44px;min-height:44px;height:44px;padding:0;border-radius:14px;font-size:18px}
+.compactOverlayControls .compactCallSelect{flex:1 1 120px;min-width:0;min-height:44px;height:44px;padding:7px 9px;font-size:12px}
+.compactOverlayControls .danger{border-color:#ff5577}
+.callAlertMessage{margin:12px auto;padding:12px 14px;border:1px solid #2d6a91;border-radius:16px;background:#102b3f;max-width:92%;text-align:center}
+.callAlertMessage b{display:block;font-size:14px;margin-bottom:7px}
+.callAlertMessage p{margin:0 0 9px;color:#a9bbca;font-size:12px}
+.callAlertMessage button{min-height:38px;padding:8px 14px;font-size:13px}
+@media(max-width:430px){.compactOverlayControls{gap:6px}.compactOverlayControls .callIconBtn{flex-basis:42px;width:42px;height:42px;min-height:42px}.compactOverlayControls .compactCallSelect{height:42px;min-height:42px;font-size:11px;padding:6px 7px}}
+
 </style>
 </head>
 <body>
@@ -355,7 +370,7 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <div class="collapsibleBody">
 <div class="groupCallHead"><div><b>Salon de l’événement</b><p id="callStatus" class="muted">Le salon est fermé.</p></div><div id="callCount" class="muted">0 participant</div></div>
 <div id="callGrid" class="callGrid"></div>
-<div class="callActions"><button id="startCallBtn">📞 Démarrer l’appel</button><button id="openCallBtn" class="secondary hidden">⛶ Ouvrir le salon</button><button id="muteCallBtn" class="secondary hidden">🎙️ Micro</button><button id="cameraCallBtn" class="secondary hidden">📷 Caméra</button><button id="leaveCallBtn" class="secondary hidden">🔴 Quitter</button></div>
+<div class="callActions compactCallActions"><button id="startCallBtn">📞 Démarrer l’appel</button><button id="joinCallBtn" class="secondary">↗️ Rejoindre l’appel</button><button id="openCallBtn" class="secondary hidden">⛶ Ouvrir</button><button id="muteCallBtn" class="secondary hidden">🎙️</button><button id="cameraCallBtn" class="secondary hidden">📷</button><button id="leaveCallBtn" class="secondary hidden">🔴</button></div>
 <p id="callMsg" class="muted"></p>
 </div></details>
 
@@ -365,13 +380,13 @@ details.tabPanel.uniformToggle > .collapsibleBody{
     <button id="minimizeCallBtn" class="secondary">⌄ Réduire</button>
   </div>
   <div id="callStage" class="callStage mode-two"></div>
-  <div class="callOverlayControls">
-    <button id="overlayMuteBtn" class="secondary">🎙️ Micro</button>
-    <button id="overlayCameraBtn" class="secondary">📷 Caméra</button>
-    <button id="pipCallBtn" class="secondary">🖼️ Mini-fenêtre</button>
-    <select id="callLayoutSelect" class="callFocusSelect" aria-label="Disposition"><option value="auto">Auto</option><option value="grid">▦ Grille</option><option value="spotlight">⭐ Plein écran</option></select>
-    <select id="callFocusSelect" class="callFocusSelect" aria-label="Personne en grand"><option value="">Choisir une personne</option></select>
-    <button id="overlayLeaveBtn" class="danger">🔴 Quitter l’appel</button>
+  <div class="callOverlayControls compactOverlayControls">
+    <button id="overlayMuteBtn" class="callIconBtn secondary" aria-label="Micro" title="Micro">🎙️</button>
+    <button id="overlayCameraBtn" class="callIconBtn secondary" aria-label="Caméra" title="Caméra">📷</button>
+    <button id="pipCallBtn" class="callIconBtn secondary" aria-label="Mini-fenêtre" title="Mini-fenêtre">🖼️</button>
+    <select id="callLayoutSelect" class="callFocusSelect compactCallSelect" aria-label="Disposition"><option value="auto">Auto</option><option value="grid">▦ Grille</option><option value="spotlight">⭐ Focus</option></select>
+    <select id="callFocusSelect" class="callFocusSelect compactCallSelect" aria-label="Personne en grand"><option value="">⭐ Personne</option></select>
+    <button id="overlayLeaveBtn" class="callIconBtn danger" aria-label="Quitter l’appel" title="Quitter l’appel">🔴</button>
   </div>
   <div class="callMiniHint">La mini-fenêtre/PiP permet de continuer à utiliser le téléphone lorsque le navigateur le permet. Réduire garde l’appel actif.</div>
 </div>
@@ -1248,6 +1263,15 @@ async function loadMessages(){
     const mine=m.user_id===user.id;
     const name=mine?'Moi':(p.display_name||p.username||'Membre');
     const av=p.avatar||'';
+    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_GROUP_CALL]]')){
+      let callLabel='Appel de groupe';
+      try{ const payload=JSON.parse(m.content.slice('[[MYEVENT_GROUP_CALL]]'.length)); callLabel=payload?.eventName||callLabel; }catch{}
+      return '<div class="callAlertMessage" data-call-alert="'+esc(m.id)+'">'+
+        '<b>📞 Appel de groupe lancé</b>'+
+        '<p>'+esc(callLabel)+'</p>'+
+        '<button type="button" class="secondary joinCallMessage">↗️ Rejoindre l’appel</button>'+
+      '</div>';
+    }
     if(item.kind==='voice'){
       if(!m.url)return '';
       return '<div class="messageRow '+(mine?'me':'')+'">'+
@@ -1289,6 +1313,7 @@ async function loadMessages(){
     const full=document.querySelector('[data-full="'+b.dataset.more+'"]');
     if(full)full.classList.toggle('hidden');
   }));
+  document.querySelectorAll('.joinCallMessage').forEach(b=>b.addEventListener('click',()=>startGroupCall()));
   bindLongPressReactions();
 
   bindVoiceSpeeds();
@@ -2250,14 +2275,24 @@ async function requestCallPiP(){
 }
 async function ensureCallPeer(peerId,initiator){if(callPeers.has(peerId))return callPeers.get(peerId);if(!callStream)return null;const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});callStream.getTracks().forEach(t=>pc.addTrack(t,callStream));pc.onicecandidate=e=>{if(e.candidate)callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'ice',from:user.id,to:peerId,candidate:e.candidate}})};pc.ontrack=e=>addCallTile(peerId,'Participant',e.streams[0],false);pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState)){pc.close();callPeers.delete(peerId);removeCallTile(peerId);updateCallCount()}};callPeers.set(peerId,pc);updateCallCount();if(initiator){const offer=await pc.createOffer();await pc.setLocalDescription(offer);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'offer',from:user.id,to:peerId,description:pc.localDescription}})}return pc}
 async function handleCallSignal(p){if(!p||!callActive||(p.to!=='*'&&p.to!==user?.id))return;try{if(p.kind==='join'){if(user.id<p.from)await ensureCallPeer(p.from,true);return}if(p.kind==='offer'){const pc=await ensureCallPeer(p.from,false);await pc.setRemoteDescription(new RTCSessionDescription(p.description));const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'answer',from:user.id,to:p.from,description:pc.localDescription}});return}if(p.kind==='answer'){const pc=callPeers.get(p.from);if(pc)await pc.setRemoteDescription(new RTCSessionDescription(p.description));return}if(p.kind==='ice'){const pc=callPeers.get(p.from);if(pc&&p.candidate)await pc.addIceCandidate(new RTCIceCandidate(p.candidate));return}if(p.kind==='leave'){callPeers.get(p.from)?.close();callPeers.delete(p.from);removeCallTile(p.from);updateCallCount()}}catch(e){console.warn('Signalisation appel:',e)}}
-async function startGroupCall(){if(callActive){openCallOverlay();return}if(!event||!user||!sb){if($('callMsg'))$('callMsg').textContent='Sélectionne un événement et connecte-toi.';return}try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('La caméra et le micro ne sont pas disponibles sur cet appareil.');callStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});callActive=true;callMuted=false;callCamera=true;callLayout='auto';callFocusId='';addCallTile('local',user.pseudo||user.name||'Moi',callStream,true);callChannel=sb.channel('event-call-'+event.id,{config:{broadcast:{self:false}}});callChannel.on('broadcast',{event:'signal'},({payload})=>handleCallSignal(payload));await new Promise((resolve,reject)=>callChannel.subscribe(st=>st==='SUBSCRIBED'?resolve():st==='CHANNEL_ERROR'?reject(new Error('Impossible d’ouvrir le salon.')):null));await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'join',from:user.id,to:'*'}});setCallStatus('Appel en cours');$('startCallBtn')?.classList.add('hidden');$('openCallBtn')?.classList.remove('hidden');$('muteCallBtn')?.classList.remove('hidden');$('cameraCallBtn')?.classList.remove('hidden');$('leaveCallBtn')?.classList.remove('hidden');if($('callMsg'))$('callMsg').textContent='Le salon est ouvert. Tu peux le réduire sans quitter l’appel.';updateCallCount();openCallOverlay()}catch(e){callActive=false;callStream?.getTracks().forEach(t=>t.stop());callStream=null;if($('callMsg'))$('callMsg').textContent='⚠️ '+(e.message||'Impossible de démarrer l’appel.')}}
-async function stopGroupCall(){minimizeCallOverlay();if(callChannel){try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'leave',from:user?.id,to:'*'}})}catch(e){}try{await sb.removeChannel(callChannel)}catch(e){}callChannel=null}callPeers.forEach(pc=>pc.close());callPeers.clear();callStream?.getTracks().forEach(t=>t.stop());callStream=null;callActive=false;callFocusId='';document.querySelectorAll('#callGrid .callTile').forEach(x=>x.remove());setCallStatus('Le salon est fermé.');$('startCallBtn')?.classList.remove('hidden');$('openCallBtn')?.classList.add('hidden');$('muteCallBtn')?.classList.add('hidden');$('cameraCallBtn')?.classList.add('hidden');$('leaveCallBtn')?.classList.add('hidden');updateCallCount()}
+async function announceGroupCall(){
+  if(!event||!user||!sb)return;
+  try{
+    const content='[[MYEVENT_GROUP_CALL]]'+JSON.stringify({eventName:event.name||'Événement'});
+    const r=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content}).select('id').single();
+    if(!r.error) rememberLocalCreated('messages',r.data?.id);
+    await loadMessages();
+  }catch(e){console.warn('Annonce appel:',e.message||e)}
+}
+
+async function startGroupCall(){if(callActive){openCallOverlay();return}if(!event||!user||!sb){if($('callMsg'))$('callMsg').textContent='Sélectionne un événement et connecte-toi.';return}try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('La caméra et le micro ne sont pas disponibles sur cet appareil.');callStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});callActive=true;callMuted=false;callCamera=true;callLayout='auto';callFocusId='';addCallTile('local',user.pseudo||user.name||'Moi',callStream,true);callChannel=sb.channel('event-call-'+event.id,{config:{broadcast:{self:false}}});callChannel.on('broadcast',{event:'signal'},({payload})=>handleCallSignal(payload));await new Promise((resolve,reject)=>callChannel.subscribe(st=>st==='SUBSCRIBED'?resolve():st==='CHANNEL_ERROR'?reject(new Error('Impossible d’ouvrir le salon.')):null));await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'join',from:user.id,to:'*'}});setCallStatus('Appel en cours');$('startCallBtn')?.classList.add('hidden');$('joinCallBtn')?.classList.add('hidden');$('openCallBtn')?.classList.remove('hidden');$('muteCallBtn')?.classList.remove('hidden');$('cameraCallBtn')?.classList.remove('hidden');$('leaveCallBtn')?.classList.remove('hidden');if($('callMsg'))$('callMsg').textContent='Le salon est ouvert. Tu peux le réduire sans quitter l’appel.';updateCallCount();await announceGroupCall();openCallOverlay()}catch(e){callActive=false;callStream?.getTracks().forEach(t=>t.stop());callStream=null;if($('callMsg'))$('callMsg').textContent='⚠️ '+(e.message||'Impossible de démarrer l’appel.')}}
+async function stopGroupCall(){minimizeCallOverlay();if(callChannel){try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'leave',from:user?.id,to:'*'}})}catch(e){}try{await sb.removeChannel(callChannel)}catch(e){}callChannel=null}callPeers.forEach(pc=>pc.close());callPeers.clear();callStream?.getTracks().forEach(t=>t.stop());callStream=null;callActive=false;callFocusId='';document.querySelectorAll('#callGrid .callTile').forEach(x=>x.remove());setCallStatus('Le salon est fermé.');$('startCallBtn')?.classList.remove('hidden');$('joinCallBtn')?.classList.remove('hidden');$('openCallBtn')?.classList.add('hidden');$('muteCallBtn')?.classList.add('hidden');$('cameraCallBtn')?.classList.add('hidden');$('leaveCallBtn')?.classList.add('hidden');updateCallCount()}
 function toggleCallMute(){callMuted=!callMuted;callStream?.getAudioTracks().forEach(t=>t.enabled=!callMuted);const txt=callMuted?'🔇 Micro coupé':'🎙️ Micro';if($('muteCallBtn'))$('muteCallBtn').textContent=txt;if($('overlayMuteBtn'))$('overlayMuteBtn').textContent=txt}
 function toggleCallCamera(){callCamera=!callCamera;callStream?.getVideoTracks().forEach(t=>t.enabled=callCamera);const txt=callCamera?'📷 Caméra':'🚫 Caméra coupée';if($('cameraCallBtn'))$('cameraCallBtn').textContent=txt;if($('overlayCameraBtn'))$('overlayCameraBtn').textContent=txt}
 function setCallLayoutMode(v){callLayout=v||'auto';if(callLayout!=='spotlight')callFocusId='';renderCallStage()}
 function setCallFocus(v){callFocusId=v||'';if(callFocusId)callLayout='spotlight';renderCallStage()}
 
-$('startCallBtn')?.addEventListener('click',startGroupCall);$('openCallBtn')?.addEventListener('click',openCallOverlay);$('leaveCallBtn')?.addEventListener('click',stopGroupCall);$('muteCallBtn')?.addEventListener('click',toggleCallMute);$('cameraCallBtn')?.addEventListener('click',toggleCallCamera);$('minimizeCallBtn')?.addEventListener('click',minimizeCallOverlay);$('overlayLeaveBtn')?.addEventListener('click',stopGroupCall);$('overlayMuteBtn')?.addEventListener('click',toggleCallMute);$('overlayCameraBtn')?.addEventListener('click',toggleCallCamera);$('pipCallBtn')?.addEventListener('click',requestCallPiP);$('callLayoutSelect')?.addEventListener('change',e=>setCallLayoutMode(e.target.value));$('callFocusSelect')?.addEventListener('change',e=>setCallFocus(e.target.value));
+$('startCallBtn')?.addEventListener('click',startGroupCall);$('joinCallBtn')?.addEventListener('click',startGroupCall);$('openCallBtn')?.addEventListener('click',openCallOverlay);$('leaveCallBtn')?.addEventListener('click',stopGroupCall);$('muteCallBtn')?.addEventListener('click',toggleCallMute);$('cameraCallBtn')?.addEventListener('click',toggleCallCamera);$('minimizeCallBtn')?.addEventListener('click',minimizeCallOverlay);$('overlayLeaveBtn')?.addEventListener('click',stopGroupCall);$('overlayMuteBtn')?.addEventListener('click',toggleCallMute);$('overlayCameraBtn')?.addEventListener('click',toggleCallCamera);$('pipCallBtn')?.addEventListener('click',requestCallPiP);$('callLayoutSelect')?.addEventListener('change',e=>setCallLayoutMode(e.target.value));$('callFocusSelect')?.addEventListener('change',e=>setCallFocus(e.target.value));
 document.addEventListener('click',e=>{const tile=e.target.closest('#callStage .callTile');if(!tile||!callActive)return;const id=tile.id.replace('call-','');if(callPeers.has(id)||id==='local'){callFocusId=id;callLayout='spotlight';if($('callFocusSelect'))$('callFocusSelect').value=id;renderCallStage();}},true);
 /* Réorganisation des cartes par maintien sur ⠿ puis glisser-déposer */
 (function initCardReorder(){
