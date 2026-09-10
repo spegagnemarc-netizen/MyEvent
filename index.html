@@ -120,6 +120,31 @@ details.uniformToggle > summary .summaryLabel {
     font-size: 12px !important;
   }
 }
+
+/* V5 — Les onglets restent de petits boutons ; le contenu s'affiche dans une zone séparée dessous. */
+details.tabPanel.uniformToggle{
+  display:none!important;
+  border:0!important;
+  background:transparent!important;
+  padding:0!important;
+  margin:12px 0!important;
+  overflow:visible!important;
+}
+details.tabPanel.uniformToggle.active{
+  display:block!important;
+}
+details.tabPanel.uniformToggle > summary{
+  display:none!important;
+}
+details.tabPanel.uniformToggle > .collapsibleBody{
+  display:block!important;
+  margin:0!important;
+  padding:16px!important;
+  background:#102131!important;
+  border:1px solid #28445b!important;
+  border-radius:18px!important;
+  box-sizing:border-box!important;
+}
 </style>
 </head>
 <body>
@@ -297,7 +322,7 @@ details.uniformToggle > summary .summaryLabel {
 </div>
 </details>
 
-<details class="card tabPanel collapsibleCard active" data-panel="discussion" open>
+<details class="card tabPanel collapsibleCard uniformToggle active" data-panel="discussion">
 <summary>💬 Discussion</summary>
 <div class="collapsibleBody">
 <div id="messages"></div>
