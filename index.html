@@ -696,7 +696,7 @@ let countdownTimer=null;
 function renderEventHero(){
   if(!event){$('eventHeroCard').classList.add('hidden');$('editEventBox').classList.add('hidden');$('createEventCard').classList.remove('hidden');return;}
   $('eventHeroCard').classList.remove('hidden');
-  $('createEventCard').classList.add('hidden');
+  $('createEventCard').classList.remove('hidden');
   $('eventHeroName').textContent=event.name||'Événement';
   $('eventHeroMeta').textContent=(event.location?'📍 '+event.location+' · ':'')+'📅 '+formatEventDate(event.event_date);
   $('eventDescription').textContent=event.description||'';
