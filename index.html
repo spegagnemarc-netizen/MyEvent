@@ -52,6 +52,74 @@ details.uniformToggle>summary:active{transform:scale(.995)}
 .uniformToggle .collapsibleBody,.uniformToggle>div[style*="margin-top"]{margin:12px 16px 16px}
 @media(max-width:430px){details.uniformToggle>summary{height:56px!important;min-height:56px!important;padding:8px 12px!important;font-size:15px!important}.dragHandle{width:32px;height:32px}}
 .collapsibleBody{margin:12px 16px 16px}.editEventBox>summary{font-size:18px}.editEventBox .collapsibleBody{margin-top:12px}.eventHero>summary{padding-bottom:14px}.eventHero[open]>summary{margin-bottom:0}.tabPanel>summary{font-size:18px}.tabPanel .collapsibleBody{margin-top:12px}.tabPanel:not(.active){display:none}.tabPanel.active{display:block}.tabPanel[open]>summary{margin-bottom:0}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}.locationInputRow{display:flex;gap:8px;align-items:stretch}.locationInputRow input{flex:1;min-width:0}.locationBtn{white-space:nowrap;padding:0 12px}.smallHint{margin-top:6px;font-size:12px}.locationMap{margin-top:10px;border:1px solid #28445b;border-radius:14px;overflow:hidden;background:#0b1824}.locationMap.hidden{display:none}.locationMap iframe{display:block;width:100%;height:150px;border:0}.locationMapBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:12px;color:#9eb2c4}.locationMapBar a{color:#fff;text-decoration:none;background:#142b3d;border:1px solid #36536a;border-radius:9px;padding:6px 9px}@media(max-width:600px){.fieldRow{grid-template-columns:1fr}.locationInputRow{display:block}.locationBtn{width:100%;margin-top:8px;min-height:42px}}
+
+/* V4 — cartes déplaçables visuellement identiques aux boutons Discussion / Sondages / Photos / Participants */
+details.uniformToggle {
+  margin: 12px 0 !important;
+  padding: 0 !important;
+  background: #0a1823 !important;
+  border: 1px solid #28465e !important;
+  border-radius: 14px !important;
+  color: #a9b9c8 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+details.uniformToggle > summary {
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 12px 8px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  background: #0a1823 !important;
+  color: #a9b9c8 !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+details.uniformToggle > summary::after {
+  content: '›' !important;
+  transform: none !important;
+  font-size: 28px !important;
+  line-height: .7 !important;
+  color: #9eb2c4 !important;
+  flex: 0 0 auto !important;
+}
+details.uniformToggle:not([open]) > summary::after {
+  transform: none !important;
+}
+details.uniformToggle[open] > summary::after {
+  transform: rotate(90deg) !important;
+}
+details.uniformToggle > summary .dragHandle {
+  order: 2 !important;
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  margin-left: auto !important;
+  border: 1px solid #28465e !important;
+  border-radius: 10px !important;
+  background: #102131 !important;
+  color: #9eb2c4 !important;
+  font-size: 20px !important;
+}
+details.uniformToggle > summary .summaryLabel {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  color: #a9b9c8 !important;
+}
+@media(max-width:430px){
+  details.uniformToggle > summary {
+    padding: 11px 5px !important;
+    font-size: 12px !important;
+  }
+}
 </style>
 </head>
 <body>
