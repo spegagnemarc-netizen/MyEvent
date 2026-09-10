@@ -169,6 +169,7 @@ details.tabPanel.uniformToggle > .collapsibleBody{
   border-radius:18px!important;
   box-sizing:border-box!important;
 }
+.groupCallHead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.groupCallHead p{margin:4px 0 0}.callGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.callTile{position:relative;aspect-ratio:16/10;background:#0a1823;border:1px solid #28465e;border-radius:14px;overflow:hidden}.callTile video{width:100%;height:100%;object-fit:cover}.callTile .callName{position:absolute;left:8px;bottom:7px;padding:4px 7px;border-radius:8px;background:rgba(0,0,0,.55);font-size:12px}.callActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.callActions button{flex:1 1 130px}.weatherNow{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.weatherIcon{font-size:42px;line-height:1}.weatherTemp{font-size:30px;font-weight:800}.weatherMeta{display:grid;gap:4px}.weatherForecast{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.weatherDay{padding:10px 7px;border:1px solid #28465e;border-radius:12px;background:#0b1b28;text-align:center}.weatherDay b,.weatherDay span{display:block}.weatherDay span{font-size:12px;margin-top:4px}.weatherHint{margin-top:10px}@media(max-width:430px){.weatherForecast{grid-template-columns:repeat(2,minmax(0,1fr))}.callGrid{grid-template-columns:1fr}.weatherTemp{font-size:26px}}
 </style>
 </head>
 <body>
@@ -320,6 +321,20 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <p id="inviteMsg" class="muted"></p>
 </div>
 </details>
+
+<details class="card collapsibleCard uniformToggle reorderableCard" id="weatherCard">
+<summary><span class="summaryLabel">🌤️ Météo</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
+<div class="collapsibleBody"><div id="weatherContent"><p class="muted">Sélectionne un événement pour afficher la météo.</p></div></div>
+</details>
+
+<details class="card collapsibleCard uniformToggle reorderableCard" id="groupCallCard">
+<summary><span class="summaryLabel">📞 Appel de groupe</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
+<div class="collapsibleBody">
+<div class="groupCallHead"><div><b>Salon de l’événement</b><p id="callStatus" class="muted">Le salon est fermé.</p></div><div id="callCount" class="muted">0 participant</div></div>
+<div id="callGrid" class="callGrid"></div>
+<div class="callActions"><button id="startCallBtn">📞 Démarrer l’appel</button><button id="muteCallBtn" class="secondary hidden">🎙️ Micro</button><button id="cameraCallBtn" class="secondary hidden">📷 Caméra</button><button id="leaveCallBtn" class="secondary hidden">🔴 Quitter</button></div>
+<p id="callMsg" class="muted"></p>
+</div></details>
 
 <div class="eventTabs" role="tablist" aria-label="Navigation de l’événement">
 <button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion <span id="discussionBadge" class="unreadBadge hidden">0</span></button>
@@ -589,6 +604,7 @@ finally{setBusy('saveProfileBtn',false,'Enregistrer mon profil')}
 
 async function show(u){
   user=u;
+  window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
   $('main').classList.add('mainVisible');
@@ -696,6 +712,7 @@ async function selectEvent(id){
   if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
   if(!r.data) throw new Error('Cet événement n’est plus accessible.');
 
+  if(callActive) await stopGroupCall();
   event=r.data;
   localStorage.setItem('myevent_active_'+user.id,event.id);
   // Les champs du formulaire « Créer un événement » restent indépendants
@@ -707,6 +724,7 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  await loadWeather();
   await refreshNotifications(false);
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
   $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
@@ -2150,17 +2168,33 @@ $('shareInviteBtn').addEventListener('click',shareInvite);
 $('joinBtn').addEventListener('click',()=>joinEvent($('joinCode').value));
 $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinEvent($('joinCode').value)});
 
+/* Météo liée à l’événement — Open-Meteo, sans clé API */
+const weatherIcons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const weatherLabels={0:'Ciel dégagé',1:'Peu nuageux',2:'Partiellement nuageux',3:'Couvert',45:'Brouillard',48:'Brouillard givrant',51:'Bruine',53:'Bruine',55:'Forte bruine',61:'Pluie faible',63:'Pluie',65:'Forte pluie',71:'Neige faible',73:'Neige',75:'Forte neige',80:'Averses faibles',81:'Averses',82:'Fortes averses',85:'Averses de neige',86:'Fortes averses de neige',95:'Orage',96:'Orage avec grêle',99:'Orage avec grêle'};
+function weatherDateLabel(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}).replace('.','')}catch(e){return iso}}
+async function loadWeather(){const root=$('weatherContent');if(!root)return;if(!event){root.innerHTML='<p class="muted">Sélectionne un événement pour afficher la météo.</p>';return}const place=(event.location||'').trim();if(!place){root.innerHTML='<p class="muted">Ajoute un lieu à l’événement pour obtenir la météo.</p>';return}root.innerHTML='<p class="muted">🌍 Recherche du lieu et des prévisions…</p>';try{const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(place)+'&count=1&language=fr&format=json');if(!geo.ok)throw new Error('Service météo indisponible');const gd=await geo.json(),g=gd.results?.[0];if(!g)throw new Error('Lieu introuvable. Essaie une ville ou une adresse plus simple.');const rr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+g.latitude+'&longitude='+g.longitude+'&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&forecast_days=16');if(!rr.ok)throw new Error('Prévisions indisponibles');const d=await rr.json(),c=d.current||{},day=d.daily||{},code=c.weather_code??0,targetDate=event.event_date?new Date(event.event_date):null;let idx=0;if(targetDate&&Array.isArray(day.time)){const td=targetDate.toLocaleDateString('en-CA',{timeZone:d.timezone||'UTC'});const found=day.time.findIndex(x=>x===td);if(found>=0)idx=found}const tmin=day.temperature_2m_min?.[idx],tmax=day.temperature_2m_max?.[idx],pop=day.precipitation_probability_max?.[idx],wmax=day.wind_speed_10m_max?.[idx];const eventTxt=targetDate?' pour le '+targetDate.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';const days=(day.time||[]).slice(0,7).map((date,i)=>'<div class="weatherDay"><b>'+weatherDateLabel(date)+'</b><span>'+(weatherIcons[day.weather_code?.[i]]||'🌤️')+'</span><span>'+Math.round(day.temperature_2m_max?.[i]??0)+'° / '+Math.round(day.temperature_2m_min?.[i]??0)+'°</span><span>🌧️ '+(day.precipitation_probability_max?.[i]??0)+'%</span></div>').join('');root.innerHTML='<div class="muted">📍 '+(g.name||place)+(g.admin1?', '+g.admin1:'')+eventTxt+'</div><div class="weatherNow"><div class="weatherIcon">'+(weatherIcons[code]||'🌤️')+'</div><div><div class="weatherTemp">'+Math.round(c.temperature_2m??tmax??0)+'°C</div><div class="weatherMeta"><span>'+(weatherLabels[code]||'Conditions actuelles')+'</span><span>💨 '+Math.round(c.wind_speed_10m??wmax??0)+' km/h · 🌧️ '+Math.round((c.precipitation??0)*10)/10+' mm</span></div></div></div><div class="weatherHint muted">Prévision pour la date de l’événement : <b>'+Math.round(tmax??0)+'° / '+Math.round(tmin??0)+'°</b> · pluie '+(pop??0)+'% · vent jusqu’à '+Math.round(wmax??0)+' km/h</div><div class="weatherForecast">'+days+'</div>'}catch(e){root.innerHTML='<p class="muted">⚠️ '+(e.message||'Impossible de charger la météo.')+'</p>'}}
+
+/* Appel de groupe — WebRTC maillé pour les petits groupes */
+let callChannel=null,callStream=null,callPeers=new Map(),callActive=false,callMuted=false,callCamera=true;
+function setCallStatus(t){if($('callStatus'))$('callStatus').textContent=t}function updateCallCount(){const n=callPeers.size+(callActive?1:0);if($('callCount'))$('callCount').textContent=n+' participant'+(n>1?'s':'')}function addCallTile(id,name,stream,local=false){const grid=$('callGrid');if(!grid)return;let tile=document.getElementById('call-'+id);if(!tile){tile=document.createElement('div');tile.className='callTile'+(local?' local':'');tile.id='call-'+id;const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=!!local;tile.appendChild(v);const lab=document.createElement('span');lab.className='callName';lab.textContent=name||'Participant';tile.appendChild(lab);grid.appendChild(tile)}const v=tile.querySelector('video');if(stream&&v.srcObject!==stream){v.srcObject=stream;v.play().catch(()=>{})}}function removeCallTile(id){document.getElementById('call-'+id)?.remove()}
+async function ensureCallPeer(peerId,initiator){if(callPeers.has(peerId))return callPeers.get(peerId);if(!callStream)return null;const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});callStream.getTracks().forEach(t=>pc.addTrack(t,callStream));pc.onicecandidate=e=>{if(e.candidate)callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'ice',from:user.id,to:peerId,candidate:e.candidate}})};pc.ontrack=e=>addCallTile(peerId,'Participant',e.streams[0],false);pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState)){pc.close();callPeers.delete(peerId);removeCallTile(peerId);updateCallCount()}};callPeers.set(peerId,pc);updateCallCount();if(initiator){const offer=await pc.createOffer();await pc.setLocalDescription(offer);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'offer',from:user.id,to:peerId,description:pc.localDescription}})}return pc}
+async function handleCallSignal(p){if(!p||!callActive||(p.to!=='*'&&p.to!==user?.id))return;try{if(p.kind==='join'){if(user.id<p.from)await ensureCallPeer(p.from,true);return}if(p.kind==='offer'){const pc=await ensureCallPeer(p.from,false);await pc.setRemoteDescription(new RTCSessionDescription(p.description));const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'answer',from:user.id,to:p.from,description:pc.localDescription}});return}if(p.kind==='answer'){const pc=callPeers.get(p.from);if(pc)await pc.setRemoteDescription(new RTCSessionDescription(p.description));return}if(p.kind==='ice'){const pc=callPeers.get(p.from);if(pc&&p.candidate)await pc.addIceCandidate(new RTCIceCandidate(p.candidate));return}if(p.kind==='leave'){callPeers.get(p.from)?.close();callPeers.delete(p.from);removeCallTile(p.from);updateCallCount()}}catch(e){console.warn('Signalisation appel:',e)}}
+async function startGroupCall(){if(callActive)return;if(!event||!user||!sb){if($('callMsg'))$('callMsg').textContent='Sélectionne un événement et connecte-toi.';return}try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('La caméra et le micro ne sont pas disponibles sur cet appareil.');callStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});callActive=true;callMuted=false;callCamera=true;addCallTile('local',user.id,callStream,true);callChannel=sb.channel('event-call-'+event.id,{config:{broadcast:{self:false}}});callChannel.on('broadcast',{event:'signal'},({payload})=>handleCallSignal(payload));await new Promise((resolve,reject)=>callChannel.subscribe(st=>st==='SUBSCRIBED'?resolve():st==='CHANNEL_ERROR'?reject(new Error('Impossible d’ouvrir le salon.')):null));await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'join',from:user.id,to:'*'}});setCallStatus('Appel en cours');$('startCallBtn')?.classList.add('hidden');$('muteCallBtn')?.classList.remove('hidden');$('cameraCallBtn')?.classList.remove('hidden');$('leaveCallBtn')?.classList.remove('hidden');$('callMsg').textContent='Les autres participants peuvent rejoindre le salon.';updateCallCount()}catch(e){callActive=false;callStream?.getTracks().forEach(t=>t.stop());callStream=null;if($('callMsg'))$('callMsg').textContent='⚠️ '+(e.message||'Impossible de démarrer l’appel.')}}
+async function stopGroupCall(){if(callChannel){try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'leave',from:user?.id,to:'*'}})}catch(e){}try{await sb.removeChannel(callChannel)}catch(e){}callChannel=null}callPeers.forEach(pc=>pc.close());callPeers.clear();callStream?.getTracks().forEach(t=>t.stop());callStream=null;callActive=false;document.querySelectorAll('#callGrid .callTile').forEach(x=>x.remove());setCallStatus('Le salon est fermé.');$('startCallBtn')?.classList.remove('hidden');$('muteCallBtn')?.classList.add('hidden');$('cameraCallBtn')?.classList.add('hidden');$('leaveCallBtn')?.classList.add('hidden');updateCallCount()}function toggleCallMute(){callMuted=!callMuted;callStream?.getAudioTracks().forEach(t=>t.enabled=!callMuted);if($('muteCallBtn'))$('muteCallBtn').textContent=callMuted?'🔇 Micro coupé':'🎙️ Micro'}function toggleCallCamera(){callCamera=!callCamera;callStream?.getVideoTracks().forEach(t=>t.enabled=callCamera);if($('cameraCallBtn'))$('cameraCallBtn').textContent=callCamera?'📷 Caméra':'🚫 Caméra coupée'}
+
+$('startCallBtn')?.addEventListener('click',startGroupCall);$('leaveCallBtn')?.addEventListener('click',stopGroupCall);$('muteCallBtn')?.addEventListener('click',toggleCallMute);$('cameraCallBtn')?.addEventListener('click',toggleCallCamera);
 /* Réorganisation des cartes par maintien sur ⠿ puis glisser-déposer */
 (function initCardReorder(){
   const cards=()=>Array.from(document.querySelectorAll('.reorderableCard'));
-  const key='myevent_card_order_v1';
+  const keyBase='myevent_card_order_v2_';
+  const key=()=>keyBase+(user?.id||'guest');
   let dragCard=null, dragTimer=null, dragging=false;
   function saveOrder(){
-    try{localStorage.setItem(key, JSON.stringify(cards().map(c=>c.id).filter(Boolean)));}catch(e){}
+    try{localStorage.setItem(key(), JSON.stringify(cards().map(c=>c.id).filter(Boolean)));}catch(e){}
   }
   function restoreOrder(){
     try{
-      const ids=JSON.parse(localStorage.getItem(key)||'[]');
+      const ids=JSON.parse(localStorage.getItem(key())||'[]');
       if(!Array.isArray(ids)||!ids.length)return;
       const current=new Map(cards().map(c=>[c.id,c]));
       const ordered=ids.map(id=>current.get(id)).filter(Boolean);
@@ -2211,6 +2245,7 @@ $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinEvent($('joi
   document.addEventListener('pointerup',finish);
   document.addEventListener('pointercancel',finish);
   document.addEventListener('click',e=>{if(e.target.closest('.dragHandle')){e.preventDefault();e.stopPropagation();}},true);
+  window.restoreMyEventCardOrder=restoreOrder;
   restoreOrder();
 })();
 </script>
