@@ -35,7 +35,8 @@ button:disabled{opacity:.5}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
-.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:block}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}</style>
+.profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:block}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}.locationInputRow{display:flex;gap:8px;align-items:stretch}.locationInputRow input{flex:1;min-width:0}.locationBtn{white-space:nowrap;padding:0 12px}.smallHint{margin-top:6px;font-size:12px}@media(max-width:600px){.locationInputRow{display:block}.locationBtn{width:100%;margin-top:8px;min-height:42px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -142,7 +143,7 @@ button:disabled{opacity:.5}
 <input id="ename" placeholder="Nom de l’événement">
 <div class="fieldRow">
   <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
-  <div><label class="smallLabel" for="place">Lieu</label><input id="place" placeholder="Lieu"></div>
+  <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div></div>
 </div>
 <textarea id="eventDescriptionInput" placeholder="Description de l’événement…" rows="3"></textarea>
 <input id="eventCoverUrlInput" placeholder="URL de la photo de couverture (optionnel)">
@@ -1807,6 +1808,29 @@ $('connectBtn').addEventListener('click',connect);
 window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
+const useLocationBtn=$('useLocationBtn');
+if(useLocationBtn){
+  useLocationBtn.addEventListener('click',()=>{
+    const hint=$('locationHint');
+    if(!navigator.geolocation){hint.textContent='La géolocalisation n’est pas disponible sur cet appareil.';return;}
+    hint.textContent='📍 Recherche de ta position…';
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const lat=pos.coords.latitude.toFixed(6),lon=pos.coords.longitude.toFixed(6);
+        const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&zoom=18&addressdetails=1',{headers:{'Accept':'application/json'}});
+        if(!r.ok) throw new Error('reverse geocoding');
+        const d=await r.json();
+        const a=d.address||{};
+        const label=d.display_name||[a.road,a.house_number,a.postcode,a.city||a.town||a.village].filter(Boolean).join(', ');
+        $('place').value=label||('Position : '+lat+', '+lon);
+        hint.textContent='✅ Lieu trouvé. Tu peux encore le modifier avant de créer l’événement.';
+      }catch(e){
+        $('place').value=pos.coords.latitude.toFixed(6)+', '+pos.coords.longitude.toFixed(6);
+        hint.textContent='✅ Position ajoutée. Tu peux remplacer les coordonnées par une adresse plus précise.';
+      }
+    },()=>{hint.textContent='Impossible d’accéder à ta position. Vérifie l’autorisation de localisation dans ton iPhone.'},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  });
+}
 $('eventBtn').addEventListener('click',createEvent);
 $('saveEventBtn').addEventListener('click',saveEvent);
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
