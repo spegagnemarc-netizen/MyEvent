@@ -138,18 +138,20 @@ button:disabled{opacity:.5}
   <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button><button id="leaveEventBtn" class="secondary hidden">🚪 Quitter l’événement</button></div>
 </div>
 
-<div class="card" id="createEventCard">
-<h2>🎉 Créer un événement</h2>
-<input id="ename" placeholder="Nom de l’événement">
-<div class="fieldRow">
-  <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
-  <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div><div id="locationMap" class="locationMap hidden"><iframe id="locationMapFrame" title="Carte du lieu" loading="lazy"></iframe><div class="locationMapBar"><span>📍 Position sélectionnée</span><a id="locationMapLink" href="#" target="_blank" rel="noopener">Ouvrir la carte</a></div></div></div>
-</div>
-<textarea id="eventDescriptionInput" placeholder="Description de l’événement…" rows="3"></textarea>
-<label class="coverFileLabel">🖼️ Joindre une photo de couverture (optionnel)<input id="eventCoverFileInput" type="file" accept="image/*"></label><div id="eventCoverFileName" class="coverFileName"></div>
-<button id="eventBtn">Créer</button>
-<p id="eventmsg" class="muted"></p>
-</div>
+<details id="createEventCard" class="card editEventBox createEventBox">
+  <summary>🎉 Créer un événement</summary>
+  <div style="margin-top:12px">
+    <input id="ename" placeholder="Nom de l’événement">
+    <div class="fieldRow">
+      <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
+      <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div><div id="locationMap" class="locationMap hidden"><iframe id="locationMapFrame" title="Carte du lieu" loading="lazy"></iframe><div class="locationMapBar"><span>📍 Position sélectionnée</span><a id="locationMapLink" href="#" target="_blank" rel="noopener">Ouvrir la carte</a></div></div></div>
+    </div>
+    <textarea id="eventDescriptionInput" placeholder="Description de l’événement…" rows="3"></textarea>
+    <label class="coverFileLabel">🖼️ Joindre une photo de couverture (optionnel)<input id="eventCoverFileInput" type="file" accept="image/*"></label><div id="eventCoverFileName" class="coverFileName"></div>
+    <button id="eventBtn">Créer</button>
+    <p id="eventmsg" class="muted"></p>
+  </div>
+</details>
 
 <details id="editEventBox" class="card editEventBox hidden">
   <summary>✏️ Modifier l’événement</summary>
@@ -801,7 +803,17 @@ async function createEvent(){
       event=ur.data;
     }
     msg('eventmsg','Événement créé : '+event.name,'ok');
-    $('eventDescriptionInput').value='';$('eventDate').value='';$('eventCoverFileInput').value='';$('eventCoverFileName').textContent='';
+    $('ename').value='';
+    $('eventDescriptionInput').value='';
+    $('eventDate').value='';
+    $('place').value='';
+    $('eventCoverFileInput').value='';
+    $('eventCoverFileName').textContent='';
+    $('locationHint').textContent='Tu peux saisir une adresse, un lieu ou utiliser ta position.';
+    $('locationMap').classList.add('hidden');
+    $('locationMapFrame').src='about:blank';
+    $('locationMapLink').href='#';
+    $('createEventCard').open=false;
     await loadEvents();
     await selectEvent(event.id);
   }catch(e){msg('eventmsg','Erreur : '+(e.message||String(e)),'err')}
@@ -1881,6 +1893,11 @@ if(useLocationBtn){
     },()=>{hint.textContent='Impossible d’accéder à ta position. Vérifie l’autorisation de localisation dans ton iPhone.'},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
   });
 }
+$('createEventCard')?.addEventListener('toggle',()=>{
+  if($('createEventCard').open){
+    $('eventmsg').textContent='';
+  }
+});
 $('eventBtn').addEventListener('click',createEvent);
 $('eventCoverFileInput')?.addEventListener('change',()=>{
   const f=$('eventCoverFileInput').files?.[0];
