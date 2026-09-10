@@ -211,6 +211,14 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 
 /* V10 — une seule alerte d'appel visible dans la discussion */
 .callAlertMessage{max-width:92%;box-sizing:border-box}
+
+/* V11 — commandes d'appel plus élégantes et compactes */
+.compactOverlayControls{display:grid;grid-template-columns:44px 44px 44px minmax(92px,1fr) minmax(92px,1fr) 44px;align-items:center;gap:7px;padding-top:8px}
+.compactOverlayControls .callIconBtn{width:44px;height:44px;min-height:44px;padding:0;border-radius:14px;font-size:18px;display:flex;align-items:center;justify-content:center}
+.compactOverlayControls .compactCallSelect{width:100%;min-width:0;height:44px;min-height:44px;padding:7px 28px 7px 10px;border-radius:14px;font-size:12px;box-sizing:border-box}
+.compactOverlayControls .danger{border-color:#ff5577}
+.compactOverlayControls .callIconBtn:hover,.compactOverlayControls .compactCallSelect:hover{transform:translateY(-1px)}
+@media(max-width:520px){.compactOverlayControls{grid-template-columns:42px 42px 42px minmax(88px,1fr) minmax(88px,1fr) 42px;gap:6px}.compactOverlayControls .callIconBtn{width:42px;height:42px;min-height:42px}.compactOverlayControls .compactCallSelect{height:42px;min-height:42px;font-size:11px;padding-left:8px;padding-right:22px}}
 </style>
 </head>
 <body>
@@ -2249,11 +2257,11 @@ const weatherLabels={0:'Ciel dégagé',1:'Peu nuageux',2:'Partiellement nuageux'
 function weatherDateLabel(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}).replace('.','')}catch(e){return iso}}
 async function loadWeather(){const root=$('weatherContent');if(!root)return;if(!event){root.innerHTML='<p class="muted">Sélectionne un événement pour afficher la météo.</p>';return}const place=(event.location||'').trim();if(!place){root.innerHTML='<p class="muted">Ajoute un lieu à l’événement pour obtenir la météo.</p>';return}root.innerHTML='<p class="muted">🌍 Recherche du lieu et des prévisions…</p>';try{const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(place)+'&count=1&language=fr&format=json');if(!geo.ok)throw new Error('Service météo indisponible');const gd=await geo.json(),g=gd.results?.[0];if(!g)throw new Error('Lieu introuvable. Essaie une ville ou une adresse plus simple.');const rr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+g.latitude+'&longitude='+g.longitude+'&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&forecast_days=16');if(!rr.ok)throw new Error('Prévisions indisponibles');const d=await rr.json(),c=d.current||{},day=d.daily||{},code=c.weather_code??0,targetDate=event.event_date?new Date(event.event_date):null;let idx=0;if(targetDate&&Array.isArray(day.time)){const td=targetDate.toLocaleDateString('en-CA',{timeZone:d.timezone||'UTC'});const found=day.time.findIndex(x=>x===td);if(found>=0)idx=found}const tmin=day.temperature_2m_min?.[idx],tmax=day.temperature_2m_max?.[idx],pop=day.precipitation_probability_max?.[idx],wmax=day.wind_speed_10m_max?.[idx];const eventTxt=targetDate?' pour le '+targetDate.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';const days=(day.time||[]).slice(0,7).map((date,i)=>'<div class="weatherDay"><b>'+weatherDateLabel(date)+'</b><span>'+(weatherIcons[day.weather_code?.[i]]||'🌤️')+'</span><span>'+Math.round(day.temperature_2m_max?.[i]??0)+'° / '+Math.round(day.temperature_2m_min?.[i]??0)+'°</span><span>🌧️ '+(day.precipitation_probability_max?.[i]??0)+'%</span></div>').join('');root.innerHTML='<div class="muted">📍 '+(g.name||place)+(g.admin1?', '+g.admin1:'')+eventTxt+'</div><div class="weatherNow"><div class="weatherIcon">'+(weatherIcons[code]||'🌤️')+'</div><div><div class="weatherTemp">'+Math.round(c.temperature_2m??tmax??0)+'°C</div><div class="weatherMeta"><span>'+(weatherLabels[code]||'Conditions actuelles')+'</span><span>💨 '+Math.round(c.wind_speed_10m??wmax??0)+' km/h · 🌧️ '+Math.round((c.precipitation??0)*10)/10+' mm</span></div></div></div><div class="weatherHint muted">Prévision pour la date de l’événement : <b>'+Math.round(tmax??0)+'° / '+Math.round(tmin??0)+'°</b> · pluie '+(pop??0)+'% · vent jusqu’à '+Math.round(wmax??0)+' km/h</div><div class="weatherForecast">'+days+'</div>'}catch(e){root.innerHTML='<p class="muted">⚠️ '+(e.message||'Impossible de charger la météo.')+'</p>'}}
 
-/* Appel de groupe — WebRTC maillé + salon immersif V8 */
-let callChannel=null,callStream=null,callPeers=new Map(),callActive=false,callMuted=false,callCamera=true,callLayout='auto',callFocusId='';
+/* Appel de groupe — V11 : WebRTC maillé + présence Supabase + reconnexion robuste */
+let callChannel=null,callStream=null,callPeers=new Map(),callStreams=new Map(),callActive=false,callMuted=false,callCamera=true,callLayout='auto',callFocusId='',callIceQueue=new Map(),callReconnectTimers=new Map();
 function setCallStatus(t){if($('callStatus'))$('callStatus').textContent=t;if($('callOverlayStatus'))$('callOverlayStatus').textContent=t}
 function callParticipantIds(){return ['local',...Array.from(callPeers.keys())]}
-function displayCallName(id){if(id==='local')return user?.pseudo||user?.name||'Moi';return document.getElementById('call-'+id)?.dataset.name||'Participant'}
+function displayCallName(id){if(id==='local')return user?.pseudo||user?.name||'Moi';return document.getElementById('call-'+id)?.dataset.name||callStreams.get(id)?.name||'Participant'}
 function updateCallCount(){const n=callPeers.size+(callActive?1:0);if($('callCount'))$('callCount').textContent=n+' participant'+(n>1?'s':'');if($('callOverlayStatus')&&callActive)$('callOverlayStatus').textContent='Appel en cours · '+n+' participant'+(n>1?'s':'');updateCallFocusOptions();renderCallStage()}
 function addCallTile(id,name,stream,local=false){
  const grid=$('callGrid');if(!grid)return;let tile=document.getElementById('call-'+id);
@@ -2261,49 +2269,82 @@ function addCallTile(id,name,stream,local=false){
   const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=!!local;tile.appendChild(v);
   const lab=document.createElement('span');lab.className='callName';lab.textContent=name||'Participant';tile.appendChild(lab);grid.appendChild(tile);
  }
- tile.dataset.name=name||tile.dataset.name||'Participant';const lab=tile.querySelector('.callName');if(lab)lab.textContent=name||'Participant';
- const v=tile.querySelector('video');if(stream&&v.srcObject!==stream){v.srcObject=stream;v.play().catch(()=>{})}
+ tile.dataset.name=name||tile.dataset.name||'Participant';
+ if(stream){callStreams.set(id,{stream,name:name||'Participant'});const lab=tile.querySelector('.callName');if(lab)lab.textContent=name||'Participant';const v=tile.querySelector('video');if(v&&v.srcObject!==stream){v.srcObject=stream;v.muted=!!local;v.play().catch(()=>{})}}
  renderCallStage();updateCallFocusOptions();
 }
-function removeCallTile(id){document.getElementById('call-'+id)?.remove();if(callFocusId===id)callFocusId='';renderCallStage();updateCallFocusOptions()}
-function updateCallFocusOptions(){const sel=$('callFocusSelect');if(!sel)return;const ids=callParticipantIds();const prev=callFocusId;sel.innerHTML='<option value="">Choisir une personne</option>'+ids.map(id=>'<option value="'+id+'">⭐ '+displayCallName(id)+'</option>').join('');if(ids.includes(prev))sel.value=prev}
+function removeCallTile(id){document.getElementById('call-'+id)?.remove();callStreams.delete(id);if(callFocusId===id)callFocusId='';renderCallStage();updateCallFocusOptions()}
+function updateCallFocusOptions(){const sel=$('callFocusSelect');if(!sel)return;const ids=callParticipantIds();const prev=callFocusId;sel.innerHTML='<option value="">⭐ Personne</option>'+ids.map(id=>'<option value="'+id+'">⭐ '+displayCallName(id)+'</option>').join('');if(ids.includes(prev))sel.value=prev}
 function renderCallStage(){
- const stage=$('callStage'),grid=$('callGrid');if(!stage||!grid)return;
- stage.innerHTML='';const tiles=Array.from(grid.querySelectorAll('.callTile'));const count=tiles.length;
- tiles.forEach(t=>{const clone=t.cloneNode(true);const src=t.querySelector('video')?.srcObject;const v=clone.querySelector('video');if(src&&v){v.srcObject=src;v.muted=t.querySelector('video')?.muted||false;v.play().catch(()=>{})}if(callFocusId===t.id.replace('call-',''))clone.classList.add('focused');stage.appendChild(clone)});
+ const stage=$('callStage');if(!stage)return;stage.innerHTML='';const ids=callParticipantIds().filter(id=>callStreams.has(id));const count=ids.length;
+ ids.forEach(id=>{const info=callStreams.get(id);const tile=document.createElement('div');tile.className='callTile'+(id==='local'?' local':'')+(callFocusId===id?' focused':'');tile.id='call-'+id;tile.dataset.name=info.name||'Participant';const v=document.createElement('video');v.autoplay=true;v.playsInline=true;v.muted=id==='local';v.srcObject=info.stream;v.play().catch(()=>{});tile.appendChild(v);const lab=document.createElement('span');lab.className='callName';lab.textContent=info.name||'Participant';tile.appendChild(lab);stage.appendChild(tile)});
  stage.classList.remove('mode-two','mode-grid','mode-spotlight');
  if(callLayout==='spotlight'||callFocusId)stage.classList.add('mode-spotlight');else if(callLayout==='grid'||count>=3)stage.classList.add('mode-grid');else stage.classList.add('mode-two');
 }
-async function openCallOverlay(){const o=$('callOverlay');if(!o)return;o.classList.add('active');o.setAttribute('aria-hidden','false');renderCallStage();try{if(document.documentElement.requestFullscreen&&!/iPhone|iPad|iPod/i.test(navigator.userAgent))await document.documentElement.requestFullscreen()}catch(e){} }
-async function minimizeCallOverlay(){const o=$('callOverlay');if(!o)return;o.classList.remove('active');o.setAttribute('aria-hidden','true');try{if(document.fullscreenElement&&document.exitFullscreen)await document.exitFullscreen()}catch(e){} }
-async function requestCallPiP(){
- const stage=$('callStage');const video=stage?.querySelector('video');
- if(!video)return;
- try{if(document.pictureInPictureEnabled&&video.requestPictureInPicture){await video.requestPictureInPicture();return}}
- catch(e){console.warn('PiP:',e)}
- if($('callMsg'))$('callMsg').textContent='La mini-fenêtre n’est pas disponible dans ce navigateur. L’appel reste actif si tu réduis le salon.';
+async function openCallOverlay(){const o=$('callOverlay');if(!o)return;o.classList.add('active');o.setAttribute('aria-hidden','false');renderCallStage();document.querySelectorAll('#callStage video').forEach(v=>v.play().catch(()=>{}));try{if(document.documentElement.requestFullscreen&&!/iPhone|iPad|iPod/i.test(navigator.userAgent))await document.documentElement.requestFullscreen()}catch(e){}}
+async function minimizeCallOverlay(){const o=$('callOverlay');if(!o)return;o.classList.remove('active');o.setAttribute('aria-hidden','true');try{if(document.fullscreenElement&&document.exitFullscreen)await document.exitFullscreen()}catch(e){}document.querySelectorAll('#callGrid video').forEach(v=>v.play().catch(()=>{}))}
+async function requestCallPiP(){const stage=$('callStage'),video=stage?.querySelector('video');if(!video)return;try{if(document.pictureInPictureEnabled&&video.requestPictureInPicture){await video.requestPictureInPicture();return}}catch(e){console.warn('PiP:',e)}if($('callMsg'))$('callMsg').textContent='La mini-fenêtre n’est pas disponible dans ce navigateur. L’appel reste actif si tu réduis le salon.'}
+function queueIce(peerId,candidate){if(!callIceQueue.has(peerId))callIceQueue.set(peerId,[]);callIceQueue.get(peerId).push(candidate)}
+async function flushIce(peerId,pc){const q=callIceQueue.get(peerId)||[];callIceQueue.delete(peerId);for(const c of q){try{await pc.addIceCandidate(new RTCIceCandidate(c))}catch(e){console.warn('ICE:',e)}}}
+async function closeCallPeer(peerId,remove=true){const pc=callPeers.get(peerId);if(pc){try{pc.onconnectionstatechange=null;pc.close()}catch(e){}callPeers.delete(peerId)}if(remove)removeCallTile(peerId);callReconnectTimers.delete(peerId);}
+async function ensureCallPeer(peerId,initiator,force=false){
+ if(!callActive||!callStream||!peerId||peerId===user?.id)return null;
+ const existing=callPeers.get(peerId);if(existing&&['connected','connecting','new'].includes(existing.connectionState)&&!force)return existing;if(existing)await closeCallPeer(peerId,true);
+ const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});
+ callStream.getTracks().forEach(t=>pc.addTrack(t,callStream));
+ pc.onicecandidate=e=>{if(e.candidate)callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'ice',from:user.id,to:peerId,candidate:e.candidate}})};
+ pc.ontrack=e=>{const stream=e.streams?.[0];if(stream){addCallTile(peerId,'Participant',stream,false);document.querySelectorAll('#callStage video').forEach(v=>v.play().catch(()=>{}))}};
+ pc.onconnectionstatechange=()=>{const st=pc.connectionState;if(st==='connected'){callReconnectTimers.delete(peerId);updateCallCount();return}if(st==='failed'||st==='disconnected'){if(!callReconnectTimers.has(peerId)){const timer=setTimeout(async()=>{callReconnectTimers.delete(peerId);if(!callActive||!callChannel)return;try{await ensureCallPeer(peerId,user.id<peerId,true);await sendCallPresence('reconnect')}catch(e){console.warn('Reconnexion appel:',e)}},2500);callReconnectTimers.set(peerId,timer)} }};
+ callPeers.set(peerId,pc);updateCallCount();
+ if(initiator){const offer=await pc.createOffer();await pc.setLocalDescription(offer);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'offer',from:user.id,to:peerId,description:pc.localDescription}})}
+ return pc;
 }
-async function ensureCallPeer(peerId,initiator){if(callPeers.has(peerId))return callPeers.get(peerId);if(!callStream)return null;const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});callStream.getTracks().forEach(t=>pc.addTrack(t,callStream));pc.onicecandidate=e=>{if(e.candidate)callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'ice',from:user.id,to:peerId,candidate:e.candidate}})};pc.ontrack=e=>addCallTile(peerId,'Participant',e.streams[0],false);pc.onconnectionstatechange=()=>{if(['failed','closed','disconnected'].includes(pc.connectionState)){pc.close();callPeers.delete(peerId);removeCallTile(peerId);updateCallCount()}};callPeers.set(peerId,pc);updateCallCount();if(initiator){const offer=await pc.createOffer();await pc.setLocalDescription(offer);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'offer',from:user.id,to:peerId,description:pc.localDescription}})}return pc}
-async function handleCallSignal(p){if(!p||!callActive||(p.to!=='*'&&p.to!==user?.id))return;try{if(p.kind==='join'){if(user.id<p.from)await ensureCallPeer(p.from,true);return}if(p.kind==='offer'){const pc=await ensureCallPeer(p.from,false);await pc.setRemoteDescription(new RTCSessionDescription(p.description));const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'answer',from:user.id,to:p.from,description:pc.localDescription}});return}if(p.kind==='answer'){const pc=callPeers.get(p.from);if(pc)await pc.setRemoteDescription(new RTCSessionDescription(p.description));return}if(p.kind==='ice'){const pc=callPeers.get(p.from);if(pc&&p.candidate)await pc.addIceCandidate(new RTCIceCandidate(p.candidate));return}if(p.kind==='leave'){callPeers.get(p.from)?.close();callPeers.delete(p.from);removeCallTile(p.from);updateCallCount()}}catch(e){console.warn('Signalisation appel:',e)}}
-async function announceGroupCall(){
-  if(!event||!user||!sb)return;
-  try{
-    const content='[[MYEVENT_GROUP_CALL]]'+JSON.stringify({eventName:event.name||'Événement'});
-    const r=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content}).select('id').single();
-    if(!r.error) rememberLocalCreated('messages',r.data?.id);
-    await loadMessages();
-  }catch(e){console.warn('Annonce appel:',e.message||e)}
+async function sendCallPresence(kind='join'){if(!callChannel||!user)return;try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind,from:user.id,to:'*',name:user.pseudo||user.name||'Participant'}})}catch(e){}}
+async function handleCallSignal(p){
+ if(!p||!callActive||(p.to!=='*'&&p.to!==user?.id)||p.from===user?.id)return;
+ try{
+  if(p.kind==='join'||p.kind==='reconnect'){
+   const initiator=user.id<p.from; await ensureCallPeer(p.from,initiator,true); return;
+  }
+  if(p.kind==='offer'){
+   const pc=await ensureCallPeer(p.from,false);if(!pc)return;await pc.setRemoteDescription(new RTCSessionDescription(p.description));await flushIce(p.from,pc);const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await callChannel?.send({type:'broadcast',event:'signal',payload:{kind:'answer',from:user.id,to:p.from,description:pc.localDescription}});return;
+  }
+  if(p.kind==='answer'){const pc=callPeers.get(p.from);if(pc){await pc.setRemoteDescription(new RTCSessionDescription(p.description));await flushIce(p.from,pc)}return}
+  if(p.kind==='ice'){const pc=callPeers.get(p.from);if(pc&&pc.remoteDescription?.type)try{await pc.addIceCandidate(new RTCIceCandidate(p.candidate))}catch(e){console.warn('ICE:',e)}else queueIce(p.from,p.candidate);return}
+  if(p.kind==='leave'){await closeCallPeer(p.from,true);updateCallCount()}
+ }catch(e){console.warn('Signalisation appel:',e)}
 }
-
-async function startGroupCall(){if(callActive){openCallOverlay();return}if(!event||!user||!sb){if($('callMsg'))$('callMsg').textContent='Sélectionne un événement et connecte-toi.';return}try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('La caméra et le micro ne sont pas disponibles sur cet appareil.');callStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});callActive=true;callMuted=false;callCamera=true;callLayout='auto';callFocusId='';addCallTile('local',user.pseudo||user.name||'Moi',callStream,true);callChannel=sb.channel('event-call-'+event.id,{config:{broadcast:{self:false}}});callChannel.on('broadcast',{event:'signal'},({payload})=>handleCallSignal(payload));await new Promise((resolve,reject)=>callChannel.subscribe(st=>st==='SUBSCRIBED'?resolve():st==='CHANNEL_ERROR'?reject(new Error('Impossible d’ouvrir le salon.')):null));await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'join',from:user.id,to:'*'}});setCallStatus('Appel en cours');$('startCallBtn')?.classList.add('hidden');$('joinCallBtn')?.classList.add('hidden');$('openCallBtn')?.classList.remove('hidden');$('muteCallBtn')?.classList.remove('hidden');$('cameraCallBtn')?.classList.remove('hidden');$('leaveCallBtn')?.classList.remove('hidden');if($('callMsg'))$('callMsg').textContent='Le salon est ouvert. Tu peux le réduire sans quitter l’appel.';updateCallCount();await announceGroupCall();openCallOverlay()}catch(e){callActive=false;callStream?.getTracks().forEach(t=>t.stop());callStream=null;if($('callMsg'))$('callMsg').textContent='⚠️ '+(e.message||'Impossible de démarrer l’appel.')}}
-async function stopGroupCall(){minimizeCallOverlay();if(callChannel){try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'leave',from:user?.id,to:'*'}})}catch(e){}try{await sb.removeChannel(callChannel)}catch(e){}callChannel=null}callPeers.forEach(pc=>pc.close());callPeers.clear();callStream?.getTracks().forEach(t=>t.stop());callStream=null;callActive=false;callFocusId='';document.querySelectorAll('#callGrid .callTile').forEach(x=>x.remove());setCallStatus('Le salon est fermé.');$('startCallBtn')?.classList.remove('hidden');$('joinCallBtn')?.classList.remove('hidden');$('openCallBtn')?.classList.add('hidden');$('muteCallBtn')?.classList.add('hidden');$('cameraCallBtn')?.classList.add('hidden');$('leaveCallBtn')?.classList.add('hidden');updateCallCount()}
-function toggleCallMute(){callMuted=!callMuted;callStream?.getAudioTracks().forEach(t=>t.enabled=!callMuted);const txt=callMuted?'🔇 Micro coupé':'🎙️ Micro';if($('muteCallBtn'))$('muteCallBtn').textContent=txt;if($('overlayMuteBtn'))$('overlayMuteBtn').textContent=txt}
-function toggleCallCamera(){callCamera=!callCamera;callStream?.getVideoTracks().forEach(t=>t.enabled=callCamera);const txt=callCamera?'📷 Caméra':'🚫 Caméra coupée';if($('cameraCallBtn'))$('cameraCallBtn').textContent=txt;if($('overlayCameraBtn'))$('overlayCameraBtn').textContent=txt}
+async function setupCallChannel(){
+ callChannel=sb.channel('event-call-'+event.id,{config:{broadcast:{self:false},presence:{key:user.id}}});
+ callChannel.on('broadcast',{event:'signal'},({payload})=>handleCallSignal(payload));
+ callChannel.on('presence',{event:'sync'},async()=>{if(!callActive)return;const state=callChannel.presenceState();for(const key of Object.keys(state)){if(key===user.id)continue;const meta=state[key]?.[0]||{};const peerId=meta.user_id||key;const initiator=user.id<peerId;await ensureCallPeer(peerId,initiator,true)}});
+ callChannel.on('presence',{event:'join'},async({key,newPresences})=>{if(!callActive||key===user.id)return;const peerId=newPresences?.[0]?.user_id||key;await ensureCallPeer(peerId,user.id<peerId,true)});
+ callChannel.on('presence',{event:'leave'},async({key})=>{if(key!==user.id){await closeCallPeer(key,true);updateCallCount()}});
+ await new Promise((resolve,reject)=>callChannel.subscribe(async st=>{if(st==='SUBSCRIBED'){try{await callChannel.track({user_id:user.id,name:user.pseudo||user.name||'Participant'});resolve()}catch(e){reject(e)}}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED')reject(new Error('Impossible d’ouvrir le salon.'))}));
+}
+async function announceGroupCall(){if(!event||!user||!sb)return;try{const content='[[MYEVENT_GROUP_CALL]]'+JSON.stringify({eventName:event.name||'Événement'});const r=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content}).select('id').single();if(!r.error)rememberLocalCreated('messages',r.data?.id);await loadMessages()}catch(e){console.warn('Annonce appel:',e.message||e)}}
+async function startGroupCall(){
+ if(callActive){await openCallOverlay();return}
+ if(!event||!user||!sb){if($('callMsg'))$('callMsg').textContent='Sélectionne un événement et connecte-toi.';return}
+ try{
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error('La caméra et le micro ne sont pas disponibles sur cet appareil.');
+  callStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  callActive=true;callMuted=false;callCamera=true;callLayout='auto';callFocusId='';callIceQueue.clear();
+  addCallTile('local',user.pseudo||user.name||'Moi',callStream,true);
+  await setupCallChannel();
+  await sendCallPresence('join');
+  setCallStatus('Appel en cours');$('startCallBtn')?.classList.add('hidden');$('joinCallBtn')?.classList.add('hidden');$('openCallBtn')?.classList.remove('hidden');$('muteCallBtn')?.classList.remove('hidden');$('cameraCallBtn')?.classList.remove('hidden');$('leaveCallBtn')?.classList.remove('hidden');if($('callMsg'))$('callMsg').textContent='Le salon est ouvert. Tu peux le réduire sans quitter l’appel.';updateCallCount();await announceGroupCall();await openCallOverlay();
+ }catch(e){callActive=false;try{if(callChannel)await sb.removeChannel(callChannel)}catch(_){}callChannel=null;callStream?.getTracks().forEach(t=>t.stop());callStream=null;if($('callMsg'))$('callMsg').textContent='⚠️ '+(e.message||'Impossible de démarrer l’appel.')}}
+async function stopGroupCall(){
+ minimizeCallOverlay();
+ if(callChannel){try{await callChannel.send({type:'broadcast',event:'signal',payload:{kind:'leave',from:user?.id,to:'*'}})}catch(e){}try{await callChannel.untrack()}catch(e){}try{await sb.removeChannel(callChannel)}catch(e){}callChannel=null}
+ callReconnectTimers.forEach(t=>clearTimeout(t));callReconnectTimers.clear();callPeers.forEach(pc=>{try{pc.close()}catch(e){}});callPeers.clear();callStreams.clear();callIceQueue.clear();callStream?.getTracks().forEach(t=>t.stop());callStream=null;callActive=false;callFocusId='';document.querySelectorAll('#callGrid .callTile').forEach(x=>x.remove());setCallStatus('Le salon est fermé.');$('startCallBtn')?.classList.remove('hidden');$('joinCallBtn')?.classList.remove('hidden');$('openCallBtn')?.classList.add('hidden');$('muteCallBtn')?.classList.add('hidden');$('cameraCallBtn')?.classList.add('hidden');$('leaveCallBtn')?.classList.add('hidden');updateCallCount()}
+function toggleCallMute(){callMuted=!callMuted;callStream?.getAudioTracks().forEach(t=>t.enabled=!callMuted);const txt=callMuted?'🔇':'🎙️';if($('muteCallBtn'))$('muteCallBtn').textContent=txt;if($('overlayMuteBtn'))$('overlayMuteBtn').textContent=txt}
+function toggleCallCamera(){callCamera=!callCamera;callStream?.getVideoTracks().forEach(t=>t.enabled=callCamera);const txt=callCamera?'📷':'🚫';if($('cameraCallBtn'))$('cameraCallBtn').textContent=txt;if($('overlayCameraBtn'))$('overlayCameraBtn').textContent=txt}
 function setCallLayoutMode(v){callLayout=v||'auto';if(callLayout!=='spotlight')callFocusId='';renderCallStage()}
 function setCallFocus(v){callFocusId=v||'';if(callFocusId)callLayout='spotlight';renderCallStage()}
-
 $('startCallBtn')?.addEventListener('click',startGroupCall);$('joinCallBtn')?.addEventListener('click',startGroupCall);$('openCallBtn')?.addEventListener('click',openCallOverlay);$('leaveCallBtn')?.addEventListener('click',stopGroupCall);$('muteCallBtn')?.addEventListener('click',toggleCallMute);$('cameraCallBtn')?.addEventListener('click',toggleCallCamera);$('minimizeCallBtn')?.addEventListener('click',minimizeCallOverlay);$('overlayLeaveBtn')?.addEventListener('click',stopGroupCall);$('overlayMuteBtn')?.addEventListener('click',toggleCallMute);$('overlayCameraBtn')?.addEventListener('click',toggleCallCamera);$('pipCallBtn')?.addEventListener('click',requestCallPiP);$('callLayoutSelect')?.addEventListener('change',e=>setCallLayoutMode(e.target.value));$('callFocusSelect')?.addEventListener('change',e=>setCallFocus(e.target.value));
-document.addEventListener('click',e=>{const tile=e.target.closest('#callStage .callTile');if(!tile||!callActive)return;const id=tile.id.replace('call-','');if(callPeers.has(id)||id==='local'){callFocusId=id;callLayout='spotlight';if($('callFocusSelect'))$('callFocusSelect').value=id;renderCallStage();}},true);
+document.addEventListener('click',e=>{const tile=e.target.closest('#callStage .callTile');if(!tile||!callActive)return;const id=tile.id.replace('call-','');if(callStreams.has(id)){callFocusId=id;callLayout='spotlight';if($('callFocusSelect'))$('callFocusSelect').value=id;renderCallStage();}},true);
 /* Réorganisation des cartes par maintien sur ⠿ puis glisser-déposer */
 (function initCardReorder(){
   const cards=()=>Array.from(document.querySelectorAll('.reorderableCard'));
