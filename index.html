@@ -36,16 +36,21 @@ button:disabled{opacity:.5}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
 .profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.collapsibleCard{overflow:hidden}.collapsibleCard>summary{cursor:pointer;list-style:none;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none;min-height:56px;padding:14px 16px;margin:-1px}.collapsibleCard>summary::-webkit-details-marker{display:none}.collapsibleCard>summary::after{content:'⌄';font-size:20px;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}.collapsibleCard:not([open])>summary::after{transform:rotate(-90deg)}.collapsibleCard>summary:active{transform:scale(.995)}
-/* Format uniforme des sections : même logique visuelle que les boutons Discussion / Sondages / Photos / Participants */
-.uniformToggle{overflow:hidden;padding:0!important;min-height:0}
-.uniformToggle>summary{cursor:pointer;list-style:none;min-height:76px;height:76px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;margin:0;background:#0a1823;border:0;border-radius:14px;color:#f4f7fa;font-size:18px;font-weight:800;line-height:1.2;user-select:none;-webkit-user-select:none}
-.uniformToggle>summary::-webkit-details-marker{display:none}
-.uniformToggle>summary::after{content:'⌄';font-size:21px;line-height:1;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}
-.uniformToggle:not([open])>summary::after{transform:rotate(-90deg)}
-.uniformToggle>summary:active{transform:scale(.995)}
-.uniformToggle[open]>summary{border-radius:14px}
+/* Cartes compactes : même format visuel que Discussion / Sondages / Photos / Participants */
+.uniformToggle{overflow:hidden!important;padding:0!important;min-height:0!important;box-sizing:border-box!important}
+details.uniformToggle:not([open]){height:auto!important;min-height:0!important}
+details.uniformToggle>summary{cursor:pointer;list-style:none;height:58px!important;min-height:58px!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:10px 14px!important;margin:0!important;background:#0a1823!important;border:0!important;border-radius:14px!important;color:#f4f7fa!important;font-size:16px!important;font-weight:800!important;line-height:1.2!important;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+details.uniformToggle>summary::-webkit-details-marker{display:none}
+details.uniformToggle>summary::after{content:'⌄';font-size:20px;line-height:1;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}
+details.uniformToggle:not([open])>summary::after{transform:rotate(-90deg)}
+details.uniformToggle>summary:active{transform:scale(.995)}
+.summaryLabel{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dragHandle{flex:0 0 auto;width:34px;height:34px;display:grid;place-items:center;border:1px solid #28465e;border-radius:10px;background:#102131;color:#9eb2c4;font-size:20px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.dragHandle:active{cursor:grabbing}
+.reorderableCard.dragging{opacity:.72;box-shadow:0 0 0 2px #1683ff,0 12px 30px rgba(0,0,0,.3);position:relative;z-index:20}
+.reorderableCard.dropTarget{box-shadow:0 0 0 2px #1683ff}
 .uniformToggle .collapsibleBody,.uniformToggle>div[style*="margin-top"]{margin:12px 16px 16px}
-@media(max-width:430px){.uniformToggle>summary{font-size:17px;height:76px;min-height:76px;padding:12px 16px}}
+@media(max-width:430px){details.uniformToggle>summary{height:56px!important;min-height:56px!important;padding:8px 12px!important;font-size:15px!important}.dragHandle{width:32px;height:32px}}
 .collapsibleBody{margin:12px 16px 16px}.editEventBox>summary{font-size:18px}.editEventBox .collapsibleBody{margin-top:12px}.eventHero>summary{padding-bottom:14px}.eventHero[open]>summary{margin-bottom:0}.tabPanel>summary{font-size:18px}.tabPanel .collapsibleBody{margin-top:12px}.tabPanel:not(.active){display:none}.tabPanel.active{display:block}.tabPanel[open]>summary{margin-bottom:0}.profileSettingsOpen{animation:profileOpen .18s ease-out}@keyframes profileOpen{from{opacity:.5;transform:translateY(-5px)}to{opacity:1;transform:none}}.locationInputRow{display:flex;gap:8px;align-items:stretch}.locationInputRow input{flex:1;min-width:0}.locationBtn{white-space:nowrap;padding:0 12px}.smallHint{margin-top:6px;font-size:12px}.locationMap{margin-top:10px;border:1px solid #28445b;border-radius:14px;overflow:hidden;background:#0b1824}.locationMap.hidden{display:none}.locationMap iframe{display:block;width:100%;height:150px;border:0}.locationMapBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:12px;color:#9eb2c4}.locationMapBar a{color:#fff;text-decoration:none;background:#142b3d;border:1px solid #36536a;border-radius:9px;padding:6px 9px}@media(max-width:600px){.fieldRow{grid-template-columns:1fr}.locationInputRow{display:block}.locationBtn{width:100%;margin-top:8px;min-height:42px}}
 </style>
 </head>
@@ -126,8 +131,8 @@ button:disabled{opacity:.5}
 <p id="profileMsg" class="muted"></p>
 </div>
 
-<details id="eventsCard" class="card collapsibleCard">
-<summary>📋 Mes événements</summary>
+<details id="eventsCard" class="card collapsibleCard uniformToggle reorderableCard">
+<summary><span class="summaryLabel">📋 Mes événements</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
 <div class="collapsibleBody">
 <p class="muted">Retrouve automatiquement tous les groupes auxquels tu participes.</p>
 <div id="eventList" class="eventList"><p class="muted">Chargement…</p></div>
@@ -135,8 +140,8 @@ button:disabled{opacity:.5}
 </div>
 </details>
 
-<details id="eventHeroCard" class="card eventHero collapsibleCard hidden">
-  <summary id="eventHeroSummary">🎉 <span id="eventHeroSummaryText">Mon événement</span></summary>
+<details id="eventHeroCard" class="card eventHero collapsibleCard uniformToggle reorderableCard hidden">
+  <summary id="eventHeroSummary"><span class="summaryLabel">🎉 <span id="eventHeroSummaryText">Mon événement</span></span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
   <div class="collapsibleBody">
   <div id="eventCover" class="eventCover">
     <div class="eventHeroContent">
@@ -155,8 +160,8 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details id="createEventCard" class="card editEventBox createEventBox uniformToggle">
-  <summary>🎉 Créer un événement</summary>
+<details id="createEventCard" class="card editEventBox createEventBox uniformToggle reorderableCard">
+  <summary><span class="summaryLabel">🎉 Créer un événement</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
   <div style="margin-top:12px">
     <input id="ename" placeholder="Nom de l’événement">
     <div class="fieldRow">
@@ -170,8 +175,8 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details id="editEventBox" class="card editEventBox hidden uniformToggle">
-  <summary>✏️ Modifier l’événement</summary>
+<details id="editEventBox" class="card editEventBox hidden uniformToggle reorderableCard">
+  <summary><span class="summaryLabel">✏️ Modifier l’événement</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
   <div style="margin-top:12px">
     <input id="editEventName" placeholder="Nom de l’événement">
     <div class="fieldRow">
@@ -186,8 +191,8 @@ button:disabled{opacity:.5}
   </div>
 </details>
 
-<details class="card collapsibleCard uniformToggle" id="inviteCard">
-<summary>👥 Inviter</summary>
+<details class="card collapsibleCard uniformToggle reorderableCard" id="inviteCard">
+<summary><span class="summaryLabel">👥 Inviter</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
 <div class="collapsibleBody">
 <p class="muted">Partage ce lien pour permettre à quelqu’un de rejoindre cet événement.</p>
 <input id="inviteLink" readonly placeholder="Le lien apparaîtra ici">
@@ -206,8 +211,8 @@ button:disabled{opacity:.5}
 <button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
 </div>
 
-<details class="card notificationCenter collapsibleCard uniformToggle" id="notificationCenter">
-  <summary>🔔 Notifications</summary>
+<details class="card notificationCenter collapsibleCard uniformToggle reorderableCard" id="notificationCenter">
+  <summary><span class="summaryLabel">🔔 Notifications</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
   <div class="collapsibleBody">
   <div class="notificationHead">
     <div><p class="muted">Les nouveautés de ton événement, au même endroit.</p></div>
@@ -264,8 +269,8 @@ button:disabled{opacity:.5}
 </div>
 </details>
 
-<details class="card collapsibleCard uniformToggle" id="joinCard">
-<summary>🔗 Rejoindre un événement</summary>
+<details class="card collapsibleCard uniformToggle reorderableCard" id="joinCard">
+<summary><span class="summaryLabel">🔗 Rejoindre un événement</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
 <div class="collapsibleBody">
 <input id="joinCode" placeholder="Code d’invitation">
 <button id="joinBtn">Rejoindre</button>
@@ -2010,6 +2015,70 @@ $('copyInviteBtn').addEventListener('click',copyInvite);
 $('shareInviteBtn').addEventListener('click',shareInvite);
 $('joinBtn').addEventListener('click',()=>joinEvent($('joinCode').value));
 $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinEvent($('joinCode').value)});
+
+/* Réorganisation des cartes par maintien sur ⠿ puis glisser-déposer */
+(function initCardReorder(){
+  const cards=()=>Array.from(document.querySelectorAll('.reorderableCard'));
+  const key='myevent_card_order_v1';
+  let dragCard=null, dragTimer=null, dragging=false;
+  function saveOrder(){
+    try{localStorage.setItem(key, JSON.stringify(cards().map(c=>c.id).filter(Boolean)));}catch(e){}
+  }
+  function restoreOrder(){
+    try{
+      const ids=JSON.parse(localStorage.getItem(key)||'[]');
+      if(!Array.isArray(ids)||!ids.length)return;
+      const current=new Map(cards().map(c=>[c.id,c]));
+      const ordered=ids.map(id=>current.get(id)).filter(Boolean);
+      if(!ordered.length)return;
+      const parent=ordered[0].parentElement;
+      let anchor=cards().find(c=>!ordered.includes(c));
+      // Rebuild only the movable-card sequence; fixed elements keep their relative position.
+      ordered.forEach(c=>{
+        if(anchor && anchor.parentElement===parent) parent.insertBefore(c,anchor);
+        else parent.appendChild(c);
+      });
+    }catch(e){}
+  }
+  function finish(){
+    clearTimeout(dragTimer); dragTimer=null;
+    if(!dragging){dragCard=null;return;}
+    dragging=false;
+    if(dragCard){dragCard.classList.remove('dragging','dropTarget');saveOrder();}
+    document.querySelectorAll('.reorderableCard.dropTarget').forEach(c=>c.classList.remove('dropTarget'));
+    dragCard=null;
+  }
+  function move(e){
+    if(!dragging||!dragCard)return;
+    const candidates=cards().filter(c=>c!==dragCard && !c.classList.contains('hidden'));
+    let target=null, before=true, best=Infinity;
+    for(const c of candidates){
+      const r=c.getBoundingClientRect();
+      const d=Math.abs(e.clientY-(r.top+r.height/2));
+      if(d<best){best=d;target=c;before=e.clientY<r.top+r.height/2;}
+    }
+    document.querySelectorAll('.reorderableCard.dropTarget').forEach(c=>c.classList.remove('dropTarget'));
+    if(target){target.classList.add('dropTarget'); if(before)target.parentElement.insertBefore(dragCard,target); else target.parentElement.insertBefore(dragCard,target.nextSibling);}
+  }
+  document.addEventListener('pointerdown',e=>{
+    const handle=e.target.closest('.dragHandle');
+    if(!handle)return;
+    const card=handle.closest('.reorderableCard');
+    if(!card)return;
+    e.preventDefault();
+    dragCard=card;
+    clearTimeout(dragTimer);
+    dragTimer=setTimeout(()=>{
+      dragging=true;card.classList.add('dragging');
+      if(navigator.vibrate)navigator.vibrate(25);
+    },320);
+  },{passive:false});
+  document.addEventListener('pointermove',e=>{if(dragging){e.preventDefault();move(e);}}, {passive:false});
+  document.addEventListener('pointerup',finish);
+  document.addEventListener('pointercancel',finish);
+  document.addEventListener('click',e=>{if(e.target.closest('.dragHandle')){e.preventDefault();e.stopPropagation();}},true);
+  restoreOrder();
+})();
 </script>
 </body>
 </html>
