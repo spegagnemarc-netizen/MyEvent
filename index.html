@@ -523,8 +523,8 @@ async function selectEvent(id){
 
   event=r.data;
   localStorage.setItem('myevent_active_'+user.id,event.id);
-  $('ename').value=event.name||'';
-  $('place').value=event.location||'';
+  // Les champs du formulaire « Créer un événement » restent indépendants
+  // de l’événement actuellement sélectionné.
   renderEventHero();
   updateInviteUI();
   await initializeUnreadMarkers();
@@ -816,6 +816,8 @@ async function createEvent(){
     $('createEventCard').open=false;
     await loadEvents();
     await selectEvent(event.id);
+    resetCreateEventForm();
+    $('createEventCard').open=false;
   }catch(e){msg('eventmsg','Erreur : '+(e.message||String(e)),'err')}
   finally{setBusy('eventBtn',false,'Créer')}
 }
@@ -1893,10 +1895,21 @@ if(useLocationBtn){
     },()=>{hint.textContent='Impossible d’accéder à ta position. Vérifie l’autorisation de localisation dans ton iPhone.'},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
   });
 }
+function resetCreateEventForm(){
+  $('ename').value='';
+  $('eventDate').value='';
+  $('place').value='';
+  $('eventDescriptionInput').value='';
+  if($('eventCoverFileInput')) $('eventCoverFileInput').value='';
+  if($('eventCoverFileName')) $('eventCoverFileName').textContent='';
+  if($('locationHint')) $('locationHint').textContent='Tu peux saisir une adresse, un lieu ou utiliser ta position.';
+  if($('locationMap')) $('locationMap').classList.add('hidden');
+  if($('locationMapFrame')) $('locationMapFrame').src='about:blank';
+  if($('locationMapLink')) $('locationMapLink').href='#';
+  $('eventmsg').textContent='';
+}
 $('createEventCard')?.addEventListener('toggle',()=>{
-  if($('createEventCard').open){
-    $('eventmsg').textContent='';
-  }
+  if($('createEventCard').open) resetCreateEventForm();
 });
 $('eventBtn').addEventListener('click',createEvent);
 $('eventCoverFileInput')?.addEventListener('change',()=>{
