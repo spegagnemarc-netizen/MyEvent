@@ -13,7 +13,7 @@ button{background:#278cff;color:#fff;border:0;border-radius:12px;padding:12px 15
 button.secondary{background:transparent;border:1px solid #36536a}
 button:disabled{opacity:.5}
 .row{display:flex;gap:8px}.row>*{flex:1}
-.muted{color:#9eb2c4;font-size:13px}.hidden{display:none}
+.muted{color:#9eb2c4;font-size:13px}.hidden{display:none!important}.mainVisible{display:block!important}
 .msg{background:#142b3d;padding:10px;border-radius:14px;margin:8px 0}.me{background:#126fdf;margin-left:15%}
 .err{color:#ff9999}.ok{color:#7ee2a8}
 .notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}.checkRow{display:flex;align-items:center;gap:8px;margin:10px 0;color:#9db0c1;font-size:14px}.checkRow input{width:auto;margin:0}
@@ -413,6 +413,7 @@ async function show(u){
   user=u;
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
+  $('main').classList.add('mainVisible');
   global('Chargement de tes événements…');
 
   try{
@@ -1793,6 +1794,7 @@ async function logout(){
     await sb.auth.signOut();
     user=null; event=null;
     $('main').classList.add('hidden');
+    $('main').classList.remove('mainVisible');
     $('auth').classList.remove('hidden');
     $('profileSettingsCard').classList.remove('profileSettingsVisible','profileSettingsOpen');
     window.scrollTo(0,0);
