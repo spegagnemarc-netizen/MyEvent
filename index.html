@@ -311,6 +311,15 @@ button:disabled{opacity:.5}
   </div>
   <button type="button" class="secondary" id="resetChatThemeBtn" style="width:100%;margin-top:13px">↩️ Réinitialiser le thème</button>
 </div>
+<div class="card tabPanel" data-panel="polls">
+<h2>📊 Sondage</h2>
+<input id="question" placeholder="Question">
+<input id="options" placeholder="Choix séparés par des virgules">
+<label class="checkRow"><input id="allowMultiple" type="checkbox"> Autoriser plusieurs réponses</label>
+<button id="pollBtn">Créer le sondage</button>
+<div id="polls"></div>
+</div>
+
 <div class="card tabPanel" data-panel="media">
 <h2>📸 Photos & vidéos</h2>
 <p class="muted">Partage des souvenirs avec les participants de l’événement.</p>
