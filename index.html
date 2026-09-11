@@ -29,7 +29,7 @@ button:disabled{opacity:.5}
 /* V48 — Localisations événement */
 .locationPanel{min-height:70vh}.locationShell{display:flex;flex-direction:column;gap:10px}.locationToolbar{display:flex;gap:7px;overflow:auto;padding-bottom:2px}.locationToolbar button{white-space:nowrap;padding:9px 11px;font-size:13px}.locationMap{height:58vh;min-height:420px;border-radius:16px;overflow:hidden;border:1px solid #28445b;background:#0b1824;position:relative}.locationMap .mapLoading{position:absolute;inset:0;display:grid;place-items:center;color:#9eb2c4;background:#0b1824;z-index:2}.locationInfo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.locationInfoCard{background:#0b1824;border:1px solid #28445b;border-radius:13px;padding:10px}.locationInfoCard b{display:block;font-size:13px}.locationInfoCard span{display:block;color:#9eb2c4;font-size:11px;margin-top:3px}.locationPrivacy{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;background:#0b1824;border:1px solid #28445b;border-radius:13px}.locationPrivacy select{margin:0;width:auto;min-width:180px}.locationPlaces{display:grid;gap:7px}.locationPlace{display:flex;align-items:center;gap:9px;padding:10px;background:#0b1824;border:1px solid #28445b;border-radius:12px}.locationPlace .placeIcon{font-size:22px}.locationPlace .placeBody{flex:1;min-width:0}.locationPlace b{display:block;font-size:14px}.locationPlace span{display:block;color:#9eb2c4;font-size:11px;margin-top:2px}.locationMember{display:flex;align-items:center;gap:8px}.locationMember .miniAvatar{width:32px;height:32px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#173047;font-size:16px;flex:none}.locationMember .miniAvatar img{width:100%;height:100%;object-fit:cover}
 /* V48.4 — finition Localisations */
-.locationToolbar{scroll-snap-type:x proximity}.locationToolbar button{flex:0 0 auto;scroll-snap-align:start}.locationMap{height:min(62vh,620px);min-height:420px}.locationPlace{min-height:58px}.locationPlace .locationGoBtn{flex:0 0 auto}.locationPrivacy{flex-wrap:wrap}.locationPrivacy>div{flex:1;min-width:180px}.locationPrivacy select{max-width:100%}.locationMembers{display:grid;gap:7px}.locationMember{padding:8px 10px;background:#0b1824;border:1px solid #28445b;border-radius:12px}.locationPlace{cursor:default}.locationPlace:active{transform:scale(.995)}
+.locationToolbar{scroll-snap-type:x proximity}.locationToolbar button{flex:0 0 auto;scroll-snap-align:start}.locationMap{height:min(62vh,620px);min-height:420px}.locationPlace{min-height:58px}.locationPlace .locationGoBtn{flex:0 0 auto}.locationGoBtn{position:relative;z-index:5;cursor:pointer;pointer-events:auto}.locationPrivacy{flex-wrap:wrap}.locationPrivacy>div{flex:1;min-width:180px}.locationPrivacy select{max-width:100%}.locationMembers{display:grid;gap:7px}.locationMember{padding:8px 10px;background:#0b1824;border:1px solid #28445b;border-radius:12px}.locationPlace{cursor:default}.locationPlace:active{transform:scale(.995)}
 @media(max-width:600px){.locationPanel .collapsibleBody{margin-left:10px;margin-right:10px}.locationToolbar{margin:0 -2px}.locationToolbar button{font-size:14px;padding:10px 13px}.locationMap{height:60vh;min-height:420px}.locationInfo{grid-template-columns:1fr 1fr}.locationPrivacy{align-items:flex-start}.locationPrivacy select{width:100%;min-width:0}.locationPlace .locationGoBtn{padding:8px 10px}}
 
 @media(max-width:430px){.locationMap{height:62vh;min-height:390px}.locationInfo{grid-template-columns:1fr 1fr}}
@@ -1046,7 +1046,19 @@ async function loadNearbyPlaces(lat,lon){
     if(locationMap){locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationPlaceMarkers=[];}
     unique.slice(0,25).forEach(p=>{ if(locationMap){ const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap); m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km'); locationPlaceMarkers.push(m); }});
     el.innerHTML=unique.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
-    el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>setLocationMapView(+b.dataset.lat,+b.dataset.lon,17));
+    el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=(ev)=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+      const lat=+b.dataset.lat, lon=+b.dataset.lon;
+      setLocationMapView(lat,lon,17);
+      const marker=locationPlaceMarkers.find(m=>{
+        const ll=m.getLatLng();
+        return Math.abs(ll.lat-lat)<0.00001 && Math.abs(ll.lng-lon)<0.00001;
+      });
+      if(marker) marker.openPopup();
+      const mapEl=$('locationMap');
+      if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'center'});
+    });
   }catch(e){
     el.innerHTML='<p class="muted">Les activités sont momentanément indisponibles. Appuie sur ↻ Actualiser pour réessayer.</p>';
   }
