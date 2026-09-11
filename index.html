@@ -1019,6 +1019,8 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
+  if(typeof window.loadMyEventChatStyle==='function') window.loadMyEventChatStyle();
   const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
   showEventTab(['discussion','polls','media','members'].includes(savedTab)?savedTab:'discussion',true);
   await loadWeather();
@@ -3006,6 +3008,8 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   document.getElementById('chatOpacity')?.addEventListener('input',e=>{style.opacity=Number(e.target.value);apply();save();});
   document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save();};r.readAsDataURL(f);});
   resetBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();style={...defaults};apply();save();});
+  // Permet à selectEvent() de recharger le fond dès que l'événement et l'utilisateur sont connus.
+  window.loadMyEventChatStyle=()=>{load();apply();};
   load();apply();
 })();
 </script>
