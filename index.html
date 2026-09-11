@@ -400,9 +400,37 @@ details.tabPanel.uniformToggle > .collapsibleBody{
   .chatComposer{gap:5px;padding-left:0;padding-right:0}
   .composerIconBtn{width:40px;height:40px}
   .composerSendBtn,.composerVoiceBtn{width:44px;height:44px}
-  .composerInputWrap input#message{height:44px;font-size:14px;padding-left:13px!important;padding-right:68px!important}
+  .composerInputWrap input#message{height:44px;font-size:14px;padding-left:13px!important;padding-right:13px!important}
   .chatAttachmentMenu{bottom:58px;width:270px}
 }
+
+/* V27 — discussion : composer compact + vocal sans recouvrir les messages */
+#discussionContent{position:relative!important;display:flex!important;flex-direction:column!important}
+#discussionContent #messages{min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important}
+#discussionContent .chatComposer{position:relative!important;z-index:8!important;flex:0 0 auto!important;display:flex!important;align-items:center!important}
+#discussionContent .composerInputWrap{min-width:0!important;flex:1 1 auto!important}
+#discussionContent .composerInputWrap input#message{padding-right:13px!important}
+#discussionContent .composerMiniBtn{display:none!important}
+#discussionContent .voiceComposer{order:initial!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:100%!important;min-height:0!important;height:auto!important;margin:4px 0 0!important;padding:0 2px!important;box-sizing:border-box!important;overflow:hidden!important}
+#discussionContent .voiceComposer:empty{display:none!important}
+#discussionContent #voiceStatus{display:block!important;min-width:0!important;max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:12px!important;line-height:20px!important}
+#discussionContent #voiceCancelHint{font-size:11px!important;line-height:20px!important;min-height:0!important;white-space:nowrap!important}
+#discussionContent #cancelRecordingBtn{height:30px!important;min-height:30px!important;padding:4px 10px!important;font-size:12px!important;border-radius:15px!important;flex:none!important}
+#discussionContent #voicePreview{position:relative!important;z-index:7!important;width:100%!important;max-width:100%!important;display:flex!important;align-items:center!important;gap:7px!important;margin:4px 0 0!important;padding:6px 8px!important;box-sizing:border-box!important;background:rgba(7,18,28,.78)!important;border:1px solid #36536a!important;border-radius:14px!important;min-height:0!important;max-height:70px!important;overflow:hidden!important}
+#discussionContent #voicePreview.hidden{display:none!important}
+#discussionContent #voicePreview>div{display:grid!important;grid-template-columns:minmax(70px,1fr) auto auto!important;align-items:center!important;gap:6px!important;width:100%!important}
+#discussionContent #voicePreview .voiceStatus{grid-column:1/-1!important;font-size:11px!important;line-height:15px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#discussionContent #voicePreview audio{width:100%!important;max-width:180px!important;height:32px!important}
+#discussionContent #voicePreview .voiceSpeedRow{margin:0!important;display:flex!important;align-items:center!important;gap:4px!important}
+#discussionContent #voicePreview .voiceSpeedRow label{display:none!important}
+#discussionContent #voicePreview .voiceSpeed{padding:4px 6px!important;font-size:11px!important;height:30px!important}
+#discussionContent #voicePreview #sendVoiceBtn,#discussionContent #voicePreview #cancelVoiceBtn{height:32px!important;min-height:32px!important;padding:5px 9px!important;font-size:11px!important;border-radius:10px!important;white-space:nowrap!important}
+@media(max-width:430px){
+  #discussionContent #voicePreview>div{grid-template-columns:minmax(80px,1fr) auto auto!important}
+  #discussionContent #voicePreview audio{max-width:145px!important}
+  #discussionContent #voicePreview #sendVoiceBtn,#discussionContent #voicePreview #cancelVoiceBtn{padding:5px 7px!important;font-size:10px!important}
+}
+
 </style>
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
 </head>
@@ -618,11 +646,9 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <div id="messages"></div>
 <div id="discussionTyping" aria-live="polite"><span class="typingDots"><i></i><i></i><i></i></span><span id="discussionTypingText">Quelqu’un écrit…</span></div>
 <div class="chatComposer">
-  <button type="button" id="chatPlusBtn" class="composerIconBtn" aria-label="Ajouter une photo ou un fichier">＋</button>
+  <button type="button" id="chatClipBtn" class="composerIconBtn" aria-label="Joindre une photo, une vidéo ou un fichier">📎</button>
   <div class="composerInputWrap">
     <input id="message" placeholder="Écrire un message…" autocomplete="off">
-    <button type="button" id="chatEmojiBtn" class="composerMiniBtn" aria-label="Emoji">☺</button>
-    <button type="button" id="chatClipBtn" class="composerMiniBtn" aria-label="Joindre un fichier">📎</button>
   </div>
   <button type="button" id="sendBtn" class="composerSendBtn" aria-label="Envoyer">➤</button>
   <button type="button" id="voiceBtn" class="composerVoiceBtn" aria-label="Maintenir pour enregistrer un message vocal">🎙️</button>
@@ -689,6 +715,9 @@ let notificationPollTimer=null;
 function showEventTab(name, forceState=null){
   const target=document.querySelector('.tabPanel[data-panel="'+name+'"]');
   if(!target)return;
+  if(user&&event){
+    localStorage.setItem('myevent_active_tab_'+user.id+'_'+event.id,name);
+  }
   const alreadyActive=target.classList.contains('active');
   const shouldOpen=forceState===null ? !alreadyActive : forceState;
 
@@ -990,6 +1019,8 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   global('Événement actif : '+event.name,'ok');
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
+  showEventTab(['discussion','polls','media','members'].includes(savedTab)?savedTab:'discussion',true);
   await loadWeather();
   await refreshNotifications(false);
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
@@ -1477,7 +1508,7 @@ async function loadMessages(){
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   const voiceUrls=await Promise.all(voices.map(async m=>{
-    const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
+    const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
     return {...m,url:x.data?.signedUrl||''};
   }));
   const all=[
@@ -1629,9 +1660,9 @@ async function toggleMessageReaction(messageId,reaction){
 async function deleteVoice(id,path){
   if(!confirm('Supprimer ce vocal ?'))return;
   try{
-    const d=await sb.from('media').delete().eq('id',id).eq('user_id',user.id);
+    const d=await sb.from('voice_messages').delete().eq('id',id).eq('user_id',user.id);
     if(d.error)throw d.error;
-    const st=await sb.storage.from('event-media').remove([path]);
+    const st=await sb.storage.from('event-voices').remove([path]);
     if(st.error)throw st.error;
     await loadMessages();
   }catch(e){alert('Erreur suppression vocal : '+(e.message||String(e)))}
@@ -1652,6 +1683,12 @@ function clearVoicePreview(){
   voiceBlob=null;
   const box=$('voicePreview');
   if(box){box.classList.add('hidden');box.innerHTML='';}
+  const status=$('voiceStatus');
+  if(status)status.textContent='';
+  const hint=$('voiceCancelHint');
+  if(hint)hint.textContent='';
+  const cancel=$('cancelRecordingBtn');
+  if(cancel)cancel.classList.add('hidden');
 }
 
 function stopVoiceStream(){
@@ -1811,9 +1848,7 @@ async function sendVoice(){
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
     clearVoicePreview();
-    $('voiceStatus').textContent='Vocal envoyé ✓';
     await loadMessages();
-    setTimeout(()=>{if($('voiceStatus'))$('voiceStatus').textContent='';},1800);
   }catch(e){btn.disabled=false;$('voiceStatus').textContent='';alert('Erreur vocal : '+(e.message||String(e)));}
 }
 
@@ -1877,7 +1912,6 @@ async function sendVoice(){
 
 // V26 — pièces jointes directement dans la discussion
 (function initChatComposer(){
-  const plus=document.getElementById('chatPlusBtn');
   const clip=document.getElementById('chatClipBtn');
   const menu=document.getElementById('chatAttachmentMenu');
   const camera=document.getElementById('chatCameraBtn');
@@ -1887,11 +1921,10 @@ async function sendVoice(){
   const cameraInput=document.getElementById('chatCameraInput');
   const galleryInput=document.getElementById('chatGalleryInput');
   const fileInput=document.getElementById('chatFileInput');
-  if(!plus||!menu)return;
+  if(!clip||!menu)return;
   const close=()=>menu.classList.add('hidden');
-  plus.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.classList.toggle('hidden');});
-  clip?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.classList.toggle('hidden');});
-  document.addEventListener('click',e=>{if(!e.target.closest('#chatAttachmentMenu')&&!e.target.closest('#chatPlusBtn')&&!e.target.closest('#chatClipBtn'))close();});
+  clip.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.classList.toggle('hidden');});
+  document.addEventListener('click',e=>{if(!e.target.closest('#chatAttachmentMenu')&&!e.target.closest('#chatClipBtn'))close();});
   camera?.addEventListener('click',()=>{close();cameraInput?.click();});
   gallery?.addEventListener('click',()=>{close();galleryInput?.click();});
   fileBtn?.addEventListener('click',()=>{close();fileInput?.click();});
@@ -1922,9 +1955,6 @@ async function sendVoice(){
   cameraInput?.addEventListener('change',()=>handleFiles(cameraInput));
   galleryInput?.addEventListener('change',()=>handleFiles(galleryInput));
   fileInput?.addEventListener('change',()=>handleFiles(fileInput));
-  document.getElementById('chatEmojiBtn')?.addEventListener('click',()=>{
-    const input=document.getElementById('message'); if(!input)return; input.value+=(input.value?' ':'')+'😊'; input.focus();
-  });
 })();
 
 async function sendMessage(){
