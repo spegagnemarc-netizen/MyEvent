@@ -34,7 +34,7 @@ button:disabled{opacity:.5}
 .tabPanel.active{display:block}
 @media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
 
-.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}
+.notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}.chatPollMessage{max-width:min(92%,430px);padding:12px 14px;background:rgba(10,30,45,.88);border:1px solid #2d6a91;border-radius:18px}.chatPollTitle{font-size:18px;font-weight:800;margin:4px 0 3px}.chatPollHint{font-size:12px;color:#9db0c1;margin-bottom:9px}.chatPollOption{margin:7px 0}.chatPollVote{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:9px 11px}.chatPollVote span{opacity:.8}.chatPollBar{height:4px;background:#0b1824;border-radius:5px;overflow:hidden;margin:3px 5px 0}.chatPollBar i{display:block;height:100%;background:#278cff;border-radius:5px}.chatPollMessage .selectedVote{outline:2px solid #7ee2a8!important}
 .profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.collapsibleCard{overflow:hidden}.collapsibleCard>summary{cursor:pointer;list-style:none;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none;min-height:56px;padding:14px 16px;margin:-1px}.collapsibleCard>summary::-webkit-details-marker{display:none}.collapsibleCard>summary::after{content:'⌄';font-size:20px;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}.collapsibleCard:not([open])>summary::after{transform:rotate(-90deg)}.collapsibleCard>summary:active{transform:scale(.995)}
 /* Cartes compactes : même format visuel que Discussion / Sondages / Photos / Participants */
 .uniformToggle{overflow:hidden!important;padding:0!important;min-height:0!important;box-sizing:border-box!important}
@@ -1454,6 +1454,22 @@ async function loadMessages(){
   const reactions=rr.error?[]:(rr.data||[]);
   const reactionMap=new Map();
   reactions.forEach(x=>{if(!reactionMap.has(x.message_id))reactionMap.set(x.message_id,[]);reactionMap.get(x.message_id).push(x)});
+  // Les sondages créés depuis la discussion sont aussi des messages de discussion.
+  const pollMessageMap=new Map();
+  const pollMessageIds=[];
+  rows.forEach(m=>{
+    if(typeof m.content==='string' && m.content.startsWith('[[MYEVENT_POLL]]')){
+      try{ const payload=JSON.parse(m.content.slice('[[MYEVENT_POLL]]'.length)); if(payload?.poll_id) pollMessageIds.push(payload.poll_id); }catch{}
+    }
+  });
+  if(pollMessageIds.length){
+    const uniq=[...new Set(pollMessageIds)];
+    const pr=await sb.from('polls').select('id,question,allow_multiple,creator_id,created_at').in('id',uniq).eq('event_id',event.id);
+    const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',uniq);
+    const vrs=await sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',uniq);
+    const options=ors.error?[]:(ors.data||[]), votes=vrs.error?[]:(vrs.data||[]);
+    (pr.error?[]:(pr.data||[])).forEach(p=>pollMessageMap.set(p.id,{...p,options:options.filter(o=>o.poll_id===p.id),votes:votes.filter(v=>v.poll_id===p.id)}));
+  }
   const vr=await sb.from('voice_messages').select('id,user_id,storage_path,duration_ms,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
   const voices=vr.error?[]:(vr.data||[]);
   const ids=[...new Set([...rows.map(m=>m.user_id),...voices.map(m=>m.user_id)].filter(Boolean))];
@@ -1490,7 +1506,21 @@ async function loadMessages(){
         '<button type="button" class="secondary joinCallMessage">↗️ Rejoindre l’appel</button>'+
       '</div>';
     }
-    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){
+    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_POLL]]')){
+      let payload=null; try{payload=JSON.parse(m.content.slice('[[MYEVENT_POLL]]'.length));}catch{}
+      const poll=payload?.poll_id?pollMessageMap.get(payload.poll_id):null;
+      if(!poll)return '';
+      const pv=poll.votes||[];
+      const optionsHtml=(poll.options||[]).map(o=>{
+        const count=pv.filter(v=>v.option_id===o.id).length;
+        const selected=pv.some(v=>v.option_id===o.id&&v.user_id===user.id);
+        const pct=pv.length?Math.round(count/pv.length*100):0;
+        return '<div class="chatPollOption"><button type="button" class="secondary chatPollVote '+(selected?'selectedVote':'')+'" data-poll="'+esc(poll.id)+'" data-option="'+esc(o.id)+'">'+esc(o.option_text)+' <span>'+count+'</span></button><div class="chatPollBar"><i style="width:'+pct+'%"></i></div></div>';
+      }).join('');
+      const multiple=poll.allow_multiple?' · Plusieurs réponses':' · 1 réponse';
+      return '<div class="messageRow '+(mine?'me':'')+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">📊 '+esc(poll.question)+'</div><div class="chatPollHint">Sondage'+multiple+'</div>'+optionsHtml+'</div></div>';
+    }
+    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){ 
       let a=null; try{a=JSON.parse(m.content.slice('[[MYEVENT_ATTACHMENT]]'.length));}catch{}
       if(!a?.path)return '';
       const sx=await sb.storage.from('event-media').createSignedUrl(a.path,3600);
@@ -1530,6 +1560,9 @@ async function loadMessages(){
       '<div class="messageBody"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="messageText">'+esc(m.content)+'</div>'+reactionHtml+'</div></div>';
   }))).join('');
   document.querySelectorAll('.deleteVoice').forEach(b=>b.addEventListener('click',()=>deleteVoice(b.dataset.id,b.dataset.path)));
+  document.querySelectorAll('.chatPollVote').forEach(b=>{
+    b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
+  });
   document.querySelectorAll('.reactionSummary').forEach(b=>b.addEventListener('click',()=>toggleMessageReaction(b.dataset.messageId,b.dataset.reaction)));
   document.querySelectorAll('.reactionBtn').forEach(b=>b.addEventListener('click',()=>{
     const messageId=b.dataset.messageId;
@@ -1931,6 +1964,14 @@ async function createPoll(){
       });
       if(r.error) throw r.error;
     }
+    // Le même sondage apparaît dans la discussion sous forme de message,
+    // tout en restant disponible dans l'onglet Sondages.
+    const mr=await sb.from('messages').insert({
+      event_id:event.id,user_id:user.id,
+      content:'[[MYEVENT_POLL]]'+JSON.stringify({poll_id:p.data.id})
+    }).select('id').single();
+    if(mr.error) throw mr.error;
+    rememberLocalCreated('messages',mr.data?.id);
     $('question').value='';
     $('options').value='';
     if($('allowMultiple'))$('allowMultiple').checked=false;
