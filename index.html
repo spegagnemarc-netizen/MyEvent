@@ -3177,27 +3177,54 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
       // Persistance du compte : une seule écriture à la fois pour éviter
       // qu'un ancien clic ne termine après un nouveau et écrase le dernier réglage.
       if(sb?.auth){
-        const r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
+        // Rafraîchir explicitement la session avant l'écriture. Sur iPhone/Safari,
+        // une reconnexion ou un retour depuis une page en arrière peut laisser le
+        // client avec une session en mémoire alors que le token d'écriture n'est
+        // plus le plus récent.
+        try{
+          const ses=await sb.auth.getSession();
+          if(ses?.data?.session?.refresh_token){
+            const refreshed=await sb.auth.refreshSession({refresh_token:ses.data.session.refresh_token});
+            if(!refreshed.error && refreshed.data?.user) user=refreshed.data.user;
+          }
+        }catch(refreshErr){
+          console.warn('Rafraîchissement session personnalisation:',refreshErr?.message||refreshErr);
+        }
+
+        let r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
+        // Une première tentative peut échouer avec une session momentanément
+        // périmée : relire l'utilisateur puis retenter une fois.
+        if(r.error){
+          const fresh=await sb.auth.getUser();
+          if(fresh.error) throw r.error;
+          if(fresh.data?.user) user=fresh.data.user;
+          r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
+        }
         if(r.error)throw r.error;
         if(r.data?.user)user=r.data.user;
 
-        // Vérification réelle côté serveur. Cela évite d'afficher « Sauvegardé »
-        // si l'écriture n'est pas effectivement disponible après reconnexion.
+        // Vérification réelle côté serveur : on n'affiche « Sauvegardé » que si
+        // Supabase renvoie exactement le réglage que nous venons d'écrire.
         const check=await sb.auth.getUser();
         const savedServer=readStyle(check.data?.user?.user_metadata?.myevent_chat_style);
-        if(!check.error && (!savedServer || Number(savedServer.savedAt)!==Number(payloadObj.savedAt))){
+        if(check.error || !savedServer || Number(savedServer.savedAt)!==Number(payloadObj.savedAt)){
           const retry=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
           if(retry.error)throw retry.error;
           if(retry.data?.user)user=retry.data.user;
+          const verify=await sb.auth.getUser();
+          const verified=readStyle(verify.data?.user?.user_metadata?.myevent_chat_style);
+          if(verify.error || !verified || Number(verified.savedAt)!==Number(payloadObj.savedAt)){
+            throw new Error('Supabase n’a pas confirmé la sauvegarde du réglage.');
+          }
         }
       }
       const status=document.getElementById('chatCustomizeSaveStatus');
-      if(status){status.textContent='✓ Sauvegardé';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),1800);}
+      if(status){status.textContent='✓ Sauvegardé sur le compte';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
       return true;
     }catch(e){
       console.warn('Sauvegarde personnalisation:',e?.message||e);
       const status=document.getElementById('chatCustomizeSaveStatus');
-      if(status){status.textContent='⚠️ Sauvegarde locale effectuée';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
+      if(status){status.textContent='⚠️ Erreur de sauvegarde — le fond reste local';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3200);}
       return false;
     }
   };
