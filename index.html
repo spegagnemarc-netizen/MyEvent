@@ -2642,5 +2642,53 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   </div>
 </div>
 
+<script>
+// V17 — l'overlay existe maintenant dans le DOM : initialisation après son rendu.
+(function initChatCustomizationV17(){
+  const panel=document.getElementById('discussionContent');
+  const overlay=document.getElementById('chatCustomizeOverlay');
+  const openBtn=document.getElementById('chatCustomizeBtn');
+  const closeBtn=document.getElementById('chatCustomizeClose');
+  const doneBtn=document.getElementById('chatCustomizeDone');
+  const resetBtn=document.getElementById('chatCustomizeReset');
+  if(!panel||!overlay||!openBtn)return;
+  const key=()=>`myevent-chat-style-${event?.id||'default'}-${user?.id||'guest'}`;
+  const defaults={bg:'lake',bubble:'modern',color:'#1683ff',opacity:100,customBg:''};
+  let style={...defaults};
+  const load=()=>{try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}};
+  const save=()=>{try{localStorage.setItem(key(),JSON.stringify(style))}catch{}};
+  function apply(){
+    const bgs={lake:'linear-gradient(145deg,#173b5c 0%,#2b6f88 42%,#e08b64 72%,#261d35 100%)',sunset:'linear-gradient(160deg,#321d4d,#a84c5f 45%,#f2a05b 75%,#243b55)',forest:'linear-gradient(145deg,#0d241f,#24563d 48%,#0e1820)',night:'radial-gradient(circle at 70% 25%,#fff4b0 0 2%,transparent 3%),linear-gradient(145deg,#081126,#142c50 55%,#050912)',minimal:'linear-gradient(145deg,#102131,#18384d)'};
+    panel.style.setProperty('--chat-bg-image',style.customBg?`url("${style.customBg.replace(/"/g,'%22')}")`:(bgs[style.bg]||bgs.lake));
+    panel.style.setProperty('--bubble-out',style.color);panel.style.setProperty('--bubble-opacity',(Number(style.opacity)||100)/100);
+    panel.classList.remove('bubble-glass','bubble-soft','bubble-compact');
+    if(style.bubble==='glass')panel.classList.add('bubble-glass');
+    if(style.bubble==='soft')panel.classList.add('bubble-soft');
+    if(style.bubble==='compact')panel.classList.add('bubble-compact');
+    document.querySelectorAll('.chatBgOption').forEach(x=>x.classList.toggle('active',x.dataset.bg===style.bg&&!style.customBg));
+    document.querySelectorAll('.chatBubbleOption').forEach(x=>x.classList.toggle('active',x.dataset.bubble===style.bubble));
+    document.querySelectorAll('.chatColor').forEach(x=>x.classList.toggle('active',x.dataset.color===style.color));
+    const op=document.getElementById('chatOpacity');if(op)op.value=style.opacity;
+    const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
+  }
+  function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('chatCustomizeOpen');}
+  function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('chatCustomizeOpen');save();}
+  openBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open();},true);
+  openBtn.addEventListener('pointerdown',e=>e.stopPropagation(),true);
+  openBtn.addEventListener('touchstart',e=>e.stopPropagation(),{capture:true,passive:true});
+  closeBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close();});
+  doneBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close();});
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+  document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('[data-chat-custom-section]').forEach(x=>x.classList.toggle('active',x.dataset.chatCustomSection===n));}));
+  document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save();}));
+  document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save();}));
+  document.querySelectorAll('.chatColor').forEach(btn=>btn.addEventListener('click',()=>{style.color=btn.dataset.color;apply();save();}));
+  document.getElementById('chatOpacity')?.addEventListener('input',e=>{style.opacity=Number(e.target.value);apply();save();});
+  document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save();};r.readAsDataURL(f);});
+  resetBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();style={...defaults};apply();save();});
+  load();apply();
+})();
+</script>
+
 </body>
 </html>
