@@ -1021,17 +1021,12 @@ async function show(u){
 
     if(!p.data){
       const name=(u.email||'membre').split('@')[0];
-      // Création initiale via la fonction SECURITY DEFINER Supabase.
-      // Cela évite le blocage RLS rencontré lors du premier INSERT.
-      const pr=await sb.rpc('ensure_my_profile',{
-        p_display_name:name,
-        p_username:name
-      });
+      const pr=await sb.from('profiles').upsert({
+        id:u.id,display_name:name,username:name
+      },{onConflict:'id'}).select().single();
       if(pr.error) throw new Error('Création du profil : '+pr.error.message);
-      const profile=Array.isArray(pr.data)?pr.data[0]:pr.data;
-      if(!profile) throw new Error('Le profil n’a pas pu être créé.');
-      $('who').textContent=profile.display_name||name;
-      renderProfile(profile);
+      $('who').textContent=name;
+      renderProfile({display_name:name,username:name,avatar:''});
     }else {
       $('who').textContent=p.data.display_name||p.data.username||u.email;
       renderProfile(p.data);
@@ -3096,7 +3091,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 @media(max-width:430px){.chatCustomizeActions button{flex:1 1 0;min-width:0;padding-left:10px;padding-right:10px}.chatCustomizeActions #chatCustomizeSaveStatus{order:4;width:100%;text-align:center}}
 </style>
 <script>
-// V41 — préférences Discussion strictement privées par utilisateur et événement.
+// V45 — préférences Discussion privées par utilisateur/événement. Les images personnalisées restent locales pour éviter tout blocage du compte.
 // V17 — l'overlay existe maintenant dans le DOM : initialisation après son rendu.
 (function initChatCustomizationV17(){
   const panel=document.getElementById('discussionContent');
@@ -3122,33 +3117,26 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const load=async()=>{
     try{
       if(!user?.id||!event?.id)return;
-      // Source de vérité : métadonnées du compte connecté. Chaque compte possède
-      // son propre objet, et chaque événement possède sa propre préférence.
       if(sb?.auth){
         const r=await sb.auth.getUser();
         if(!r.error&&r.data?.user)user=r.data.user;
       }
+      // Les réglages légers sont synchronisés sur le compte. L'image personnalisée
+      // reste locale : on ne met JAMAIS une data:image volumineuse dans user_metadata.
+      const local=readStyle(localStorage.getItem(key()));
       const styles=readServerStyles();
       const serverStyle=styles ? readStyle(styles[event.id]) : null;
       if(serverStyle){
-        style={...defaults,...serverStyle};
-        try{
-          const payload=JSON.stringify(serverStyle);
-          localStorage.setItem(key(),payload);
-          localStorage.setItem(globalKey(),payload);
-        }catch{}
-        return;
-      }
-      // Migration une seule fois depuis l'ancien réglage serveur global, sans jamais
-      // lire le cache générique d'un autre utilisateur.
-      const legacy=readStyle(user?.user_metadata?.myevent_chat_style);
-      if(legacy){
-        style={...defaults,...legacy};
+        style={...defaults,...serverStyle,...(local?.customBg?{customBg:local.customBg}:{})};
         try{localStorage.setItem(key(),JSON.stringify(style));}catch{}
         return;
       }
-      // Dernier secours : uniquement le cache local déjà isolé par user + event.
-      const local=readStyle(localStorage.getItem(key()));
+      const legacy=readStyle(user?.user_metadata?.myevent_chat_style);
+      if(legacy){
+        style={...defaults,...legacy,...(local?.customBg?{customBg:local.customBg}:{})};
+        try{localStorage.setItem(key(),JSON.stringify(style));}catch{}
+        return;
+      }
       if(local)style={...defaults,...local};
       else style={...defaults};
     }catch(e){ console.warn('Chargement personnalisation:',e?.message||e); }
@@ -3159,31 +3147,34 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     if(!user?.id||!event?.id)return false;
     try{
       const payloadObj={...style,savedAt:Date.now()};
-      const payload=JSON.stringify(payloadObj);
-      localStorage.setItem(key(),payload);
-      localStorage.setItem(globalKey(),payload);
+      // Toujours conserver la copie locale complète, y compris une éventuelle image.
+      localStorage.setItem(key(),JSON.stringify(payloadObj));
+      localStorage.setItem(globalKey(),JSON.stringify(payloadObj));
       if(sb?.auth){
-        try{
-          const ses=await sb.auth.getSession();
-          if(ses?.data?.session?.refresh_token){
-            const refreshed=await sb.auth.refreshSession({refresh_token:ses.data.session.refresh_token});
-            if(!refreshed.error&&refreshed.data?.user)user=refreshed.data.user;
-          }
-        }catch(e){console.warn('Refresh session:',e?.message||e);}
+        const ses=await sb.auth.getSession();
+        if(!ses?.data?.session?.access_token)throw new Error('Session Supabase absente ou expirée.');
         const fresh=await sb.auth.getUser();
         if(fresh.error)throw fresh.error;
         if(fresh.data?.user)user=fresh.data.user;
         const current=(user.user_metadata?.myevent_chat_styles_v2&&typeof user.user_metadata.myevent_chat_styles_v2==='object')
           ? {...user.user_metadata.myevent_chat_styles_v2}:{};
-        current[event.id]=payloadObj;
-        // Suppression explicite de l'ancien format global pour éviter toute ambiguïté.
+        // IMPORTANT : aucune image/base64 dans user_metadata.
+        const serverPayload={
+          bg:payloadObj.bg,
+          bubble:payloadObj.bubble,
+          color:payloadObj.color,
+          incomingColor:payloadObj.incomingColor,
+          opacity:payloadObj.opacity,
+          savedAt:payloadObj.savedAt
+        };
+        current[event.id]=serverPayload;
         const r=await sb.auth.updateUser({data:{myevent_chat_styles_v2:current,myevent_chat_style:null}});
         if(r.error)throw r.error;
         if(r.data?.user)user=r.data.user;
         const verify=await sb.auth.getUser();
         if(verify.error)throw verify.error;
         const verified=verify.data?.user?.user_metadata?.myevent_chat_styles_v2?.[event.id];
-        if(!verified||Number(verified.savedAt)!==Number(payloadObj.savedAt))throw new Error('Supabase n’a pas confirmé la sauvegarde du réglage.');
+        if(!verified||Number(verified.savedAt)!==Number(serverPayload.savedAt))throw new Error('Supabase n’a pas confirmé la sauvegarde du réglage.');
       }
       const status=document.getElementById('chatCustomizeSaveStatus');
       if(status){status.textContent='✓ Sauvegardé sur mon compte';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
@@ -3191,7 +3182,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     }catch(e){
       console.warn('Sauvegarde personnalisation:',e?.message||e);
       const status=document.getElementById('chatCustomizeSaveStatus');
-      if(status){status.textContent='⚠️ Sauvegarde locale uniquement';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3200);}
+      if(status){status.textContent='⚠️ Réglage local conservé';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3200);}
       return false;
     }
   };
