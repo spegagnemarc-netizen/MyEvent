@@ -328,8 +328,7 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 .chatColorRow{gap:10px!important;justify-content:flex-start}.chatColor{width:38px!important;height:38px!important}
 .chatRange{accent-color:#1683ff!important;height:24px}
 .bubblePreview span{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:6px 9px;border-radius:14px;background:#142b3d;font-size:12px}.bubblePreview.classic span{background:#142b3d}.bubblePreview.blue span{background:#1683ff;color:#fff}.bubblePreview.minimal span{background:transparent;border:1px solid #587084}.bubblePreview.outline span{background:transparent;border:1px solid #fff}.bubblePreview.compact span{padding:4px 8px;border-radius:10px}
-.bg-mountain{background:linear-gradient(180deg,#e9784d 0%,#9a4c5d 22%,#294b70 43%,#17384d 55%,#0d2634 70%,#0b1b24 100%)!important;position:relative;overflow:hidden}.bg-mountain:after{content:"";position:absolute;left:-10%;right:-10%;bottom:-5%;height:58%;background:linear-gradient(145deg,transparent 35%,rgba(8,22,32,.9) 36% 48%,transparent 49%),linear-gradient(35deg,transparent 45%,rgba(14,37,52,.95) 46% 60%,transparent 61%)}
-.bg-beach{background:linear-gradient(180deg,#75b8d9 0 48%,#e5bd7c 49% 68%,#23758a 69% 100%)!important}.bg-city{background:linear-gradient(180deg,#1b2940,#4d6780 48%,#101a25 49%)!important}.bg-aurora{background:linear-gradient(145deg,#08182d,#123f58 35%,#1b7a6d 58%,#19305b 82%,#08101d)!important}.bg-desert{background:linear-gradient(180deg,#4b3650,#d98b5e 48%,#e0a15f 49%,#9a5a37 100%)!important}.bg-upload{display:grid;place-items:center;font-size:26px!important;background:#17384d!important}
+.bg-upload{display:grid;place-items:center;font-size:26px!important;background:#17384d!important}
 #discussionContent{background-position:center!important;background-size:cover!important}
 #discussionContent:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,12,20,.10),rgba(3,12,20,.28));z-index:0}
 #discussionContent>*{position:relative;z-index:1}
@@ -2775,6 +2774,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     // Les anciennes versions remplaçaient les décors par de simples dégradés,
     // ce qui donnait par exemple une Aurore bleu/verte sans paysage.
     const bgClassMap={mountain:'bg-mountain',lake:'bg-lake',sunset:'bg-sunset',beach:'bg-beach',forest:'bg-forest',city:'bg-city',night:'bg-night',aurora:'bg-aurora',desert:'bg-desert',minimal:'bg-minimal'};
+    // Les vignettes et le fond utilisent les mêmes classes CSS : aucune substitution en dégradé.
     let bgImage='none';
     if(style.customBg){
       bgImage=`url("${style.customBg.replace(/"/g,'%22')}")`;
