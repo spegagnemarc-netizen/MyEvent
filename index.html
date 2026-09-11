@@ -1134,7 +1134,7 @@ async function selectEvent(id){
   // showEventTab ne marque pas la discussion comme lue et ne remonte pas en haut.
   showEventTab(restoredTab,true);
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
-  if(typeof window.loadMyEventChatStyle==='function') window.loadMyEventChatStyle();
+  if(typeof window.loadMyEventChatStyle==='function') await window.loadMyEventChatStyle();
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
   // Réapplique le thème après le rendu complet : aucune reconnexion ne doit
   // pouvoir remplacer le fond choisi par le fond par défaut.
@@ -3121,22 +3121,41 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
         if(!r.error && r.data?.user) user=r.data.user;
       }
 
-      // La préférence peut exister dans plusieurs caches. On compare le timestamp
-      // de sauvegarde et on garde systématiquement la version la plus récente.
-      const candidates=[];
-      const pushCandidate=x=>{
-        if(x&&typeof x==='object' && Number(x.savedAt)>0)candidates.push(x);
-      };
-      pushCandidate(readStyle(user?.user_metadata?.myevent_chat_style));
-      if(user?.id){
-        pushCandidate(readStyle(localStorage.getItem(globalKey())));
-        pushCandidate(readStyle(localStorage.getItem('myevent-chat-style-last')));
+      // IMPORTANT : après reconnexion, le serveur Supabase est la source de vérité.
+      // Les anciennes versions comparaient tous les caches localStorage et pouvaient
+      // reprendre un ancien fond simplement parce que son timestamp local était plus récent.
+      const serverStyle=readStyle(user?.user_metadata?.myevent_chat_style);
+      if(serverStyle){
+        style={...defaults,...serverStyle};
+        // Le cache local est seulement une copie de secours, jamais une source
+        // capable d'écraser une préférence serveur valide.
+        try{
+          const payload=JSON.stringify(serverStyle);
+          if(user?.id){
+            localStorage.setItem(globalKey(),payload);
+            localStorage.setItem('myevent-chat-style-last',payload);
+          }
+          if(event?.id){
+            localStorage.setItem(key(),payload);
+            localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
+          }
+        }catch{}
+      }else{
+        // Seulement si le compte ne possède encore aucune préférence serveur,
+        // on récupère l'ancienne préférence locale pour assurer la migration.
+        const candidates=[];
+        const pushCandidate=x=>{
+          if(x&&typeof x==='object' && Number(x.savedAt)>0)candidates.push(x);
+        };
+        if(user?.id){
+          pushCandidate(readStyle(localStorage.getItem(globalKey())));
+          pushCandidate(readStyle(localStorage.getItem('myevent-chat-style-last')));
+        }
+        pushCandidate(readStyle(localStorage.getItem(key())));
+        if(user?.id&&event?.id)pushCandidate(readStyle(localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`)));
+        candidates.sort((a,b)=>Number(b.savedAt)-Number(a.savedAt));
+        if(candidates[0]) style={...defaults,...candidates[0]};
       }
-      pushCandidate(readStyle(localStorage.getItem(key())));
-      if(user?.id&&event?.id)pushCandidate(readStyle(localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`)));
-
-      candidates.sort((a,b)=>Number(b.savedAt)-Number(a.savedAt));
-      if(candidates[0]) style={...defaults,...candidates[0]};
     }catch(e){
       console.warn('Chargement personnalisation:',e?.message||e);
     }
@@ -3269,6 +3288,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 #discussionContent .messageRow:not(.me) .messageBody{background:var(--bubble-in-rgba,rgba(20,43,61,.35))!important;opacity:1!important}
 #discussionContent .messageRow.me .messageBody{background:var(--bubble-out-rgba,rgba(22,131,255,.35))!important;opacity:1!important}
 
+/* V39 — Persistance du fond : Supabase prioritaire, ancien localStorage jamais prioritaire
 /* V38 — Format compact définitif des cartes repliables, aligné sur les boutons d'onglets */
 details.uniformToggle:not(.tabPanel){
   display:block !important;
