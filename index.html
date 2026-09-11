@@ -260,6 +260,24 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 #discussionContent.bubble-compact .messageBody{padding:7px 10px!important;border-radius:13px!important}
 @media(max-width:430px){.chatOptionGrid{grid-template-columns:repeat(3,1fr)}.chatCustomizeSheet{max-height:88vh}.chatCustomizeTabs{grid-template-columns:repeat(3,1fr)}.chatCustomizeBtn{font-size:12px!important;padding:7px 8px!important}}
 
+/* V16 — Discussion : personnaliser sans fermer + bulles sans fond parasite + indicateur de saisie */
+#discussionPanel > summary{position:relative;z-index:2}
+#discussionPanel > summary .chatCustomizeBtn{position:relative;z-index:3;flex:none}
+#discussionPanel > summary .chatCustomizeBtn{touch-action:manipulation}
+#discussionContent #messages{background:transparent!important}
+#discussionContent .messageRow{background:transparent!important;background-color:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+#discussionContent .messageRow.me{background:transparent!important;background-color:transparent!important}
+#discussionContent .messageRow.me .messageBody{background:var(--bubble-out,#1683ff)!important;width:fit-content!important;max-width:min(72%,430px)!important;flex:0 1 auto!important}
+#discussionContent .messageRow:not(.me) .messageBody{width:fit-content!important;max-width:min(72%,430px)!important}
+#discussionTyping{display:none;align-items:center;gap:7px;margin:6px 8px 2px;color:#9eb2c4;font-size:13px;min-height:22px}
+#discussionTyping.show{display:flex}
+#discussionTyping .typingDots{display:inline-flex;gap:3px;align-items:center;padding:5px 8px;border-radius:13px;background:rgba(20,43,61,.9);border:1px solid #28445b}
+#discussionTyping .typingDots i{width:5px;height:5px;border-radius:50%;background:#9eb2c4;animation:typingDot 1.2s infinite ease-in-out}
+#discussionTyping .typingDots i:nth-child(2){animation-delay:.15s}
+#discussionTyping .typingDots i:nth-child(3){animation-delay:.3s}
+@keyframes typingDot{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+@media(max-width:430px){#discussionContent .messageRow.me .messageBody,#discussionContent .messageRow:not(.me) .messageBody{max-width:74%!important}}
+
 </style>
 </head>
 <body>
@@ -472,6 +490,7 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <summary><span>💬 Discussion</span><button type="button" class="chatCustomizeBtn secondary" id="chatCustomizeBtn">🎨 Personnaliser</button></summary>
 <div class="collapsibleBody" id="discussionContent">
 <div id="messages"></div>
+<div id="discussionTyping" aria-live="polite"><span class="typingDots"><i></i><i></i><i></i></span><span id="discussionTypingText">Quelqu’un écrit…</span></div>
 <div class="row">
 <input id="message" placeholder="Écrire un message…">
 <button id="sendBtn">Envoyer</button>
@@ -2132,6 +2151,38 @@ async function markAllNotificationsRead(){
 
 
 
+
+// V16 — indicateur « 💬 quelqu’un écrit… »
+const typingUsers=new Map();
+let typingSendTimer=null;
+function renderTypingIndicator(){
+  const box=document.getElementById('discussionTyping'), text=document.getElementById('discussionTypingText');
+  if(!box||!text)return;
+  const now=Date.now();
+  for(const [id,v] of typingUsers){if(v.until<=now)typingUsers.delete(id)}
+  const names=[...typingUsers.values()].map(v=>v.name);
+  if(!names.length){box.classList.remove('show');return}
+  text.textContent=names.length===1?names[0]+' écrit…':names.length===2?names.join(' et ')+' écrivent…':names.length+' personnes écrivent…';
+  box.classList.add('show');
+  clearTimeout(renderTypingIndicator._timer);
+  renderTypingIndicator._timer=setTimeout(renderTypingIndicator,2300);
+}
+async function sendTypingSignal(){
+  if(!realtimeChannel||!user)return;
+  try{await realtimeChannel.send({type:'broadcast',event:'typing',payload:{user_id:user.id,name:user.pseudo||user.name||user.username||'Quelqu’un'}})}catch{}
+}
+function setupTypingInput(){
+  const input=document.getElementById('message');
+  if(!input||input.dataset.typingReady)return;
+  input.dataset.typingReady='1';
+  input.addEventListener('input',()=>{
+    if(!input.value.trim())return;
+    clearTimeout(typingSendTimer);
+    sendTypingSignal();
+    typingSendTimer=setTimeout(()=>{},900);
+  });
+}
+
 function subscribeRealtime(){
   if(!sb||!event)return;
   if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
@@ -2140,6 +2191,11 @@ function subscribeRealtime(){
   notificationPollTimer=setInterval(()=>{ if(event&&user) refreshNotifications(false); },4000);
 
   realtimeChannel=sb.channel('event-'+event.id)
+    .on('broadcast',{event:'typing'},({payload})=>{
+      if(!payload||payload.user_id===user?.id)return;
+      typingUsers.set(payload.user_id,{name:payload.name||'Quelqu’un',until:Date.now()+2200});
+      renderTypingIndicator();
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async()=>{ await loadMessages(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); })
@@ -2149,11 +2205,13 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await loadMessages(); await refreshNotifications(false); })
   .on('postgres_changes',{event:'*',schema:'public',table:'voice_messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
     .subscribe((status)=>{
-      if(status==='SUBSCRIBED') global('Discussion et sondages en temps réel.','ok');
+      if(status==='SUBSCRIBED'){ global('Discussion et sondages en temps réel.','ok'); setupTypingInput(); }
     });
 }
 
 
+
+setupTypingInput();
 $('missedBtn').addEventListener('click',()=>{ missedSummaryHtml=''; refreshNotifications(true); });
 $('markNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
 
@@ -2530,7 +2588,8 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   }
   function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false')}
   function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');save()}
-  openBtn.addEventListener('click',open); closeBtn.addEventListener('click',close); doneBtn.addEventListener('click',close); overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+  openBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()}); closeBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close()}); doneBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close()}); overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+  openBtn.addEventListener('pointerdown',e=>e.stopPropagation());
   document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',()=>{const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('[data-chat-custom-section]').forEach(x=>x.classList.toggle('active',x.dataset.chatCustomSection===n))}));
   document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save()}));
   document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save()}));
