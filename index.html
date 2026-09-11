@@ -335,6 +335,46 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 #discussionContent:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,12,20,.10),rgba(3,12,20,.28));z-index:0}
 #discussionContent>*{position:relative;z-index:1}
 @media(max-width:430px){.chatCustomizeSheet{max-height:93vh!important;padding:9px 10px 14px!important}.chatCustomizeTabs{grid-template-columns:repeat(4,1fr)!important}.chatCustomizeTab{font-size:10px!important;padding:9px 3px!important}.chatBgGrid{grid-template-columns:repeat(3,1fr)!important}.bubbleGrid{grid-template-columns:repeat(4,1fr)!important}.chatOption{min-height:68px!important}.chatColor{width:34px!important;height:34px!important}}
+
+/* V20 — personnalisation compacte : le résultat reste visible au-dessus */
+#discussionContent{position:relative!important;isolation:isolate!important;background-color:#102131!important;background-image:none!important;overflow:hidden!important}
+#discussionContent::before{content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background-image:linear-gradient(180deg,rgba(3,12,20,.08),rgba(3,12,20,.30)),var(--chat-bg-image,none)!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+#discussionContent>*{position:relative!important;z-index:1!important}
+#discussionContent #messages{background:transparent!important}
+
+.chatCustomizeOverlay{align-items:flex-end!important;background:rgba(2,9,15,.30)!important;backdrop-filter:blur(2px)!important}
+.chatCustomizeSheet{width:min(760px,100%)!important;height:auto!important;max-height:46vh!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:8px 14px 12px!important;border-radius:22px 22px 0 0!important}
+.chatSheetHandle{width:38px!important;height:4px!important;margin:0 auto 7px!important}
+.chatCustomizeTop{margin-bottom:7px!important}
+.chatCustomizeTop h3{font-size:18px!important}
+.chatCustomizeClose{width:34px!important;height:34px!important}
+.chatCustomizeTabs{gap:5px!important;margin-bottom:8px!important}
+.chatCustomizeTab{padding:7px 4px!important;font-size:11px!important;border-radius:10px!important}
+.chatCustomizeAllSections{gap:7px!important}
+.chatCustomizeSection{padding:0!important}
+.chatSectionTitle{font-size:14px!important;margin:3px 0 5px!important}
+.chatOptionGrid{gap:5px!important}
+.chatBgGrid{grid-template-columns:repeat(5,1fr)!important}
+.chatOption{min-height:54px!important;height:54px!important;padding:4px!important;border-radius:10px!important;font-size:10px!important;line-height:1.1!important}
+.chatBgPreview{height:28px!important;border-radius:6px!important;margin-bottom:2px!important}
+.bubbleGrid{grid-template-columns:repeat(7,1fr)!important}
+.bubblePreview span{min-width:28px!important;padding:4px 6px!important;font-size:10px!important}
+.chatColorRow{gap:8px!important}
+.chatColor{width:30px!important;height:30px!important}
+.chatRange{height:20px!important;margin:0!important}
+.chatCustomizeActions{gap:6px!important;margin-top:8px!important}
+.chatCustomizeActions button{padding:8px 10px!important;font-size:12px!important}
+@media(max-width:430px){
+  .chatCustomizeSheet{max-height:45vh!important;padding:7px 9px 10px!important}
+  .chatCustomizeTop h3{font-size:17px!important}
+  .chatCustomizeTabs{grid-template-columns:repeat(4,1fr)!important}
+  .chatCustomizeTab{font-size:9.5px!important;padding:7px 2px!important}
+  .chatBgGrid{grid-template-columns:repeat(4,1fr)!important}
+  .chatOption{min-height:50px!important;height:50px!important;font-size:9px!important}
+  .chatBgPreview{height:25px!important}
+  .bubbleGrid{grid-template-columns:repeat(4,1fr)!important}
+  .chatColor{width:28px!important;height:28px!important}
+}
 </style>
 </head>
 <body>
