@@ -431,6 +431,46 @@ details.tabPanel.uniformToggle > .collapsibleBody{
   #discussionContent #voicePreview #sendVoiceBtn,#discussionContent #voicePreview #cancelVoiceBtn{padding:5px 7px!important;font-size:10px!important}
 }
 
+
+/* V29 — vocal intégré à la barre de saisie + transparence sans toucher aux photos */
+#discussionContent .messageBody{
+  opacity:1!important;
+  background:var(--bubble-in-rgba,#142b3d)!important;
+}
+#discussionContent .messageRow.me .messageBody{
+  opacity:1!important;
+  background:var(--bubble-out-rgba,#1683ff)!important;
+}
+#discussionContent .chatAttachmentMessage{
+  opacity:1!important;
+}
+#discussionContent .chatAttachmentImage,
+#discussionContent .chatAttachmentVideo{
+  opacity:1!important;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+}
+#discussionContent .chatComposer{position:relative!important;}
+#discussionContent .voiceRecordingBar{
+  flex:1 1 auto!important;min-width:0!important;height:44px!important;box-sizing:border-box!important;
+  display:flex!important;align-items:center!important;gap:7px!important;padding:0 12px!important;
+  border:1px solid #ff5577!important;border-radius:23px!important;background:rgba(45,14,25,.94)!important;
+  color:#fff!important;font-size:13px!important;overflow:hidden!important;
+}
+#discussionContent .voiceRecordingBar.hidden{display:none!important}
+#discussionContent .voiceRecDot{color:#ff5577!important;font-size:15px!important;animation:voicePulse 1s infinite}
+#discussionContent #voiceCancelGesture{margin-left:auto;color:#ff9bad!important;font-size:11px!important;white-space:nowrap!important}
+#discussionContent .chatComposer.isRecording #chatClipBtn,
+#discussionContent .chatComposer.isRecording .composerInputWrap,
+#discussionContent .chatComposer.isRecording #sendBtn{display:none!important}
+#discussionContent .chatComposer.isRecording #voiceBtn{background:#ff315f!important;border-color:#ff315f!important;transform:none!important}
+@keyframes voicePulse{0%,100%{opacity:.45}50%{opacity:1}}
+#discussionContent #voicePreview{display:none!important}
+#discussionContent .voiceComposer{display:none!important}
+@media(max-width:430px){
+  #discussionContent .voiceRecordingBar{height:44px!important;font-size:12px!important;padding:0 10px!important}
+  #discussionContent #voiceCancelGesture{font-size:10px!important}
+}
 </style>
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
 </head>
@@ -647,6 +687,9 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <div id="discussionTyping" aria-live="polite"><span class="typingDots"><i></i><i></i><i></i></span><span id="discussionTypingText">Quelqu’un écrit…</span></div>
 <div class="chatComposer">
   <button type="button" id="chatClipBtn" class="composerIconBtn" aria-label="Joindre une photo, une vidéo ou un fichier">📎</button>
+  <div id="voiceRecordingBar" class="voiceRecordingBar hidden" aria-live="polite">
+    <span class="voiceRecDot">●</span><span id="voiceRecordingText">Enregistrement 00:00</span><span id="voiceCancelGesture">← Glisser pour annuler</span>
+  </div>
   <div class="composerInputWrap">
     <input id="message" placeholder="Écrire un message…" autocomplete="off">
   </div>
@@ -1733,8 +1776,10 @@ function updateVoiceTimer(){
   const total=Math.floor(elapsed/1000);
   const min=String(Math.floor(total/60)).padStart(2,'0');
   const sec=String(total%60).padStart(2,'0');
+  const text=$('voiceRecordingText');
+  if(text)text.textContent='Enregistrement '+min+':'+sec;
   const status=$('voiceStatus');
-  if(status)status.textContent='🎙️ Enregistrement '+min+':'+sec;
+  if(status)status.textContent='';
 }
 
 function resetVoiceRecordingUi(){
@@ -1743,8 +1788,12 @@ function resetVoiceRecordingUi(){
   voiceStartedAt=0;
   const btn=$('voiceBtn');
   const cancel=$('cancelRecordingBtn');
-  if(btn){btn.disabled=false;btn.classList.remove('recording');btn.textContent='🎙️ Maintenir pour enregistrer';}
+  const composer=document.querySelector('#discussionContent .chatComposer');
+  const bar=$('voiceRecordingBar');
+  if(btn){btn.disabled=false;btn.classList.remove('recording','cancelZone');btn.textContent='🎙️';}
   if(cancel)cancel.classList.add('hidden');
+  if(composer)composer.classList.remove('isRecording');
+  if(bar)bar.classList.add('hidden');
 }
 
 function cancelVoiceRecording(){
@@ -1802,38 +1851,36 @@ async function toggleVoiceRecording(){
     mediaRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
     voiceChunks=[];
     mediaRecorder.ondataavailable=e=>{if(e.data?.size)voiceChunks.push(e.data)};
-    mediaRecorder.onstop=()=>{
+    mediaRecorder.onstop=async()=>{
       clearInterval(voiceTimer);voiceTimer=null;
       const type=mediaRecorder.mimeType||mime||'audio/webm';
       voiceBlob=new Blob(voiceChunks,{type});
       stopVoiceStream();
       mediaRecorder=null;
-      const durationMs=Math.max(0,Date.now()-voiceStartedAt);
       resetVoiceRecordingUi();
-      const url=URL.createObjectURL(voiceBlob);
-      const box=$('voicePreview');
-      box.innerHTML='<div style="width:100%"><div class="voiceStatus">Vocal de '+formatVoiceDuration(durationMs)+' ✓</div><audio class="voiceAudio" src="'+url+'" controls></audio><div class="voiceSpeedRow"><label>Vitesse</label><select class="voiceSpeed" aria-label="Vitesse de lecture"><option value="1">1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></div><button type="button" id="sendVoiceBtn">Envoyer le vocal</button><button type="button" class="secondary" id="cancelVoiceBtn">Annuler</button></div>';
-      box.classList.remove('hidden');
-      bindVoiceSpeeds(box);
-      $('voiceStatus').textContent='Vocal prêt ✓';
-      $('sendVoiceBtn').addEventListener('click',sendVoice);
-      $('cancelVoiceBtn').addEventListener('click',()=>{URL.revokeObjectURL(url);clearVoicePreview();$('voiceStatus').textContent='';});
+      // Snapchat-like : au relâchement, le vocal est envoyé directement.
+      await sendVoice();
     };
     mediaRecorder.onerror=e=>{stopVoiceStream();mediaRecorder=null;resetVoiceRecordingUi();$('voiceStatus').textContent='';alert('Erreur enregistrement vocal.');};
     mediaRecorder.start();
     voiceStartedAt=Date.now();
     updateVoiceTimer();
     voiceTimer=setInterval(updateVoiceTimer,250);
+    const composer=document.querySelector('#discussionContent .chatComposer');
+    const bar=$('voiceRecordingBar');
+    if(composer)composer.classList.add('isRecording');
+    if(bar)bar.classList.remove('hidden');
     btn.classList.add('recording');
-    btn.textContent='⏹️ Relâcher pour envoyer';
+    btn.textContent='⏺️';
     const cancel=$('cancelRecordingBtn');if(cancel)cancel.classList.remove('hidden');
   }catch(e){stopVoiceStream();mediaRecorder=null;resetVoiceRecordingUi();alert('Micro inaccessible : '+(e.message||String(e)));}
 }
 async function sendVoice(){
   if(!voiceBlob||!event||!user)return;
-  const btn=$('sendVoiceBtn');
-  btn.disabled=true;
-  $('voiceStatus').textContent='Envoi du vocal…';
+  const btn=$('voiceBtn');
+  if(btn)btn.disabled=true;
+  const recText=$('voiceRecordingText');
+  if(recText)recText.textContent='Envoi du vocal…';
   try{
     const type=voiceBlob.type||'audio/webm';
     const ext=type.includes('mp4')?'m4a':'webm';
@@ -1850,8 +1897,9 @@ async function sendVoice(){
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
     clearVoicePreview();
+    resetVoiceRecordingUi();
     await loadMessages();
-  }catch(e){btn.disabled=false;$('voiceStatus').textContent='';alert('Erreur vocal : '+(e.message||String(e)));}
+  }catch(e){if(btn)btn.disabled=false;resetVoiceRecordingUi();alert('Erreur vocal : '+(e.message||String(e)));}
 }
 
 
@@ -2979,7 +3027,12 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
       probe.remove();
     }
     panel.style.setProperty('--chat-bg-image',bgImage);
-    panel.style.setProperty('--bubble-out',style.color);panel.style.setProperty('--bubble-opacity',(Number(style.opacity)||100)/100);
+    panel.style.setProperty('--bubble-out',style.color);
+    const alpha=Math.max(0.45,Math.min(1,(Number(style.opacity)||100)/100));
+    const hexToRgba=(hex,a)=>{const h=String(hex||'').replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return `rgba(22,131,255,${a})`;return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;};
+    panel.style.setProperty('--bubble-in-rgba',`rgba(20,43,61,${alpha})`);
+    panel.style.setProperty('--bubble-out-rgba',hexToRgba(style.color,alpha));
+    panel.style.setProperty('--bubble-opacity',1);
     panel.classList.remove('bubble-glass','bubble-soft','bubble-compact','bubble-classic','bubble-minimal','bubble-outline');
     if(style.bubble==='glass')panel.classList.add('bubble-glass');
     if(style.bubble==='soft')panel.classList.add('bubble-soft');
