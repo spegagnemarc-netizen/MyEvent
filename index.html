@@ -892,15 +892,36 @@ function setBusy(id,busy,label){
 const SUPABASE_URL='https://nxxvadbliinhvkirqkkl.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_jBqcZF0k-mNBp5HJGxniTQ_gcjkPgMn';
 
+async function ensureAuthenticatedSession(){
+  if(!sb?.auth) throw new Error('Supabase n’est pas initialisé.');
+  let lastError=null;
+  for(let i=0;i<3;i++){
+    try{
+      const r=await sb.auth.getSession();
+      if(r.error) throw r.error;
+      let session=r.data?.session||null;
+      if(session?.refresh_token){
+        const rr=await sb.auth.refreshSession({refresh_token:session.refresh_token});
+        if(!rr.error && rr.data?.session) session=rr.data.session;
+      }
+      if(session?.user?.id){
+        user=session.user;
+        return session;
+      }
+    }catch(e){ lastError=e; }
+    await new Promise(resolve=>setTimeout(resolve,250*(i+1)));
+  }
+  throw lastError||new Error('Aucune session utilisateur Supabase active.');
+}
+
 async function connect(){
   msg('status','Connexion à Supabase…');
   try{
     if(!window.supabase) throw new Error('La bibliothèque Supabase ne s’est pas chargée. Recharge la page.');
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-    const r=await sb.auth.getSession();
-    if(r.error) throw r.error;
+    const session=await ensureAuthenticatedSession().catch(async()=>null);
     $('setup').classList.add('hidden');
-    if(r.data.session) await show(r.data.session.user);
+    if(session?.user) await show(session.user);
     else { $('main').classList.add('hidden'); $('auth').classList.remove('hidden'); }
   }catch(e){
     msg('status',e.message||String(e),'err');
@@ -921,7 +942,9 @@ async function login(){
   try{
     const r=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
     if(r.error) throw r.error;
-    await show(r.data.user);
+    if(r.data?.session) await sb.auth.setSession({access_token:r.data.session.access_token,refresh_token:r.data.session.refresh_token});
+    const session=await ensureAuthenticatedSession();
+    await show(session.user);
   }catch(e){msg('authmsg',e.message||String(e),'err')}
 }
 
@@ -1009,6 +1032,14 @@ finally{setBusy('saveProfileBtn',false,'Enregistrer mon profil')}
 
 async function show(u){
   user=u;
+  // Important : ne jamais lancer la création du profil avec un objet user
+  // provenant d’un appel précédent si la session JWT n’est pas active.
+  try{
+    const session=await ensureAuthenticatedSession();
+    if(session?.user?.id) user=session.user;
+  }catch(e){
+    throw new Error('Session Supabase indisponible : '+(e.message||String(e)));
+  }
   window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
