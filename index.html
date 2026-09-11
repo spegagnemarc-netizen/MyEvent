@@ -3086,9 +3086,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 </div>
 <style>
 .chatCustomizeActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#chatCustomizeSave{min-width:0;transition:opacity .15s,transform .15s}
-#chatCustomizeSave.saved{background:#19b879!important;color:#fff!important;border-color:#19b879!important}
-#chatCustomizeSave:disabled{opacity:.85;cursor:default}
+#chatCustomizeSave{min-width:0}
 #chatCustomizeSaveStatus{white-space:nowrap}
 @media(max-width:430px){.chatCustomizeActions button{flex:1 1 0;min-width:0;padding-left:10px;padding-right:10px}.chatCustomizeActions #chatCustomizeSaveStatus{order:4;width:100%;text-align:center}}
 </style>
@@ -3116,23 +3114,19 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   // suivent donc l'utilisateur après déconnexion/reconnexion et sur un autre appareil.
   const load=async()=>{
     try{
-      let found=null;
-      if(user?.id){
-        const meta=readStyle(user?.user_metadata?.myevent_chat_style);
-        if(meta) found=meta;
-        // Recharge l'utilisateur courant pour éviter d'utiliser un objet user ancien.
-        if(!found && sb?.auth){
-          const r=await sb.auth.getUser();
-          if(!r.error && r.data?.user){
-            user=r.data.user;
-            found=readStyle(user?.user_metadata?.myevent_chat_style);
-          }
-        }
+      // Toujours relire l'utilisateur depuis Supabase : l'objet de session peut
+      // contenir d'anciennes user_metadata après un rafraîchissement/reconnexion.
+      if(user?.id && sb?.auth){
+        const r=await sb.auth.getUser();
+        if(!r.error && r.data?.user) user=r.data.user;
       }
-      // V36 : on ne donne plus systématiquement priorité aux métadonnées Supabase.
-      // On compare les versions et on reprend toujours le réglage le plus récent.
+
+      // La préférence peut exister dans plusieurs caches. On compare le timestamp
+      // de sauvegarde et on garde systématiquement la version la plus récente.
       const candidates=[];
-      const pushCandidate=x=>{if(x&&typeof x==='object')candidates.push(x);};
+      const pushCandidate=x=>{
+        if(x&&typeof x==='object' && Number(x.savedAt)>0)candidates.push(x);
+      };
       pushCandidate(readStyle(user?.user_metadata?.myevent_chat_style));
       if(user?.id){
         pushCandidate(readStyle(localStorage.getItem(globalKey())));
@@ -3140,10 +3134,12 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
       }
       pushCandidate(readStyle(localStorage.getItem(key())));
       if(user?.id&&event?.id)pushCandidate(readStyle(localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`)));
-      candidates.sort((a,b)=>(Number(b.savedAt)||0)-(Number(a.savedAt)||0));
-      if(candidates[0]) found=candidates[0];
-      if(found) style={...defaults,...found};
-    }catch{}
+
+      candidates.sort((a,b)=>Number(b.savedAt)-Number(a.savedAt));
+      if(candidates[0]) style={...defaults,...candidates[0]};
+    }catch(e){
+      console.warn('Chargement personnalisation:',e?.message||e);
+    }
   };
   let saveQueue=Promise.resolve();
   let saveBusy=false;
@@ -3165,6 +3161,16 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
         const r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
         if(r.error)throw r.error;
         if(r.data?.user)user=r.data.user;
+
+        // Vérification réelle côté serveur. Cela évite d'afficher « Sauvegardé »
+        // si l'écriture n'est pas effectivement disponible après reconnexion.
+        const check=await sb.auth.getUser();
+        const savedServer=readStyle(check.data?.user?.user_metadata?.myevent_chat_style);
+        if(!check.error && (!savedServer || Number(savedServer.savedAt)!==Number(payloadObj.savedAt))){
+          const retry=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
+          if(retry.error)throw retry.error;
+          if(retry.data?.user)user=retry.data.user;
+        }
       }
       const status=document.getElementById('chatCustomizeSaveStatus');
       if(status){status.textContent='✓ Sauvegardé';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),1800);}
@@ -3224,29 +3230,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   openBtn.addEventListener('touchstart',e=>e.stopPropagation(),{capture:true,passive:true});
   closeBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
   doneBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
-  saveBtn?.addEventListener('click',async e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    if(saveBtn.disabled)return;
-    const original=saveBtn.textContent;
-    saveBtn.disabled=true;
-    saveBtn.textContent='💾 Sauvegarde…';
-    const ok=await save();
-    saveBtn.textContent=ok?'✓ Sauvegardé':'⚠️ Réessayer';
-    if(ok){
-      saveBtn.classList.add('saved');
-      setTimeout(()=>{
-        saveBtn.textContent=original;
-        saveBtn.classList.remove('saved');
-        saveBtn.disabled=false;
-      },1600);
-    }else{
-      setTimeout(()=>{
-        saveBtn.textContent=original;
-        saveBtn.disabled=false;
-      },1800);
-    }
-  });
+  saveBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await save();});
   overlay.addEventListener('click',async e=>{if(e.target===overlay)await close();});
   document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelector('[data-chat-custom-section=\"'+n+'\"]')?.scrollIntoView({behavior:'smooth',block:'nearest'});}));
   document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save();}));
@@ -3284,4 +3268,80 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 #discussionContent .chatAttachmentImage,#discussionContent .chatAttachmentVideo{opacity:1!important;filter:none!important;mix-blend-mode:normal!important}
 #discussionContent .messageRow:not(.me) .messageBody{background:var(--bubble-in-rgba,rgba(20,43,61,.35))!important;opacity:1!important}
 #discussionContent .messageRow.me .messageBody{background:var(--bubble-out-rgba,rgba(22,131,255,.35))!important;opacity:1!important}
+
+/* V38 — Format compact définitif des cartes repliables, aligné sur les boutons d'onglets */
+details.uniformToggle:not(.tabPanel){
+  display:block !important;
+  width:100% !important;
+  margin:12px 0 !important;
+  padding:0 !important;
+  min-height:0 !important;
+  height:auto !important;
+  background:#0a1823 !important;
+  border:1px solid #28465e !important;
+  border-radius:14px !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+}
+details.uniformToggle:not(.tabPanel):not([open]){
+  height:58px !important;
+  min-height:58px !important;
+}
+details.uniformToggle:not(.tabPanel) > summary{
+  width:100% !important;
+  height:58px !important;
+  min-height:58px !important;
+  margin:0 !important;
+  padding:10px 10px 10px 14px !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+  list-style:none !important;
+  cursor:pointer !important;
+  background:#0a1823 !important;
+  color:#a9b9c8 !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+  line-height:1.2 !important;
+}
+details.uniformToggle:not(.tabPanel) > summary::-webkit-details-marker{display:none !important}
+details.uniformToggle:not(.tabPanel) > summary::after{
+  content:'›' !important;
+  font-size:28px !important;
+  line-height:.7 !important;
+  color:#9eb2c4 !important;
+  flex:0 0 auto !important;
+  transform:none !important;
+}
+details.uniformToggle:not(.tabPanel)[open] > summary::after{transform:rotate(90deg) !important}
+details.uniformToggle:not(.tabPanel) > summary .summaryLabel{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+details.uniformToggle:not(.tabPanel) > summary .dragHandle{
+  flex:0 0 34px !important;
+  width:34px !important;
+  height:34px !important;
+  margin-left:auto !important;
+  display:grid !important;
+  place-items:center !important;
+}
+details.uniformToggle:not(.tabPanel) > .collapsibleBody,
+details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
+  margin:12px 16px 16px !important;
+}
+@media(max-width:430px){
+  details.uniformToggle:not(.tabPanel) > summary{
+    height:58px !important;
+    min-height:58px !important;
+    padding:10px 10px 10px 12px !important;
+    font-size:15px !important;
+  }
+  details.uniformToggle:not(.tabPanel):not([open]){height:58px !important;min-height:58px !important}
+}
 </style>
