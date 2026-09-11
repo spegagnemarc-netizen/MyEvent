@@ -716,7 +716,7 @@ body.discussionFullScreen{overflow:hidden!important}
     <input id="ename" placeholder="Nom de l’événement">
     <div class="fieldRow">
       <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
-      <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div><div id="locationMap" class="locationMap hidden"><iframe id="locationMapFrame" title="Carte du lieu" loading="lazy"></iframe><div class="locationMapBar"><span>📍 Position sélectionnée</span><a id="locationMapLink" href="#" target="_blank" rel="noopener">Ouvrir la carte</a></div></div></div>
+      <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div><div id="createLocationMap" class="locationMap hidden"><iframe id="createLocationMapFrame" title="Carte du lieu" loading="lazy"></iframe><div class="locationMapBar"><span>📍 Position sélectionnée</span><a id="createLocationMapLink" href="#" target="_blank" rel="noopener">Ouvrir la carte</a></div></div></div>
     </div>
     <textarea id="eventDescriptionInput" placeholder="Description de l’événement…" rows="3"></textarea>
     <label class="coverFileLabel">🖼️ Joindre une photo de couverture (optionnel)<input id="eventCoverFileInput" type="file" accept="image/*"></label><div id="eventCoverFileName" class="coverFileName"></div>
@@ -988,93 +988,105 @@ function setBusy(id,busy,label){
 }
 
 
-/* V48 — Localisations */
+/* V48.3 — Localisations : carte Leaflet réelle + géolocalisation */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationEventCoords=null;
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️'};
-function clearLocationMarkers(){ locationMemberMarkers.forEach(m=>locationMap?.removeLayer(m)); locationMemberMarkers=[]; }
-function buildLocationMapUrl(lat,lon,zoom=15){
-  const d=zoom>=16?0.008:zoom>=15?0.012:0.02;
-  const bbox=(lon-d)+'%2C'+(lat-d)+'%2C'+(lon+d)+'%2C'+(lat+d);
-  return 'https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+encodeURIComponent(lat+','+lon);
+function clearLocationMarkers(){
+  if(locationMap){ if(locationEventMarker) locationMap.removeLayer(locationEventMarker); if(locationUserMarker) locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); }
+  locationEventMarker=null; locationUserMarker=null; locationMemberMarkers=[];
 }
-function initLocationMap(lat=43.1242,lon=5.928){
-  const el=$('locationMap');
-  if(!el)return;
-  let frame=el.querySelector('#locationMapFrameLive');
-  if(!frame){
-    frame=document.createElement('iframe');
-    frame.id='locationMapFrameLive';
-    frame.title='Carte de localisation';
-    frame.loading='eager';
-    frame.style.cssText='display:block;width:100%;height:100%;border:0;position:relative;z-index:1';
-    el.insertBefore(frame, el.firstChild);
+function makeLocationIcon(emoji,bg='#278cff'){
+  return L.divIcon({className:'',html:'<div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:19px">'+emoji+'</div>',iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]});
+}
+function initLocationMap(lat=43.1242,lon=5.928,zoom=14){
+  const el=$('locationMap'); if(!el||!window.L)return;
+  if(!locationMap){
+    locationMap=L.map(el,{zoomControl:true,attributionControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(locationMap);
   }
-  frame.src=buildLocationMapUrl(lat,lon,14);
+  locationMap.setView([lat,lon],zoom);
+  setTimeout(()=>locationMap.invalidateSize(),80);
 }
 function setLocationMapView(lat,lon,zoom=15){
-  const el=$('locationMap'); if(!el)return;
-  let frame=el.querySelector('#locationMapFrameLive');
-  if(!frame){initLocationMap(lat,lon,zoom); frame=el.querySelector('#locationMapFrameLive');}
-  if(frame) frame.src=buildLocationMapUrl(lat,lon,zoom);
+  initLocationMap(lat,lon,zoom);
+  if(locationMap) locationMap.setView([lat,lon],zoom,{animate:true});
 }
 async function geocodeEventLocation(){
   if(!event)return null;
-  const text=String(event.location||'').trim();
-  if(!text) return null;
+  const text=String(event.location||'').trim(); if(!text)return null;
   try{
-    const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text));
-    const d=await r.json();
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'}});
+    if(!r.ok)return null; const d=await r.json();
     if(d?.[0]) return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name};
   }catch(e){}
   return null;
 }
 async function loadNearbyPlaces(lat,lon){
-  const box=0.025;
-  const q='[out:json][timeout:12];(node(around:2500,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];node(around:2500,'+lat+','+lon+') [tourism~"attraction|museum" ];node(around:2500,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley"];);out center tags;';
+  const q='[out:json][timeout:12];(node(around:2500,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];node(around:2500,'+lat+','+lon+') [tourism~"attraction|museum"];node(around:2500,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley"];);out center tags;';
   const el=$('locationPlaces'); if(!el)return;
   try{
-    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q,headers:{'Content-Type':'text/plain'}});
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q,headers:{'Content-Type':'text/plain'}}); if(!r.ok)throw new Error('overpass');
     const d=await r.json();
-    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction'})).filter(x=>x.lat&&x.lon).slice(0,30);
+    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction'})).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
     arr.sort((a,b)=>((a.lat-lat)**2+(a.lon-lon)**2)-((b.lat-lat)**2+(b.lon-lon)**2));
-    el.innerHTML=arr.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(p.type.replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
-    el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>locationMap?.setView([+b.dataset.lat,+b.dataset.lon],16));
-  }catch(e){ el.innerHTML='<p class="muted">Impossible de charger les activités à proximité pour le moment.</p>'; }
+    el.innerHTML=arr.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
+    el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>setLocationMapView(+b.dataset.lat,+b.dataset.lon,17));
+  }catch(e){el.innerHTML='<p class="muted">Impossible de charger les activités à proximité pour le moment.</p>';}
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
   try{
     const r=await sb.from('event_locations').select('user_id,lat,lon,accuracy,share_mode,updated_at').eq('event_id',event.id).neq('share_mode','off');
-    if(r.error){ wrap.innerHTML='<p class="muted">Les positions des membres seront disponibles après activation du partage.</p>'; $('locationMemberCount').textContent='0 membre'; return; }
-    const rows=r.data||[];
+    if(r.error){wrap.innerHTML='<p class="muted">Les positions des membres seront disponibles après activation du partage.</p>'; $('locationMemberCount').textContent='0 membre'; return;}
+    const rows=(r.data||[]).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
     const ids=rows.map(x=>x.user_id).filter(Boolean); let profs=[];
-    if(ids.length){const pr=await sb.from('profiles').select('id,display_name,avatar').in('id',ids); if(!pr.error)profs=pr.data||[];}
+    if(ids.length){const pr=await sb.from('profiles').select('id,display_name,avatar').in('id',ids);if(!pr.error)profs=pr.data||[];}
     const pm=new Map(profs.map(x=>[x.id,x]));
-    rows.forEach(x=>{let lat=+x.lat,lon=+x.lon;if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100;}if(!Number.isFinite(lat)||!Number.isFinite(lon))return;});
+    if(locationMap){locationMemberMarkers.forEach(m=>locationMap.removeLayer(m));locationMemberMarkers=[];}
+    rows.forEach(x=>{
+      let lat=+x.lat,lon=+x.lon;
+      if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100;}
+      const p=pm.get(x.user_id)||{}; const mine=x.user_id===user.id;
+      if(locationMap){const m=L.marker([lat,lon],{icon:makeLocationIcon(mine?'📍':'👤',mine?'#278cff':'#6f5cff')}).addTo(locationMap);m.bindPopup('<b>'+esc(p.display_name||'Membre')+'</b><br>'+(x.share_mode==='approx'?'Position approximative':'Position exacte'));locationMemberMarkers.push(m);}
+    });
     $('locationMemberCount').textContent=rows.length+' membre'+(rows.length>1?'s':'');
     wrap.innerHTML=rows.map(x=>{const p=pm.get(x.user_id)||{};return '<div class="memberRow locationMember">'+avatarHtml(p.avatar,'miniAvatar')+'<div class="memberInfo"><b>'+esc(p.display_name||'Membre')+'</b><span>'+(x.share_mode==='approx'?'Position approximative':'Position exacte')+'</span></div></div>';}).join('')||'<p class="muted">Aucune position partagée.</p>';
   }catch(e){wrap.innerHTML='<p class="muted">Les positions des membres ne sont pas encore configurées.</p>';}
 }
 async function updateMyLocation(mode){
   if(!event||!user)return;
-  if(mode==='off'){await sb.from('event_locations').upsert({event_id:event.id,user_id:user.id,lat:null,lon:null,accuracy:null,share_mode:'off',updated_at:new Date().toISOString()},{onConflict:'event_id,user_id'}); await loadSharedMemberLocations(); return;}
+  if(mode==='off'){const r=await sb.from('event_locations').upsert({event_id:event.id,user_id:user.id,lat:null,lon:null,accuracy:null,share_mode:'off',updated_at:new Date().toISOString()},{onConflict:'event_id,user_id'});$('locationMsg').textContent=r.error?'Impossible d’arrêter le partage.':'Partage de position désactivé.';await loadSharedMemberLocations();return;}
   if(!navigator.geolocation){$('locationMsg').textContent='La géolocalisation n’est pas disponible sur cet appareil.';return;}
-  $('locationMsg').textContent='Autorisation de localisation…';
-  navigator.geolocation.getCurrentPosition(async pos=>{const payload={event_id:event.id,user_id:user.id,lat:pos.coords.latitude,lon:pos.coords.longitude,accuracy:pos.coords.accuracy||null,share_mode:mode,updated_at:new Date().toISOString()};const r=await sb.from('event_locations').upsert(payload,{onConflict:'event_id,user_id'});$('locationMsg').textContent=r.error?'Impossible de partager la position.':'Position partagée avec les membres de cet événement.'; await loadSharedMemberLocations();},()=>{$('locationMsg').textContent='Autorisation de localisation refusée.';},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  $('locationMsg').textContent='📍 Recherche de ta position…';
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    setLocationMapView(lat,lon,16);
+    if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);
+    if(locationMap){locationUserMarker=L.marker([lat,lon],{icon:makeLocationIcon('📍','#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();}
+    const payload={event_id:event.id,user_id:user.id,lat,lon,accuracy:pos.coords.accuracy||null,share_mode:mode,updated_at:new Date().toISOString()};
+    const r=await sb.from('event_locations').upsert(payload,{onConflict:'event_id,user_id'});
+    $('locationMsg').textContent=r.error?'Impossible de partager la position : '+r.error.message:'Position partagée avec les membres de cet événement.';
+    await loadSharedMemberLocations();
+  },err=>{$('locationMsg').textContent=err?.code===1?'⚠️ Autorisation refusée. Vérifie Réglages → Confidentialité et sécurité → Service de localisation → Safari.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 async function loadEventLocations(){
-  if(!event)return;
-  if(!$('locationMap'))return;
+  if(!event||!$('locationMap'))return;
+  const loader=$('locationMapLoading'); if(loader)loader.style.display='grid';
   initLocationMap();
-  const loader=$('locationMapLoading');
-  if(loader) loader.style.display='grid';
   const geo=await geocodeEventLocation();
-  if(geo){locationEventCoords=geo;initLocationMap(geo.lat,geo.lon); setLocationMapView(geo.lat,geo.lon,14); $('locationEventAddress').textContent=geo.address||event.location||'Lieu'; await loadNearbyPlaces(geo.lat,geo.lon);}else{$('locationEventAddress').textContent=event.location||'Lieu non renseigné';$('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';}
+  if(geo){
+    locationEventCoords=geo; initLocationMap(geo.lat,geo.lon,14);
+    if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);
+    locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu')).openPopup();
+    $('locationEventAddress').textContent=geo.address||event.location||'Lieu'; await loadNearbyPlaces(geo.lat,geo.lon);
+  }else{
+    $('locationEventAddress').textContent=event.location||'Lieu non renseigné';
+    $('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';
+  }
   await loadSharedMemberLocations();
-  const loaderDone=$('locationMapLoading');
-  if(loaderDone) loaderDone.style.display='none';
+  if(loader)loader.style.display='none';
+  setTimeout(()=>locationMap?.invalidateSize(),100);
 }
-
 
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
 document.addEventListener('click',e=>{
@@ -1084,12 +1096,11 @@ document.addEventListener('click',e=>{
     if(!navigator.geolocation){if(msgEl)msgEl.textContent='La géolocalisation n’est pas disponible dans ce navigateur.';return;}
     if(msgEl)msgEl.textContent='📍 Demande d’autorisation de localisation…';
     navigator.geolocation.getCurrentPosition(pos=>{
-      const {latitude,longitude}=pos.coords;
-      setLocationMapView(latitude,longitude,16);
+      const {latitude,longitude}=pos.coords; setLocationMapView(latitude,longitude,16);
+      if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);
+      if(locationMap)locationUserMarker=L.marker([latitude,longitude],{icon:makeLocationIcon('📍','#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();
       if(msgEl)msgEl.textContent='📍 Ta position est affichée sur la carte. Pour la partager, choisis ensuite une option ci-dessous.';
-    },err=>{
-      if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';
-    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+    },err=>{if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   }
   if(e.target.closest('#locRefreshBtn'))loadEventLocations();
 });
@@ -1629,9 +1640,9 @@ async function createEvent(){
     $('eventCoverFileInput').value='';
     $('eventCoverFileName').textContent='';
     $('locationHint').textContent='Tu peux saisir une adresse, un lieu ou utiliser ta position.';
-    $('locationMap').classList.add('hidden');
-    $('locationMapFrame').src='about:blank';
-    $('locationMapLink').href='#';
+    $('createLocationMap').classList.add('hidden');
+    $('createLocationMapFrame').src='about:blank';
+    $('createLocationMapLink').href='#';
     $('createEventCard').open=false;
     await loadEvents();
     await selectEvent(event.id);
@@ -2907,7 +2918,7 @@ window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
 function showLocationMap(lat,lon){
-  const map=$('locationMap'), frame=$('locationMapFrame'), link=$('locationMapLink');
+  const map=$('createLocationMap'), frame=$('createLocationMapFrame'), link=$('createLocationMapLink');
   if(!map||!frame||!link)return;
   const d=0.004;
   const bbox=[lon-d,lat-d,lon+d,lat+d].join('%2C');
@@ -2949,9 +2960,9 @@ function resetCreateEventForm(){
   if($('eventCoverFileInput')) $('eventCoverFileInput').value='';
   if($('eventCoverFileName')) $('eventCoverFileName').textContent='';
   if($('locationHint')) $('locationHint').textContent='Tu peux saisir une adresse, un lieu ou utiliser ta position.';
-  if($('locationMap')) $('locationMap').classList.add('hidden');
-  if($('locationMapFrame')) $('locationMapFrame').src='about:blank';
-  if($('locationMapLink')) $('locationMapLink').href='#';
+  if($('createLocationMap')) $('createLocationMap').classList.add('hidden');
+  if($('createLocationMapFrame')) $('createLocationMapFrame').src='about:blank';
+  if($('createLocationMapLink')) $('createLocationMapLink').href='#';
   $('eventmsg').textContent='';
 }
 $('createEventCard')?.addEventListener('toggle',()=>{
