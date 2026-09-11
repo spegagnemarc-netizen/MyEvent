@@ -992,15 +992,22 @@ function setBusy(id,busy,label){
 }
 
 
-/* V48.3 — Localisations : carte Leaflet réelle + géolocalisation */
+/* V48.6 — Localisation : activités renforcées + avatars sur la carte */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null;
-const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️'};
+const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
-  if(locationMap){ if(locationEventMarker) locationMap.removeLayer(locationEventMarker); if(locationUserMarker) locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
+  if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
   locationEventMarker=null; locationUserMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
 }
 function makeLocationIcon(emoji,bg='#278cff'){
   return L.divIcon({className:'',html:'<div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:19px">'+emoji+'</div>',iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]});
+}
+function makeAvatarLocationIcon(avatar,bg='#6f5cff'){
+  const v=String(avatar||'');
+  const inner=(/^https?:\/\//i.test(v)||/^data:image\//i.test(v))
+    ? '<img src="'+esc(v)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block">'
+    : '<span style="font-size:18px">'+esc(v||'👤')+'</span>';
+  return L.divIcon({className:'',html:'<div style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.4);overflow:hidden">'+inner+'</div>',iconSize:[40,40],iconAnchor:[20,20],popupAnchor:[0,-20]});
 }
 function initLocationMap(lat=43.1242,lon=5.928,zoom=14){
   const el=$('locationMap'); if(!el||!window.L)return;
@@ -1008,67 +1015,56 @@ function initLocationMap(lat=43.1242,lon=5.928,zoom=14){
     locationMap=L.map(el,{zoomControl:true,attributionControl:true});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(locationMap);
   }
-  locationMap.setView([lat,lon],zoom);
-  setTimeout(()=>locationMap.invalidateSize(),80);
+  locationMap.setView([lat,lon],zoom); setTimeout(()=>locationMap.invalidateSize(),80);
 }
-function setLocationMapView(lat,lon,zoom=15){
-  initLocationMap(lat,lon,zoom);
-  if(locationMap) locationMap.setView([lat,lon],zoom,{animate:true});
-}
+function setLocationMapView(lat,lon,zoom=15){ initLocationMap(lat,lon,zoom); if(locationMap)locationMap.setView([lat,lon],zoom,{animate:true}); }
 async function geocodeEventLocation(){
-  if(!event)return null;
-  const text=String(event.location||'').trim(); if(!text)return null;
-  try{
-    const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'}});
-    if(!r.ok)return null; const d=await r.json();
-    if(d?.[0]) return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name};
-  }catch(e){}
+  if(!event)return null; const text=String(event.location||'').trim(); if(!text)return null;
+  try{ const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'}}); if(!r.ok)return null; const d=await r.json(); if(d?.[0])return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name}; }catch(e){} return null;
+}
+function distanceKm(a,b,c,d){ const R=6371,rad=Math.PI/180, x=(c-a)*rad, y=(d-b)*rad; const q=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2; return 2*R*Math.asin(Math.sqrt(q)); }
+async function fetchJsonWithTimeout(url,opts={},ms=12000){ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),ms); try{ const r=await fetch(url,{...opts,signal:ctl.signal,headers:{Accept:'application/json',...(opts.headers||{})}}); if(!r.ok)throw new Error('HTTP '+r.status); return await r.json(); } finally{clearTimeout(t);} }
+async function overpassQuery(q){
+  const encoded=encodeURIComponent(q);
+  const urls=[
+    'https://overpass-api.de/api/interpreter?data='+encoded,
+    'https://overpass.kumi.systems/api/interpreter?data='+encoded,
+    'https://overpass.private.coffee/api/interpreter?data='+encoded
+  ];
+  for(const url of urls){ try{ const d=await fetchJsonWithTimeout(url,{},14000); if(d&&Array.isArray(d.elements))return d; }catch(e){} }
   return null;
 }
 async function loadNearbyPlaces(lat,lon){
-  const q='[out:json][timeout:15];(nwr(around:3000,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];nwr(around:3000,'+lat+','+lon+') [tourism~"attraction|museum|gallery|viewpoint"];nwr(around:3000,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];);out center tags;';
   const el=$('locationPlaces'); if(!el)return;
+  el.innerHTML='<p class="muted">🔎 Recherche des activités autour de l’événement…</p>';
+  const q='[out:json][timeout:20];(nwr(around:3500,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];nwr(around:3500,'+lat+','+lon+') [tourism~"attraction|museum|gallery|viewpoint"];nwr(around:3500,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];);out center tags;';
   try{
-    let r=null, d=null;
-    const endpoints=[
-      'https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),
-      'https://overpass.kumi.systems/api/interpreter?data='+encodeURIComponent(q)
-    ];
-    for(const url of endpoints){
-      try{ const rr=await fetch(url,{method:'GET',headers:{'Accept':'application/json'}}); if(rr.ok){ r=rr; d=await rr.json(); break; } }catch(_e){}
-    }
-    if(!d)throw new Error('overpass');
-    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction',phone:x.tags?.phone||'',website:x.tags?.website||''})).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)&&x.name!=='Lieu sans nom');
-    const seen=new Set();
-    const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
-    unique.sort((a,b)=>((a.lat-lat)**2+(a.lon-lon)**2)-((b.lat-lat)**2+(b.lon-lon)**2));
-    if(locationMap){ locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers=[]; }
-    unique.slice(0,20).forEach(p=>{
-      if(locationMap){
-        const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap);
-        m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' ')));
-        locationPlaceMarkers.push(m);
-      }
-    });
-    el.innerHTML=unique.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
+    const d=await overpassQuery(q); if(!d)throw new Error('overpass');
+    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction',phone:x.tags?.phone||'',website:x.tags?.website||''})).filter(x=>x.name&&Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
+    const seen=new Set(); const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+    unique.forEach(x=>x.distance=distanceKm(lat,lon,+x.lat,+x.lon)); unique.sort((a,b)=>a.distance-b.distance);
+    if(locationMap){locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationPlaceMarkers=[];}
+    unique.slice(0,25).forEach(p=>{ if(locationMap){ const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap); m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km'); locationPlaceMarkers.push(m); }});
+    el.innerHTML=unique.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
     el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>setLocationMapView(+b.dataset.lat,+b.dataset.lon,17));
-  }catch(e){el.innerHTML='<p class="muted">Les activités à proximité sont momentanément indisponibles. Réessaie avec ↻ Actualiser.</p>';}
+  }catch(e){
+    el.innerHTML='<p class="muted">Les activités sont momentanément indisponibles. Appuie sur ↻ Actualiser pour réessayer.</p>';
+  }
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
   try{
     const r=await sb.from('event_locations').select('user_id,lat,lon,accuracy,share_mode,updated_at').eq('event_id',event.id).neq('share_mode','off');
     if(r.error){wrap.innerHTML='<p class="muted">Les positions des membres seront disponibles après activation du partage.</p>'; $('locationMemberCount').textContent='0 membre'; return;}
-    const allRows=r.data||[]; const mineRow=allRows.find(x=>x.user_id===user.id); const shareSel=$('locationShareMode'); if(shareSel) shareSel.value=mineRow?.share_mode||'off'; const rows=allRows.filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
-    const ids=rows.map(x=>x.user_id).filter(Boolean); let profs=[];
+    const allRows=r.data||[], mineRow=allRows.find(x=>x.user_id===user.id), shareSel=$('locationShareMode'); if(shareSel)shareSel.value=mineRow?.share_mode||'off';
+    const rows=allRows.filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)); const ids=rows.map(x=>x.user_id).filter(Boolean); let profs=[];
     if(ids.length){const pr=await sb.from('profiles').select('id,display_name,avatar').in('id',ids);if(!pr.error)profs=pr.data||[];}
     const pm=new Map(profs.map(x=>[x.id,x]));
-    if(locationMap){locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationMemberMarkers=[];}
+    if(locationMap){locationMemberMarkers.forEach(m=>locationMap.removeLayer(m));locationMemberMarkers=[];}
     rows.forEach(x=>{
-      let lat=+x.lat,lon=+x.lon;
-      if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100;}
-      const p=pm.get(x.user_id)||{}; const mine=x.user_id===user.id;
-      if(locationMap){const m=L.marker([lat,lon],{icon:makeLocationIcon(mine?'📍':'👤',mine?'#278cff':'#6f5cff')}).addTo(locationMap);m.bindPopup('<b>'+esc(p.display_name||'Membre')+'</b><br>'+(x.share_mode==='approx'?'Position approximative':'Position exacte'));locationMemberMarkers.push(m);}
+      let lat=+x.lat,lon=+x.lon; if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100;}
+      const p=pm.get(x.user_id)||{}, mine=x.user_id===user.id;
+      if(locationMap){const m=L.marker([lat,lon],{icon:makeAvatarLocationIcon(p.avatar,mine?'#278cff':'#6f5cff')}).addTo(locationMap);m.bindPopup('<b>'+esc(p.display_name||'Membre')+'</b><br>'+(!mine&&x.share_mode==='approx'?'Position approximative':mine?'Ma position · '+(x.share_mode==='approx'?'approximative':'exacte'):'Position exacte'));locationMemberMarkers.push(m);}
     });
     $('locationMemberCount').textContent=rows.length+' membre'+(rows.length>1?'s':'');
     wrap.innerHTML=rows.map(x=>{const p=pm.get(x.user_id)||{};return '<div class="memberRow locationMember">'+avatarHtml(p.avatar,'miniAvatar')+'<div class="memberInfo"><b>'+esc(p.display_name||'Membre')+'</b><span>'+(x.share_mode==='approx'?'Position approximative':'Position exacte')+'</span></div></div>';}).join('')||'<p class="muted">Aucune position partagée.</p>';
@@ -1080,49 +1076,24 @@ async function updateMyLocation(mode){
   if(!navigator.geolocation){$('locationMsg').textContent='La géolocalisation n’est pas disponible sur cet appareil.';return;}
   $('locationMsg').textContent='📍 Recherche de ta position…';
   navigator.geolocation.getCurrentPosition(async pos=>{
-    const lat=pos.coords.latitude,lon=pos.coords.longitude;
-    setLocationMapView(lat,lon,16);
+    const lat=pos.coords.latitude,lon=pos.coords.longitude; setLocationMapView(lat,lon,16);
     if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);
-    if(locationMap){locationUserMarker=L.marker([lat,lon],{icon:makeLocationIcon('📍','#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();}
-    const payload={event_id:event.id,user_id:user.id,lat,lon,accuracy:pos.coords.accuracy||null,share_mode:mode,updated_at:new Date().toISOString()};
-    const r=await sb.from('event_locations').upsert(payload,{onConflict:'event_id,user_id'});
-    $('locationMsg').textContent=r.error?'Impossible de partager la position : '+r.error.message:'Position partagée avec les membres de cet événement.';
-    await loadSharedMemberLocations();
+    const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle(); const avatar=pr?.data?.avatar||'';
+    if(locationMap)locationUserMarker=L.marker([lat,lon],{icon:makeAvatarLocationIcon(avatar,'#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();
+    const payload={event_id:event.id,user_id:user.id,lat,lon,accuracy:pos.coords.accuracy||null,share_mode:mode,updated_at:new Date().toISOString()}; const r=await sb.from('event_locations').upsert(payload,{onConflict:'event_id,user_id'});
+    $('locationMsg').textContent=r.error?'Impossible de partager la position : '+r.error.message:'Position partagée avec les membres de cet événement.'; await loadSharedMemberLocations();
   },err=>{$('locationMsg').textContent=err?.code===1?'⚠️ Autorisation refusée. Vérifie Réglages → Confidentialité et sécurité → Service de localisation → Safari.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 async function loadEventLocations(){
-  if(!event||!$('locationMap'))return;
-  const loader=$('locationMapLoading'); if(loader)loader.style.display='grid';
-  initLocationMap();
-  const geo=await geocodeEventLocation();
-  if(geo){
-    locationEventCoords=geo; initLocationMap(geo.lat,geo.lon,14);
-    if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);
-    locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu'));
-    $('locationEventAddress').textContent=geo.address||event.location||'Lieu'; await loadNearbyPlaces(geo.lat,geo.lon);
-  }else{
-    $('locationEventAddress').textContent=event.location||'Lieu non renseigné';
-    $('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';
-  }
-  await loadSharedMemberLocations();
-  if(loader)loader.style.display='none';
-  setTimeout(()=>locationMap?.invalidateSize(),100);
+  if(!event||!$('locationMap'))return; const loader=$('locationMapLoading'); if(loader)loader.style.display='grid'; initLocationMap(); const geo=await geocodeEventLocation();
+  if(geo){ locationEventCoords=geo;initLocationMap(geo.lat,geo.lon,14);if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu'));$('locationEventAddress').textContent=geo.address||event.location||'Lieu';await loadNearbyPlaces(geo.lat,geo.lon); }
+  else{$('locationEventAddress').textContent=event.location||'Lieu non renseigné';$('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';}
+  await loadSharedMemberLocations();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);
 }
-
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
 document.addEventListener('click',e=>{
   if(e.target.closest('#locCenterBtn')){if(locationEventCoords)setLocationMapView(locationEventCoords.lat,locationEventCoords.lon,15);else $('locationMsg').textContent='Le lieu de l’événement n’a pas encore pu être localisé.';}
-  if(e.target.closest('#locMeBtn')){
-    const msgEl=$('locationMsg');
-    if(!navigator.geolocation){if(msgEl)msgEl.textContent='La géolocalisation n’est pas disponible dans ce navigateur.';return;}
-    if(msgEl)msgEl.textContent='📍 Demande d’autorisation de localisation…';
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const {latitude,longitude}=pos.coords; setLocationMapView(latitude,longitude,16);
-      if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);
-      if(locationMap)locationUserMarker=L.marker([latitude,longitude],{icon:makeLocationIcon('📍','#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();
-      if(msgEl)msgEl.textContent='📍 Ta position est affichée sur la carte. Pour la partager, choisis ensuite une option ci-dessous.';
-    },err=>{if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
-  }
+  if(e.target.closest('#locMeBtn')){const msgEl=$('locationMsg');if(!navigator.geolocation){if(msgEl)msgEl.textContent='La géolocalisation n’est pas disponible dans ce navigateur.';return;}if(msgEl)msgEl.textContent='📍 Demande d’autorisation de localisation…';navigator.geolocation.getCurrentPosition(async pos=>{const {latitude,longitude}=pos.coords;setLocationMapView(latitude,longitude,16);if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();const avatar=pr?.data?.avatar||'';if(locationMap)locationUserMarker=L.marker([latitude,longitude],{icon:makeAvatarLocationIcon(avatar,'#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();if(msgEl)msgEl.textContent='📍 Ta position est affichée sur la carte. Pour la partager, choisis ensuite une option ci-dessous.';},err=>{if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
   if(e.target.closest('#locRefreshBtn'))loadEventLocations();
 });
 
