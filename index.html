@@ -3081,9 +3081,15 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
       </div>
     </div>
 
-    <div class="chatCustomizeActions"><button type="button" class="secondary" id="chatCustomizeReset">↺ Réinitialiser</button><button type="button" id="chatCustomizeDone">✓ Terminé</button></div>
+    <div class="chatCustomizeActions"><button type="button" class="secondary" id="chatCustomizeReset">↺ Réinitialiser</button><button type="button" class="secondary" id="chatCustomizeSave">💾 Sauvegarder</button><span id="chatCustomizeSaveStatus" class="muted hidden" style="align-self:center;font-size:13px">✓ Sauvegardé</span><button type="button" id="chatCustomizeDone">✓ Terminé</button></div>
   </div>
 </div>
+<style>
+.chatCustomizeActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#chatCustomizeSave{min-width:0}
+#chatCustomizeSaveStatus{white-space:nowrap}
+@media(max-width:430px){.chatCustomizeActions button{flex:1 1 0;min-width:0;padding-left:10px;padding-right:10px}.chatCustomizeActions #chatCustomizeSaveStatus{order:4;width:100%;text-align:center}}
+</style>
 <script>
 // V17 — l'overlay existe maintenant dans le DOM : initialisation après son rendu.
 (function initChatCustomizationV17(){
@@ -3093,6 +3099,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const closeBtn=document.getElementById('chatCustomizeClose');
   const doneBtn=document.getElementById('chatCustomizeDone');
   const resetBtn=document.getElementById('chatCustomizeReset');
+  const saveBtn=document.getElementById('chatCustomizeSave');
   if(!panel||!overlay||!openBtn)return;
   const key=()=>`myevent-chat-style-${user?.id||'guest'}-${event?.id||'default'}`;
   const globalKey=()=>`myevent-chat-style-last-${user?.id||'guest'}`;
@@ -3120,21 +3127,27 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
           }
         }
       }
-      if(!found){
-        const raws=[
-          user?.id?localStorage.getItem(globalKey()):null,
-          localStorage.getItem(key()),
-          user?.id&&event?.id?localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`):null,
-          localStorage.getItem('myevent-chat-style-last')
-        ];
-        found=raws.map(readStyle).find(Boolean);
+      // V36 : on ne donne plus systématiquement priorité aux métadonnées Supabase.
+      // On compare les versions et on reprend toujours le réglage le plus récent.
+      const candidates=[];
+      const pushCandidate=x=>{if(x&&typeof x==='object')candidates.push(x);};
+      pushCandidate(readStyle(user?.user_metadata?.myevent_chat_style));
+      if(user?.id){
+        pushCandidate(readStyle(localStorage.getItem(globalKey())));
+        pushCandidate(readStyle(localStorage.getItem('myevent-chat-style-last')));
       }
-      if(found) style=found;
+      pushCandidate(readStyle(localStorage.getItem(key())));
+      if(user?.id&&event?.id)pushCandidate(readStyle(localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`)));
+      candidates.sort((a,b)=>(Number(b.savedAt)||0)-(Number(a.savedAt)||0));
+      if(candidates[0]) found=candidates[0];
+      if(found) style={...defaults,...found};
     }catch{}
   };
-  const save=async()=>{
+  let saveQueue=Promise.resolve();
+  let saveBusy=false;
+  const saveNow=async()=>{
+    if(!user?.id)return false;
     try{
-      if(!user?.id)return;
       const payloadObj={...style,savedAt:Date.now()};
       const payload=JSON.stringify(payloadObj);
       // Cache local immédiat.
@@ -3144,12 +3157,26 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
         localStorage.setItem(key(),payload);
         localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
       }
-      // Persistance réelle dans le compte Supabase.
+      // Persistance du compte : une seule écriture à la fois pour éviter
+      // qu'un ancien clic ne termine après un nouveau et écrase le dernier réglage.
       if(sb?.auth){
         const r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
-        if(!r.error && r.data?.user) user=r.data.user;
+        if(r.error)throw r.error;
+        if(r.data?.user)user=r.data.user;
       }
-    }catch{}
+      const status=document.getElementById('chatCustomizeSaveStatus');
+      if(status){status.textContent='✓ Sauvegardé';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),1800);}
+      return true;
+    }catch(e){
+      console.warn('Sauvegarde personnalisation:',e?.message||e);
+      const status=document.getElementById('chatCustomizeSaveStatus');
+      if(status){status.textContent='⚠️ Sauvegarde locale effectuée';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
+      return false;
+    }
+  };
+  const save=()=>{
+    saveQueue=saveQueue.then(()=>saveNow());
+    return saveQueue;
   };
   function apply(){
     // Utilise exactement les mêmes visuels que les vignettes du sélecteur.
@@ -3189,13 +3216,14 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
   }
   async function open(){await load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('chatCustomizeOpen');}
-  function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('chatCustomizeOpen');save();}
+  async function close(){await save();overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('chatCustomizeOpen');}
   openBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open();},true);
   openBtn.addEventListener('pointerdown',e=>e.stopPropagation(),true);
   openBtn.addEventListener('touchstart',e=>e.stopPropagation(),{capture:true,passive:true});
-  closeBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close();});
-  doneBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close();});
-  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+  closeBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
+  doneBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
+  saveBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await save();});
+  overlay.addEventListener('click',async e=>{if(e.target===overlay)await close();});
   document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelector('[data-chat-custom-section=\"'+n+'\"]')?.scrollIntoView({behavior:'smooth',block:'nearest'});}));
   document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save();}));
   document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save();}));
