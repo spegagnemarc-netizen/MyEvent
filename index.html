@@ -240,6 +240,26 @@ details.tabPanel.uniformToggle > .collapsibleBody{
   .messageRow .messageAvatar{width:34px!important;height:34px!important;flex-basis:34px!important}
   .voiceMessage{width:min(74%,300px)!important}
 }
+
+/* V15 — personnalisation de la discussion */
+.chatCustomizeBtn{padding:8px 10px!important;font-size:13px!important;border-radius:10px!important;white-space:nowrap}
+.chatCustomizeOverlay{position:fixed;inset:0;z-index:10000;background:rgba(2,9,15,.72);backdrop-filter:blur(7px);display:none;align-items:flex-end;justify-content:center}
+.chatCustomizeOverlay.open{display:flex}
+.chatCustomizeSheet{width:min(720px,100%);max-height:82vh;overflow:auto;background:#102131;border:1px solid #315b78;border-radius:22px 22px 0 0;padding:16px;box-sizing:border-box;box-shadow:0 -10px 40px rgba(0,0,0,.45)}
+.chatCustomizeTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.chatCustomizeTop h3{margin:0;font-size:19px}.chatCustomizeClose{width:38px;height:38px;padding:0!important;border-radius:50%!important}
+.chatCustomizeTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}.chatCustomizeTab{padding:10px 7px!important;font-size:13px!important;background:#0a1823!important;border:1px solid #28465e!important;color:#a9b9c8!important}.chatCustomizeTab.active{background:#1683ff!important;border-color:#1683ff!important;color:#fff!important}
+.chatCustomizeSection{display:none}.chatCustomizeSection.active{display:block}.chatSectionTitle{font-weight:800;margin:8px 0}.chatOptionGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.chatOption{position:relative;min-height:72px;padding:7px!important;background:#0a1823!important;border:1px solid #28465e!important;border-radius:12px!important;color:#dbe7ef!important;font-size:12px!important}.chatOption.active{outline:2px solid #278cff}.chatBgPreview{width:100%;height:42px;border-radius:8px;margin-bottom:5px;background:#142b3d}.bg-lake{background:linear-gradient(145deg,#173b5c 0%,#2b6f88 42%,#e08b64 72%,#261d35 100%)}.bg-sunset{background:linear-gradient(160deg,#321d4d,#a84c5f 45%,#f2a05b 75%,#243b55)}.bg-forest{background:linear-gradient(145deg,#0d241f,#24563d 48%,#0e1820)}.bg-night{background:radial-gradient(circle at 70% 25%,#fff4b0 0 2%,transparent 3%),linear-gradient(145deg,#081126,#142c50 55%,#050912)}.bg-minimal{background:linear-gradient(145deg,#102131,#18384d)}
+.bubblePreview{display:flex;align-items:center;justify-content:center}.bubblePreview span{padding:7px 10px;border-radius:15px;background:#142b3d;font-size:12px}.bubblePreview.blue span{background:#1683ff;color:#fff}.bubblePreview.glass span{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(5px)}.bubblePreview.soft span{background:#1b3548;border-radius:10px}
+.chatColorRow{display:flex;gap:8px;flex-wrap:wrap}.chatColor{width:42px;height:42px;border-radius:50%;border:2px solid #36536a!important;padding:0!important}.chatColor.active{outline:2px solid #fff;outline-offset:2px}.chatColor.blue{background:#1683ff!important}.chatColor.green{background:#19b87a!important}.chatColor.purple{background:#8a5cf6!important}.chatColor.orange{background:#ef8b2c!important}.chatColor.pink{background:#e85b9c!important}.chatColor.teal{background:#13a9b5!important}
+.chatRange{width:100%}.chatRangeLabel{display:flex;justify-content:space-between;color:#9eb2c4;font-size:13px}.chatCustomizeActions{display:flex;gap:8px;margin-top:14px}.chatCustomizeActions button{flex:1}
+#discussionContent{border-radius:18px;padding:10px;background:var(--chat-bg,#102131);background-image:var(--chat-bg-image,none);background-size:cover;background-position:center;transition:.2s}
+#discussionContent .messageBody{background:var(--bubble-in,#142b3d)!important;opacity:var(--bubble-opacity,1)!important}
+#discussionContent .messageRow.me .messageBody{background:var(--bubble-out,#1683ff)!important}
+#discussionContent.bubble-glass .messageBody{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.14)!important;backdrop-filter:blur(8px)}
+#discussionContent.bubble-soft .messageBody{border-radius:11px!important;box-shadow:none!important}
+#discussionContent.bubble-compact .messageBody{padding:7px 10px!important;border-radius:13px!important}
+@media(max-width:430px){.chatOptionGrid{grid-template-columns:repeat(3,1fr)}.chatCustomizeSheet{max-height:88vh}.chatCustomizeTabs{grid-template-columns:repeat(3,1fr)}.chatCustomizeBtn{font-size:12px!important;padding:7px 8px!important}}
+
 </style>
 </head>
 <body>
@@ -448,9 +468,9 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 </div>
 </details>
 
-<details class="card tabPanel collapsibleCard uniformToggle" data-panel="discussion">
-<summary>💬 Discussion</summary>
-<div class="collapsibleBody">
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="discussion" id="discussionPanel">
+<summary><span>💬 Discussion</span><button type="button" class="chatCustomizeBtn secondary" id="chatCustomizeBtn">🎨 Personnaliser</button></summary>
+<div class="collapsibleBody" id="discussionContent">
 <div id="messages"></div>
 <div class="row">
 <input id="message" placeholder="Écrire un message…">
@@ -2487,6 +2507,81 @@ document.addEventListener('click',e=>{const tile=e.target.closest('#callStage .c
 })();
 
 document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.getTracks().forEach(t=>{t.enabled=true});if(document.visibilityState==='visible')updateCallCount()}});
+
+// V15 — personnalisation discussion : fond, bulles, couleurs, transparence
+(function initChatCustomization(){
+  const panel=document.getElementById('discussionContent'), overlay=document.getElementById('chatCustomizeOverlay');
+  const openBtn=document.getElementById('chatCustomizeBtn'), closeBtn=document.getElementById('chatCustomizeClose'), doneBtn=document.getElementById('chatCustomizeDone'), resetBtn=document.getElementById('chatCustomizeReset');
+  if(!panel||!overlay||!openBtn)return;
+  const key=()=>`myevent-chat-style-${event?.id||'default'}-${user?.id||'guest'}`;
+  const defaults={bg:'lake',bubble:'modern',color:'#1683ff',opacity:100,customBg:''};
+  let style={...defaults};
+  function save(){try{localStorage.setItem(key(),JSON.stringify(style))}catch{}}
+  function load(){try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}}
+  function apply(){
+    const bgs={lake:'linear-gradient(145deg,#173b5c 0%,#2b6f88 42%,#e08b64 72%,#261d35 100%)',sunset:'linear-gradient(160deg,#321d4d,#a84c5f 45%,#f2a05b 75%,#243b55)',forest:'linear-gradient(145deg,#0d241f,#24563d 48%,#0e1820)',night:'radial-gradient(circle at 70% 25%,#fff4b0 0 2%,transparent 3%),linear-gradient(145deg,#081126,#142c50 55%,#050912)',minimal:'linear-gradient(145deg,#102131,#18384d)'};
+    panel.style.setProperty('--chat-bg-image',style.customBg?`url("${style.customBg.replace(/"/g,'%22')}")`:(bgs[style.bg]||bgs.lake));
+    panel.style.setProperty('--bubble-out',style.color); panel.style.setProperty('--bubble-opacity',(Number(style.opacity)||100)/100);
+    panel.classList.remove('bubble-glass','bubble-soft','bubble-compact'); if(style.bubble==='glass')panel.classList.add('bubble-glass');if(style.bubble==='soft')panel.classList.add('bubble-soft');if(style.bubble==='compact')panel.classList.add('bubble-compact');
+    document.querySelectorAll('.chatBgOption').forEach(x=>x.classList.toggle('active',x.dataset.bg===style.bg&&!style.customBg));
+    document.querySelectorAll('.chatBubbleOption').forEach(x=>x.classList.toggle('active',x.dataset.bubble===style.bubble));
+    document.querySelectorAll('.chatColor').forEach(x=>x.classList.toggle('active',x.dataset.color===style.color));
+    const op=document.getElementById('chatOpacity');if(op)op.value=style.opacity;const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
+  }
+  function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false')}
+  function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');save()}
+  openBtn.addEventListener('click',open); closeBtn.addEventListener('click',close); doneBtn.addEventListener('click',close); overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+  document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',()=>{const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('[data-chat-custom-section]').forEach(x=>x.classList.toggle('active',x.dataset.chatCustomSection===n))}));
+  document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save()}));
+  document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save()}));
+  document.querySelectorAll('.chatColor').forEach(btn=>btn.addEventListener('click',()=>{style.color=btn.dataset.color;apply();save()}));
+  document.getElementById('chatOpacity')?.addEventListener('input',e=>{style.opacity=Number(e.target.value);apply();save()});
+  document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save()};r.readAsDataURL(f)});
+  resetBtn.addEventListener('click',()=>{style={...defaults};apply();save()});
+  load(); apply();
+})();
 </script>
+
+<div class="chatCustomizeOverlay" id="chatCustomizeOverlay" aria-hidden="true">
+  <div class="chatCustomizeSheet" role="dialog" aria-modal="true" aria-labelledby="chatCustomizeTitle">
+    <div class="chatCustomizeTop"><h3 id="chatCustomizeTitle">🎨 Personnaliser la discussion</h3><button type="button" class="secondary chatCustomizeClose" id="chatCustomizeClose">✕</button></div>
+    <div class="chatCustomizeTabs">
+      <button type="button" class="chatCustomizeTab active" data-chat-custom-tab="background">🖼️ Fond</button>
+      <button type="button" class="chatCustomizeTab" data-chat-custom-tab="bubbles">💬 Bulles</button>
+      <button type="button" class="chatCustomizeTab" data-chat-custom-tab="colors">🎨 Couleurs</button>
+    </div>
+    <div class="chatCustomizeSection active" data-chat-custom-section="background">
+      <div class="chatSectionTitle">Choisir un fond d’écran</div>
+      <div class="chatOptionGrid">
+        <button type="button" class="chatOption chatBgOption" data-bg="lake"><div class="chatBgPreview bg-lake"></div>🌅 Lac</button>
+        <button type="button" class="chatOption chatBgOption" data-bg="sunset"><div class="chatBgPreview bg-sunset"></div>🌇 Coucher de soleil</button>
+        <button type="button" class="chatOption chatBgOption" data-bg="forest"><div class="chatBgPreview bg-forest"></div>🌲 Forêt</button>
+        <button type="button" class="chatOption chatBgOption" data-bg="night"><div class="chatBgPreview bg-night"></div>🌙 Nuit</button>
+        <button type="button" class="chatOption chatBgOption" data-bg="minimal"><div class="chatBgPreview bg-minimal"></div>◼️ Minimal</button>
+        <label class="chatOption" for="chatBgUpload"><div class="chatBgPreview" style="display:grid;place-items:center;font-size:24px">＋</div>📷 Ma photo<input id="chatBgUpload" type="file" accept="image/*" style="display:none"></label>
+      </div>
+    </div>
+    <div class="chatCustomizeSection" data-chat-custom-section="bubbles">
+      <div class="chatSectionTitle">Style des bulles</div>
+      <div class="chatOptionGrid">
+        <button type="button" class="chatOption chatBubbleOption" data-bubble="modern"><div class="bubblePreview"><span>Coucou</span></div>Moderne</button>
+        <button type="button" class="chatOption chatBubbleOption" data-bubble="glass"><div class="bubblePreview glass"><span>Coucou</span></div>Verre</button>
+        <button type="button" class="chatOption chatBubbleOption" data-bubble="soft"><div class="bubblePreview soft"><span>Coucou</span></div>Doux</button>
+        <button type="button" class="chatOption chatBubbleOption" data-bubble="compact"><div class="bubblePreview"><span>Coucou</span></div>Compact</button>
+      </div>
+    </div>
+    <div class="chatCustomizeSection" data-chat-custom-section="colors">
+      <div class="chatSectionTitle">Couleur de mes messages</div>
+      <div class="chatColorRow">
+        <button type="button" class="chatColor blue" data-color="#1683ff" aria-label="Bleu"></button><button type="button" class="chatColor green" data-color="#19b87a" aria-label="Vert"></button><button type="button" class="chatColor purple" data-color="#8a5cf6" aria-label="Violet"></button><button type="button" class="chatColor orange" data-color="#ef8b2c" aria-label="Orange"></button><button type="button" class="chatColor pink" data-color="#e85b9c" aria-label="Rose"></button><button type="button" class="chatColor teal" data-color="#13a9b5" aria-label="Turquoise"></button>
+      </div>
+      <div class="chatSectionTitle" style="margin-top:16px">Transparence des bulles</div>
+      <div class="chatRangeLabel"><span>Opaque</span><span id="chatOpacityValue">100 %</span><span>Transparent</span></div>
+      <input class="chatRange" id="chatOpacity" type="range" min="45" max="100" value="100">
+    </div>
+    <div class="chatCustomizeActions"><button type="button" class="secondary" id="chatCustomizeReset">↺ Réinitialiser</button><button type="button" id="chatCustomizeDone">✓ Terminé</button></div>
+  </div>
+</div>
+
 </body>
 </html>
