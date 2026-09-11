@@ -506,6 +506,35 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 @media(max-width:430px){#discussionContent .voiceMessage{width:min(78%,285px)!important;padding:7px 9px!important}#discussionContent .voicePlayBtn{width:36px!important;height:36px!important;min-width:36px!important}.voiceWaveform{gap:1px!important}.voiceWaveform i{width:2px!important}.voiceDuration{font-size:10px!important}}
 </style>
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
+
+<style id="myevent-v33-final">
+/* V33 — réglages persistants + micro réellement intégré à la barre */
+#discussionContent .chatComposer{display:flex!important;align-items:center!important;gap:7px!important;position:relative!important;z-index:20!important}
+#discussionContent .composerInputWrap{position:relative!important;display:flex!important;align-items:center!important;flex:1 1 auto!important;min-width:0!important}
+#discussionContent .composerInputWrap input#message{width:100%!important;height:46px!important;padding:10px 52px 10px 14px!important;box-sizing:border-box!important}
+#discussionContent .composerVoiceBtn{position:absolute!important;right:4px!important;top:50%!important;transform:translateY(-50%)!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;color:#dbe7ef!important;box-shadow:none!important;font-size:18px!important;z-index:25!important;touch-action:none!important}
+#discussionContent .composerVoiceBtn.recording{background:transparent!important;border:0!important;color:#ff5577!important;box-shadow:none!important}
+#discussionContent .voiceRecordingBar{position:absolute!important;inset:1px 42px 1px 1px!important;height:auto!important;border-radius:21px!important;background:rgba(7,18,28,.96)!important;border:1px solid #ff5577!important;display:flex!important;align-items:center!important;padding:0 9px!important;gap:7px!important;z-index:24!important;pointer-events:none!important;box-sizing:border-box!important}
+#discussionContent .voiceRecordingBar.hidden{display:none!important}
+#discussionContent .chatComposer.isRecording .composerInputWrap input#message{visibility:hidden!important}
+#discussionContent .chatComposer.isRecording #chatClipBtn,#discussionContent .chatComposer.isRecording #sendBtn{display:none!important}
+#discussionContent .voiceMessage{width:min(72%,285px)!important;min-width:0!important;padding:7px 9px!important;border-radius:17px!important}
+#discussionContent .voiceWhatsAppRow{height:38px!important;gap:7px!important}
+#discussionContent .voicePlayBtn{width:36px!important;height:36px!important;min-width:36px!important;background:rgba(255,255,255,.14)!important;border:0!important}
+#discussionContent .voiceWaveform{height:28px!important;gap:2px!important}
+#discussionContent .voiceDuration{font-size:11px!important;min-width:28px!important}
+#discussionContent .voiceMetaLine{margin-top:2px!important;font-size:9px!important;line-height:14px!important}
+#discussionContent .voiceMetaLine .deleteVoice{font-size:16px!important}
+@media(max-width:430px){
+  #discussionContent .chatComposer{gap:5px!important}
+  #discussionContent .composerInputWrap input#message{height:44px!important;font-size:14px!important;padding-right:46px!important}
+  #discussionContent .composerVoiceBtn{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;font-size:17px!important;right:3px!important}
+  #discussionContent .voiceRecordingBar{inset:1px 38px 1px 1px!important;font-size:12px!important}
+  #discussionContent .voiceMessage{width:min(70%,255px)!important}
+  #discussionContent .voiceWhatsAppRow{height:36px!important}
+  #discussionContent .voicePlayBtn{width:34px!important;height:34px!important;min-width:34px!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1107,6 +1136,13 @@ async function selectEvent(id){
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
   if(typeof window.loadMyEventChatStyle==='function') window.loadMyEventChatStyle();
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
+  // Réapplique le thème après le rendu complet : aucune reconnexion ne doit
+  // pouvoir remplacer le fond choisi par le fond par défaut.
+  if(typeof window.loadMyEventChatStyle==='function'){
+    window.loadMyEventChatStyle();
+    setTimeout(()=>window.loadMyEventChatStyle?.(),250);
+    setTimeout(()=>window.loadMyEventChatStyle?.(),900);
+  }
   await loadWeather();
   await refreshNotifications(false);
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
@@ -1726,16 +1762,25 @@ async function loadMessages(){
   });
   if($('statMessages'))$('statMessages').textContent=rows.length;
   await loadUnreadCount();
-  requestAnimationFrame(()=>{
-    const box=document.getElementById('discussionContent');
+  const restoreDiscussionPosition=()=>{
+    const messagesBox=document.getElementById('messages');
+    if(!messagesBox)return;
     const target=discussionScrollTargetId ? document.querySelector('#messages [data-message-id="'+CSS.escape(String(discussionScrollTargetId))+'"]') : null;
-    if(target) target.scrollIntoView({behavior:'auto',block:hasUnreadTarget?'center':'end'});
-    else if(box) box.scrollTop=box.scrollHeight;
-    // If there was no unread message, force the internal message scroller to the bottom.
-    if(!hasUnreadTarget){
-      const messagesBox=document.getElementById('messages');
-      if(messagesBox) messagesBox.scrollTop=messagesBox.scrollHeight;
+    if(target && hasUnreadTarget){
+      target.scrollIntoView({behavior:'auto',block:'center'});
+    }else{
+      messagesBox.scrollTop=messagesBox.scrollHeight;
     }
+  };
+  // Les images/vocaux peuvent modifier la hauteur après le premier rendu.
+  // On recale donc plusieurs fois, sans animation, comme WhatsApp/Snapchat.
+  requestAnimationFrame(restoreDiscussionPosition);
+  setTimeout(restoreDiscussionPosition,120);
+  setTimeout(restoreDiscussionPosition,450);
+  setTimeout(restoreDiscussionPosition,1000);
+  document.querySelectorAll('#messages img,#messages video').forEach(el=>{
+    if(!el.complete) el.addEventListener('loadeddata',restoreDiscussionPosition,{once:true});
+    el.addEventListener('load',restoreDiscussionPosition,{once:true});
   });
 }
 
@@ -3050,15 +3095,22 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const resetBtn=document.getElementById('chatCustomizeReset');
   if(!panel||!overlay||!openBtn)return;
   const key=()=>`myevent-chat-style-${user?.id||'guest'}-${event?.id||'default'}`;
+  const globalKey=()=>`myevent-chat-style-last-${user?.id||'guest'}`;
   const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',incomingColor:'#142b3d',opacity:62,customBg:''};
   let style={...defaults};
+  const readStyle=(raw)=>{
+    try{ const x=raw?JSON.parse(raw):null; return x&&typeof x==='object'?{...defaults,...x}:null; }catch{return null;}
+  };
   const load=()=>{
     try{
-      const raw=localStorage.getItem(key()) || (user?.id&&event?.id?localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`):null);
-      if(raw){
-        const x=JSON.parse(raw);
-        if(x&&typeof x==='object') style={...defaults,...x};
-      }
+      const raws=[
+        localStorage.getItem(key()),
+        user?.id&&event?.id?localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`):null,
+        user?.id?localStorage.getItem(globalKey()):null,
+        localStorage.getItem('myevent-chat-style-last')
+      ];
+      const found=raws.map(readStyle).find(Boolean);
+      if(found) style=found;
     }catch{}
   };
   const save=()=>{
@@ -3066,9 +3118,10 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
       if(!user?.id||!event?.id)return;
       const payload=JSON.stringify({...style,savedAt:Date.now()});
       localStorage.setItem(key(),payload);
-      // Mirror under a second stable key so a previous MyEvent build cannot
-      // accidentally overwrite the active theme during reconnection.
       localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
+      localStorage.setItem(globalKey(),payload);
+      // Fallback for private-tab/session changes: keep the latest MyEvent theme.
+      localStorage.setItem('myevent-chat-style-last',payload);
     }catch{}
   };
   function apply(){
