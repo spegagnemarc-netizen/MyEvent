@@ -28,6 +28,10 @@ button:disabled{opacity:.5}
 
 /* V48 — Localisations événement */
 .locationPanel{min-height:70vh}.locationShell{display:flex;flex-direction:column;gap:10px}.locationToolbar{display:flex;gap:7px;overflow:auto;padding-bottom:2px}.locationToolbar button{white-space:nowrap;padding:9px 11px;font-size:13px}.locationMap{height:58vh;min-height:420px;border-radius:16px;overflow:hidden;border:1px solid #28445b;background:#0b1824;position:relative}.locationMap .mapLoading{position:absolute;inset:0;display:grid;place-items:center;color:#9eb2c4;background:#0b1824;z-index:2}.locationInfo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.locationInfoCard{background:#0b1824;border:1px solid #28445b;border-radius:13px;padding:10px}.locationInfoCard b{display:block;font-size:13px}.locationInfoCard span{display:block;color:#9eb2c4;font-size:11px;margin-top:3px}.locationPrivacy{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;background:#0b1824;border:1px solid #28445b;border-radius:13px}.locationPrivacy select{margin:0;width:auto;min-width:180px}.locationPlaces{display:grid;gap:7px}.locationPlace{display:flex;align-items:center;gap:9px;padding:10px;background:#0b1824;border:1px solid #28445b;border-radius:12px}.locationPlace .placeIcon{font-size:22px}.locationPlace .placeBody{flex:1;min-width:0}.locationPlace b{display:block;font-size:14px}.locationPlace span{display:block;color:#9eb2c4;font-size:11px;margin-top:2px}.locationMember{display:flex;align-items:center;gap:8px}.locationMember .miniAvatar{width:32px;height:32px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#173047;font-size:16px;flex:none}.locationMember .miniAvatar img{width:100%;height:100%;object-fit:cover}
+/* V48.4 — finition Localisations */
+.locationToolbar{scroll-snap-type:x proximity}.locationToolbar button{flex:0 0 auto;scroll-snap-align:start}.locationMap{height:min(62vh,620px);min-height:420px}.locationPlace{min-height:58px}.locationPlace .locationGoBtn{flex:0 0 auto}.locationPrivacy{flex-wrap:wrap}.locationPrivacy>div{flex:1;min-width:180px}.locationPrivacy select{max-width:100%}.locationMembers{display:grid;gap:7px}.locationMember{padding:8px 10px;background:#0b1824;border:1px solid #28445b;border-radius:12px}.locationPlace{cursor:default}.locationPlace:active{transform:scale(.995)}
+@media(max-width:600px){.locationPanel .collapsibleBody{margin-left:10px;margin-right:10px}.locationToolbar{margin:0 -2px}.locationToolbar button{font-size:14px;padding:10px 13px}.locationMap{height:60vh;min-height:420px}.locationInfo{grid-template-columns:1fr 1fr}.locationPrivacy{align-items:flex-start}.locationPrivacy select{width:100%;min-width:0}.locationPlace .locationGoBtn{padding:8px 10px}}
+
 @media(max-width:430px){.locationMap{height:62vh;min-height:390px}.locationInfo{grid-template-columns:1fr 1fr}}
 
 /* Navigation de l’événement */
@@ -887,7 +891,7 @@ body.discussionFullScreen{overflow:hidden!important}
     <select id="locationShareMode"><option value="off">Ne pas partager</option><option value="approx">Position approximative</option><option value="exact">Position exacte</option></select>
   </div>
   <div><b>À proximité</b><div id="locationPlaces" class="locationPlaces"><p class="muted">Les activités apparaîtront ici.</p></div></div>
-  <div><b>Membres sur la carte</b><div id="locationMembers"><p class="muted">Aucune position partagée.</p></div></div>
+  <div><b>Membres sur la carte</b><div id="locationMembers" class="locationMembers"><p class="muted">Aucune position partagée.</p></div></div>
   <p id="locationMsg" class="muted"></p>
 </div>
 </div>
@@ -989,11 +993,11 @@ function setBusy(id,busy,label){
 
 
 /* V48.3 — Localisations : carte Leaflet réelle + géolocalisation */
-let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationEventCoords=null;
+let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null;
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️'};
 function clearLocationMarkers(){
-  if(locationMap){ if(locationEventMarker) locationMap.removeLayer(locationEventMarker); if(locationUserMarker) locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); }
-  locationEventMarker=null; locationUserMarker=null; locationMemberMarkers=[];
+  if(locationMap){ if(locationEventMarker) locationMap.removeLayer(locationEventMarker); if(locationUserMarker) locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
+  locationEventMarker=null; locationUserMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
 }
 function makeLocationIcon(emoji,bg='#278cff'){
   return L.divIcon({className:'',html:'<div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:19px">'+emoji+'</div>',iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]});
@@ -1022,27 +1026,37 @@ async function geocodeEventLocation(){
   return null;
 }
 async function loadNearbyPlaces(lat,lon){
-  const q='[out:json][timeout:12];(node(around:2500,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];node(around:2500,'+lat+','+lon+') [tourism~"attraction|museum"];node(around:2500,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley"];);out center tags;';
+  const q='[out:json][timeout:15];(nwr(around:3000,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];nwr(around:3000,'+lat+','+lon+') [tourism~"attraction|museum|gallery|viewpoint"];nwr(around:3000,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];);out center tags;';
   const el=$('locationPlaces'); if(!el)return;
   try{
     const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q,headers:{'Content-Type':'text/plain'}}); if(!r.ok)throw new Error('overpass');
     const d=await r.json();
-    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction'})).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
-    arr.sort((a,b)=>((a.lat-lat)**2+(a.lon-lon)**2)-((b.lat-lat)**2+(b.lon-lon)**2));
-    el.innerHTML=arr.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
+    const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction',phone:x.tags?.phone||'',website:x.tags?.website||''})).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)&&x.name!=='Lieu sans nom');
+    const seen=new Set();
+    const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+    unique.sort((a,b)=>((a.lat-lat)**2+(a.lon-lon)**2)-((b.lat-lat)**2+(b.lon-lon)**2));
+    if(locationMap){ locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers=[]; }
+    unique.slice(0,20).forEach(p=>{
+      if(locationMap){
+        const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap);
+        m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' ')));
+        locationPlaceMarkers.push(m);
+      }
+    });
+    el.innerHTML=unique.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
     el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>setLocationMapView(+b.dataset.lat,+b.dataset.lon,17));
-  }catch(e){el.innerHTML='<p class="muted">Impossible de charger les activités à proximité pour le moment.</p>';}
+  }catch(e){el.innerHTML='<p class="muted">Les activités à proximité sont momentanément indisponibles. La carte reste utilisable.</p>';}
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
   try{
     const r=await sb.from('event_locations').select('user_id,lat,lon,accuracy,share_mode,updated_at').eq('event_id',event.id).neq('share_mode','off');
     if(r.error){wrap.innerHTML='<p class="muted">Les positions des membres seront disponibles après activation du partage.</p>'; $('locationMemberCount').textContent='0 membre'; return;}
-    const rows=(r.data||[]).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
+    const allRows=r.data||[]; const mineRow=allRows.find(x=>x.user_id===user.id); const shareSel=$('locationShareMode'); if(shareSel) shareSel.value=mineRow?.share_mode||'off'; const rows=allRows.filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
     const ids=rows.map(x=>x.user_id).filter(Boolean); let profs=[];
     if(ids.length){const pr=await sb.from('profiles').select('id,display_name,avatar').in('id',ids);if(!pr.error)profs=pr.data||[];}
     const pm=new Map(profs.map(x=>[x.id,x]));
-    if(locationMap){locationMemberMarkers.forEach(m=>locationMap.removeLayer(m));locationMemberMarkers=[];}
+    if(locationMap){locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationMemberMarkers=[];}
     rows.forEach(x=>{
       let lat=+x.lat,lon=+x.lon;
       if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100;}
@@ -1077,7 +1091,7 @@ async function loadEventLocations(){
   if(geo){
     locationEventCoords=geo; initLocationMap(geo.lat,geo.lon,14);
     if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);
-    locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu')).openPopup();
+    locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu'));
     $('locationEventAddress').textContent=geo.address||event.location||'Lieu'; await loadNearbyPlaces(geo.lat,geo.lon);
   }else{
     $('locationEventAddress').textContent=event.location||'Lieu non renseigné';
