@@ -31,13 +31,13 @@ button:disabled{opacity:.5}
 @media(max-width:430px){.locationMap{height:62vh;min-height:390px}.locationInfo{grid-template-columns:1fr 1fr}}
 
 /* Navigation de l’événement */
-.eventTabs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 16px;position:sticky;top:8px;z-index:5}
-.eventTab{padding:12px 8px;border:1px solid #28465e;background:#0a1823;color:#a9b9c8;border-radius:14px;font-weight:700;font-size:14px}
+.eventTabs{display:flex;gap:8px;margin:12px 0 16px;position:sticky;top:8px;z-index:5;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.eventTabs::-webkit-scrollbar{display:none}
+.eventTab{flex:0 0 auto;min-width:132px;padding:12px 12px;border:1px solid #28465e;background:#0a1823;color:#a9b9c8;border-radius:14px;font-weight:700;font-size:14px}
 .eventTab.active{background:#1683ff;color:#fff;border-color:#1683ff}
 .unreadBadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:3px;border-radius:10px;background:#ff4d6d;color:#fff;font-size:11px;font-weight:800}
 .tabPanel{display:none}
 .tabPanel.active{display:block}
-@media(max-width:430px){.eventTab{font-size:12px;padding:11px 5px}}
+@media(max-width:430px){.eventTab{font-size:12px;padding:11px 10px;min-width:124px}}
 
 .notificationCenter{margin-top:14px}.notificationHead{display:flex;justify-content:space-between;gap:14px;align-items:center}.notificationHead h2{margin:0 0 4px}.notificationHead p{margin:0}.notificationList{display:grid;gap:9px;margin-top:14px}.notificationItem{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border:1px solid #28465e;border-radius:14px;background:#0b1b28}.notificationIcon{font-size:22px;line-height:1}.notificationItem b{display:block}.notificationItem span{display:block;color:#9db0c1;font-size:13px;margin-top:3px}.notificationEmpty{padding:12px 0}.missedSummary{border:1px solid #2d6a91;background:#0c2333;border-radius:14px;padding:14px;margin-top:12px}.missedSummary b{font-size:17px}.missedSummary ul{margin:8px 0 0 18px;padding:0;color:#c8d5df}.notificationHead button{white-space:nowrap}.notificationActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}.notificationActions button{min-width:0}.notificationItem{cursor:pointer}.notificationItem:active{transform:scale(.99)}.notificationTime{display:block;color:#71879a;font-size:11px;margin-top:5px}.notificationDetail{display:block;color:#9db0c1;font-size:13px;margin-top:3px;line-height:1.35}@media(max-width:700px){.notificationHead{display:block}.notificationActions{display:flex;flex-direction:column;gap:8px;margin-top:12px}.notificationActions button{width:100%;white-space:normal;margin:0}}.pollAiBox{margin-top:10px;padding:12px 14px;border:1px solid #2d6a91;border-radius:14px;background:#0c2333}.pollAiBox b{display:block;margin-bottom:5px}.pollAiBox p{margin:0;color:#c8d5df;line-height:1.45}.pollAnalyzeBtn{margin-top:10px;width:100%}.chatPollMessage{max-width:min(92%,430px);padding:12px 14px;background:rgba(10,30,45,.88);border:1px solid #2d6a91;border-radius:18px}.chatPollTitle{font-size:18px;font-weight:800;margin:4px 0 3px}.chatPollHint{font-size:12px;color:#9db0c1;margin-bottom:9px}.chatPollOption{margin:7px 0}.chatPollVote{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:9px 11px}.chatPollVote span{opacity:.8}.chatPollBar{height:4px;background:#0b1824;border-radius:5px;overflow:hidden;margin:3px 5px 0}.chatPollBar i{display:block;height:100%;background:#278cff;border-radius:5px}.chatPollMessage .selectedVote{outline:2px solid #7ee2a8!important}
 .profileQuickAccess{display:flex;align-items:center;gap:12px}.profileAvatarTrigger{width:58px;height:58px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.profileHint{font-size:12px;margin-top:4px}.profileSettingsCard{display:none}.profileSettingsCard.profileSettingsVisible{display:block}.collapsibleCard{overflow:hidden}.collapsibleCard>summary{cursor:pointer;list-style:none;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;-webkit-user-select:none;min-height:56px;padding:14px 16px;margin:-1px}.collapsibleCard>summary::-webkit-details-marker{display:none}.collapsibleCard>summary::after{content:'⌄';font-size:20px;color:#9eb2c4;transition:transform .18s ease;flex:0 0 auto}.collapsibleCard:not([open])>summary::after{transform:rotate(-90deg)}.collapsibleCard>summary:active{transform:scale(.995)}
@@ -992,25 +992,30 @@ function setBusy(id,busy,label){
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationEventCoords=null;
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️'};
 function clearLocationMarkers(){ locationMemberMarkers.forEach(m=>locationMap?.removeLayer(m)); locationMemberMarkers=[]; }
+function buildLocationMapUrl(lat,lon,zoom=15){
+  const d=zoom>=16?0.008:zoom>=15?0.012:0.02;
+  const bbox=(lon-d)+'%2C'+(lat-d)+'%2C'+(lon+d)+'%2C'+(lat+d);
+  return 'https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+encodeURIComponent(lat+','+lon);
+}
 function initLocationMap(lat=43.1242,lon=5.928){
   const el=$('locationMap');
   if(!el)return;
   let frame=el.querySelector('#locationMapFrameLive');
   if(!frame){
-    el.innerHTML='<iframe id="locationMapFrameLive" title="Carte de localisation" style="display:block;width:100%;height:100%;border:0" loading="eager"></iframe>';
-    frame=$('locationMapFrameLive');
+    frame=document.createElement('iframe');
+    frame.id='locationMapFrameLive';
+    frame.title='Carte de localisation';
+    frame.loading='eager';
+    frame.style.cssText='display:block;width:100%;height:100%;border:0;position:relative;z-index:1';
+    el.insertBefore(frame, el.firstChild);
   }
-  const d=0.018;
-  const bbox=(lon-d)+'%2C'+(lat-d)+'%2C'+(lon+d)+'%2C'+(lat+d);
-  frame.src='https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+encodeURIComponent(lat+','+lon);
+  frame.src=buildLocationMapUrl(lat,lon,14);
 }
 function setLocationMapView(lat,lon,zoom=15){
   const el=$('locationMap'); if(!el)return;
   let frame=el.querySelector('#locationMapFrameLive');
-  if(!frame){initLocationMap(lat,lon); frame=$('locationMapFrameLive');}
-  const d=zoom>=16?0.008:zoom>=15?0.012:0.02;
-  const bbox=(lon-d)+'%2C'+(lat-d)+'%2C'+(lon+d)+'%2C'+(lat+d);
-  frame.src='https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+encodeURIComponent(lat+','+lon);
+  if(!frame){initLocationMap(lat,lon,zoom); frame=el.querySelector('#locationMapFrameLive');}
+  if(frame) frame.src=buildLocationMapUrl(lat,lon,zoom);
 }
 async function geocodeEventLocation(){
   if(!event)return null;
@@ -1061,13 +1066,15 @@ async function loadEventLocations(){
   if(!event)return;
   if(!$('locationMap'))return;
   initLocationMap();
-  $('locationMapLoading').style.display='grid';
+  const loader=$('locationMapLoading');
+  if(loader) loader.style.display='grid';
   const geo=await geocodeEventLocation();
   if(geo){locationEventCoords=geo;initLocationMap(geo.lat,geo.lon); setLocationMapView(geo.lat,geo.lon,14); $('locationEventAddress').textContent=geo.address||event.location||'Lieu'; await loadNearbyPlaces(geo.lat,geo.lon);}else{$('locationEventAddress').textContent=event.location||'Lieu non renseigné';$('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';}
   await loadSharedMemberLocations();
-  $('locationMapLoading').style.display='none';
-  
+  const loaderDone=$('locationMapLoading');
+  if(loaderDone) loaderDone.style.display='none';
 }
+
 
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
 document.addEventListener('click',e=>{
