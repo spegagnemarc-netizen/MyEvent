@@ -2771,8 +2771,22 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const load=()=>{try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}};
   const save=()=>{try{localStorage.setItem(key(),JSON.stringify(style))}catch{}};
   function apply(){
-    const bgs={mountain:'linear-gradient(180deg,#e9784d 0%,#9a4c5d 22%,#294b70 43%,#17384d 55%,#0d2634 70%,#0b1b24 100%)',lake:'linear-gradient(145deg,#173b5c 0%,#2b6f88 42%,#e08b64 72%,#261d35 100%)',sunset:'linear-gradient(160deg,#321d4d,#a84c5f 45%,#f2a05b 75%,#243b55)',beach:'linear-gradient(180deg,#75b8d9 0 48%,#e5bd7c 49% 68%,#23758a 69% 100%)',forest:'linear-gradient(145deg,#0d241f,#24563d 48%,#0e1820)',city:'linear-gradient(180deg,#1b2940,#4d6780 48%,#101a25 49%)',night:'radial-gradient(circle at 70% 25%,#fff4b0 0 2%,transparent 3%),linear-gradient(145deg,#081126,#142c50 55%,#050912)',aurora:'linear-gradient(145deg,#08182d,#123f58 35%,#1b7a6d 58%,#19305b 82%,#08101d)',desert:'linear-gradient(180deg,#4b3650,#d98b5e 48%,#e0a15f 49%,#9a5a37 100%)',minimal:'linear-gradient(145deg,#102131,#18384d)'};
-    panel.style.setProperty('--chat-bg-image',style.customBg?`url("${style.customBg.replace(/"/g,'%22')}")`:(bgs[style.bg]||bgs.lake));
+    // Utilise exactement les mêmes visuels que les vignettes du sélecteur.
+    // Les anciennes versions remplaçaient les décors par de simples dégradés,
+    // ce qui donnait par exemple une Aurore bleu/verte sans paysage.
+    const bgClassMap={mountain:'bg-mountain',lake:'bg-lake',sunset:'bg-sunset',beach:'bg-beach',forest:'bg-forest',city:'bg-city',night:'bg-night',aurora:'bg-aurora',desert:'bg-desert',minimal:'bg-minimal'};
+    let bgImage='none';
+    if(style.customBg){
+      bgImage=`url("${style.customBg.replace(/"/g,'%22')}")`;
+    }else{
+      const probe=document.createElement('div');
+      probe.className='chatBgPreview '+(bgClassMap[style.bg]||'bg-lake');
+      probe.style.position='absolute'; probe.style.width='1px'; probe.style.height='1px'; probe.style.pointerEvents='none';
+      document.body.appendChild(probe);
+      bgImage=getComputedStyle(probe).backgroundImage || 'none';
+      probe.remove();
+    }
+    panel.style.setProperty('--chat-bg-image',bgImage);
     panel.style.setProperty('--bubble-out',style.color);panel.style.setProperty('--bubble-opacity',(Number(style.opacity)||100)/100);
     panel.classList.remove('bubble-glass','bubble-soft','bubble-compact','bubble-classic','bubble-minimal','bubble-outline');
     if(style.bubble==='glass')panel.classList.add('bubble-glass');
