@@ -3086,7 +3086,9 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 </div>
 <style>
 .chatCustomizeActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#chatCustomizeSave{min-width:0}
+#chatCustomizeSave{min-width:0;transition:opacity .15s,transform .15s}
+#chatCustomizeSave.saved{background:#19b879!important;color:#fff!important;border-color:#19b879!important}
+#chatCustomizeSave:disabled{opacity:.85;cursor:default}
 #chatCustomizeSaveStatus{white-space:nowrap}
 @media(max-width:430px){.chatCustomizeActions button{flex:1 1 0;min-width:0;padding-left:10px;padding-right:10px}.chatCustomizeActions #chatCustomizeSaveStatus{order:4;width:100%;text-align:center}}
 </style>
@@ -3222,7 +3224,29 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   openBtn.addEventListener('touchstart',e=>e.stopPropagation(),{capture:true,passive:true});
   closeBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
   doneBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await close();});
-  saveBtn?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();await save();});
+  saveBtn?.addEventListener('click',async e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(saveBtn.disabled)return;
+    const original=saveBtn.textContent;
+    saveBtn.disabled=true;
+    saveBtn.textContent='💾 Sauvegarde…';
+    const ok=await save();
+    saveBtn.textContent=ok?'✓ Sauvegardé':'⚠️ Réessayer';
+    if(ok){
+      saveBtn.classList.add('saved');
+      setTimeout(()=>{
+        saveBtn.textContent=original;
+        saveBtn.classList.remove('saved');
+        saveBtn.disabled=false;
+      },1600);
+    }else{
+      setTimeout(()=>{
+        saveBtn.textContent=original;
+        saveBtn.disabled=false;
+      },1800);
+    }
+  });
   overlay.addEventListener('click',async e=>{if(e.target===overlay)await close();});
   document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelector('[data-chat-custom-section=\"'+n+'\"]')?.scrollIntoView({behavior:'smooth',block:'nearest'});}));
   document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save();}));
