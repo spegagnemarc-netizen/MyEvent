@@ -1029,8 +1029,15 @@ async function loadNearbyPlaces(lat,lon){
   const q='[out:json][timeout:15];(nwr(around:3000,'+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];nwr(around:3000,'+lat+','+lon+') [tourism~"attraction|museum|gallery|viewpoint"];nwr(around:3000,'+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];);out center tags;';
   const el=$('locationPlaces'); if(!el)return;
   try{
-    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q,headers:{'Content-Type':'text/plain'}}); if(!r.ok)throw new Error('overpass');
-    const d=await r.json();
+    let r=null, d=null;
+    const endpoints=[
+      'https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),
+      'https://overpass.kumi.systems/api/interpreter?data='+encodeURIComponent(q)
+    ];
+    for(const url of endpoints){
+      try{ const rr=await fetch(url,{method:'GET',headers:{'Accept':'application/json'}}); if(rr.ok){ r=rr; d=await rr.json(); break; } }catch(_e){}
+    }
+    if(!d)throw new Error('overpass');
     const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'Lieu sans nom',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction',phone:x.tags?.phone||'',website:x.tags?.website||''})).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)&&x.name!=='Lieu sans nom');
     const seen=new Set();
     const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
@@ -1045,7 +1052,7 @@ async function loadNearbyPlaces(lat,lon){
     });
     el.innerHTML=unique.slice(0,12).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+'</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
     el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=()=>setLocationMapView(+b.dataset.lat,+b.dataset.lon,17));
-  }catch(e){el.innerHTML='<p class="muted">Les activités à proximité sont momentanément indisponibles. La carte reste utilisable.</p>';}
+  }catch(e){el.innerHTML='<p class="muted">Les activités à proximité sont momentanément indisponibles. Réessaie avec ↻ Actualiser.</p>';}
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
