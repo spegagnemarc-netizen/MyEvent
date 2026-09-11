@@ -3101,30 +3101,54 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const readStyle=(raw)=>{
     try{ const x=raw?JSON.parse(raw):null; return x&&typeof x==='object'?{...defaults,...x}:null; }catch{return null;}
   };
-  const load=()=>{
+  // V35 : la personnalisation est une préférence du compte, pas seulement du navigateur.
+  // On conserve localStorage comme cache, mais la source principale devient
+  // user_metadata Supabase : le fond, les couleurs, le style et la transparence
+  // suivent donc l'utilisateur après déconnexion/reconnexion et sur un autre appareil.
+  const load=async()=>{
     try{
-      const raws=[
-        // Le réglage est une préférence de l'utilisateur : la version globale
-        // passe avant l'ancien réglage lié à un événement. Cela évite qu'un
-        // ancien événement réinjecte ses couleurs/fond à la reconnexion.
-        user?.id?localStorage.getItem(globalKey()):null,
-        localStorage.getItem(key()),
-        user?.id&&event?.id?localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`):null,
-        localStorage.getItem('myevent-chat-style-last')
-      ];
-      const found=raws.map(readStyle).find(Boolean);
+      let found=null;
+      if(user?.id){
+        const meta=readStyle(user?.user_metadata?.myevent_chat_style);
+        if(meta) found=meta;
+        // Recharge l'utilisateur courant pour éviter d'utiliser un objet user ancien.
+        if(!found && sb?.auth){
+          const r=await sb.auth.getUser();
+          if(!r.error && r.data?.user){
+            user=r.data.user;
+            found=readStyle(user?.user_metadata?.myevent_chat_style);
+          }
+        }
+      }
+      if(!found){
+        const raws=[
+          user?.id?localStorage.getItem(globalKey()):null,
+          localStorage.getItem(key()),
+          user?.id&&event?.id?localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`):null,
+          localStorage.getItem('myevent-chat-style-last')
+        ];
+        found=raws.map(readStyle).find(Boolean);
+      }
       if(found) style=found;
     }catch{}
   };
-  const save=()=>{
+  const save=async()=>{
     try{
-      if(!user?.id||!event?.id)return;
-      const payload=JSON.stringify({...style,savedAt:Date.now()});
-      localStorage.setItem(key(),payload);
-      localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
+      if(!user?.id)return;
+      const payloadObj={...style,savedAt:Date.now()};
+      const payload=JSON.stringify(payloadObj);
+      // Cache local immédiat.
       localStorage.setItem(globalKey(),payload);
-      // Fallback for private-tab/session changes: keep the latest MyEvent theme.
       localStorage.setItem('myevent-chat-style-last',payload);
+      if(event?.id){
+        localStorage.setItem(key(),payload);
+        localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
+      }
+      // Persistance réelle dans le compte Supabase.
+      if(sb?.auth){
+        const r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
+        if(!r.error && r.data?.user) user=r.data.user;
+      }
     }catch{}
   };
   function apply(){
@@ -3164,7 +3188,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     const op=document.getElementById('chatOpacity');if(op)op.value=style.opacity;
     const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
   }
-  function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('chatCustomizeOpen');}
+  async function open(){await load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('chatCustomizeOpen');}
   function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('chatCustomizeOpen');save();}
   openBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open();},true);
   openBtn.addEventListener('pointerdown',e=>e.stopPropagation(),true);
@@ -3181,10 +3205,10 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save();};r.readAsDataURL(f);});
   resetBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();style={...defaults};apply();save();});
   // Permet à selectEvent() de recharger le fond dès que l'événement et l'utilisateur sont connus.
-  window.loadMyEventChatStyle=()=>{load();apply();};
+  window.loadMyEventChatStyle=async()=>{await load();apply();};
   window.addEventListener('beforeunload',save);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
-  load();apply();
+  load().then(apply);
 })();
 </script>
 
@@ -3196,6 +3220,9 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 #discussionContent .chatAttachmentMenu.hidden{display:none!important}
 #discussionContent .chatAttachmentMenu button{min-height:48px!important;padding:10px 12px!important;font-size:14px!important}
 @media(max-width:430px){#discussionContent .chatAttachmentMenu{width:270px!important;max-width:calc(100vw - 40px)!important;left:0!important;bottom:calc(100% + 8px)!important}}
+</style>
+<style id="myevent-v35-persistence">
+/* V35 — la persistance visuelle est gérée côté compte Supabase ; aucun changement visuel. */
 </style>
 </body>
 </html>
