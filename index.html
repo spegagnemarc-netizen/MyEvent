@@ -325,7 +325,7 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 .chatSectionTitle{font-size:16px!important;margin:4px 0 8px!important;display:flex;justify-content:space-between;align-items:center}
 .chatOptionGrid{gap:7px!important}.chatBgGrid{grid-template-columns:repeat(4,1fr)!important}.bubbleGrid{grid-template-columns:repeat(7,1fr)!important}
 .chatOption{min-height:72px!important;font-size:11px!important;padding:6px!important}.chatBgPreview{height:44px!important}
-.chatColorRow{gap:10px!important;justify-content:flex-start}.chatColor{width:38px!important;height:38px!important}
+.chatColorRow{gap:10px!important;justify-content:flex-start}.chatColor{width:38px!important;height:38px!important}.incomingColorRow .incomingBlue{background:#142b3d!important}.incomingColorRow .gray{background:#485866!important}
 .chatRange{accent-color:#1683ff!important;height:24px}
 .bubblePreview span{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:6px 9px;border-radius:14px;background:#142b3d;font-size:12px}.bubblePreview.classic span{background:#142b3d}.bubblePreview.blue span{background:#1683ff;color:#fff}.bubblePreview.minimal span{background:transparent;border:1px solid #587084}.bubblePreview.outline span{background:transparent;border:1px solid #fff}.bubblePreview.compact span{padding:4px 8px;border-radius:10px}
 .bg-upload{display:grid;place-items:center;font-size:26px!important;background:#17384d!important}
@@ -432,45 +432,36 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 }
 
 
-/* V29 — vocal intégré à la barre de saisie + transparence sans toucher aux photos */
-#discussionContent .messageBody{
-  opacity:1!important;
-  background:var(--bubble-in-rgba,#142b3d)!important;
-}
-#discussionContent .messageRow.me .messageBody{
-  opacity:1!important;
-  background:var(--bubble-out-rgba,#1683ff)!important;
-}
-#discussionContent .chatAttachmentMessage{
-  opacity:1!important;
-}
-#discussionContent .chatAttachmentImage,
-#discussionContent .chatAttachmentVideo{
-  opacity:1!important;
-  filter:none!important;
-  mix-blend-mode:normal!important;
-}
-#discussionContent .chatComposer{position:relative!important;}
-#discussionContent .voiceRecordingBar{
-  flex:1 1 auto!important;min-width:0!important;height:44px!important;box-sizing:border-box!important;
-  display:flex!important;align-items:center!important;gap:7px!important;padding:0 12px!important;
-  border:1px solid #ff5577!important;border-radius:23px!important;background:rgba(45,14,25,.94)!important;
-  color:#fff!important;font-size:13px!important;overflow:hidden!important;
-}
+/* V30 — vocal façon Snapchat + bulles transparentes + médias intacts */
+#discussionContent .messageBody{opacity:1!important;background:var(--bubble-in-rgba,rgba(20,43,61,.58))!important}
+#discussionContent .messageRow.me .messageBody{opacity:1!important;background:var(--bubble-out-rgba,rgba(22,131,255,.58))!important}
+#discussionContent .chatAttachmentMessage{opacity:1!important;background:transparent!important;padding:0!important;overflow:visible!important}
+#discussionContent .chatAttachmentMessage .messageMeta{padding:0 4px!important}
+#discussionContent .chatAttachmentImage,#discussionContent .chatAttachmentVideo{opacity:1!important;filter:none!important;mix-blend-mode:normal!important;display:block!important;position:relative!important;z-index:2!important}
+#discussionContent .chatAttachmentImage{width:100%!important;max-width:300px!important;height:auto!important;object-fit:cover!important;border-radius:14px!important}
+#discussionContent .chatAttachmentVideo{width:100%!important;max-width:300px!important;max-height:300px!important;border-radius:14px!important}
+#discussionContent .chatComposer{position:relative!important;z-index:8!important;display:flex!important;align-items:center!important;gap:7px!important}
+#discussionContent .composerInputWrap{position:relative!important;min-width:0!important;flex:1 1 auto!important;display:flex!important;align-items:center!important}
+#discussionContent .composerInputWrap input#message{width:100%!important;height:46px!important;box-sizing:border-box!important;padding:10px 54px 10px 14px!important}
+#discussionContent .composerVoiceBtn{position:absolute!important;right:5px!important;top:50%!important;transform:translateY(-50%)!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:50%!important;background:#19b978!important;border-color:#19b978!important;font-size:18px!important;z-index:6!important;box-shadow:0 2px 8px rgba(0,0,0,.18)!important;touch-action:none!important}
+#discussionContent .composerVoiceBtn.recording{background:#ff315f!important;border-color:#ff315f!important;box-shadow:0 0 0 3px rgba(255,49,95,.20)!important}
+#discussionContent .voiceRecordingBar{position:absolute!important;inset:0!important;z-index:5!important;height:46px!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;gap:7px!important;padding:0 50px 0 12px!important;border:1px solid #ff5577!important;border-radius:23px!important;background:rgba(45,14,25,.96)!important;color:#fff!important;font-size:13px!important;overflow:hidden!important;pointer-events:none!important}
 #discussionContent .voiceRecordingBar.hidden{display:none!important}
-#discussionContent .voiceRecDot{color:#ff5577!important;font-size:15px!important;animation:voicePulse 1s infinite}
-#discussionContent #voiceCancelGesture{margin-left:auto;color:#ff9bad!important;font-size:11px!important;white-space:nowrap!important}
-#discussionContent .chatComposer.isRecording #chatClipBtn,
-#discussionContent .chatComposer.isRecording .composerInputWrap,
-#discussionContent .chatComposer.isRecording #sendBtn{display:none!important}
-#discussionContent .chatComposer.isRecording #voiceBtn{background:#ff315f!important;border-color:#ff315f!important;transform:none!important}
+#discussionContent .voiceRecDot{color:#ff5577!important;font-size:14px!important;animation:voicePulse 1s infinite}
+#discussionContent #voiceCancelGesture{margin-left:auto;color:#ffb0bd!important;font-size:10px!important;white-space:nowrap!important}
+#discussionContent .chatComposer.isRecording #chatClipBtn,#discussionContent .chatComposer.isRecording #sendBtn{display:none!important}
+#discussionContent .chatComposer.isRecording .composerInputWrap input#message{visibility:hidden!important}
+#discussionContent .voiceComposer,#discussionContent #voicePreview{display:none!important}
 @keyframes voicePulse{0%,100%{opacity:.45}50%{opacity:1}}
-#discussionContent #voicePreview{display:none!important}
-#discussionContent .voiceComposer{display:none!important}
-@media(max-width:430px){
-  #discussionContent .voiceRecordingBar{height:44px!important;font-size:12px!important;padding:0 10px!important}
-  #discussionContent #voiceCancelGesture{font-size:10px!important}
-}
+#discussionContent .voiceMessage{width:min(68%,245px)!important;min-width:0!important;padding:8px 10px!important;border-radius:15px!important}
+#discussionContent .voiceMessage .messageMeta{margin-bottom:3px!important}
+#discussionContent .voiceMessage .voiceLabel{display:flex!important;align-items:center!important;gap:4px!important;font-size:11px!important;color:#dbe7ef!important;margin:0 0 3px!important;white-space:nowrap!important}
+#discussionContent .voiceMessage .voiceAudio{display:block!important;width:100%!important;max-width:190px!important;height:32px!important;margin:0!important}
+#discussionContent .voiceMessage .voiceSpeedRow{margin:3px 0 0!important;display:flex!important;justify-content:flex-end!important;align-items:center!important}
+#discussionContent .voiceMessage .voiceSpeedRow label{display:none!important}
+#discussionContent .voiceMessage .voiceSpeed{height:25px!important;padding:2px 6px!important;font-size:10px!important;border-radius:8px!important}
+#discussionContent .voiceMessage .deleteVoice{height:24px!important;margin:3px 0 0!important;padding:2px 7px!important;font-size:10px!important;border-radius:8px!important}
+@media(max-width:430px){#discussionContent .composerIconBtn{width:42px!important;height:42px!important}#discussionContent .composerSendBtn{width:44px!important;height:44px!important}#discussionContent .composerInputWrap input#message{height:44px!important;font-size:14px!important;padding-right:50px!important}#discussionContent .composerVoiceBtn{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;right:4px!important;font-size:17px!important}#discussionContent .voiceRecordingBar{height:44px!important;padding-right:47px!important;font-size:12px!important}#discussionContent #voiceCancelGesture{font-size:9px!important}#discussionContent .voiceMessage{width:min(66%,225px)!important;padding:7px 9px!important}#discussionContent .voiceMessage .voiceAudio{max-width:175px!important;height:30px!important}}
 </style>
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
 </head>
@@ -687,14 +678,14 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 <div id="discussionTyping" aria-live="polite"><span class="typingDots"><i></i><i></i><i></i></span><span id="discussionTypingText">Quelqu’un écrit…</span></div>
 <div class="chatComposer">
   <button type="button" id="chatClipBtn" class="composerIconBtn" aria-label="Joindre une photo, une vidéo ou un fichier">📎</button>
-  <div id="voiceRecordingBar" class="voiceRecordingBar hidden" aria-live="polite">
-    <span class="voiceRecDot">●</span><span id="voiceRecordingText">Enregistrement 00:00</span><span id="voiceCancelGesture">← Glisser pour annuler</span>
-  </div>
   <div class="composerInputWrap">
     <input id="message" placeholder="Écrire un message…" autocomplete="off">
+    <div id="voiceRecordingBar" class="voiceRecordingBar hidden" aria-live="polite">
+      <span class="voiceRecDot">●</span><span id="voiceRecordingText">00:00</span><span id="voiceCancelGesture">← Glisser pour annuler</span>
+    </div>
+    <button type="button" id="voiceBtn" class="composerVoiceBtn" aria-label="Maintenir pour enregistrer un message vocal">🎙️</button>
   </div>
   <button type="button" id="sendBtn" class="composerSendBtn" aria-label="Envoyer">➤</button>
-  <button type="button" id="voiceBtn" class="composerVoiceBtn" aria-label="Maintenir pour enregistrer un message vocal">🎙️</button>
 </div>
 <div class="chatAttachmentMenu hidden" id="chatAttachmentMenu">
   <button type="button" id="chatCameraBtn"><span>📷</span><b>Prendre une photo</b></button>
@@ -1777,7 +1768,7 @@ function updateVoiceTimer(){
   const min=String(Math.floor(total/60)).padStart(2,'0');
   const sec=String(total%60).padStart(2,'0');
   const text=$('voiceRecordingText');
-  if(text)text.textContent='Enregistrement '+min+':'+sec;
+  if(text)text.textContent=min+':'+sec;
   const status=$('voiceStatus');
   if(status)status.textContent='';
 }
@@ -1793,7 +1784,10 @@ function resetVoiceRecordingUi(){
   if(btn){btn.disabled=false;btn.classList.remove('recording','cancelZone');btn.textContent='🎙️';}
   if(cancel)cancel.classList.add('hidden');
   if(composer)composer.classList.remove('isRecording');
-  if(bar)bar.classList.add('hidden');
+  if(bar){bar.classList.add('hidden');}
+   const recText=$('voiceRecordingText');if(recText)recText.textContent='00:00';
+   const status=$('voiceStatus');if(status)status.textContent='';
+   const hint=$('voiceCancelHint');if(hint)hint.textContent='';
 }
 
 function cancelVoiceRecording(){
@@ -1872,7 +1866,7 @@ async function toggleVoiceRecording(){
     if(bar)bar.classList.remove('hidden');
     btn.classList.add('recording');
     btn.textContent='⏺️';
-    const cancel=$('cancelRecordingBtn');if(cancel)cancel.classList.remove('hidden');
+    const cancel=$('cancelRecordingBtn');if(cancel)cancel.classList.add('hidden');
   }catch(e){stopVoiceStream();mediaRecorder=null;resetVoiceRecordingUi();alert('Micro inaccessible : '+(e.message||String(e)));}
 }
 async function sendVoice(){
@@ -2894,7 +2888,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const openBtn=document.getElementById('chatCustomizeBtn'), closeBtn=document.getElementById('chatCustomizeClose'), doneBtn=document.getElementById('chatCustomizeDone'), resetBtn=document.getElementById('chatCustomizeReset');
   if(!panel||!overlay||!openBtn)return;
   const key=()=>`myevent-chat-style-${event?.id||'default'}-${user?.id||'guest'}`;
-  const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',opacity:100,customBg:''};
+  const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',incomingColor:'#142b3d',opacity:62,customBg:''};
   let style={...defaults};
   function save(){try{localStorage.setItem(key(),JSON.stringify(style))}catch{}}
   function load(){try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}}
@@ -2905,7 +2899,8 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     panel.classList.remove('bubble-glass','bubble-soft','bubble-compact'); if(style.bubble==='glass')panel.classList.add('bubble-glass');if(style.bubble==='soft')panel.classList.add('bubble-soft');if(style.bubble==='compact')panel.classList.add('bubble-compact');
     document.querySelectorAll('.chatBgOption').forEach(x=>x.classList.toggle('active',x.dataset.bg===style.bg&&!style.customBg));
     document.querySelectorAll('.chatBubbleOption').forEach(x=>x.classList.toggle('active',x.dataset.bubble===style.bubble));
-    document.querySelectorAll('.chatColor').forEach(x=>x.classList.toggle('active',x.dataset.color===style.color));
+    document.querySelectorAll('.chatColor[data-color]').forEach(x=>x.classList.toggle('active',x.dataset.color===style.color));
+     document.querySelectorAll('.chatColor[data-incoming-color]').forEach(x=>x.classList.toggle('active',x.dataset.incomingColor===style.incomingColor));
     const op=document.getElementById('chatOpacity');if(op)op.value=style.opacity;const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
   }
   function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false')}
@@ -2972,6 +2967,13 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
         </div>
       </div>
 
+      <div class="chatCustomizeSection" data-chat-custom-section="incomingColors">
+        <div class="chatSectionTitle">Couleur des messages des autres</div>
+        <div class="chatColorRow incomingColorRow">
+          <button type="button" class="chatColor incomingBlue" data-incoming-color="#142b3d" aria-label="Bleu nuit"></button><button type="button" class="chatColor green" data-incoming-color="#176047" aria-label="Vert"></button><button type="button" class="chatColor purple" data-incoming-color="#4b356f" aria-label="Violet"></button><button type="button" class="chatColor orange" data-incoming-color="#70451f" aria-label="Orange"></button><button type="button" class="chatColor pink" data-incoming-color="#69334f" aria-label="Rose"></button><button type="button" class="chatColor teal" data-incoming-color="#185c63" aria-label="Turquoise"></button><button type="button" class="chatColor gray" data-incoming-color="#485866" aria-label="Gris"></button>
+        </div>
+      </div>
+
       <div class="chatCustomizeSection" data-chat-custom-section="bubbles">
         <div class="chatSectionTitle">Style des bulles</div>
         <div class="chatOptionGrid bubbleGrid">
@@ -3030,7 +3032,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
     panel.style.setProperty('--bubble-out',style.color);
     const alpha=Math.max(0.45,Math.min(1,(Number(style.opacity)||100)/100));
     const hexToRgba=(hex,a)=>{const h=String(hex||'').replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return `rgba(22,131,255,${a})`;return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;};
-    panel.style.setProperty('--bubble-in-rgba',`rgba(20,43,61,${alpha})`);
+    panel.style.setProperty('--bubble-in-rgba',hexToRgba(style.incomingColor||'#142b3d',alpha));
     panel.style.setProperty('--bubble-out-rgba',hexToRgba(style.color,alpha));
     panel.style.setProperty('--bubble-opacity',1);
     panel.classList.remove('bubble-glass','bubble-soft','bubble-compact','bubble-classic','bubble-minimal','bubble-outline');
@@ -3057,7 +3059,8 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelector('[data-chat-custom-section=\"'+n+'\"]')?.scrollIntoView({behavior:'smooth',block:'nearest'});}));
   document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save();}));
   document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save();}));
-  document.querySelectorAll('.chatColor').forEach(btn=>btn.addEventListener('click',()=>{style.color=btn.dataset.color;apply();save();}));
+  document.querySelectorAll('.chatColor[data-color]').forEach(btn=>btn.addEventListener('click',()=>{style.color=btn.dataset.color;apply();save();}));
+   document.querySelectorAll('.chatColor[data-incoming-color]').forEach(btn=>btn.addEventListener('click',()=>{style.incomingColor=btn.dataset.incomingColor;apply();save();}));
   document.getElementById('chatOpacity')?.addEventListener('input',e=>{style.opacity=Number(e.target.value);apply();save();});
   document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save();};r.readAsDataURL(f);});
   resetBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();style={...defaults};apply();save();});
