@@ -3091,6 +3091,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 @media(max-width:430px){.chatCustomizeActions button{flex:1 1 0;min-width:0;padding-left:10px;padding-right:10px}.chatCustomizeActions #chatCustomizeSaveStatus{order:4;width:100%;text-align:center}}
 </style>
 <script>
+// V41 — préférences Discussion strictement privées par utilisateur et événement.
 // V17 — l'overlay existe maintenant dans le DOM : initialisation après son rendu.
 (function initChatCustomizationV17(){
   const panel=document.getElementById('discussionContent');
@@ -3102,136 +3103,94 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const saveBtn=document.getElementById('chatCustomizeSave');
   if(!panel||!overlay||!openBtn)return;
   const key=()=>`myevent-chat-style-${user?.id||'guest'}-${event?.id||'default'}`;
-  const globalKey=()=>`myevent-chat-style-last-${user?.id||'guest'}`;
+  const globalKey=()=>`myevent-chat-style-user-${user?.id||'guest'}`;
   const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',incomingColor:'#142b3d',opacity:62,customBg:''};
   let style={...defaults};
   const readStyle=(raw)=>{
-    try{ const x=raw?JSON.parse(raw):null; return x&&typeof x==='object'?{...defaults,...x}:null; }catch{return null;}
+    try{ const x=typeof raw==='string'?(raw?JSON.parse(raw):null):raw; return x&&typeof x==='object'?{...defaults,...x}:null; }catch{return null;}
   };
-  // V35 : la personnalisation est une préférence du compte, pas seulement du navigateur.
-  // On conserve localStorage comme cache, mais la source principale devient
-  // user_metadata Supabase : le fond, les couleurs, le style et la transparence
-  // suivent donc l'utilisateur après déconnexion/reconnexion et sur un autre appareil.
+  const readServerStyles=()=>{
+    const raw=user?.user_metadata?.myevent_chat_styles_v2;
+    if(!raw||typeof raw!=='object')return null;
+    return raw;
+  };
   const load=async()=>{
     try{
-      // Toujours relire l'utilisateur depuis Supabase : l'objet de session peut
-      // contenir d'anciennes user_metadata après un rafraîchissement/reconnexion.
-      if(user?.id && sb?.auth){
+      if(!user?.id||!event?.id)return;
+      // Source de vérité : métadonnées du compte connecté. Chaque compte possède
+      // son propre objet, et chaque événement possède sa propre préférence.
+      if(sb?.auth){
         const r=await sb.auth.getUser();
-        if(!r.error && r.data?.user) user=r.data.user;
+        if(!r.error&&r.data?.user)user=r.data.user;
       }
-
-      // IMPORTANT : après reconnexion, le serveur Supabase est la source de vérité.
-      // Les anciennes versions comparaient tous les caches localStorage et pouvaient
-      // reprendre un ancien fond simplement parce que son timestamp local était plus récent.
-      const serverStyle=readStyle(user?.user_metadata?.myevent_chat_style);
+      const styles=readServerStyles();
+      const serverStyle=styles ? readStyle(styles[event.id]) : null;
       if(serverStyle){
         style={...defaults,...serverStyle};
-        // Le cache local est seulement une copie de secours, jamais une source
-        // capable d'écraser une préférence serveur valide.
         try{
           const payload=JSON.stringify(serverStyle);
-          if(user?.id){
-            localStorage.setItem(globalKey(),payload);
-            localStorage.setItem('myevent-chat-style-last',payload);
-          }
-          if(event?.id){
-            localStorage.setItem(key(),payload);
-            localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
-          }
+          localStorage.setItem(key(),payload);
+          localStorage.setItem(globalKey(),payload);
         }catch{}
-      }else{
-        // Seulement si le compte ne possède encore aucune préférence serveur,
-        // on récupère l'ancienne préférence locale pour assurer la migration.
-        const candidates=[];
-        const pushCandidate=x=>{
-          if(x&&typeof x==='object' && Number(x.savedAt)>0)candidates.push(x);
-        };
-        if(user?.id){
-          pushCandidate(readStyle(localStorage.getItem(globalKey())));
-          pushCandidate(readStyle(localStorage.getItem('myevent-chat-style-last')));
-        }
-        pushCandidate(readStyle(localStorage.getItem(key())));
-        if(user?.id&&event?.id)pushCandidate(readStyle(localStorage.getItem(`myevent-chat-style-v2-${user.id}-${event.id}`)));
-        candidates.sort((a,b)=>Number(b.savedAt)-Number(a.savedAt));
-        if(candidates[0]) style={...defaults,...candidates[0]};
+        return;
       }
-    }catch(e){
-      console.warn('Chargement personnalisation:',e?.message||e);
-    }
+      // Migration une seule fois depuis l'ancien réglage serveur global, sans jamais
+      // lire le cache générique d'un autre utilisateur.
+      const legacy=readStyle(user?.user_metadata?.myevent_chat_style);
+      if(legacy){
+        style={...defaults,...legacy};
+        try{localStorage.setItem(key(),JSON.stringify(style));}catch{}
+        return;
+      }
+      // Dernier secours : uniquement le cache local déjà isolé par user + event.
+      const local=readStyle(localStorage.getItem(key()));
+      if(local)style={...defaults,...local};
+      else style={...defaults};
+    }catch(e){ console.warn('Chargement personnalisation:',e?.message||e); }
   };
   let saveQueue=Promise.resolve();
   let saveBusy=false;
   const saveNow=async()=>{
-    if(!user?.id)return false;
+    if(!user?.id||!event?.id)return false;
     try{
       const payloadObj={...style,savedAt:Date.now()};
       const payload=JSON.stringify(payloadObj);
-      // Cache local immédiat.
+      localStorage.setItem(key(),payload);
       localStorage.setItem(globalKey(),payload);
-      localStorage.setItem('myevent-chat-style-last',payload);
-      if(event?.id){
-        localStorage.setItem(key(),payload);
-        localStorage.setItem(`myevent-chat-style-v2-${user.id}-${event.id}`,payload);
-      }
-      // Persistance du compte : une seule écriture à la fois pour éviter
-      // qu'un ancien clic ne termine après un nouveau et écrase le dernier réglage.
       if(sb?.auth){
-        // Rafraîchir explicitement la session avant l'écriture. Sur iPhone/Safari,
-        // une reconnexion ou un retour depuis une page en arrière peut laisser le
-        // client avec une session en mémoire alors que le token d'écriture n'est
-        // plus le plus récent.
         try{
           const ses=await sb.auth.getSession();
           if(ses?.data?.session?.refresh_token){
             const refreshed=await sb.auth.refreshSession({refresh_token:ses.data.session.refresh_token});
-            if(!refreshed.error && refreshed.data?.user) user=refreshed.data.user;
+            if(!refreshed.error&&refreshed.data?.user)user=refreshed.data.user;
           }
-        }catch(refreshErr){
-          console.warn('Rafraîchissement session personnalisation:',refreshErr?.message||refreshErr);
-        }
-
-        let r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
-        // Une première tentative peut échouer avec une session momentanément
-        // périmée : relire l'utilisateur puis retenter une fois.
-        if(r.error){
-          const fresh=await sb.auth.getUser();
-          if(fresh.error) throw r.error;
-          if(fresh.data?.user) user=fresh.data.user;
-          r=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
-        }
+        }catch(e){console.warn('Refresh session:',e?.message||e);}
+        const fresh=await sb.auth.getUser();
+        if(fresh.error)throw fresh.error;
+        if(fresh.data?.user)user=fresh.data.user;
+        const current=(user.user_metadata?.myevent_chat_styles_v2&&typeof user.user_metadata.myevent_chat_styles_v2==='object')
+          ? {...user.user_metadata.myevent_chat_styles_v2}:{};
+        current[event.id]=payloadObj;
+        // Suppression explicite de l'ancien format global pour éviter toute ambiguïté.
+        const r=await sb.auth.updateUser({data:{myevent_chat_styles_v2:current,myevent_chat_style:null}});
         if(r.error)throw r.error;
         if(r.data?.user)user=r.data.user;
-
-        // Vérification réelle côté serveur : on n'affiche « Sauvegardé » que si
-        // Supabase renvoie exactement le réglage que nous venons d'écrire.
-        const check=await sb.auth.getUser();
-        const savedServer=readStyle(check.data?.user?.user_metadata?.myevent_chat_style);
-        if(check.error || !savedServer || Number(savedServer.savedAt)!==Number(payloadObj.savedAt)){
-          const retry=await sb.auth.updateUser({data:{myevent_chat_style:payloadObj}});
-          if(retry.error)throw retry.error;
-          if(retry.data?.user)user=retry.data.user;
-          const verify=await sb.auth.getUser();
-          const verified=readStyle(verify.data?.user?.user_metadata?.myevent_chat_style);
-          if(verify.error || !verified || Number(verified.savedAt)!==Number(payloadObj.savedAt)){
-            throw new Error('Supabase n’a pas confirmé la sauvegarde du réglage.');
-          }
-        }
+        const verify=await sb.auth.getUser();
+        if(verify.error)throw verify.error;
+        const verified=verify.data?.user?.user_metadata?.myevent_chat_styles_v2?.[event.id];
+        if(!verified||Number(verified.savedAt)!==Number(payloadObj.savedAt))throw new Error('Supabase n’a pas confirmé la sauvegarde du réglage.');
       }
       const status=document.getElementById('chatCustomizeSaveStatus');
-      if(status){status.textContent='✓ Sauvegardé sur le compte';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
+      if(status){status.textContent='✓ Sauvegardé sur mon compte';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),2200);}
       return true;
     }catch(e){
       console.warn('Sauvegarde personnalisation:',e?.message||e);
       const status=document.getElementById('chatCustomizeSaveStatus');
-      if(status){status.textContent='⚠️ Erreur de sauvegarde — le fond reste local';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3200);}
+      if(status){status.textContent='⚠️ Sauvegarde locale uniquement';status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3200);}
       return false;
     }
   };
-  const save=()=>{
-    saveQueue=saveQueue.then(()=>saveNow());
-    return saveQueue;
-  };
+  const save=()=>{saveQueue=saveQueue.then(()=>saveNow());return saveQueue;};
   function apply(){
     // Utilise exactement les mêmes visuels que les vignettes du sélecteur.
     // Les anciennes versions remplaçaient les décors par de simples dégradés,
