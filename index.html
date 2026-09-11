@@ -278,6 +278,41 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 @keyframes typingDot{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
 @media(max-width:430px){#discussionContent .messageRow.me .messageBody,#discussionContent .messageRow:not(.me) .messageBody{max-width:74%!important}}
 
+
+/* V18 — discussion à hauteur fixe : seuls les messages défilent */
+#discussionContent{
+  height:min(62vh,680px)!important;
+  min-height:420px!important;
+  max-height:680px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+#discussionContent #messages{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  padding:4px 2px 8px!important;
+  box-sizing:border-box!important;
+}
+#discussionContent #discussionTyping{
+  flex:0 0 auto!important;
+}
+#discussionContent>.row,
+#discussionContent>.voiceComposer{
+  flex:0 0 auto!important;
+}
+@media(max-width:430px){
+  #discussionContent{
+    height:min(60vh,620px)!important;
+    min-height:390px!important;
+  }
+}
 </style>
 </head>
 <body>
