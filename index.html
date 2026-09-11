@@ -542,12 +542,32 @@ body.discussionFullScreen{overflow:hidden!important}
 #discussionPanel.active .chatComposer{flex:0 0 auto!important}
 #discussionPanel.active .voiceComposer{flex:0 0 auto!important}
 #discussionPanel.active #voicePreview{flex:0 0 auto!important}
-#discussionPanel.active .chatVoiceSpeedRow{justify-content:flex-end!important;margin-top:2px!important}
-#discussionPanel.active .chatVoiceSpeedRow .voiceSpeed{height:27px!important;padding:2px 6px!important;font-size:11px!important}
+#discussionContent .voiceWhatsAppRow .voiceSpeed{
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:39px!important;
+  height:27px!important;
+  margin:0!important;
+  padding:2px 6px!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  border-radius:13px!important;
+  background:rgba(7,18,28,.62)!important;
+  color:#fff!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+}
+#discussionContent .voiceWhatsAppRow .voiceSpeed:active{transform:scale(.96)!important}
+#discussionPanel.active .chatVoiceSpeedRow{display:none!important}
 @media(max-width:600px){
   #discussionPanel.active>summary{padding-left:12px!important;padding-right:12px!important}
 }
 </style>
+<!-- MyEvent V47 — vitesse vocaux par clic, multiplicateur à côté de la durée -->
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
 
 <style id="myevent-v33-final">
@@ -1747,9 +1767,8 @@ async function loadMessages(){
         '<div class="messageBody voiceMessage"><div class="voiceWhatsAppRow">'+
         '<button type="button" class="voicePlayBtn" data-voice-url="'+esc(m.url)+'" aria-label="Lire le vocal">▶</button>'+
         '<div class="voiceWaveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
-        '<span class="voiceDuration">'+duration+'</span></div>'+
+        '<span class="voiceDuration">'+duration+'</span><button type="button" class="voiceSpeed" data-speed="1" aria-label="Changer la vitesse de lecture">1×</button></div>'+
         '<audio class="voiceAudio" src="'+esc(m.url)+'" preload="metadata"></audio>'+
-        '<div class="voiceSpeedRow chatVoiceSpeedRow"><select class="voiceSpeed" aria-label="Vitesse de lecture"><option value="1">1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></div>'+
         '<div class="voiceMetaLine"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span>'+(mine?'<button type="button" class="deleteVoice" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'" aria-label="Supprimer">×</button>':'')+'</div>'+
         '</div></div>';
     }
@@ -1929,17 +1948,26 @@ function getVoiceSpeed(){
 }
 
 function bindVoiceSpeeds(root=document){
+  const speeds=[1,1.5,2];
+  const labels={1:'1×',1.5:'1,5×',2:'2×'};
   const speed=getVoiceSpeed();
-  root.querySelectorAll('.voiceSpeed').forEach(select=>{
-    select.value=String(speed);
-    select.addEventListener('change',()=>{
-      const v=parseFloat(select.value)||1;
-      localStorage.setItem('myevent_voice_speed',String(v));
-      const scope=select.closest('.voiceMessage,.voicePreview')||root;
-      scope.querySelectorAll('audio').forEach(a=>{a.playbackRate=v;});
+  root.querySelectorAll('.voiceSpeed').forEach(button=>{
+    const initial=speeds.includes(parseFloat(button.dataset.speed))?parseFloat(button.dataset.speed):speed;
+    button.dataset.speed=String(initial);
+    button.textContent=labels[initial];
+    button.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const current=parseFloat(button.dataset.speed)||1;
+      const next=speeds[(speeds.indexOf(current)+1)%speeds.length];
+      button.dataset.speed=String(next);
+      button.textContent=labels[next];
+      localStorage.setItem('myevent_voice_speed',String(next));
+      const scope=button.closest('.voiceMessage,.voicePreview')||root;
+      scope.querySelectorAll('audio').forEach(a=>{a.playbackRate=next;});
     });
-    const scope=select.closest('.voiceMessage,.voicePreview')||root;
-    scope.querySelectorAll('audio').forEach(a=>{a.playbackRate=speed;});
+    const scope=button.closest('.voiceMessage,.voicePreview')||root;
+    scope.querySelectorAll('audio').forEach(a=>{a.playbackRate=initial;});
   });
 }
 
