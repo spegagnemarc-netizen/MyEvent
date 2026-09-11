@@ -462,6 +462,30 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 #discussionContent .voiceMessage .voiceSpeed{height:25px!important;padding:2px 6px!important;font-size:10px!important;border-radius:8px!important}
 #discussionContent .voiceMessage .deleteVoice{height:24px!important;margin:3px 0 0!important;padding:2px 7px!important;font-size:10px!important;border-radius:8px!important}
 @media(max-width:430px){#discussionContent .composerIconBtn{width:42px!important;height:42px!important}#discussionContent .composerSendBtn{width:44px!important;height:44px!important}#discussionContent .composerInputWrap input#message{height:44px!important;font-size:14px!important;padding-right:50px!important}#discussionContent .composerVoiceBtn{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;right:4px!important;font-size:17px!important}#discussionContent .voiceRecordingBar{height:44px!important;padding-right:47px!important;font-size:12px!important}#discussionContent #voiceCancelGesture{font-size:9px!important}#discussionContent .voiceMessage{width:min(66%,225px)!important;padding:7px 9px!important}#discussionContent .voiceMessage .voiceAudio{max-width:175px!important;height:30px!important}}
+
+/* V31 — médias toujours opaques, bulles transparentes uniquement */
+#discussionContent .chatAttachmentMessage{background:transparent!important;opacity:1!important}
+#discussionContent .chatAttachmentImage,#discussionContent .chatAttachmentVideo{opacity:1!important;filter:none!important;mix-blend-mode:normal!important;display:block!important}
+#discussionContent .chatAttachmentImage{width:100%!important;height:auto!important;max-height:420px!important;object-fit:cover!important;border-radius:12px!important}
+#discussionContent .chatAttachmentVideo{width:100%!important;max-height:420px!important;border-radius:12px!important}
+
+/* V31 — vocaux compacts façon WhatsApp */
+#discussionContent .voiceMessage{width:min(78%,310px)!important;min-width:0!important;padding:8px 10px!important;border-radius:18px!important}
+#discussionContent .voiceWhatsAppRow{display:flex!important;align-items:center!important;gap:8px!important;width:100%!important}
+#discussionContent .voicePlayBtn{width:38px!important;height:38px!important;min-width:38px!important;border-radius:50%!important;border:0!important;background:rgba(255,255,255,.18)!important;color:#fff!important;display:grid!important;place-items:center!important;padding:0!important;font-size:17px!important}
+#discussionContent .voicePlayBtn.playing{background:rgba(255,255,255,.28)!important}
+#discussionContent .voiceWaveform{height:30px!important;flex:1!important;display:flex!important;align-items:center!important;gap:2px!important;overflow:hidden!important}
+#discussionContent .voiceWaveform i{display:block!important;width:3px!important;border-radius:3px!important;background:currentColor!important;opacity:.75!important}
+#discussionContent .voiceWaveform i:nth-child(1){height:9px}.voiceWaveform i:nth-child(2){height:17px}.voiceWaveform i:nth-child(3){height:23px}.voiceWaveform i:nth-child(4){height:13px}.voiceWaveform i:nth-child(5){height:27px}.voiceWaveform i:nth-child(6){height:19px}.voiceWaveform i:nth-child(7){height:11px}.voiceWaveform i:nth-child(8){height:24px}.voiceWaveform i:nth-child(9){height:16px}.voiceWaveform i:nth-child(10){height:28px}.voiceWaveform i:nth-child(11){height:20px}.voiceWaveform i:nth-child(12){height:12px}.voiceWaveform i:nth-child(13){height:25px}.voiceWaveform i:nth-child(14){height:18px}.voiceWaveform i:nth-child(15){height:10px}.voiceWaveform i:nth-child(16){height:26px}.voiceWaveform i:nth-child(17){height:15px}.voiceWaveform i:nth-child(18){height:22px}.voiceWaveform i:nth-child(19){height:12px}.voiceWaveform i:nth-child(20){height:24px}
+#discussionContent .voiceDuration{font-size:11px!important;min-width:30px!important;text-align:right!important;color:rgba(255,255,255,.82)!important}
+#discussionContent .voiceAudio{display:none!important}
+#discussionContent .voiceMetaLine{display:flex!important;align-items:center!important;gap:6px!important;margin-top:4px!important;font-size:10px!important;color:rgba(255,255,255,.68)!important}
+#discussionContent .voiceMetaLine span:first-child{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#discussionContent .voiceMetaLine .deleteVoice{margin:0!important;padding:0!important;border:0!important;background:transparent!important;color:rgba(255,255,255,.72)!important;font-size:17px!important;line-height:1!important}
+#discussionContent .messageBody{background:var(--bubble-in-rgba,rgba(20,43,61,.48))!important;opacity:1!important}
+#discussionContent .messageRow.me .messageBody{background:var(--bubble-out-rgba,rgba(22,131,255,.48))!important;opacity:1!important}
+#discussionContent .incomingColorTitle{margin-top:18px!important}
+@media(max-width:430px){#discussionContent .voiceMessage{width:min(78%,285px)!important;padding:7px 9px!important}#discussionContent .voicePlayBtn{width:36px!important;height:36px!important;min-width:36px!important}.voiceWaveform{gap:1px!important}.voiceWaveform i{width:2px!important}.voiceDuration{font-size:10px!important}}
 </style>
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
 </head>
@@ -1512,8 +1536,17 @@ async function markMembersRead(){
   localStorage.setItem(unreadStorageKey('members'),new Date().toISOString());
 }
 
+let discussionScrollTargetId=null;
+
 async function loadMessages(){
   if(!event)return;
+  // On reconnect/open, remember the first incoming message after the last read point.
+  // If there is none, the discussion opens on the latest message.
+  let lastReadAt=null;
+  try{
+    const read=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+    lastReadAt=read.data?.last_read_at||null;
+  }catch{}
   const r=await sb.from('messages').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
   if(r.error){$('messages').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
   const rows=r.data||[];
@@ -1551,6 +1584,8 @@ async function loadMessages(){
     ...rows.map(m=>({kind:'message',created_at:m.created_at,data:m})),
     ...voiceUrls.map(m=>({kind:'voice',created_at:m.created_at,data:m}))
   ].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const unreadItem=lastReadAt ? all.find(item=>new Date(item.created_at)>new Date(lastReadAt) && item.data?.user_id!==user.id) : null;
+  discussionScrollTargetId=unreadItem?.data?.id||all[all.length-1]?.data?.id||null;
   // Un seul bandeau d'appel doit être visible : on conserve uniquement
   // l'annonce la plus récente du salon, même si plusieurs essais ont créé
   // plusieurs messages techniques dans la base.
@@ -1585,7 +1620,7 @@ async function loadMessages(){
         return '<div class="chatPollOption"><button type="button" class="secondary chatPollVote '+(selected?'selectedVote':'')+'" data-poll="'+esc(poll.id)+'" data-option="'+esc(o.id)+'">'+esc(o.option_text)+' <span>'+count+'</span></button><div class="chatPollBar"><i style="width:'+pct+'%"></i></div></div>';
       }).join('');
       const multiple=poll.allow_multiple?' · Plusieurs réponses':' · 1 réponse';
-      return '<div class="messageRow '+(mine?'me':'')+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">📊 '+esc(poll.question)+'</div><div class="chatPollHint">Sondage'+multiple+'</div>'+optionsHtml+'</div></div>';
+      return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">📊 '+esc(poll.question)+'</div><div class="chatPollHint">Sondage'+multiple+'</div>'+optionsHtml+'</div></div>';
     }
     if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){ 
       let a=null; try{a=JSON.parse(m.content.slice('[[MYEVENT_ATTACHMENT]]'.length));}catch{}
@@ -1594,15 +1629,19 @@ async function loadMessages(){
       const url=sx.data?.signedUrl||''; if(!url)return '';
       const isImage=(a.type||'').startsWith('image/'), isVideo=(a.type||'').startsWith('video/');
       const preview=isImage?'<img class="chatAttachmentImage" src="'+esc(url)+'" alt="'+esc(a.name||'Image')+'">':isVideo?'<video class="chatAttachmentVideo" src="'+esc(url)+'" controls preload="metadata"></video>':'<a class="chatAttachmentFile" href="'+esc(url)+'" target="_blank" rel="noopener">📎 '+esc(a.name||'Fichier joint')+'</a>';
-      return '<div class="messageRow '+(mine?'me':'')+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatAttachmentMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+preview+'</div></div>';
+      return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatAttachmentMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+preview+'</div></div>';
     }
     if(item.kind==='voice'){
       if(!m.url)return '';
-      return '<div class="messageRow '+(mine?'me':'')+'">'+
+      const duration=m.duration_ms?formatVoiceDuration(m.duration_ms):'0:00';
+      return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
         avatarHtml(av,'messageAvatar')+
-        '<div class="messageBody voiceMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+
-        '<div class="voiceLabel">🎙️ Message vocal'+(m.duration_ms?' · '+formatVoiceDuration(m.duration_ms):'')+'</div><audio class="voiceAudio" src="'+esc(m.url)+'" controls preload="metadata"></audio><div class="voiceSpeedRow"><label>Vitesse</label><select class="voiceSpeed" aria-label="Vitesse de lecture"><option value="1">1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></div>'+
-        (mine?'<button type="button" class="secondary deleteVoice" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'">Supprimer</button>':'')+
+        '<div class="messageBody voiceMessage"><div class="voiceWhatsAppRow">'+
+        '<button type="button" class="voicePlayBtn" data-voice-url="'+esc(m.url)+'" aria-label="Lire le vocal">▶</button>'+
+        '<div class="voiceWaveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'+
+        '<span class="voiceDuration">'+duration+'</span></div>'+
+        '<audio class="voiceAudio" src="'+esc(m.url)+'" preload="metadata"></audio>'+
+        '<div class="voiceMetaLine"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span>'+(mine?'<button type="button" class="deleteVoice" data-id="'+m.id+'" data-path="'+esc(m.storage_path)+'" aria-label="Supprimer">×</button>':'')+'</div>'+
         '</div></div>';
     }
     const rs=reactionMap.get(m.id)||[];
@@ -1622,7 +1661,7 @@ async function loadMessages(){
         '<div class="reactionQuick">'+quick+'<button type="button" class="reactionMore" data-more="'+m.id+'" aria-label="Plus de réactions">•••</button></div>'+
         '<div class="reactionFull hidden" data-full="'+m.id+'">'+full+'</div>'+ 
       '</div></div>';
-    return '<div class="messageRow '+(mine?'me':'')+'">'+
+    return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
       avatarHtml(av,'messageAvatar')+
       '<div class="messageBody"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="messageText">'+esc(m.content)+'</div>'+reactionHtml+'</div></div>';
   }))).join('');
@@ -1643,9 +1682,29 @@ async function loadMessages(){
   document.querySelectorAll('.joinCallMessage').forEach(b=>b.addEventListener('click',()=>startGroupCall()));
   bindLongPressReactions();
 
-  bindVoiceSpeeds();
+  // WhatsApp-like compact voice controls.
+  document.querySelectorAll('#messages .voicePlayBtn').forEach(btn=>{
+    const audio=btn.closest('.voiceMessage')?.querySelector('.voiceAudio');
+    if(!audio)return;
+    btn.addEventListener('click',async()=>{
+      document.querySelectorAll('#messages .voiceAudio').forEach(a=>{if(a!==audio){a.pause();a.currentTime=0;}});
+      try{
+        if(audio.paused){await audio.play();btn.textContent='❚❚';btn.classList.add('playing');}
+        else{audio.pause();btn.textContent='▶';btn.classList.remove('playing');}
+      }catch{}
+    });
+    audio.addEventListener('play',()=>{btn.textContent='❚❚';btn.classList.add('playing')});
+    audio.addEventListener('pause',()=>{btn.textContent='▶';btn.classList.remove('playing')});
+    audio.addEventListener('ended',()=>{btn.textContent='▶';btn.classList.remove('playing');audio.currentTime=0});
+  });
   if($('statMessages'))$('statMessages').textContent=rows.length;
   await loadUnreadCount();
+  requestAnimationFrame(()=>{
+    const box=document.getElementById('discussionContent');
+    const target=discussionScrollTargetId ? document.querySelector('#messages [data-message-id="'+CSS.escape(String(discussionScrollTargetId))+'"]') : null;
+    if(target) target.scrollIntoView({behavior:'auto',block:lastReadAt?'center':'end'});
+    else if(box) box.scrollTop=box.scrollHeight;
+  });
 }
 
 function closeReactionPickers(){
@@ -2882,40 +2941,6 @@ document.addEventListener('click',e=>{const tile=e.target.closest('#callStage .c
 
 document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.getTracks().forEach(t=>{t.enabled=true});if(document.visibilityState==='visible')updateCallCount()}});
 
-// V15 — personnalisation discussion : fond, bulles, couleurs, transparence
-(function initChatCustomization(){
-  const panel=document.getElementById('discussionContent'), overlay=document.getElementById('chatCustomizeOverlay');
-  const openBtn=document.getElementById('chatCustomizeBtn'), closeBtn=document.getElementById('chatCustomizeClose'), doneBtn=document.getElementById('chatCustomizeDone'), resetBtn=document.getElementById('chatCustomizeReset');
-  if(!panel||!overlay||!openBtn)return;
-  const key=()=>`myevent-chat-style-${event?.id||'default'}-${user?.id||'guest'}`;
-  const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',incomingColor:'#142b3d',opacity:62,customBg:''};
-  let style={...defaults};
-  function save(){try{localStorage.setItem(key(),JSON.stringify(style))}catch{}}
-  function load(){try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}}
-  function apply(){
-    const bgs={mountain:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZDk1ZDRmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTUyZjUyIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PHBvbHlnb24gcG9pbnRzPSIwLDM5MCAxNzAsMjIwIDMwMCwzODAgNDU1LDE1MCA2NTAsMzg1IDgwMCwyNTAgODAwLDYwMCAwLDYwMCIgZmlsbD0iIzE3MmY0OCIvPjxwb2x5Z29uIHBvaW50cz0iOTAsMzkwIDIyMCwyNDUgMzAwLDM4MCIgZmlsbD0iI2Q5ZThlZiIgb3BhY2l0eT0iLjg1Ii8+PHBvbHlnb24gcG9pbnRzPSIzODUsMzg1IDQ1NSwxODUgNTM1LDM4NSIgZmlsbD0iI2U3ZWVmMiIgb3BhY2l0eT0iLjgiLz48cGF0aCBkPSJNMCA0NzAgUTE1MCA0MjAgMzAwIDQ3NSBUODAwIDQ1MCBWNjAwIEgwWiIgZmlsbD0iIzEwMjczNyIvPjxwYXRoIGQ9Ik0wIDUyMCBRMTgwIDQ3MCAzNjAgNTI1IFQ4MDAgNTAwIFY2MDAgSDBaIiBmaWxsPSIjMGExZDJhIi8+PC9zdmc+")',lake:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMmM3ODkxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZWY5YTcwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PGNpcmNsZSBjeD0iNjIwIiBjeT0iMTAwIiByPSI1NSIgZmlsbD0iI2ZmZDk4YSIgb3BhY2l0eT0iLjkiLz48cG9seWdvbiBwb2ludHM9IjAsMzYwIDE4MCwyMDAgMzMwLDM1NSA1MDAsMTQ1IDY5MCwzNTUgODAwLDIzNSA4MDAsNjAwIDAsNjAwIiBmaWxsPSIjMTgzYTRlIi8+PHBvbHlnb24gcG9pbnRzPSI0MTAsMzUwIDUwMCwxNjAgNTY1LDM1MCIgZmlsbD0iI2RjZTdlYiIvPjxwYXRoIGQ9Ik0wIDM5MCBRMjAwIDM2MCA0MDAgMzk1IFQ4MDAgMzgwIFY2MDAgSDBaIiBmaWxsPSJ1cmwoI3dhdGVyKSIvPjxwYXRoIGQ9Ik0wIDQzMCBRMTgwIDQxMCAzNjAgNDM1IFQ4MDAgNDI1IiBmaWxsPSJub25lIiBzdHJva2U9IiM3N2E5YjUiIHN0cm9rZS13aWR0aD0iNyIgb3BhY2l0eT0iLjU1Ii8+PHBhdGggZD0iTTAgNTAwIFExODAgNDUwIDM1MCA1MTAgVDgwMCA0OTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q2OGI2OCIgc3Ryb2tlLXdpZHRoPSIxMCIgb3BhY2l0eT0iLjM1Ii8+PHBhdGggZD0iTTExMCAzODAgbDE4IC01NSAxOCA1NSBNMTQ1IDM4MCBsMTUgLTQyIDE1IDQyIE02ODAgMzcwIGwxNiAtNDggMTYgNDggTTcxNSAzNzAgbDEzIC0zOCAxMyAzOCIgc3Ryb2tlPSIjMTAyYTJkIiBzdHJva2Utd2lkdGg9IjEyIiBmaWxsPSJub25lIi8+PC9zdmc+")',sunset:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjNDAyMDRlIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZjM5YjU5Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PGNpcmNsZSBjeD0iNTkwIiBjeT0iMjg1IiByPSI3MCIgZmlsbD0iI2ZmZDM3YSIvPjxwYXRoIGQ9Ik0wIDMzNSBRMTgwIDMwMCAzNjAgMzQ1IFQ4MDAgMzIwIFY2MDAgSDBaIiBmaWxsPSIjMTgyMzNkIi8+PHBhdGggZD0iTTAgNDEwIFExNzAgMzc1IDM0MCA0MTUgVDgwMCA0MDAgVjYwMCBIMFoiIGZpbGw9IiMzNDFiM2IiLz48cGF0aCBkPSJNMCA0NzAgUTE5MCA0MzAgMzkwIDQ3NSBUODAwIDQ1NSBWNjAwIEgwWiIgZmlsbD0iI2E5NGY1NSIgb3BhY2l0eT0iLjc1Ii8+PHBhdGggZD0iTTAgNTIwIFExODAgNDg1IDM2MCA1MjUgVDgwMCA1MTAiIHN0cm9rZT0iI2YzYTA1YyIgc3Ryb2tlLXdpZHRoPSIxNiIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iLjU1Ii8+PC9zdmc+")',beach:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjNzhjMWRmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZjRiODc4Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PGNpcmNsZSBjeD0iNjI1IiBjeT0iMTIwIiByPSI1NSIgZmlsbD0iI2ZmZjFiMCIvPjxyZWN0IHk9IjM1MCIgd2lkdGg9IjgwMCIgaGVpZ2h0PSIyNTAiIGZpbGw9InVybCgjd2F0ZXIpIi8+PHBhdGggZD0iTTAgMzMwIFEyMDAgMzAwIDM5MCAzMzUgVDgwMCAzMjUgVjQxMCBRNjAwIDM5MCA0MDAgNDIwIFQwIDQwNVoiIGZpbGw9IiNmMGM5ODIiLz48cGF0aCBkPSJNMCA0MjAgUTE5MCAzOTAgMzkwIDQyNSBUODAwIDQxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmMWNlIiBzdHJva2Utd2lkdGg9IjEwIiBvcGFjaXR5PSIuNjUiLz48cGF0aCBkPSJNMTUwIDM2MCBRMTcwIDI5MCAxOTAgMzYwIE0xNzUgMzYwIFExOTUgMjgwIDIxNSAzNjAiIHN0cm9rZT0iIzZjOGQ1YyIgc3Ryb2tlLXdpZHRoPSIxMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==")',forest:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMTczYjM0Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDcxNzE0Ii8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PHJlY3QgeT0iMzEwIiB3aWR0aD0iODAwIiBoZWlnaHQ9IjI5MCIgZmlsbD0iIzEwMmQyNiIvPjxnIGZpbGw9IiMxZTVhM2MiPjxwb2x5Z29uIHBvaW50cz0iNzAsNDMwIDE0NSwyMzAgMjIwLDQzMCIvPjxwb2x5Z29uIHBvaW50cz0iMTkwLDQ1MCAyNzAsMjEwIDM1MCw0NTAiLz48cG9seWdvbiBwb2ludHM9IjMzMCw0NDAgNDEwLDE4MCA0OTAsNDQwIi8+PHBvbHlnb24gcG9pbnRzPSI0ODAsNDU1IDU2NSwyMTUgNjUwLDQ1NSIvPjxwb2x5Z29uIHBvaW50cz0iNjEwLDQ0NSA2OTAsMjQ1IDc3MCw0NDUiLz48L2c+PHBhdGggZD0iTTM5MCA2MDAgUTQyMCA0NjAgNDA1IDMzMCBRMzk1IDI1MCA0MzAgMTgwIiBzdHJva2U9IiM3YTU1MzkiIHN0cm9rZS13aWR0aD0iNDUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNDAwIDQ3MCBRMjgwIDM5MCAyMTAgMzMwIE00MjAgMzkwIFE1MzAgMzEwIDYyMCAyNzUiIHN0cm9rZT0iIzdhNTUzOSIgc3Ryb2tlLXdpZHRoPSIxOCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==")',city:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMWMyYjQzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNTM2ZjgyIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PHJlY3QgeT0iMzMwIiB3aWR0aD0iODAwIiBoZWlnaHQ9IjI3MCIgZmlsbD0iIzEwMTkyMyIvPjxnIGZpbGw9IiMyNjM5NGIiPjxyZWN0IHg9IjQwIiB5PSIyNTAiIHdpZHRoPSI5NSIgaGVpZ2h0PSIzNTAiLz48cmVjdCB4PSIxNTUiIHk9IjE4MCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSI0MjAiLz48cmVjdCB4PSIzMDAiIHk9IjI5MCIgd2lkdGg9IjkwIiBoZWlnaHQ9IjMxMCIvPjxyZWN0IHg9IjQxMCIgeT0iMTMwIiB3aWR0aD0iMTMwIiBoZWlnaHQ9IjQ3MCIvPjxyZWN0IHg9IjU2MCIgeT0iMjIwIiB3aWR0aD0iOTAiIGhlaWdodD0iMzgwIi8+PHJlY3QgeD0iNjcwIiB5PSIxNjAiIHdpZHRoPSI5MCIgaGVpZ2h0PSI0NDAiLz48L2c+PGcgZmlsbD0iI2Y1Yzk2YiI+PHBhdGggZD0iTTY1IDI4MGg0NXYxOEg2NXpNNjUgMzMwaDQ1djE4SDY1ek0xODUgMjE1aDU1djE4aC01NXpNMTg1IDI3MGg1NXYxOGgtNTV6TTQ0MCAxNzVoNzB2MThoLTcwek00NDAgMjMwaDcwdjE4aC03MHpNNjkwIDIwNWg1MHYxOGgtNTB6Ii8+PC9nPjxwYXRoIGQ9Ik0wIDUzMCBIODAwIiBzdHJva2U9IiMzYzU2NjgiIHN0cm9rZS13aWR0aD0iOCIvPjwvc3ZnPg==")',night:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMDcxMTI2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTYyZjUwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PGNpcmNsZSBjeD0iNjI1IiBjeT0iMTA1IiByPSI0OCIgZmlsbD0iI2ZmZjViNCIvPjxjaXJjbGUgY3g9IjY0NSIgY3k9IjkyIiByPSI0OCIgZmlsbD0iIzA4MTMyNiIvPjxnIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii45Ij48Y2lyY2xlIGN4PSIxMDAiIGN5PSI5MCIgcj0iMyIvPjxjaXJjbGUgY3g9IjIxMCIgY3k9IjE1MCIgcj0iMiIvPjxjaXJjbGUgY3g9IjMzMCIgY3k9IjgwIiByPSIzIi8+PGNpcmNsZSBjeD0iNDgwIiBjeT0iMTMwIiByPSIyIi8+PGNpcmNsZSBjeD0iNzIwIiBjeT0iMTcwIiByPSIzIi8+PC9nPjxwb2x5Z29uIHBvaW50cz0iMCw0MzAgMTkwLDI0MCAzNTAsNDIwIDUxMCwyMTAgNzAwLDQzMCA4MDAsMzAwIDgwMCw2MDAgMCw2MDAiIGZpbGw9IiMxMzJjNGEiLz48cmVjdCB5PSI0ODAiIHdpZHRoPSI4MDAiIGhlaWdodD0iMTIwIiBmaWxsPSIjMDYxMDFjIi8+PHBhdGggZD0iTTAgNTA1IFEyMDAgNDcwIDQwMCA1MTAgVDgwMCA0OTUiIHN0cm9rZT0iIzNmNzA5MCIgc3Ryb2tlLXdpZHRoPSI1IiBmaWxsPSJub25lIi8+PC9zdmc+")',aurora:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMDcxNzJkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTkzYTVkIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PHBhdGggZD0iTTAgMTgwIFExNTAgNDAgMzAwIDE5MCBUNjAwIDE3MCBUODAwIDExMCBWMzAwIFE2NTAgMjIwIDUwMCAzMTAgVDIwMCAyODAgVDAgMzQwWiIgZmlsbD0iIzI4YzZhMCIgb3BhY2l0eT0iLjUiLz48cGF0aCBkPSJNMCAyMzAgUTE4MCA4MCAzMzAgMjQwIFQ2MjAgMjE1IFQ4MDAgMTYwIFYzMjAgUTY1MCAyNjAgNTAwIDM0MCBUMjAwIDMyMCBUMCAzOTBaIiBmaWxsPSIjOGM1Y2ZmIiBvcGFjaXR5PSIuNDUiLz48cG9seWdvbiBwb2ludHM9IjAsNDEwIDE4MCwyNjAgMzMwLDQyMCA1MTAsMjUwIDY5MCw0MzAgODAwLDMwMCA4MDAsNjAwIDAsNjAwIiBmaWxsPSIjMTAyODQ2Ii8+PHBhdGggZD0iTTAgNTAwIFEyMDAgNDUwIDQwMCA1MDAgVDgwMCA0ODUiIHN0cm9rZT0iIzNkOGNhMCIgc3Ryb2tlLXdpZHRoPSI4IiBmaWxsPSJub25lIi8+PC9zdmc+")',desert:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjNWEzOTUyIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZTNhMTVkIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PGNpcmNsZSBjeD0iNjEwIiBjeT0iMTEwIiByPSI1OCIgZmlsbD0iI2ZmZTNhMiIvPjxwYXRoIGQ9Ik0wIDM1MCBRMTgwIDI1MCAzNjAgMzYwIFQ4MDAgMzIwIFY2MDAgSDBaIiBmaWxsPSIjZDg4NjU1Ii8+PHBhdGggZD0iTTAgNDEwIFExODAgMzEwIDM5MCA0MjAgVDgwMCAzOTAgVjYwMCBIMFoiIGZpbGw9IiNlNGEzNWUiLz48cGF0aCBkPSJNMCA0OTAgUTE3MCA0MDAgMzUwIDUwNSBUODAwIDQ3MCBWNjAwIEgwWiIgZmlsbD0iIzlhNWEzYyIvPjxwYXRoIGQ9Ik01OTAgMzkwIHEyNSAtNzAgNTAgMCBNNjIwIDM5MCBxMjUgLTg1IDUwIDAiIHN0cm9rZT0iIzVlNDMzMyIgc3Ryb2tlLXdpZHRoPSIxNCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==")',minimal:'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjMGYxZTJjIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMTkzNzRiIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMyNDVkNzkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzFiMmEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0idXJsKCNza3kpIi8+PHJlY3QgeD0iODAiIHk9IjEwMCIgd2lkdGg9IjY0MCIgaGVpZ2h0PSI0MDAiIHJ4PSI0NSIgZmlsbD0iIzE3Mzk0ZCIvPjxjaXJjbGUgY3g9IjQwMCIgY3k9IjMwMCIgcj0iODUiIGZpbGw9IiMyMDRjNjMiIG9wYWNpdHk9Ii43Ii8+PC9zdmc+")'};
-    panel.style.setProperty('--chat-bg-image',style.customBg?`url("${style.customBg.replace(/"/g,'%22')}")`:(bgs[style.bg]||bgs.lake));
-    panel.style.setProperty('--bubble-out',style.color); panel.style.setProperty('--bubble-opacity',(Number(style.opacity)||100)/100);
-    panel.classList.remove('bubble-glass','bubble-soft','bubble-compact'); if(style.bubble==='glass')panel.classList.add('bubble-glass');if(style.bubble==='soft')panel.classList.add('bubble-soft');if(style.bubble==='compact')panel.classList.add('bubble-compact');
-    document.querySelectorAll('.chatBgOption').forEach(x=>x.classList.toggle('active',x.dataset.bg===style.bg&&!style.customBg));
-    document.querySelectorAll('.chatBubbleOption').forEach(x=>x.classList.toggle('active',x.dataset.bubble===style.bubble));
-    document.querySelectorAll('.chatColor[data-color]').forEach(x=>x.classList.toggle('active',x.dataset.color===style.color));
-     document.querySelectorAll('.chatColor[data-incoming-color]').forEach(x=>x.classList.toggle('active',x.dataset.incomingColor===style.incomingColor));
-    const op=document.getElementById('chatOpacity');if(op)op.value=style.opacity;const ov=document.getElementById('chatOpacityValue');if(ov)ov.textContent=style.opacity+' %';
-  }
-  function open(){load();apply();overlay.classList.add('open');overlay.setAttribute('aria-hidden','false')}
-  function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');save()}
-  openBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()}); closeBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close()}); doneBtn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close()}); overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
-  openBtn.addEventListener('pointerdown',e=>e.stopPropagation());
-  document.querySelectorAll('[data-chat-custom-tab]').forEach(btn=>btn.addEventListener('click',()=>{const n=btn.dataset.chatCustomTab;document.querySelectorAll('[data-chat-custom-tab]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('[data-chat-custom-section]').forEach(x=>x.classList.toggle('active',x.dataset.chatCustomSection===n))}));
-  document.querySelectorAll('.chatBgOption').forEach(btn=>btn.addEventListener('click',()=>{style.bg=btn.dataset.bg;style.customBg='';apply();save()}));
-  document.querySelectorAll('.chatBubbleOption').forEach(btn=>btn.addEventListener('click',()=>{style.bubble=btn.dataset.bubble;apply();save()}));
-  document.querySelectorAll('.chatColor').forEach(btn=>btn.addEventListener('click',()=>{style.color=btn.dataset.color;apply();save()}));
-  document.getElementById('chatOpacity')?.addEventListener('input',e=>{style.opacity=Number(e.target.value);apply();save()});
-  document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save()};r.readAsDataURL(f)});
-  resetBtn.addEventListener('click',()=>{style={...defaults};apply();save()});
-  load(); apply();
-})();
 </script>
 
 <div class="chatCustomizeOverlay" id="chatCustomizeOverlay" aria-hidden="true">
@@ -2946,17 +2971,6 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
           <button type="button" class="chatOption chatBgOption" data-bg="lagoon"><div class="chatBgPreview bg-lagoon"></div>🏝️ Lagon</button>
           <button type="button" class="chatOption chatBgOption" data-bg="aurora"><div class="chatBgPreview bg-aurora"></div>🌌 Aurore boréale</button>
           <label class="chatOption" for="chatBgUpload"><div class="chatBgPreview bg-upload">＋</div>📷 Ma photo<input id="chatBgUpload" type="file" accept="image/*" style="display:none"></label>
-        </div>🏔️ Montagne</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="beach"><div class="chatBgPreview bg-beach"></div>🏝️ Plage</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="forest"><div class="chatBgPreview bg-forest"></div>🌲 Forêt</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="city"><div class="chatBgPreview bg-city"></div>🌆 Ville</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="night"><div class="chatBgPreview bg-night"></div>🌃 Nuit</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="sunset"><div class="chatBgPreview bg-sunset"></div>🌅 Coucher de soleil</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="aurora"><div class="chatBgPreview bg-aurora"></div>🌌 Aurore boréale</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="space"><div class="chatBgPreview bg-space"></div>🌌 Espace</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="winter"><div class="chatBgPreview bg-winter"></div>❄️ Hiver</button>
-          <button type="button" class="chatOption chatBgOption" data-bg="dream"><div class="chatBgPreview bg-dream"></div>✨ Rêve</button>
-          <label class="chatOption" for="chatBgUpload"><div class="chatBgPreview bg-upload">＋</div>📷 Ma photo<input id="chatBgUpload" type="file" accept="image/*" style="display:none"></label>
         </div>
       </div>
 
@@ -2965,10 +2979,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
         <div class="chatColorRow">
           <button type="button" class="chatColor blue" data-color="#1683ff" aria-label="Bleu"></button><button type="button" class="chatColor green" data-color="#19b87a" aria-label="Vert"></button><button type="button" class="chatColor purple" data-color="#8a5cf6" aria-label="Violet"></button><button type="button" class="chatColor orange" data-color="#ef8b2c" aria-label="Orange"></button><button type="button" class="chatColor yellow" data-color="#f2d12e" aria-label="Jaune"></button><button type="button" class="chatColor pink" data-color="#e85b9c" aria-label="Rose"></button><button type="button" class="chatColor teal" data-color="#13a9b5" aria-label="Turquoise"></button>
         </div>
-      </div>
-
-      <div class="chatCustomizeSection" data-chat-custom-section="incomingColors">
-        <div class="chatSectionTitle">Couleur des messages des autres</div>
+        <div class="chatSectionTitle incomingColorTitle">Couleur des messages des autres</div>
         <div class="chatColorRow incomingColorRow">
           <button type="button" class="chatColor incomingBlue" data-incoming-color="#142b3d" aria-label="Bleu nuit"></button><button type="button" class="chatColor green" data-incoming-color="#176047" aria-label="Vert"></button><button type="button" class="chatColor purple" data-incoming-color="#4b356f" aria-label="Violet"></button><button type="button" class="chatColor orange" data-incoming-color="#70451f" aria-label="Orange"></button><button type="button" class="chatColor pink" data-incoming-color="#69334f" aria-label="Rose"></button><button type="button" class="chatColor teal" data-incoming-color="#185c63" aria-label="Turquoise"></button><button type="button" class="chatColor gray" data-incoming-color="#485866" aria-label="Gris"></button>
         </div>
@@ -3007,7 +3018,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
   const resetBtn=document.getElementById('chatCustomizeReset');
   if(!panel||!overlay||!openBtn)return;
   const key=()=>`myevent-chat-style-${event?.id||'default'}-${user?.id||'guest'}`;
-  const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',opacity:100,customBg:''};
+  const defaults={bg:'mountain',bubble:'modern',color:'#1683ff',incomingColor:'#142b3d',opacity:62,customBg:''};
   let style={...defaults};
   const load=()=>{try{const x=JSON.parse(localStorage.getItem(key())||'null');if(x)style={...defaults,...x}}catch{}};
   const save=()=>{try{localStorage.setItem(key(),JSON.stringify(style))}catch{}};
