@@ -4175,11 +4175,16 @@ async function searchHalls(){
   const results=$('hallResults'); results.innerHTML='<div class="hallLoading">🔎 Recherche de salles autour de l’événement…</div>'; msg('hallMsg',''); await saveHallCriteria();
   const geo=await geocodeEventLocation(); if(!geo){results.innerHTML='<div class="hallEmpty">Impossible de localiser le lieu de l’événement. Vérifie son adresse dans l’événement.</div>';return;}
   const km=Number($('hallRadius').value||5);
-  const q='[out:json][timeout:25];(nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [amenity~"community_centre|social_centre|conference_centre|events_venue"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [building~"civic|public"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [tourism~"hotel|guest_house"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [leisure~"sports_hall|sports_centre"];);out center tags;';
+  const minCapacity=Math.max(0,Number($('hallMinCapacity').value||0));
+  const maxBudget=Math.max(0,Number($('hallMaxPrice').value||0));
+  const api='/api/search-halls?lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&minCapacity='+encodeURIComponent(minCapacity)+'&maxBudget='+encodeURIComponent(maxBudget);
   try{
-    const d=await overpassQuery(q); if(!d)throw new Error('Recherche indisponible');
-    const arr=(d.elements||[]).map((x,i)=>{const t=x.tags||{};const lat=x.lat??x.center?.lat,lon=x.lon??x.center?.lon;const cap=t.capacity?Number(String(t.capacity).replace(/[^0-9.]/g,'')):null;const price=t.price?Number(String(t.price).replace(/[^0-9.]/g,'')):null;const eq=[t.cuisine?'🍽️ '+t.cuisine:'',t.wheelchair?'♿ Accessibilité':'',t.parking?'🅿️ Parking':'',t.internet_access?'📶 Wi‑Fi':''].filter(Boolean).join(' · ');return {id:'osm-'+(x.id||i),name:t.name||'Lieu événementiel',address:[t['addr:housenumber'],t['addr:street'],t['addr:postcode'],t['addr:city']].filter(Boolean).join(' ')||t['addr:place']||'',lat,lon,capacity:Number.isFinite(cap)?cap:null,price:Number.isFinite(price)?price:null,equipment:eq,typeLabel:t.amenity||t.leisure||t.tourism||'lieu événementiel',website:t.website||t['contact:website']||''};}).filter(x=>x.name&&Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
-    const seen=new Set(); hallResultsData=arr.filter(h=>{const k=(h.name+'|'+(+h.lat).toFixed(5)+'|'+(+h.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;}); hallResultsData.forEach(h=>h.distance=distanceKm(geo.lat,geo.lon,+h.lat,+h.lon)); hallResultsData.sort((a,b)=>a.distance-b.distance); renderHallResults(); msg('hallMsg',hallResultsData.length+' lieu'+(hallResultsData.length>1?'x':'')+' trouvé'+(hallResultsData.length>1?'s':'')+'.','ok');
+    const r=await fetch(api,{headers:{Accept:'application/json'}});
+    const d=await r.json().catch(()=>null);
+    if(!r.ok||!d)throw new Error(d?.error||'Recherche indisponible');
+    hallResultsData=(d.results||[]).map(h=>({...h,distance:Number(h.distance)}));
+    renderHallResults();
+    msg('hallMsg',hallResultsData.length+' lieu'+(hallResultsData.length>1?'x':'')+' trouvé'+(hallResultsData.length>1?'s':'')+'.','ok');
   }catch(e){hallResultsData=[];results.innerHTML='<div class="hallEmpty">La recherche est momentanément indisponible. Réessaie dans quelques instants.</div>';msg('hallMsg',e.message||'Erreur de recherche.','err');}
 }
 async function addManualHall(){
