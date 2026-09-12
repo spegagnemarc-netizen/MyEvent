@@ -954,7 +954,7 @@ body.discussionFullScreen{overflow:hidden!important}
   <div class="fundStat"><b id="fundBalance">0,00 €</b><span>Solde</span></div>
 </div>
 <div class="fundProgress"><div id="fundProgressBar"></div></div>
-<div class="fundHeader"><span id="fundTargetLabel" class="muted">Objectif : 0,00 €</span><span id="fundPerPerson" class="muted">0,00 € / personne</span></div>
+<div class="fundHeader"><span id="fundTargetLabel" class="muted">Objectif : 0,00 €</span><span id="fundPerPerson" class="muted">· 0,00 € / personne</span></div>
 <div id="fundOrganizerBox" class="editEventBox hidden" style="margin-top:12px">
   <div style="margin-top:12px">
     <input id="fundTargetInput" type="number" min="0" step="0.01" placeholder="Objectif en €">
@@ -965,7 +965,7 @@ body.discussionFullScreen{overflow:hidden!important}
     <p id="fundSettingsMsg" class="muted"></p>
   </div>
 </div>
-<div id="fundPaymentBox" class="editEventBox" style="margin-top:12px">
+<div id="fundPaymentBox" class="editEventBox fundPaymentBox" style="margin-top:12px">
   <div class="fundPaymentHead"><div><b>🏦 Paiement par virement</b><p id="fundPaymentStatus" class="muted">Aucune coordonnée bancaire configurée.</p></div></div>
   <div id="fundPaymentDetails" class="fundPaymentDetails hidden"></div>
   <div id="fundPaymentForm" class="hidden" style="margin-top:10px">
@@ -1013,7 +1013,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:5px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
+.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let sb=null,user=null,event=null;
@@ -1977,7 +1977,7 @@ async function loadFund(){
   $('fundCollected').textContent=eur(collected); $('fundSpent').textContent=eur(spent); $('fundBalance').textContent=eur(balance);
   const pct=target>0?Math.min(100,(collected/target)*100):0; $('fundProgressBar').style.width=pct+'%';
   const memberCountResult=await sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id); const memberCount=Number(memberCountResult.count||0);
-  $('fundPerPerson').textContent=(memberCount?eur(target/memberCount):eur(target))+' / personne';
+  $('fundPerPerson').textContent='· '+(memberCount?eur(target/memberCount):eur(target))+' / personne';
   if(!entries.length){ $('fundEntries').innerHTML='<p class="muted">Aucune participation ou dépense pour le moment.</p>'; return; }
   const ids=[...new Set(entries.map(x=>x.user_id).filter(Boolean))]; let profiles=[]; if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
