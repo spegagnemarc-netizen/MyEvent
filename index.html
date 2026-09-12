@@ -34,6 +34,24 @@ button:disabled{opacity:.5}
 
 @media(max-width:430px){.locationMap{height:62vh;min-height:390px}.locationInfo{grid-template-columns:1fr 1fr}}
 
+/* V48.9 — Localisation : interface mobile + recherche/filtres + carrousel */
+.locationToolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;overflow:visible}
+.locationToolbar button{min-width:0;width:100%;white-space:nowrap;padding:10px 6px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.locationNearbyHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:2px}
+.locationNearbyHead b{font-size:18px}
+.locationSearchRow{margin-top:7px}
+.locationSearchRow input{width:100%;box-sizing:border-box;margin:0;background:#0b1824;border:1px solid #28445b;color:#eef5fb;border-radius:13px;padding:11px 13px;font-size:14px;outline:none}
+.locationSearchRow input:focus{border-color:#4d7395}
+.locationPlaceFilters{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:7px 1px 3px;scroll-snap-type:x proximity}
+.locationPlaceFilters::-webkit-scrollbar{display:none}
+.placeFilter{flex:0 0 auto;scroll-snap-align:start;border:1px solid #28445b;background:#0b1824;color:#a9b9c8;border-radius:999px;padding:8px 11px;font-weight:700;font-size:12px;cursor:pointer}
+.placeFilter.active{background:#173047;color:#fff;border-color:#4d7395}
+.locationPlaces{display:flex;gap:9px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 1px 7px}
+.locationPlaces::-webkit-scrollbar{display:none}
+.locationPlaces .locationPlace{flex:0 0 min(88%,340px);scroll-snap-align:start;min-height:86px;box-sizing:border-box}
+@media(min-width:601px){.locationPlaces{display:grid;grid-template-columns:1fr 1fr;overflow:visible}.locationPlaces .locationPlace{flex:auto;width:auto}}
+@media(max-width:430px){.locationToolbar button{font-size:12px;padding:10px 4px}.locationPlaceFilters{margin-right:-2px}.locationPlaces .locationPlace{flex-basis:88%}}
+
 /* Navigation de l’événement */
 .eventTabs{display:flex;gap:8px;margin:12px 0 16px;position:sticky;top:8px;z-index:5;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.eventTabs::-webkit-scrollbar{display:none}
 .eventTab{flex:0 0 auto;min-width:132px;padding:12px 12px;border:1px solid #28465e;background:#0a1823;color:#a9b9c8;border-radius:14px;font-weight:700;font-size:14px}
@@ -877,9 +895,10 @@ body.discussionFullScreen{overflow:hidden!important}
 <div class="collapsibleBody">
 <div class="locationShell">
   <div class="locationToolbar">
-    <button type="button" id="locCenterBtn" class="secondary">📌 Lieu de l’événement</button>
+    <button type="button" id="locCenterBtn" class="secondary">📌 Lieu</button>
     <button type="button" id="locMeBtn" class="secondary">📍 Ma position</button>
-    <button type="button" id="locRefreshBtn" class="secondary">↻ Actualiser</button><button type="button" id="locRadiusBtn" class="secondary">🔎 Rayon : 3 km</button>
+    <button type="button" id="locRefreshBtn" class="secondary">↻ Actualiser</button>
+    <button type="button" id="locRadiusBtn" class="secondary">🔎 3 km</button>
   </div>
   <div id="locationMap" class="locationMap"><div id="locationMapLoading" class="mapLoading">Chargement de la carte…</div></div>
   <div class="locationInfo">
@@ -890,7 +909,19 @@ body.discussionFullScreen{overflow:hidden!important}
     <div><b>📍 Partager ma position</b><div class="muted">Uniquement avec les membres de cet événement.</div></div>
     <select id="locationShareMode"><option value="off">Ne pas partager</option><option value="approx">Position approximative</option><option value="exact">Position exacte</option></select>
   </div>
-  <div><b>À proximité</b><div id="locationPlaces" class="locationPlaces"><p class="muted">Les activités apparaîtront ici.</p></div></div>
+  <div class="locationNearbyHead"><b>À proximité</b><span id="locationResultCount" class="muted"></span></div>
+  <div class="locationSearchRow">
+    <input id="locationPlaceSearch" type="search" placeholder="🔎 Rechercher un restaurant, une activité…" autocomplete="off">
+  </div>
+  <div id="locationPlaceFilters" class="locationPlaceFilters" aria-label="Filtrer les lieux">
+    <button type="button" class="placeFilter active" data-filter="all">✨ Tout</button>
+    <button type="button" class="placeFilter" data-filter="restaurant">🍽️ Restaurants</button>
+    <button type="button" class="placeFilter" data-filter="cafe">☕ Cafés</button>
+    <button type="button" class="placeFilter" data-filter="activity">🎯 Activités</button>
+    <button type="button" class="placeFilter" data-filter="nature">🌳 Nature</button>
+    <button type="button" class="placeFilter" data-filter="culture">🏛️ Culture</button>
+  </div>
+  <div id="locationPlaces" class="locationPlaces"><p class="muted">Les activités apparaîtront ici.</p></div>
   <div><b>Membres sur la carte</b><div id="locationMembers" class="locationMembers"><p class="muted">Aucune position partagée.</p></div></div>
   <p id="locationMsg" class="muted"></p>
 </div>
@@ -994,6 +1025,7 @@ function setBusy(id,busy,label){
 
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null;
+let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
   if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
@@ -1035,34 +1067,52 @@ async function overpassQuery(q){
   for(const url of urls){ try{ const d=await fetchJsonWithTimeout(url,{},14000); if(d&&Array.isArray(d.elements))return d; }catch(e){} }
   return null;
 }
+function locationPlaceCategory(type){
+  type=String(type||'').toLowerCase();
+  if(['restaurant','fast_food','bar','pub'].includes(type)) return type==='restaurant'||type==='fast_food'?'restaurant':'activity';
+  if(type==='cafe') return 'cafe';
+  if(['park','playground','beach','viewpoint'].includes(type)) return 'nature';
+  if(['museum','gallery','theatre','cinema','arts_centre','attraction'].includes(type)) return 'culture';
+  return 'activity';
+}
+function renderNearbyPlaces(){
+  const el=$('locationPlaces'); if(!el)return;
+  const q=locationPlaceSearch.trim().toLowerCase();
+  const filtered=locationPlacesData.filter(p=>{
+    const cat=locationPlaceCategory(p.type);
+    const matchCat=locationPlaceFilter==='all'||cat===locationPlaceFilter;
+    const matchSearch=!q||String(p.name||'').toLowerCase().includes(q)||String(p.type||'').toLowerCase().includes(q);
+    return matchCat&&matchSearch;
+  });
+  const countEl=$('locationResultCount'); if(countEl)countEl.textContent=filtered.length+' résultat'+(filtered.length>1?'s':'');
+  if(locationMap){locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationPlaceMarkers=[];}
+  filtered.slice(0,40).forEach(p=>{
+    if(locationMap){
+      const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap);
+      m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km');
+      locationPlaceMarkers.push(m);
+    }
+  });
+  el.innerHTML=filtered.slice(0,20).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu ne correspond à ta recherche.</p>';
+  el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=(ev)=>{
+    ev.preventDefault();ev.stopPropagation();
+    const lat=+b.dataset.lat,lon=+b.dataset.lon;setLocationMapView(lat,lon,17);
+    const marker=locationPlaceMarkers.find(m=>{const ll=m.getLatLng();return Math.abs(ll.lat-lat)<0.00001&&Math.abs(ll.lng-lon)<0.00001;});
+    if(marker)marker.openPopup();
+    const mapEl=$('locationMap');if(mapEl)mapEl.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
 async function loadNearbyPlaces(lat,lon){
   const el=$('locationPlaces'); if(!el)return;
   el.innerHTML='<p class="muted">🔎 Recherche des activités autour de l’événement…</p>';
   const q='[out:json][timeout:20];(nwr(around:'+(locationSearchRadiusKm*1000)+','+lat+','+lon+') [amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];nwr(around:'+(locationSearchRadiusKm*1000)+','+lat+','+lon+') [tourism~"attraction|museum|gallery|viewpoint"];nwr(around:'+(locationSearchRadiusKm*1000)+','+lat+','+lon+') [leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];);out center tags;';
   try{
-    const d=await overpassQuery(q); if(!d)throw new Error('overpass');
+    const d=await overpassQuery(q);if(!d)throw new Error('overpass');
     const arr=(d.elements||[]).map(x=>({name:x.tags?.name||'',lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,type:x.tags?.amenity||x.tags?.tourism||x.tags?.leisure||'attraction',phone:x.tags?.phone||'',website:x.tags?.website||''})).filter(x=>x.name&&Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
-    const seen=new Set(); const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
-    unique.forEach(x=>x.distance=distanceKm(lat,lon,+x.lat,+x.lon)); unique.sort((a,b)=>a.distance-b.distance);
-    if(locationMap){locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationPlaceMarkers=[];}
-    unique.slice(0,40).forEach(p=>{ if(locationMap){ const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap); m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km'); locationPlaceMarkers.push(m); }});
-    el.innerHTML=unique.slice(0,20).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu trouvé à proximité.</p>';
-    el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=(ev)=>{
-      ev.preventDefault();
-      ev.stopPropagation();
-      const lat=+b.dataset.lat, lon=+b.dataset.lon;
-      setLocationMapView(lat,lon,17);
-      const marker=locationPlaceMarkers.find(m=>{
-        const ll=m.getLatLng();
-        return Math.abs(ll.lat-lat)<0.00001 && Math.abs(ll.lng-lon)<0.00001;
-      });
-      if(marker) marker.openPopup();
-      const mapEl=$('locationMap');
-      if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'center'});
-    });
-  }catch(e){
-    el.innerHTML='<p class="muted">Les activités sont momentanément indisponibles. Appuie sur ↻ Actualiser pour réessayer.</p>';
-  }
+    const seen=new Set();const unique=arr.filter(x=>{const k=(x.name+'|'+(+x.lat).toFixed(5)+'|'+(+x.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+    unique.forEach(x=>x.distance=distanceKm(lat,lon,+x.lat,+x.lon));unique.sort((a,b)=>a.distance-b.distance);
+    locationPlacesData=unique;renderNearbyPlaces();
+  }catch(e){locationPlacesData=[];el.innerHTML='<p class="muted">Les activités sont momentanément indisponibles. Appuie sur ↻ Actualiser pour réessayer.</p>';const countEl=$('locationResultCount');if(countEl)countEl.textContent='';}
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
@@ -1104,13 +1154,18 @@ async function loadEventLocations(){
   await loadSharedMemberLocations();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);
 }
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
+document.addEventListener('input',e=>{if(e.target?.id==='locationPlaceSearch'){locationPlaceSearch=e.target.value||'';renderNearbyPlaces();}});
+document.addEventListener('click',e=>{
+  const f=e.target.closest('.placeFilter');
+  if(f){locationPlaceFilter=f.dataset.filter||'all';document.querySelectorAll('.placeFilter').forEach(b=>b.classList.toggle('active',b===f));renderNearbyPlaces();}
+});
 document.addEventListener('click',e=>{
   if(e.target.closest('#locRadiusBtn')){
     const steps=[3,5,10,20];
     const i=steps.indexOf(locationSearchRadiusKm);
     locationSearchRadiusKm=steps[(i+1)%steps.length];
     const btn=e.target.closest('#locRadiusBtn');
-    if(btn)btn.textContent='🔎 Rayon : '+locationSearchRadiusKm+' km';
+    if(btn)btn.textContent='🔎 '+locationSearchRadiusKm+' km';
     if(locationEventCoords)loadNearbyPlaces(locationEventCoords.lat,locationEventCoords.lon);
   }
   if(e.target.closest('#locCenterBtn')){if(locationEventCoords)setLocationMapView(locationEventCoords.lat,locationEventCoords.lon,15);else $('locationMsg').textContent='Le lieu de l’événement n’a pas encore pu être localisé.';}
