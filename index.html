@@ -1006,6 +1006,13 @@ body.discussionFullScreen{overflow:hidden!important}
   <div><b>🔎 Paiements à confirmer</b><p class="muted">Le responsable confirme uniquement les virements réellement reçus.</p></div>
   <div id="fundPendingEntries" class="fundEntryList"></div>
 </div>
+<div id="fundMemberTrackingBox" class="editEventBox hidden" style="margin-top:16px">
+  <div><b>👥 Suivi des participants</b><p class="muted">Visualise qui a payé, ce qui est en attente et ce qu’il reste à verser.</p></div>
+  <div id="fundMemberTracking" class="fundMemberTracking"></div>
+</div>
+<div id="fundMyTrackingBox" class="editEventBox hidden" style="margin-top:16px">
+  <div><b>👤 Ma participation</b><p id="fundMyTracking" class="muted">Chargement…</p></div>
+</div>
 <div style="margin-top:16px"><b>Historique</b><div id="fundEntries" class="fundEntryList"><p class="muted">Chargement…</p></div></div>
 <p class="fundPrivateHint">Les participations et dépenses sont visibles uniquement par les membres de cet événement.</p>
 </div>
@@ -1017,7 +1024,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
+.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let sb=null,user=null,event=null;
@@ -2002,6 +2009,56 @@ async function loadFund(){
         return '<div class="fundEntry"><div class="fundEntryMain"><b>'+esc(name)+' <span class="fundStatus fundPending">🟠 En attente</span></b><span>'+new Date(x.created_at).toLocaleDateString('fr-FR')+' · '+eur(x.amount)+'</span>'+note+'</div><div class="fundVerifyActions"><button type="button" data-fund-confirm="'+esc(x.id)+'">✅ Confirmer</button><button type="button" class="secondary" data-fund-reject="'+esc(x.id)+'">❌ Refuser</button></div></div>';
       }).join('');
     }else pendingList.innerHTML='';
+  }
+
+  // Suivi individuel des participants : le responsable voit tout le groupe,
+  // chaque autre membre voit uniquement son propre statut.
+  const trackingBox=$('fundMemberTrackingBox'), myBox=$('fundMyTrackingBox');
+  if(trackingBox) trackingBox.classList.toggle('hidden',!manager);
+  if(myBox) myBox.classList.toggle('hidden',manager);
+  const membersRes=await sb.from('event_members').select('user_id,nickname,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true});
+  const eventMembers=membersRes.data||[];
+  const memberIds=[...new Set(eventMembers.map(m=>m.user_id).filter(Boolean))];
+  let memberProfiles=[];
+  if(memberIds.length){ const pr=await sb.from('profiles').select('id,display_name,username').in('id',memberIds); if(!pr.error) memberProfiles=pr.data||[]; }
+  const memberMap=new Map(memberProfiles.map(p=>[p.id,p]));
+  const expectedPerPerson=memberCount?target/memberCount:0;
+  const byUser=new Map();
+  contributions.forEach(x=>{
+    if(!x.user_id)return;
+    const cur=byUser.get(x.user_id)||{confirmed:0,pending:0,rejected:0};
+    const st=x.status||'pending';
+    if(st==='confirmed')cur.confirmed+=Number(x.amount||0);
+    else if(st==='pending')cur.pending+=Number(x.amount||0);
+    else cur.rejected+=Number(x.amount||0);
+    byUser.set(x.user_id,cur);
+  });
+  const trackingHtml=(m)=>{
+    const p=memberMap.get(m.user_id)||{};
+    const name=m.user_id===user.id?'Moi':(m.nickname||p.display_name||p.username||'Membre');
+    const d=byUser.get(m.user_id)||{confirmed:0,pending:0,rejected:0};
+    const remaining=Math.max(0,expectedPerPerson-d.confirmed-d.pending);
+    let statusHtml='<span class="fundStatus fundRejected">🔴 Non payé</span>';
+    if(d.confirmed>0 && d.pending>0) statusHtml='<span class="fundStatus fundPending">🟠 Partiel / en attente</span>';
+    else if(d.pending>0) statusHtml='<span class="fundStatus fundPending">🟠 En attente</span>';
+    else if(d.confirmed>=expectedPerPerson && expectedPerPerson>0) statusHtml='<span class="fundStatus fundConfirmed">🟢 Confirmé</span>';
+    else if(d.confirmed>0) statusHtml='<span class="fundStatus fundConfirmed">🟢 Partiellement confirmé</span>';
+    const paid=d.confirmed;
+    const pendingTxt=d.pending>0?' · '+eur(d.pending)+' en attente':'';
+    const remainTxt=expectedPerPerson>0?'Reste '+eur(remaining):'Objectif individuel non défini';
+    return '<div class="fundMemberRow"><div class="fundMemberName"><b>'+esc(name)+'</b><span>'+eur(paid)+' confirmé'+pendingTxt+'</span></div><div class="fundMemberStatus">'+statusHtml+'</div><div class="fundMemberRemain">'+esc(remainTxt)+'</div></div>';
+  };
+  if(manager && trackingBox){
+    const list=$('fundMemberTracking');
+    if(list) list.innerHTML=eventMembers.length?eventMembers.map(trackingHtml).join(''):'<p class="muted">Aucun participant.</p>';
+  }
+  if(!manager && myBox){
+    const mine=eventMembers.find(m=>m.user_id===user.id)||{user_id:user.id};
+    const p=memberMap.get(user.id)||{};
+    const d=byUser.get(user.id)||{confirmed:0,pending:0,rejected:0};
+    const remaining=Math.max(0,expectedPerPerson-d.confirmed-d.pending);
+    let state=d.confirmed>0?'🟢 '+eur(d.confirmed)+' confirmé':d.pending>0?'🟠 '+eur(d.pending)+' en attente':'🔴 Aucune participation déclarée';
+    $('fundMyTracking').innerHTML='<b>'+esc(state)+'</b>'+(expectedPerPerson>0?' · Reste '+eur(remaining):'');
   }
 
   if(!entries.length){ $('fundEntries').innerHTML='<p class="muted">Aucune participation ou dépense pour le moment.</p>'; return; }
