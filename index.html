@@ -1047,6 +1047,17 @@ body.discussionFullScreen{overflow:hidden!important}
   <p id="hallManualMsg" class="muted"></p>
 </div>
 <div class="hallCompareHint">💡 <b>Conseil :</b> complète les prix et capacités quand ils ne sont pas indiqués. La salle sélectionnée pourra ensuite alimenter le budget de l’événement.</div>
+<div class="suppliesBox" id="suppliesBox">
+  <div class="suppliesHead"><div><b>🎒 Qui amène quoi ?</b><p class="muted">Organise le matériel à apporter pour l’événement.</p></div><button type="button" id="supplyAddBtn">➕ Ajouter</button></div>
+  <p id="suppliesMsg" class="muted"></p>
+  <div id="supplyForm" class="editEventBox hidden" style="margin-top:10px">
+    <input id="supplyTitle" placeholder="Ex. Gâteau, enceinte, tables…">
+    <div class="fieldRow"><input id="supplyQty" type="number" min="1" step="1" value="1" placeholder="Quantité"><select id="supplyStatus"><option value="planned">🟠 À prévoir</option><option value="reserved">🔵 Réservé</option><option value="brought">🟢 Apporté</option></select></div>
+    <input id="supplyNote" placeholder="Note (taille, modèle, détails…) — optionnel">
+    <button type="button" id="supplySaveBtn">💾 Ajouter</button><button type="button" id="supplyCancelBtn" class="secondary">Annuler</button>
+  </div>
+  <div id="suppliesList" class="suppliesList"><p class="muted">Chargement…</p></div>
+</div>
 </div>
 </details>
 
@@ -1058,6 +1069,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <style id="myevent-v51-hall-css">
 .hallIntro{margin-bottom:12px}.hallIntro b{font-size:18px}.hallControls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hallControls>div{min-width:0}.hallActions{display:flex;gap:8px;margin-top:10px}.hallActions button{flex:1}.hallResults{display:flex;flex-direction:column;gap:8px;margin-top:12px}.hallCard{border:1px solid #28445b;border-radius:14px;padding:12px;background:#0b1824}.hallCardTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.hallCardName{font-size:17px;font-weight:800}.hallDistance{font-size:12px;color:#9eb2c4;white-space:nowrap}.hallMeta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.hallChip{border:1px solid #28445b;border-radius:999px;padding:4px 8px;font-size:12px;color:#b7c7d5}.hallEquipment{font-size:13px;color:#9eb2c4;line-height:1.45}.hallCardActions{display:flex;gap:7px;margin-top:10px}.hallCardActions button{flex:1;min-width:0}.hallSelectedBox{border:1px solid #3d8bfd;border-radius:14px;padding:12px;background:#0b1824;margin-top:12px}.hallSelectedBox b{font-size:17px}.hallManualForm input,.hallManualForm select{margin-top:8px}.hallCompareHint{margin-top:12px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#0b1824;color:#9eb2c4;font-size:12px;line-height:1.45}.hallEmpty{padding:12px;border:1px dashed #28445b;border-radius:12px;color:#9eb2c4}.hallLoading{padding:12px;border:1px solid #28445b;border-radius:12px;color:#9eb2c4}@media(max-width:600px){.hallControls{grid-template-columns:1fr}.hallActions{flex-direction:column}.hallCardActions{flex-direction:column}}
 .hallSelectedBox .hallCardActions{flex-wrap:wrap}.hallSelectedBox .hallCardActions>*{flex:1;min-width:150px}
+.suppliesBox{margin-top:14px;padding:12px;border:1px solid #28445b;border-radius:14px;background:#0b1824}.suppliesHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.suppliesHead b{font-size:18px}.suppliesHead button{white-space:nowrap}.suppliesList{display:flex;flex-direction:column;gap:8px;margin-top:10px}.supplyCard{border:1px solid #28445b;border-radius:12px;padding:10px;background:#091522}.supplyTop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.supplyTitle{font-weight:800;font-size:16px}.supplyMeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.supplyChip{border:1px solid #28445b;border-radius:999px;padding:3px 7px;font-size:11px;color:#b7c7d5}.supplyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.supplyActions>*{flex:1;min-width:120px}.supplyAssign{display:flex;gap:6px;align-items:center;margin-top:8px}.supplyAssign select{flex:1;margin:0}.supplyStatusPlanned{color:#f4c86b}.supplyStatusReserved{color:#8fc9ff}.supplyStatusBrought{color:#7ee2a8}@media(max-width:600px){.supplyAssign{flex-direction:column;align-items:stretch}.suppliesHead{align-items:flex-start}.supplyActions{flex-direction:column}}
 </style>
 <style>
 .fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundTrackingSummary{border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824;line-height:1.55}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
@@ -1105,7 +1117,7 @@ function showEventTab(name, forceState=null){
       if(name==='members') markMembersRead();
       if(name==='locations') loadEventLocations();
       if(name==='fund') loadFund();
-      if(name==='hall') loadHall();
+      if(name==='hall'){ loadHall(); loadSupplies(); }
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
@@ -4220,6 +4232,83 @@ document.addEventListener('click',e=>{
   if(selectedMap){const [lat,lon]=selectedMap.dataset.hallSelectedMap.split('|').map(Number); if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true); setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17); if(locationMap){if(locationHallMarker)locationMap.removeLayer(locationHallMarker); locationHallMarker=L.marker([lat,lon],{icon:makeLocationIcon('🏢','#278cff')}).addTo(locationMap).bindPopup('<b>🏢 Salle sélectionnée</b>').openPopup();} $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});},180);}return;}
   const mp=e.target.closest('[data-hall-map]'); if(mp){const [lat,lon]=mp.dataset.hallMap.split('|').map(Number); if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true); setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17); if(locationMap){if(locationHallMarker)locationMap.removeLayer(locationHallMarker); locationHallMarker=L.marker([lat,lon],{icon:makeLocationIcon('🏢','#278cff')}).addTo(locationMap).bindPopup('<b>🏢 Salle</b>').openPopup();} $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});},180);}return;}
 });
+// V51.6 — Qui amène quoi ?
+let suppliesData=[];
+let supplyProfiles=[];
+function supplyIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function supplyStatusLabel(status){ return status==='brought'?'🟢 Apporté':status==='reserved'?'🔵 Réservé':'🟠 À prévoir'; }
+function supplyStatusClass(status){ return status==='brought'?'supplyStatusBrought':status==='reserved'?'supplyStatusReserved':'supplyStatusPlanned'; }
+function supplyMemberName(id){
+  if(!id)return 'Personne';
+  const p=supplyProfiles.find(x=>x.id===id);
+  return p?.display_name||p?.username||'Membre';
+}
+async function loadSupplies(){
+  if(!event||!user)return;
+  const list=$('suppliesList'); if(!list)return;
+  list.innerHTML='<p class="muted">Chargement…</p>';
+  const r=await sb.from('event_supplies').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
+  if(r.error){list.innerHTML='<p class="muted">Impossible de charger la liste : '+esc(r.error.message)+'</p>';return;}
+  suppliesData=r.data||[];
+  const ids=[...new Set(suppliesData.map(x=>x.assigned_user_id).filter(Boolean))];
+  if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)supplyProfiles=pr.data||[];}
+  const mr=await sb.from('event_members').select('user_id,nickname').eq('event_id',event.id).order('joined_at',{ascending:true});
+  const mids=(mr.data||[]).map(x=>x.user_id).filter(Boolean);
+  if(mids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',mids); if(!pr.error){const map=new Map((pr.data||[]).map(x=>[x.id,x])); supplyProfiles=[...map.values()];}}
+  renderSupplies();
+}
+function renderSupplies(){
+  const list=$('suppliesList'); if(!list)return;
+  if(!suppliesData.length){list.innerHTML='<div class="hallEmpty">Aucun élément pour le moment. Ajoute le premier objet à apporter.</div>';return;}
+  const canManage=supplyIsOrganizer();
+  const memberOptions='<option value="">— Personne —</option>'+supplyProfiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.display_name||p.username||'Membre')+'</option>').join('');
+  list.innerHTML=suppliesData.map(x=>{
+    const mine=x.assigned_user_id===user?.id;
+    const canEdit=canManage||mine||x.created_by===user?.id;
+    return '<div class="supplyCard" data-supply-id="'+esc(x.id)+'"><div class="supplyTop"><div><div class="supplyTitle">'+esc(x.title)+'</div><div class="supplyMeta"><span class="supplyChip">🔢 '+esc(String(x.quantity||1))+'</span><span class="supplyChip '+supplyStatusClass(x.status)+'">'+supplyStatusLabel(x.status)+'</span><span class="supplyChip">👤 '+esc(supplyMemberName(x.assigned_user_id))+'</span></div></div></div>'+(x.note?'<div class="muted" style="margin-top:7px">'+esc(x.note)+'</div>':'')+(canManage?'<div class="supplyAssign"><select data-supply-assign="'+esc(x.id)+'">'+memberOptions+'</select><button type="button" class="secondary" data-supply-status="'+esc(x.id)+'">'+supplyStatusLabel(x.status)+'</button></div>':'')+'<div class="supplyActions">'+(!x.assigned_user_id&&!canManage?'<button type="button" data-supply-me="'+esc(x.id)+'">🙋 Je m’en occupe</button>':'')+(canEdit?'<button type="button" class="secondary" data-supply-edit="'+esc(x.id)+'">✏️ Modifier</button>':'')+(canEdit?'<button type="button" class="secondary" data-supply-delete="'+esc(x.id)+'">🗑️ Supprimer</button>':'')+'</div></div>';
+  }).join('');
+  suppliesData.forEach(x=>{const sel=list.querySelector('[data-supply-assign="'+CSS.escape(x.id)+'"]');if(sel)sel.value=x.assigned_user_id||'';});
+}
+function supplyOpenForm(open){$('supplyForm')?.classList.toggle('hidden',!open);if(!open){$('supplyTitle').value='';$('supplyQty').value='1';$('supplyStatus').value='planned';$('supplyNote').value='';}}
+async function addSupply(){
+  if(!event||!user)return;
+  const title=String($('supplyTitle')?.value||'').trim(); if(!title){msg('suppliesMsg','Indique ce qu’il faut apporter.','err');return;}
+  const quantity=Math.max(1,Number($('supplyQty')?.value||1)); const status=$('supplyStatus')?.value||'planned'; const note=String($('supplyNote')?.value||'').trim();
+  const r=await sb.from('event_supplies').insert({event_id:event.id,title,quantity,status,note:note||null,created_by:user.id,assigned_user_id:null}).select('*').single();
+  if(r.error){msg('suppliesMsg','Impossible d’ajouter : '+r.error.message,'err');return;}
+  suppliesData.push(r.data); supplyOpenForm(false); msg('suppliesMsg','Élément ajouté.','ok'); renderSupplies();
+}
+async function updateSupply(id,patch){
+  const x=suppliesData.find(v=>v.id===id); if(!x)return;
+  const can=supplyIsOrganizer()||x.assigned_user_id===user?.id||x.created_by===user?.id; if(!can){msg('suppliesMsg','Tu ne peux pas modifier cet élément.','err');return;}
+  const r=await sb.from('event_supplies').update({...patch,updated_at:new Date().toISOString()}).eq('id',id).eq('event_id',event.id);
+  if(r.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;}
+  Object.assign(x,patch); msg('suppliesMsg','Liste mise à jour.','ok'); renderSupplies();
+}
+async function deleteSupply(id){
+  const x=suppliesData.find(v=>v.id===id); if(!x)return;
+  const can=supplyIsOrganizer()||x.created_by===user?.id; if(!can){msg('suppliesMsg','Seul le créateur ou l’organisateur peut supprimer cet élément.','err');return;}
+  if(!confirm('Supprimer « '+x.title+' » ?'))return;
+  const r=await sb.from('event_supplies').delete().eq('id',id).eq('event_id',event.id); if(r.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;}
+  suppliesData=suppliesData.filter(v=>v.id!==id); msg('suppliesMsg','Élément supprimé.','ok'); renderSupplies();
+}
+async function editSupply(id){
+  const x=suppliesData.find(v=>v.id===id); if(!x)return;
+  const title=prompt('Que faut-il apporter ?',x.title); if(title===null)return;
+  const qty=prompt('Quantité ?',String(x.quantity||1)); if(qty===null)return;
+  const note=prompt('Note (optionnel) :',x.note||''); if(note===null)return;
+  await updateSupply(id,{title:title.trim()||x.title,quantity:Math.max(1,Number(qty)||1),note:note.trim()||null});
+}
+document.addEventListener('change',e=>{
+  const a=e.target.closest('[data-supply-assign]'); if(a){updateSupply(a.dataset.supplyAssign,{assigned_user_id:a.value||null});return;}
+});
+document.addEventListener('click',e=>{
+  const me=e.target.closest('[data-supply-me]'); if(me){updateSupply(me.dataset.supplyMe,{assigned_user_id:user.id,status:'reserved'});return;}
+  const st=e.target.closest('[data-supply-status]'); if(st){const x=suppliesData.find(v=>v.id===st.dataset.supplyStatus);if(x){const next=x.status==='planned'?'reserved':x.status==='reserved'?'brought':'planned';updateSupply(x.id,{status:next});}return;}
+  const ed=e.target.closest('[data-supply-edit]'); if(ed){editSupply(ed.dataset.supplyEdit);return;}
+  const del=e.target.closest('[data-supply-delete]'); if(del){deleteSupply(del.dataset.supplyDelete);return;}
+});
+(function(){const bindSup=()=>{ $('supplyAddBtn')?.addEventListener('click',()=>supplyOpenForm(true)); $('supplyCancelBtn')?.addEventListener('click',()=>supplyOpenForm(false)); $('supplySaveBtn')?.addEventListener('click',addSupply); }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindSup,{once:true});else bindSup();})();
 (function(){const bind=()=>{ $('hallSearchBtn')?.addEventListener('click',searchHalls); $('hallAddBtn')?.addEventListener('click',()=>hallOpenManualForm(true)); $('hallCancelManualBtn')?.addEventListener('click',()=>hallOpenManualForm(false)); $('hallSaveManualBtn')?.addEventListener('click',addManualHall); ['hallRadius','hallMinCapacity','hallMaxPrice'].forEach(id=>$(id)?.addEventListener('change',saveHallCriteria)); }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();})();
 </script>
 <script>
