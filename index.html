@@ -827,7 +827,6 @@ body.discussionFullScreen{overflow:hidden!important}
 <button class="eventTab active" data-tab="discussion" role="tab">💬 Discussion <span id="discussionBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="polls" role="tab">📊 Sondages <span id="pollBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="media" role="tab">📸 Photos <span id="mediaBadge" class="unreadBadge hidden">0</span></button>
-<button class="eventTab" data-tab="members" role="tab">👥 Participants</button>
 <button class="eventTab" data-tab="locations" role="tab">📍 Localisation</button>
 </div>
 
@@ -1398,7 +1397,6 @@ async function loadEvents(){
       '<div class="eventCardMenu hidden">'+
         edit+
         '<button type="button" class="inviteEventListBtn">👥 Inviter</button>'+
-        '<button type="button" class="participantsEventBtn">👥 Participants</button>'+
         leaveOrDelete+
       '</div>'+
       '</div>';
@@ -1437,9 +1435,6 @@ async function loadEvents(){
   }));
   document.querySelectorAll('.inviteEventListBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
     ev.stopPropagation(); const card=btn.closest('.eventCard'); await selectEvent(card.dataset.eventId); openEventTool('inviteCard');
-  }));
-  document.querySelectorAll('.participantsEventBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
-    ev.stopPropagation(); const card=btn.closest('.eventCard'); await selectEvent(card.dataset.eventId); showEventTab('members',true); document.querySelector('.tabPanel[data-panel="members"]')?.scrollIntoView({behavior:'smooth',block:'start'});
   }));
   document.querySelectorAll('.deleteEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();deleteEvent(btn.dataset.id)}));
   document.querySelectorAll('.leaveEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();leaveEvent(btn.dataset.id)}));
