@@ -959,9 +959,25 @@ body.discussionFullScreen{overflow:hidden!important}
   <div style="margin-top:12px">
     <input id="fundTargetInput" type="number" min="0" step="0.01" placeholder="Objectif en €">
     <input id="fundDescriptionInput" placeholder="Ex. Restaurant + activité + cadeau">
+    <label class="muted" style="display:block;margin:10px 0 5px">👤 Responsable de la cagnotte</label>
+    <select id="fundManagerSelect"><option value="">Organisateur de l’événement</option></select>
     <button id="saveFundSettingsBtn">💾 Enregistrer le budget</button>
     <p id="fundSettingsMsg" class="muted"></p>
   </div>
+</div>
+<div id="fundPaymentBox" class="editEventBox" style="margin-top:12px">
+  <div class="fundPaymentHead"><div><b>🏦 Paiement par virement</b><p id="fundPaymentStatus" class="muted">Aucune coordonnée bancaire configurée.</p></div></div>
+  <div id="fundPaymentDetails" class="fundPaymentDetails hidden"></div>
+  <div id="fundPaymentForm" class="hidden" style="margin-top:10px">
+    <input id="fundAccountHolder" placeholder="Titulaire du compte">
+    <input id="fundIban" autocomplete="off" placeholder="IBAN (ex. FR76...)" maxlength="34">
+    <input id="fundBic" autocomplete="off" placeholder="BIC (optionnel)" maxlength="11">
+    <input id="fundPaymentNote" placeholder="Instruction de virement (optionnel)">
+    <button id="saveFundPaymentBtn">🔐 Enregistrer les coordonnées</button>
+    <button id="cancelFundPaymentBtn" type="button" class="secondary">Annuler</button>
+    <p id="fundPaymentMsg" class="muted"></p>
+  </div>
+  <button id="editFundPaymentBtn" type="button" class="secondary hidden" style="margin-top:8px">⚙️ Configurer / modifier</button>
 </div>
 <div class="fundActions" style="margin-top:12px">
   <button type="button" id="addContributionBtn">➕ Ajouter ma participation</button>
@@ -997,7 +1013,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
+.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:5px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let sb=null,user=null,event=null;
@@ -1884,20 +1900,74 @@ async function createEvent(){
 
 function eur(v){ return Number(v||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}); }
 function fundIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function fundManagerId(settings){ return settings?.manager_user_id || event?.creator_id || null; }
+function fundIsManager(settings){ return !!(event&&user&&(event.creator_id===user.id || settings?.manager_user_id===user.id)); }
 function fundSetFormOpen(open){ const box=$('fundOrganizerBox'); if(box) box.classList.toggle('hidden',!open); }
 function fundContributionFormOpen(open){ $('fundContributionForm')?.classList.toggle('hidden',!open); if(!open){$('fundContributionAmount').value='';$('fundContributionNote').value='';} }
 function fundExpenseFormOpen(open){ $('fundExpenseForm')?.classList.toggle('hidden',!open); if(!open){$('fundExpenseAmount').value='';$('fundExpenseLabel').value='';} }
+function fundPaymentFormOpen(open){ $('fundPaymentForm')?.classList.toggle('hidden',!open); if(!open) $('fundPaymentMsg').textContent=''; }
+function normalizeIban(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function formatIban(v){ const x=normalizeIban(v); return x.replace(/(.{4})/g,'$1 ').trim(); }
+function maskIban(v){ const x=normalizeIban(v); return x.length>8 ? x.slice(0,4)+' •• •••• •••• •••• '+x.slice(-4) : x; }
+async function loadFundMembers(selectedId){
+  const sel=$('fundManagerSelect'); if(!sel||!event)return;
+  const r=await sb.from('event_members').select('user_id,nickname').eq('event_id',event.id).order('joined_at',{ascending:true});
+  const members=r.data||[];
+  const ids=members.map(m=>m.user_id).filter(Boolean); let profiles=[];
+  if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
+  const pmap=new Map(profiles.map(p=>[p.id,p]));
+  sel.innerHTML='<option value="">Organisateur de l’événement</option>' + members.filter(m=>m.user_id!==event.creator_id).map(m=>{
+    const p=pmap.get(m.user_id)||{}; const name=m.nickname||p.display_name||p.username||'Membre';
+    return '<option value="'+esc(m.user_id)+'">'+esc(name)+'</option>';
+  }).join('');
+  if(selectedId && members.some(m=>m.user_id===selectedId)) sel.value=selectedId;
+}
+async function loadFundPayment(settings){
+  const status=$('fundPaymentStatus'), details=$('fundPaymentDetails'), edit=$('editFundPaymentBtn');
+  if(!status||!details||!edit||!event||!user)return;
+  const managerId=fundManagerId(settings);
+  const pr=await sb.from('event_fund_payment_details').select('account_holder,iban,bic,payment_note,updated_at').eq('event_id',event.id).maybeSingle();
+  if(pr.error && !String(pr.error.message||'').includes('does not exist')){status.textContent='Impossible de charger les coordonnées.'; details.classList.add('hidden'); return;}
+  const d=pr.data;
+  edit.classList.toggle('hidden',!fundIsManager(settings));
+  if(!d || !d.iban){
+    status.textContent=managerId===user.id?'Configure tes coordonnées bancaires pour recevoir les virements.':'Le responsable n’a pas encore configuré les coordonnées bancaires.';
+    details.classList.add('hidden');
+    if(fundIsManager(settings)) edit.textContent='🏦 Configurer les coordonnées';
+    return;
+  }
+  status.textContent='Coordonnées configurées pour le responsable de la cagnotte.';
+  details.innerHTML='<div class="fundPaymentRow"><span>Responsable</span><b>'+(managerId===user.id?'Moi':'Responsable de la cagnotte')+'</b></div>'+
+    '<div class="fundPaymentRow"><span>Titulaire</span><b>'+esc(d.account_holder||'—')+'</b></div>'+
+    '<div class="fundPaymentRow"><span>IBAN</span><b class="fundPaymentIban">'+esc(maskIban(d.iban))+'</b></div>'+
+    (d.bic?'<div class="fundPaymentRow"><span>BIC</span><b>'+esc(d.bic)+'</b></div>':'')+
+    (d.payment_note?'<div style="margin-top:8px"><span class="muted">Instruction</span><div>'+esc(d.payment_note)+'</div></div>':'')+
+    '<button type="button" id="copyFundIbanBtn" class="secondary" style="margin-top:10px">📋 Copier l’IBAN</button>';
+  details.classList.remove('hidden');
+  if(fundIsManager(settings)) edit.textContent='⚙️ Modifier les coordonnées';
+  $('copyFundIbanBtn')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(normalizeIban(d.iban));status.textContent='IBAN copié dans le presse-papiers.';}catch(e){status.textContent='Copie impossible sur cet appareil.';}});
+}
+async function openFundPaymentForm(){
+  if(!event||!user)return;
+  const r=await sb.from('event_fund_payment_details').select('account_holder,iban,bic,payment_note').eq('event_id',event.id).maybeSingle();
+  if(r.error && !String(r.error.message||'').includes('does not exist')){msg('fundPaymentMsg','Erreur : '+r.error.message,'err');return;}
+  const d=r.data||{};
+  $('fundAccountHolder').value=d.account_holder||''; $('fundIban').value=d.iban?formatIban(d.iban):''; $('fundBic').value=d.bic||''; $('fundPaymentNote').value=d.payment_note||'';
+  fundPaymentFormOpen(true);
+}
 async function loadFund(){
   if(!event||!user||!sb)return;
   const sr=await sb.from('event_fund_settings').select('*').eq('event_id',event.id).maybeSingle();
   if(sr.error && !String(sr.error.message||'').includes('does not exist')){ $('fundEntries').innerHTML='<p class="err">'+esc(sr.error.message)+'</p>'; return; }
-  const settings=sr.data||{target_amount:0,description:''};
+  const settings=sr.data||{target_amount:0,description:'',manager_user_id:null};
   const target=Number(settings.target_amount||0);
   $('fundTargetLabel').textContent='Objectif : '+eur(target);
   $('fundDescription').textContent=settings.description||'Organise les participations et les dépenses du groupe.';
-  $('fundTargetInput').value=target||'';
-  $('fundDescriptionInput').value=settings.description||'';
-  const org=fundIsOrganizer(); $('editFundBtn').classList.toggle('hidden',!org); if(!org) fundSetFormOpen(false);
+  $('fundTargetInput').value=target||''; $('fundDescriptionInput').value=settings.description||'';
+  const org=fundIsOrganizer(); $('editFundBtn').classList.toggle('hidden',!fundIsManager(settings)); if(!fundIsManager(settings)) fundSetFormOpen(false);
+  if(org){ await loadFundMembers(settings.manager_user_id); }
+  const managerSelect=$('fundManagerSelect'); if(managerSelect){ managerSelect.disabled=!org; }
+  await loadFundPayment(settings);
   const er=await sb.from('event_fund_entries').select('id,event_id,user_id,entry_type,amount,label,note,created_at').eq('event_id',event.id).order('created_at',{ascending:false});
   if(er.error){ $('fundEntries').innerHTML='<p class="err">'+esc(er.error.message)+'</p>'; return; }
   const entries=er.data||[];
@@ -1920,13 +1990,29 @@ async function loadFund(){
   }).join('');
 }
 async function saveFundSettings(){
-  if(!event||!user||!fundIsOrganizer())return;
-  const target=Math.max(0,Number($('fundTargetInput').value||0)); const description=String($('fundDescriptionInput').value||'').trim();
+  if(!event||!user)return;
+  const sr=await sb.from('event_fund_settings').select('manager_user_id').eq('event_id',event.id).maybeSingle();
+  const currentManagerId=sr.data?.manager_user_id||null;
+  const manager=fundIsManager({manager_user_id:currentManagerId});
+  if(!manager)return;
+  const target=Math.max(0,Number($('fundTargetInput').value||0)); const description=String($('fundDescriptionInput').value||'').trim(); const managerId=fundIsOrganizer()?($('fundManagerSelect').value||null):currentManagerId;
   $('saveFundSettingsBtn').disabled=true; msg('fundSettingsMsg','Enregistrement…');
-  const r=await sb.from('event_fund_settings').upsert({event_id:event.id,target_amount:target,description,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
+  const r=await sb.from('event_fund_settings').upsert({event_id:event.id,target_amount:target,description,manager_user_id:managerId,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
   $('saveFundSettingsBtn').disabled=false;
   if(r.error){msg('fundSettingsMsg','Erreur : '+r.error.message,'err');return;}
-  msg('fundSettingsMsg','Budget enregistré.','ok'); await loadFund();
+  msg('fundSettingsMsg','Budget et responsable enregistrés.','ok'); await loadFund();
+}
+async function saveFundPayment(){
+  if(!event||!user)return;
+  const holder=String($('fundAccountHolder').value||'').trim(); const iban=normalizeIban($('fundIban').value); const bic=String($('fundBic').value||'').trim().toUpperCase(); const note=String($('fundPaymentNote').value||'').trim();
+  if(!holder||!iban){msg('fundPaymentMsg','Indique le titulaire et un IBAN.','err');return;}
+  if(!/^FR\d{25}$/.test(iban) && !/^[A-Z]{2}\d{13,32}$/.test(iban)){msg('fundPaymentMsg','IBAN invalide ou incomplet.','err');return;}
+  if(bic && !/^[A-Z0-9]{8}([A-Z0-9]{3})?$/.test(bic)){msg('fundPaymentMsg','BIC invalide.','err');return;}
+  $('saveFundPaymentBtn').disabled=true; msg('fundPaymentMsg','Enregistrement sécurisé…');
+  const r=await sb.from('event_fund_payment_details').upsert({event_id:event.id,account_holder:holder,iban,bic:bic||null,payment_note:note||null,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
+  $('saveFundPaymentBtn').disabled=false;
+  if(r.error){msg('fundPaymentMsg','Erreur : '+r.error.message,'err');return;}
+  fundPaymentFormOpen(false); await loadFund();
 }
 async function saveContribution(){
   if(!event||!user)return; const amount=Number($('fundContributionAmount').value||0); if(!(amount>0)){msg('fundContributionMsg','Indique un montant supérieur à 0.','err');return;}
@@ -1934,7 +2020,7 @@ async function saveContribution(){
   if(r.error){msg('fundContributionMsg','Erreur : '+r.error.message,'err');return;} fundContributionFormOpen(false); await loadFund();
 }
 async function saveExpense(){
-  if(!event||!user||!fundIsOrganizer())return; const amount=Number($('fundExpenseAmount').value||0); const label=String($('fundExpenseLabel').value||'').trim(); if(!(amount>0)||!label){msg('fundExpenseMsg','Indique un montant et un libellé.','err');return;}
+  if(!event||!user)return; const amount=Number($('fundExpenseAmount').value||0); const label=String($('fundExpenseLabel').value||'').trim(); if(!(amount>0)||!label){msg('fundExpenseMsg','Indique un montant et un libellé.','err');return;}
   $('saveExpenseBtn').disabled=true; const r=await sb.from('event_fund_entries').insert({event_id:event.id,user_id:user.id,entry_type:'expense',amount,label}); $('saveExpenseBtn').disabled=false;
   if(r.error){msg('fundExpenseMsg','Erreur : '+r.error.message,'err');return;} fundExpenseFormOpen(false); await loadFund();
 }
@@ -3883,7 +3969,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 }
 </style>
 <script>
-// V50.0 — Participation / Cagnotte
+// V50.1 — Responsable de cagnotte + coordonnées de virement
 (function(){
   const bind=()=>{
     $('editFundBtn')?.addEventListener('click',()=>fundSetFormOpen($('fundOrganizerBox').classList.contains('hidden')));
@@ -3894,6 +3980,10 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
     $('addExpenseBtn')?.addEventListener('click',()=>{if(fundIsOrganizer())fundExpenseFormOpen(true);else alert('Seul l’organisateur peut enregistrer une dépense.');});
     $('cancelExpenseBtn')?.addEventListener('click',()=>fundExpenseFormOpen(false));
     $('saveExpenseBtn')?.addEventListener('click',saveExpense);
+    $('editFundPaymentBtn')?.addEventListener('click',openFundPaymentForm);
+    $('cancelFundPaymentBtn')?.addEventListener('click',()=>fundPaymentFormOpen(false));
+    $('saveFundPaymentBtn')?.addEventListener('click',saveFundPayment);
+    $('fundIban')?.addEventListener('input',e=>{ const pos=e.target.selectionStart; e.target.value=formatIban(e.target.value); e.target.selectionStart=e.target.selectionEnd=Math.min(e.target.value.length,pos+(e.target.value.length>pos?1:0)); });
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
