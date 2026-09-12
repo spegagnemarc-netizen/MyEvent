@@ -18,6 +18,7 @@ button:disabled{opacity:.5}
 .err{color:#ff9999}.ok{color:#7ee2a8}
 .notice{padding:10px;border-radius:12px;background:#0b1824;margin:10px 0}.selectedVote{outline:2px solid #7ee2a8!important}.pollOption{margin:8px 0}.pollOption button{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left}.pollCount{font-size:13px;color:#9eb2c4;margin-left:8px;white-space:nowrap}.pollBar{height:6px;background:#0b1824;border-radius:6px;overflow:hidden;margin:5px 4px 0}.pollBarFill{height:100%;background:#278cff;border-radius:6px}.checkRow{display:flex;align-items:center;gap:8px;margin:10px 0;color:#9db0c1;font-size:14px}.checkRow input{width:auto;margin:0}
 .eventList{display:grid;gap:8px}.eventCard{background:#0b1824;border:1px solid #28445b;border-radius:14px;padding:12px;cursor:pointer}.eventCard.active{outline:2px solid #278cff}.eventCard b{display:block;font-size:16px}.eventCard span{display:block;color:#9eb2c4;font-size:13px;margin-top:4px}
+.eventHubActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}.eventCardActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.eventCardActions button{flex:1;min-width:88px;padding:8px 9px;font-size:13px}.eventHubActions button{min-height:42px}.eventHero{margin-top:12px}.eventHero.hidden{display:none}.eventHero[open]>summary{margin-bottom:0}@media(max-width:600px){.eventHubActions{grid-template-columns:1fr 1fr}.eventCardActions{display:grid;grid-template-columns:1fr 1fr}.eventCardActions button{min-width:0}}
  .eventHero{overflow:hidden;padding:0}.eventCover{height:150px;background:linear-gradient(135deg,#145da0,#278cff 55%,#6d3bd1);display:flex;align-items:flex-end;padding:16px;position:relative}.eventCover.hasImage{background-size:cover;background-position:center}.eventCover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.72));}.eventHeroContent{position:relative;z-index:1;width:100%}.eventHeroName{font-size:25px;font-weight:850;margin:0 0 4px}.eventHeroMeta{font-size:13px;color:#d5e2ec}.eventStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}.eventStat{background:#0b1824;border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center}.eventStat b{display:block;font-size:17px}.eventStat span{display:block;color:#9eb2c4;font-size:11px;margin-top:3px}.eventDescription{padding:0 14px 14px;color:#b8c8d5;font-size:13px;line-height:1.45}.eventActions{display:flex;gap:8px;padding:0 14px 14px}.eventActions button{flex:1}.editEventBox{border:1px solid #315b78;background:#0b1824}.editEventBox summary{cursor:pointer;font-weight:750;list-style:none}.editEventBox summary::-webkit-details-marker{display:none}.countdown{color:#91d0ff;font-weight:750;margin-top:5px}.fieldRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.smallLabel{display:block;color:#9eb2c4;font-size:12px;margin:3px 0 5px}.coverPreview{height:90px;border-radius:12px;background:#102131 center/cover no-repeat;border:1px solid #28445b;margin:8px 0}.coverFileLabel{display:block;padding:12px;border:1px dashed #3c6785;border-radius:12px;background:#0d1d2b;color:#c9d8e4;text-align:center;cursor:pointer;margin:6px 0 10px}.coverFileLabel input{display:none}.coverFileName{font-size:12px;color:#9eb2c4;margin:-4px 0 10px}.
 
 .memberRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -703,16 +704,18 @@ body.discussionFullScreen{overflow:hidden!important}
 <p id="profileMsg" class="muted"></p>
 </div>
 
-<details id="eventsCard" class="card collapsibleCard uniformToggle reorderableCard">
+<details id="eventsCard" class="card collapsibleCard uniformToggle reorderableCard" open>
 <summary><span class="summaryLabel">📋 Mes événements</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
 <div class="collapsibleBody">
-<p class="muted">Retrouve automatiquement tous les groupes auxquels tu participes.</p>
+<p class="muted">Ton espace central pour créer, rejoindre, ouvrir et gérer tes événements.</p>
+<div class="eventHubActions">
+  <button type="button" id="createEventInlineBtn">➕ Créer un événement</button>
+  <button type="button" id="joinEventInlineBtn" class="secondary">🔗 Rejoindre un événement</button>
+</div>
 <div id="eventList" class="eventList"><p class="muted">Chargement…</p></div>
 <p id="eventListMsg" class="muted"></p>
-</div>
-</details>
 
-<details id="eventHeroCard" class="card eventHero collapsibleCard uniformToggle reorderableCard hidden">
+<details id="eventHeroCard" class="eventHero hidden">
   <summary id="eventHeroSummary"><span class="summaryLabel">🎉 <span id="eventHeroSummaryText">Mon événement</span></span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
   <div class="collapsibleBody">
   <div id="eventCover" class="eventCover">
@@ -728,12 +731,12 @@ body.discussionFullScreen{overflow:hidden!important}
     <div class="eventStat"><b id="statMessages">0</b><span>Messages</span></div>
     <div class="eventStat"><b id="statPhotos">0</b><span>Souvenirs</span></div>
   </div>
-  <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button><button id="leaveEventBtn" class="secondary hidden">🚪 Quitter l’événement</button></div>
+  <div id="eventActions" class="eventActions hidden"><button id="editEventToggle" class="secondary">✏️ Modifier</button><button id="eventInviteToggle" class="secondary">👥 Inviter</button><button id="leaveEventBtn" class="secondary hidden">🚪 Quitter</button></div>
   </div>
 </details>
 
-<details id="createEventCard" class="card editEventBox createEventBox uniformToggle reorderableCard">
-  <summary><span class="summaryLabel">🎉 Créer un événement</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
+<details id="createEventCard" class="editEventBox createEventBox hidden">
+  <summary><span class="summaryLabel">➕ Créer un événement</span></summary>
   <div style="margin-top:12px">
     <input id="ename" placeholder="Nom de l’événement">
     <div class="fieldRow">
@@ -747,8 +750,17 @@ body.discussionFullScreen{overflow:hidden!important}
   </div>
 </details>
 
-<details id="editEventBox" class="card editEventBox hidden uniformToggle reorderableCard">
-  <summary><span class="summaryLabel">✏️ Modifier l’événement</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
+<details id="joinCard" class="editEventBox hidden">
+  <summary><span class="summaryLabel">🔗 Rejoindre un événement</span></summary>
+  <div style="margin-top:12px">
+    <input id="joinCode" placeholder="Code d’invitation">
+    <button id="joinBtn">Rejoindre</button>
+    <p id="joinMsg" class="muted"></p>
+  </div>
+</details>
+
+<details id="editEventBox" class="editEventBox hidden">
+  <summary><span class="summaryLabel">✏️ Modifier l’événement</span></summary>
   <div style="margin-top:12px">
     <input id="editEventName" placeholder="Nom de l’événement">
     <div class="fieldRow">
@@ -763,16 +775,18 @@ body.discussionFullScreen{overflow:hidden!important}
   </div>
 </details>
 
-<details class="card collapsibleCard uniformToggle reorderableCard" id="inviteCard">
-<summary><span class="summaryLabel">👥 Inviter</span><span class="dragHandle" title="Maintenir puis déplacer">⠿</span></summary>
-<div class="collapsibleBody">
-<p class="muted">Partage ce lien pour permettre à quelqu’un de rejoindre cet événement.</p>
-<input id="inviteLink" readonly placeholder="Le lien apparaîtra ici">
-<div class="row">
-<button id="copyInviteBtn">🔗 Copier le lien</button>
-<button class="secondary" id="shareInviteBtn">Partager</button>
-</div>
-<p id="inviteMsg" class="muted"></p>
+<details id="inviteCard" class="editEventBox hidden">
+  <summary><span class="summaryLabel">👥 Inviter à cet événement</span></summary>
+  <div style="margin-top:12px">
+    <p class="muted">Partage ce lien pour permettre à quelqu’un de rejoindre cet événement.</p>
+    <input id="inviteLink" readonly placeholder="Le lien apparaîtra ici">
+    <div class="row">
+      <button id="copyInviteBtn">🔗 Copier le lien</button>
+      <button class="secondary" id="shareInviteBtn">Partager</button>
+    </div>
+    <p id="inviteMsg" class="muted"></p>
+  </div>
+</details>
 </div>
 </details>
 
@@ -1364,20 +1378,25 @@ async function loadEvents(){
     const active=e.id===savedId?' active':'';
     const mine=e.creator_id===user.id;
     return '<div class="eventCard'+active+'" data-event-id="'+e.id+'">'+
-      '<div style="display:flex;align-items:center;gap:8px">'+
-      '<div style="flex:1;min-width:0"><b>'+esc(e.name||'Événement sans nom')+'</b>'+
-      '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span></div>'+
-      (mine?'<button class="secondary deleteEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Supprimer</button>':'<button class="secondary leaveEventBtn" data-id="'+e.id+'" style="flex:none;padding:8px 10px;font-size:13px">Quitter</button>')+
-      '</div>'+
-      '</div>';
+      '<div style="display:flex;align-items:flex-start;gap:8px">'+
+      '<div style="flex:1;min-width:0"><b>'+esc(e.name||'Événement sans nom')+'</b>'+      '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span></div>'+      '</div>'+      '<div class="eventCardActions">'+      '<button type="button" class="openEventBtn">👁️ Ouvrir</button>'+      (mine?'<button type="button" class="secondary editEventListBtn">✏️ Modifier</button>':'')+      '<button type="button" class="secondary inviteEventListBtn">👥 Inviter</button>'+      (mine?'<button type="button" class="secondary deleteEventBtn" data-id="'+e.id+'">🗑️ Supprimer</button>':'<button type="button" class="secondary leaveEventBtn" data-id="'+e.id+'">🚪 Quitter</button>')+      '</div>'+      '</div>';
   }).join('') : '<p class="muted">Aucun groupe pour le moment.</p>';
 
   document.querySelectorAll('.eventCard').forEach(card=>{
     card.addEventListener('click',(ev)=>{
-      if(ev.target.closest('.deleteEventBtn')) return;
+      if(ev.target.closest('button')) return;
       selectEvent(card.dataset.eventId);
     });
   });
+  document.querySelectorAll('.openEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{
+    ev.stopPropagation(); selectEvent(btn.closest('.eventCard').dataset.eventId).then(()=>document.getElementById('eventHeroCard')?.scrollIntoView({behavior:'smooth',block:'start'}));
+  }));
+  document.querySelectorAll('.editEventListBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
+    ev.stopPropagation(); await selectEvent(btn.closest('.eventCard').dataset.eventId); openEventTool('editEventBox');
+  }));
+  document.querySelectorAll('.inviteEventListBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
+    ev.stopPropagation(); await selectEvent(btn.closest('.eventCard').dataset.eventId); openEventTool('inviteCard');
+  }));
   document.querySelectorAll('.deleteEventBtn').forEach(btn=>{
     btn.addEventListener('click',(ev)=>{
       ev.stopPropagation();
@@ -1505,6 +1524,7 @@ async function leaveEvent(id){
       $('eventHeroCard').classList.add('hidden');
       $('eventActions').classList.add('hidden');
       $('editEventBox').classList.add('hidden');
+      $('inviteCard').classList.add('hidden');
       $('inviteLink').value='';
       $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
@@ -1618,10 +1638,11 @@ async function refreshEventCover(){
   $('eventCover').style.backgroundImage=url?'url("'+String(url).replace(/"/g,'%22')+'")':'';
 }
 function renderEventHero(){
-  if(!event){$('eventHeroCard').classList.add('hidden');$('editEventBox').classList.add('hidden');$('createEventCard').classList.remove('hidden');return;}
+  if(!event){$('eventHeroCard').classList.add('hidden');$('editEventBox').classList.add('hidden');$('inviteCard').classList.add('hidden');return;}
   $('eventHeroCard').classList.remove('hidden');
-  $('createEventCard').classList.remove('hidden');
+  $('eventHeroCard').open=true;
   $('eventHeroName').textContent=event.name||'Événement';
+  $('eventHeroSummaryText').textContent=event.name||'Mon événement';
   $('eventHeroMeta').textContent=(event.location?'📍 '+event.location+' · ':'')+'📅 '+formatEventDate(event.event_date);
   $('eventDescription').textContent=event.description||'';
   $('eventDescription').classList.toggle('hidden',!event.description);
@@ -3036,6 +3057,18 @@ function resetCreateEventForm(){
 $('createEventCard')?.addEventListener('toggle',()=>{
   if($('createEventCard').open) resetCreateEventForm();
 });
+function openEventTool(id){
+  const el=$(id);
+  if(!el)return;
+  ['createEventCard','joinCard','editEventBox','inviteCard'].forEach(other=>{if(other!==id && $(other)) $(other).open=false;});
+  el.classList.remove('hidden');
+  el.open=true;
+  if(id==='inviteCard') updateInviteUI();
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+$('createEventInlineBtn')?.addEventListener('click',()=>openEventTool('createEventCard'));
+$('joinEventInlineBtn')?.addEventListener('click',()=>openEventTool('joinCard'));
+$('eventInviteToggle')?.addEventListener('click',()=>openEventTool('inviteCard'));
 $('eventBtn').addEventListener('click',createEvent);
 $('eventCoverFileInput')?.addEventListener('change',()=>{
   const f=$('eventCoverFileInput').files?.[0];
@@ -3048,7 +3081,7 @@ $('editEventCoverFile')?.addEventListener('change',()=>{
 
 $('saveEventBtn').addEventListener('click',saveEvent);
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
-$('editEventToggle').addEventListener('click',()=>{ $('editEventBox').open=true; $('editEventBox').scrollIntoView({behavior:'smooth',block:'start'}); });
+$('editEventToggle').addEventListener('click',()=>openEventTool('editEventBox'));
 
 $('sendBtn').addEventListener('click',sendMessage);
 let lastVoiceTouch=0;
