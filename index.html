@@ -742,6 +742,7 @@ body.discussionFullScreen{overflow:hidden!important}
   <div style="margin-top:12px">
     <input id="ename" placeholder="Nom de l’événement">
     <div class="fieldRow">
+      <div><label class="smallLabel" for="eventType">Type</label><select id="eventType"><option value="general">🎉 Événement</option><option value="birthday">🎂 Anniversaire</option><option value="party">🥳 Fête</option><option value="wedding">💍 Mariage</option><option value="baptism">👶 Baptême</option><option value="family">👨‍👩‍👧‍👦 Fête de famille</option><option value="hall">🏢 Événement en salle</option></select></div>
       <div><label class="smallLabel" for="eventDate">Date</label><input id="eventDate" type="datetime-local"></div>
       <div><label class="smallLabel" for="place">📍 Lieu</label><div class="locationInputRow"><input id="place" placeholder="Adresse, ville ou lieu"><button type="button" class="secondaryBtn locationBtn" id="useLocationBtn">📍 Ma position</button></div><div id="locationHint" class="muted smallHint">Tu peux saisir une adresse, un lieu ou utiliser ta position.</div><div id="createLocationMap" class="locationMap hidden"><iframe id="createLocationMapFrame" title="Carte du lieu" loading="lazy"></iframe><div class="locationMapBar"><span>📍 Position sélectionnée</span><a id="createLocationMapLink" href="#" target="_blank" rel="noopener">Ouvrir la carte</a></div></div></div>
     </div>
@@ -766,6 +767,7 @@ body.discussionFullScreen{overflow:hidden!important}
   <div style="margin-top:12px">
     <input id="editEventName" placeholder="Nom de l’événement">
     <div class="fieldRow">
+      <div><label class="smallLabel" for="editEventType">Type</label><select id="editEventType"><option value="general">🎉 Événement</option><option value="birthday">🎂 Anniversaire</option><option value="party">🥳 Fête</option><option value="wedding">💍 Mariage</option><option value="baptism">👶 Baptême</option><option value="family">👨‍👩‍👧‍👦 Fête de famille</option><option value="hall">🏢 Événement en salle</option></select></div>
       <div><label class="smallLabel" for="editEventDate">Date</label><input id="editEventDate" type="datetime-local"></div>
       <div><label class="smallLabel" for="editEventPlace">Lieu</label><input id="editEventPlace" placeholder="Lieu"></div>
     </div>
@@ -829,6 +831,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <button class="eventTab" data-tab="media" role="tab">📸 Photos <span id="mediaBadge" class="unreadBadge hidden">0</span></button>
 <button class="eventTab" data-tab="locations" role="tab">📍 Localisation</button>
 <button class="eventTab" data-tab="fund" role="tab">💰 Cagnotte</button>
+<button class="eventTab" data-tab="hall" role="tab">🏢 Salle</button>
 </div>
 
 <details class="card notificationCenter collapsibleCard uniformToggle reorderableCard" id="notificationCenter">
@@ -1019,11 +1022,41 @@ body.discussionFullScreen{overflow:hidden!important}
 </div>
 </details>
 
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="hall" id="hallPanel">
+<summary>🏢 Salle / lieu de réception</summary>
+<div class="collapsibleBody">
+<div class="hallIntro"><b>Trouve une salle autour de ton événement</b><p class="muted">Recherche dans le rayon choisi, compare les salles et garde tes critères. Les tarifs/capacités peuvent être complétés manuellement car ils ne sont pas toujours disponibles publiquement.</p></div>
+<div class="hallControls">
+  <div><label class="smallLabel">📏 Rayon</label><select id="hallRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></div>
+  <div><label class="smallLabel">👥 Capacité min.</label><input id="hallMinCapacity" type="number" min="0" step="1" placeholder="Ex. 30"></div>
+  <div><label class="smallLabel">💰 Budget max.</label><input id="hallMaxPrice" type="number" min="0" step="1" placeholder="Ex. 500"></div>
+</div>
+<div class="hallActions"><button type="button" id="hallSearchBtn">🔎 Rechercher des salles</button><button type="button" id="hallAddBtn" class="secondary">➕ Ajouter une salle</button></div>
+<p id="hallMsg" class="muted"></p>
+<div id="hallSelectedBox" class="hallSelectedBox hidden"></div>
+<div id="hallResults" class="hallResults"><p class="muted">Appuie sur « Rechercher des salles » pour trouver des lieux autour de l’événement.</p></div>
+<div id="hallManualForm" class="editEventBox hidden" style="margin-top:12px">
+  <input id="hallNameInput" placeholder="Nom de la salle">
+  <input id="hallAddressInput" placeholder="Adresse / ville">
+  <div class="fieldRow"><input id="hallCapacityInput" type="number" min="0" placeholder="Capacité"><input id="hallPriceInput" type="number" min="0" step="0.01" placeholder="Prix (€)"></div>
+  <input id="hallEquipmentInput" placeholder="Équipements (sono, tables, cuisine…) ">
+  <input id="hallWebsiteInput" placeholder="Site / lien de réservation (optionnel)">
+  <button type="button" id="hallSaveManualBtn">💾 Ajouter à la comparaison</button>
+  <button type="button" id="hallCancelManualBtn" class="secondary">Annuler</button>
+  <p id="hallManualMsg" class="muted"></p>
+</div>
+<div class="hallCompareHint">💡 <b>Conseil :</b> complète les prix et capacités quand ils ne sont pas indiqués. La salle sélectionnée pourra ensuite alimenter le budget de l’événement.</div>
+</div>
+</details>
+
 </section>
 </div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style id="myevent-v51-hall-css">
+.hallIntro{margin-bottom:12px}.hallIntro b{font-size:18px}.hallControls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hallControls>div{min-width:0}.hallActions{display:flex;gap:8px;margin-top:10px}.hallActions button{flex:1}.hallResults{display:flex;flex-direction:column;gap:8px;margin-top:12px}.hallCard{border:1px solid #28445b;border-radius:14px;padding:12px;background:#0b1824}.hallCardTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.hallCardName{font-size:17px;font-weight:800}.hallDistance{font-size:12px;color:#9eb2c4;white-space:nowrap}.hallMeta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.hallChip{border:1px solid #28445b;border-radius:999px;padding:4px 8px;font-size:12px;color:#b7c7d5}.hallEquipment{font-size:13px;color:#9eb2c4;line-height:1.45}.hallCardActions{display:flex;gap:7px;margin-top:10px}.hallCardActions button{flex:1;min-width:0}.hallSelectedBox{border:1px solid #3d8bfd;border-radius:14px;padding:12px;background:#0b1824;margin-top:12px}.hallSelectedBox b{font-size:17px}.hallManualForm input,.hallManualForm select{margin-top:8px}.hallCompareHint{margin-top:12px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#0b1824;color:#9eb2c4;font-size:12px;line-height:1.45}.hallEmpty{padding:12px;border:1px dashed #28445b;border-radius:12px;color:#9eb2c4}.hallLoading{padding:12px;border:1px solid #28445b;border-radius:12px;color:#9eb2c4}@media(max-width:600px){.hallControls{grid-template-columns:1fr}.hallActions{flex-direction:column}.hallCardActions{flex-direction:column}}
+</style>
 <style>
 .fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundTrackingSummary{border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824;line-height:1.55}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1070,6 +1103,7 @@ function showEventTab(name, forceState=null){
       if(name==='members') markMembersRead();
       if(name==='locations') loadEventLocations();
       if(name==='fund') loadFund();
+      if(name==='hall') loadHall();
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
@@ -1593,7 +1627,7 @@ async function selectEvent(id, options={}){
     });
   }else{
     const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
-    restoredTab=['discussion','polls','media','locations','fund'].includes(savedTab)?savedTab:'discussion';
+    restoredTab=['discussion','polls','media','locations','fund','hall'].includes(savedTab)?savedTab:'discussion';
     showEventTab(restoredTab,true);
   }
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
@@ -1826,6 +1860,7 @@ function renderEventHero(){
   $('editEventBox').classList.add('hidden');
   if(mine){
     $('editEventName').value=event.name||'';
+    if($('editEventType'))$('editEventType').value=event.event_type||'general';
     $('editEventDate').value=toLocalDateTime(event.event_date);
     $('editEventPlace').value=event.location||'';
     $('editEventDescription').value=event.description||'';
@@ -1857,6 +1892,7 @@ async function saveEvent(){
       description:$('editEventDescription').value.trim()||null,
       location:$('editEventPlace').value.trim()||null,
       event_date:$('editEventDate').value?new Date($('editEventDate').value).toISOString():null,
+      event_type:$('editEventType')?.value||'general',
       cover_url:coverPath
     }).eq('id',event.id).select().single();
     if(r.error)throw r.error;
@@ -1878,7 +1914,8 @@ async function createEvent(){
   try{
     const r=await sb.from('events').insert({
       creator_id:user.id,name:n,location:place||null,description:description||null,
-      event_date:$('eventDate').value?new Date($('eventDate').value).toISOString():null,cover_url:null
+      event_date:$('eventDate').value?new Date($('eventDate').value).toISOString():null,
+      event_type:$('eventType')?.value||'general',cover_url:null
     }).select().single();
     if(r.error) throw r.error;
     event=r.data;
@@ -1894,6 +1931,7 @@ async function createEvent(){
     $('ename').value='';
     $('eventDescriptionInput').value='';
     $('eventDate').value='';
+    if($('eventType'))$('eventType').value='general';
     $('place').value='';
     $('eventCoverFileInput').value='';
     $('eventCoverFileName').textContent='';
@@ -4083,6 +4121,86 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
   details.uniformToggle:not(.tabPanel):not([open]){height:58px !important;min-height:58px !important}
 }
 </style>
+<script>
+// V51 — Événement en salle : recherche, comparaison et sélection
+let hallResultsData=[];
+let hallSelectedId=null;
+function hallIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function hallOpenManualForm(open){ $('hallManualForm')?.classList.toggle('hidden',!open); if(!open && $('hallManualMsg'))$('hallManualMsg').textContent=''; }
+function hallEscapeUrl(u){ return /^https?:\/\//i.test(String(u||'')) ? String(u) : ''; }
+function renderHallSelected(){
+  const box=$('hallSelectedBox'); if(!box)return;
+  const h=hallResultsData.find(x=>x.id===hallSelectedId);
+  if(!h){box.classList.add('hidden');box.innerHTML='';return;}
+  box.classList.remove('hidden');
+  box.innerHTML='<div>🏢 <b>Salle sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(h.name)+'</b></div>'+
+    '<div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'')+(h.distance!=null?'<span class="hallChip">📍 '+h.distance.toFixed(1)+' km</span>':'')+'</div>'+
+    '<div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Informations à compléter')+'</div>'+
+    '<div class="hallCardActions"><button type="button" class="secondary" data-hall-unselect>✕ Désélectionner</button>'+(h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Voir le site</a>':'')+'</div>';
+}
+function renderHallResults(){
+  const el=$('hallResults'); if(!el)return;
+  const min=Math.max(0,Number($('hallMinCapacity')?.value||0)); const max=Number($('hallMaxPrice')?.value||0);
+  const arr=hallResultsData.filter(h=>(!min||!h.capacity||h.capacity>=min)&&(!max||h.price==null||h.price<=max));
+  if(!arr.length){el.innerHTML='<div class="hallEmpty">Aucune salle ne correspond aux critères. Essaie un rayon plus large ou ajoute une salle manuellement.</div>';return;}
+  el.innerHTML=arr.map(h=>'<div class="hallCard"><div class="hallCardTop"><div class="hallCardName">🏢 '+esc(h.name)+'</div><div class="hallDistance">'+(h.distance!=null?h.distance.toFixed(1)+' km':'')+'</div></div><div class="muted" style="margin-top:3px">'+esc(h.address||'Adresse non disponible')+'</div><div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'<span class="hallChip">👥 Capacité à vérifier</span>')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'<span class="hallChip">💶 Tarif à demander</span>')+'</div><div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Salle / lieu événementiel trouvé sur OpenStreetMap')+'</div><div class="hallCardActions"><button type="button" data-hall-select="'+esc(h.id)+'">⭐ Sélectionner</button>'+(h.lat&&h.lon?'<button type="button" class="secondary" data-hall-map="'+h.lat+'|'+h.lon+'">📍 Voir</button>':'')+(h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>').join('');
+}
+async function saveHallSelection(h){
+  hallSelectedId=h.id; renderHallSelected();
+  if(event&&user){
+    const r=await sb.from('event_hall_settings').upsert({event_id:event.id,selected_hall_name:h.name,selected_hall_address:h.address||null,selected_hall_lat:h.lat||null,selected_hall_lon:h.lon||null,selected_hall_capacity:h.capacity||null,selected_hall_price:h.price??null,selected_hall_equipment:h.equipment||null,selected_hall_website:h.website||null,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
+    if(r.error){msg('hallMsg','Salle sélectionnée localement, mais sauvegarde impossible : '+r.error.message,'err');return;}
+    msg('hallMsg','Salle sélectionnée et enregistrée.','ok');
+  }
+}
+async function loadHall(){
+  if(!event)return;
+  const r=await sb.from('event_hall_settings').select('*').eq('event_id',event.id).maybeSingle();
+  if(!r.error&&r.data){
+    $('hallRadius').value=String(r.data.radius_km||5); $('hallMinCapacity').value=r.data.min_capacity||''; $('hallMaxPrice').value=r.data.max_budget||'';
+    if(r.data.selected_hall_name){
+      const h={id:'selected',name:r.data.selected_hall_name,address:r.data.selected_hall_address,lat:r.data.selected_hall_lat,lon:r.data.selected_hall_lon,capacity:r.data.selected_hall_capacity,price:r.data.selected_hall_price,equipment:r.data.selected_hall_equipment,website:r.data.selected_hall_website,distance:null};
+      hallResultsData=[h]; hallSelectedId='selected'; renderHallSelected();
+    }
+  }
+}
+async function saveHallCriteria(){
+  if(!event||!user)return;
+  const radius=Number($('hallRadius')?.value||5), min=Math.max(0,Number($('hallMinCapacity')?.value||0)), max=Math.max(0,Number($('hallMaxPrice')?.value||0));
+  const r=await sb.from('event_hall_settings').upsert({event_id:event.id,radius_km:radius,min_capacity:min||null,max_budget:max||null,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'event_id'});
+  if(r.error)console.warn('Critères salle:',r.error.message);
+}
+async function searchHalls(){
+  if(!event)return;
+  const results=$('hallResults'); results.innerHTML='<div class="hallLoading">🔎 Recherche de salles autour de l’événement…</div>'; msg('hallMsg',''); await saveHallCriteria();
+  const geo=await geocodeEventLocation(); if(!geo){results.innerHTML='<div class="hallEmpty">Impossible de localiser le lieu de l’événement. Vérifie son adresse dans l’événement.</div>';return;}
+  const km=Number($('hallRadius').value||5);
+  const q='[out:json][timeout:25];(nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [amenity~"community_centre|social_centre|conference_centre|events_venue"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [building~"civic|public"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [tourism~"hotel|guest_house"];nwr(around:'+(km*1000)+','+geo.lat+','+geo.lon+') [leisure~"sports_hall|sports_centre"];);out center tags;';
+  try{
+    const d=await overpassQuery(q); if(!d)throw new Error('Recherche indisponible');
+    const arr=(d.elements||[]).map((x,i)=>{const t=x.tags||{};const lat=x.lat??x.center?.lat,lon=x.lon??x.center?.lon;const cap=t.capacity?Number(String(t.capacity).replace(/[^0-9.]/g,'')):null;const price=t.price?Number(String(t.price).replace(/[^0-9.]/g,'')):null;const eq=[t.cuisine?'🍽️ '+t.cuisine:'',t.wheelchair?'♿ Accessibilité':'',t.parking?'🅿️ Parking':'',t.internet_access?'📶 Wi‑Fi':''].filter(Boolean).join(' · ');return {id:'osm-'+(x.id||i),name:t.name||'Lieu événementiel',address:[t['addr:housenumber'],t['addr:street'],t['addr:postcode'],t['addr:city']].filter(Boolean).join(' ')||t['addr:place']||'',lat,lon,capacity:Number.isFinite(cap)?cap:null,price:Number.isFinite(price)?price:null,equipment:eq,typeLabel:t.amenity||t.leisure||t.tourism||'lieu événementiel',website:t.website||t['contact:website']||''};}).filter(x=>x.name&&Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
+    const seen=new Set(); hallResultsData=arr.filter(h=>{const k=(h.name+'|'+(+h.lat).toFixed(5)+'|'+(+h.lon).toFixed(5)).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;}); hallResultsData.forEach(h=>h.distance=distanceKm(geo.lat,geo.lon,+h.lat,+h.lon)); hallResultsData.sort((a,b)=>a.distance-b.distance); renderHallResults(); msg('hallMsg',hallResultsData.length+' lieu'+(hallResultsData.length>1?'x':'')+' trouvé'+(hallResultsData.length>1?'s':'')+'.','ok');
+  }catch(e){hallResultsData=[];results.innerHTML='<div class="hallEmpty">La recherche est momentanément indisponible. Réessaie dans quelques instants.</div>';msg('hallMsg',e.message||'Erreur de recherche.','err');}
+}
+async function addManualHall(){
+  if(!hallIsOrganizer()){msg('hallManualMsg','Seul l’organisateur peut ajouter une salle manuellement.','err');return;}
+  const name=String($('hallNameInput').value||'').trim(); if(!name){msg('hallManualMsg','Indique le nom de la salle.','err');return;}
+  const h={id:'manual-'+Date.now(),name,address:String($('hallAddressInput').value||'').trim(),capacity:Number($('hallCapacityInput').value||0)||null,price:$('hallPriceInput').value!==''?Number($('hallPriceInput').value):null,equipment:String($('hallEquipmentInput').value||'').trim(),website:hallEscapeUrl($('hallWebsiteInput').value.trim()),distance:null,typeLabel:'Salle ajoutée manuellement'};
+  hallResultsData=[...hallResultsData,h]; renderHallResults(); hallOpenManualForm(false); ['hallNameInput','hallAddressInput','hallCapacityInput','hallPriceInput','hallEquipmentInput','hallWebsiteInput'].forEach(id=>{if($(id))$(id).value='';}); msg('hallMsg','Salle ajoutée à la comparaison.','ok');
+}
+document.addEventListener('click',e=>{
+  const sel=e.target.closest('[data-hall-select]'); if(sel){const h=hallResultsData.find(x=>x.id===sel.dataset.hallSelect);if(h)saveHallSelection(h);return;}
+  if(e.target.closest('[data-hall-unselect]')){hallSelectedId=null;renderHallSelected();msg('hallMsg','Sélection retirée.');return;}
+  const mp=e.target.closest('[data-hall-map]'); if(mp){const [lat,lon]=mp.dataset.hallMap.split('|').map(Number); if(Number.isFinite(lat)&&Number.isFinite(lon)){if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17);$('locationsPanel')?.scrollIntoView({behavior:'smooth',block:'center'});showEventTab('locations',true);}return;}
+});
+(function(){
+ const bind=()=>{
+  $('hallSearchBtn')?.addEventListener('click',searchHalls); $('hallAddBtn')?.addEventListener('click',()=>hallOpenManualForm(true)); $('hallCancelManualBtn')?.addEventListener('click',()=>hallOpenManualForm(false)); $('hallSaveManualBtn')?.addEventListener('click',addManualHall);
+  ['hallRadius','hallMinCapacity','hallMaxPrice'].forEach(id=>$(id)?.addEventListener('change',saveHallCriteria));
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+})();
+</script>
 <script>
 // V50.1 — Responsable de cagnotte + coordonnées de virement
 (function(){
