@@ -1182,7 +1182,7 @@ async function geocodeEventLocation(){
 let locationSearchRadiusKm=3;
 function distanceKm(a,b,c,d){ const R=6371,rad=Math.PI/180, x=(c-a)*rad, y=(d-b)*rad; const q=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2; return 2*R*Math.asin(Math.sqrt(q)); }
 async function fetchJsonWithTimeout(url,opts={},ms=12000){ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),ms); try{ const r=await fetch(url,{...opts,signal:ctl.signal,headers:{Accept:'application/json',...(opts.headers||{})}}); if(!r.ok)throw new Error('HTTP '+r.status); return await r.json(); } finally{clearTimeout(t);} }
-// V51.2 — Les recherches OSM passent désormais par l'API serveur MyEvent.
+// V51.3 — Les recherches OSM passent désormais par l'API serveur MyEvent / Photon.
 function locationPlaceCategory(type){
   type=String(type||'').toLowerCase();
   if(['restaurant','fast_food','bar','pub'].includes(type)) return type==='restaurant'||type==='fast_food'?'restaurant':'activity';
