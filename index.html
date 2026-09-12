@@ -979,7 +979,12 @@ function showEventTab(name, forceState=null){
 
   document.body.classList.toggle('discussionFullScreen', name==='discussion' && shouldOpen);
   if(shouldOpen){
-    // During the automatic restore at login, do not mark the discussion as read
+    // Une vue ouverte volontairement doit pouvoir être restaurée si l'utilisateur
+    // quitte puis revient sur la page sans se déconnecter.
+    if(!initialRestore && user&&event){
+      sessionStorage.setItem('myevent_restore_view','1');
+    }
+    // During the automatic restore at login/reload, do not mark the discussion as read
     // before loadMessages() has located the unread/last message.
     if(!initialRestore){
       if(name==='discussion') markDiscussionRead();
@@ -1324,12 +1329,23 @@ async function show(u){
       renderProfile(p.data);
     }
 
-    // V49.2 : après connexion, toujours arriver sur l'accueil.
-    // On conserve le dernier événement en mémoire pour la sélection future,
-    // mais on n'ouvre plus automatiquement sa discussion.
+    // V49.3 : connexion = accueil, sauf retour/rechargement de la même session
+    // alors qu'un onglet était déjà ouvert.
     event=null;
     const events=await loadEvents();
     await handleJoinLink();
+
+    // Connexion = accueil. En revanche, si la page est simplement rechargée/quittée
+    // pendant la même session et qu'un onglet était ouvert, on restaure exactement
+    // cet événement et cet onglet. Un changement d'événement efface ce mode.
+    const restoreSameView=sessionStorage.getItem('myevent_restore_view')==='1';
+    const savedActiveId=localStorage.getItem('myevent_active_'+u.id)||'';
+    if(restoreSameView && savedActiveId && events.some(e=>e.id===savedActiveId)){
+      await selectEvent(savedActiveId,{restoreView:true});
+    }else{
+      event=null;
+      sessionStorage.removeItem('myevent_restore_view');
+    }
     $('ename').value=''; $('place').value='';
     renderEventHero();
     updateInviteUI();
@@ -1439,19 +1455,19 @@ async function renderInlineSelectedEvent(){
   const card=document.querySelector('.eventCard[data-event-id="'+CSS.escape(String(event.id))+'"]');
   if(!card)return;
   const box=document.createElement('div'); box.className='inlineEventDetails';
-  const cover=document.createElement('div'); cover.className='inlineEventCover';
-  cover.innerHTML='<div class="inlineEventCoverTitle">'+esc(event.name||'Événement')+'</div>'; box.appendChild(cover);
+  // La couverture est déjà affichée par .eventCardCover.
+  // Les détails du choix sélectionné ajoutent uniquement les informations complémentaires.
   const meta=document.createElement('div'); meta.className='inlineEventMeta'; meta.textContent=(event.location?'📍 '+event.location+' · ':'')+'📅 '+formatEventDate(event.event_date); box.appendChild(meta);
   const stats=document.createElement('div'); stats.className='inlineEventStats';
   const members=(document.getElementById('memberCount')?.textContent||'').replace(/[^0-9]/g,'')||'0';
   const messages=String(document.querySelectorAll('#messages .messageRow').length);
   const photos=String(document.querySelectorAll('#mediaGrid .mediaItem').length);
   stats.innerHTML='<div class="inlineEventStat"><b>'+members+'</b><span>Participants</span></div><div class="inlineEventStat"><b>'+messages+'</b><span>Messages</span></div><div class="inlineEventStat"><b>'+photos+'</b><span>Souvenirs</span></div>'; box.appendChild(stats); card.appendChild(box);
-  try{const url=await coverDisplayUrl(event.cover_url||''); if(url&&card.contains(box)) cover.style.backgroundImage='url("'+String(url).replace(/"/g,'%22')+'")';}catch(_){ }
 }
 
-async function selectEvent(id){
+async function selectEvent(id, options={}){
   if(!id)return;
+  const restoreView=options?.restoreView===true;
   const r=await sb.from('events').select('*').eq('id',id).maybeSingle();
   if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
   if(!r.data) throw new Error('Cet événement n’est plus accessible.');
@@ -1469,11 +1485,26 @@ async function selectEvent(id){
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   await renderInlineSelectedEvent();
   global('Événement actif : '+event.name,'ok');
-  const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
-  const restoredTab=['discussion','polls','media','members','locations'].includes(savedTab)?savedTab:'discussion';
-  // Ouvre l'écran choisi AVANT le chargement du contenu. En mode restauration,
-  // showEventTab ne marque pas la discussion comme lue et ne remonte pas en haut.
-  showEventTab(restoredTab,true);
+
+  // Changer d'événement doit toujours ramener à l'accueil de cet événement.
+  // La restauration d'un onglet n'est autorisée que lors d'un retour/rechargement
+  // de la page avec la même session, jamais après une sélection normale.
+  if(!restoreView){
+    sessionStorage.removeItem('myevent_restore_view');
+    document.body.classList.remove('discussionFullScreen');
+    document.querySelectorAll('.eventTab').forEach(btn=>{
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected','false');
+    });
+    document.querySelectorAll('.tabPanel').forEach(panel=>{
+      panel.classList.remove('active');
+      panel.open=false;
+    });
+  }else{
+    const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
+    const restoredTab=['discussion','polls','media','members','locations'].includes(savedTab)?savedTab:'discussion';
+    showEventTab(restoredTab,true);
+  }
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
   if(typeof window.loadMyEventChatStyle==='function') await window.loadMyEventChatStyle();
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia()]);
@@ -3030,6 +3061,7 @@ async function logout(){
     if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
     if(notificationPollTimer){clearInterval(notificationPollTimer);notificationPollTimer=null;}
     await sb.auth.signOut();
+    sessionStorage.removeItem('myevent_restore_view');
     user=null; event=null;
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
