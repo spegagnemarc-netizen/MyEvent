@@ -1,11 +1,10 @@
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter'
+const PHOTON_ENDPOINTS = [
+  'https://photon.komoot.io/reverse'
 ];
 
 function send(res, status, body) {
   res.status(status);
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 's-maxage=180, stale-while-revalidate=600');
   return res.json(body);
 }
 
@@ -27,104 +26,140 @@ function distanceKm(aLat, aLon, bLat, bLon) {
   return 2 * R * Math.asin(Math.sqrt(q));
 }
 
-function normalizePlace(x, index) {
-  const t = x.tags || {};
-  const lat = x.lat ?? x.center?.lat;
-  const lon = x.lon ?? x.center?.lon;
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(String(value).replace(',', '.').replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
 
-  if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) {
-    return null;
-  }
+function normalizeFeature(feature, index) {
+  const p = feature?.properties || {};
+  const coordinates = feature?.geometry?.coordinates || [];
+  const lon = Number(coordinates[0]);
+  const lat = Number(coordinates[1]);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const extra = p.extra && typeof p.extra === 'object' ? p.extra : {};
+  const osmKey = p.osm_key || '';
+  const osmValue = p.osm_value || '';
+
+  const type = osmValue || osmKey || 'attraction';
+
+  const address = [
+    p.housenumber,
+    p.street,
+    p.postcode,
+    p.city || p.locality,
+  ].filter(Boolean).join(' ');
+
+  const capacity =
+    toNumber(extra.capacity) ??
+    toNumber(p.capacity);
+
+  const price =
+    toNumber(extra.price) ??
+    toNumber(p.price);
+
+  const equipment = [
+    extra.wheelchair === 'yes' || p.wheelchair === 'yes' ? '♿ Accessibilité' : '',
+    extra.parking ? '🅿️ Parking' : '',
+    extra.internet_access ? '📶 Wi-Fi' : '',
+  ].filter(Boolean).join(' · ');
 
   return {
-    id: 'osm-' + (x.type || 'item') + '-' + (x.id || index),
-    name: t.name || '',
-    address: [
-      t['addr:housenumber'],
-      t['addr:street'],
-      t['addr:postcode'],
-      t['addr:city']
-    ].filter(Boolean).join(' ') || t['addr:place'] || '',
-    lat: Number(lat),
-    lon: Number(lon),
-    type: t.amenity || t.tourism || t.leisure || 'attraction',
-    typeLabel: t.amenity || t.tourism || t.leisure || 'lieu événementiel',
-    capacity: number(t.capacity),
-    price: number(t.price != null ? String(t.price).replace(',', '.') : null),
-    equipment: [
-      t.wheelchair ? '♿ Accessibilité' : '',
-      t.parking ? '🅿️ Parking' : '',
-      t.internet_access ? '📶 Wi-Fi' : ''
-    ].filter(Boolean).join(' · '),
-    website: t.website || t['contact:website'] || '',
-    phone: t.phone || t['contact:phone'] || '',
-    source: 'OpenStreetMap'
+    id: 'photon-' + (p.osm_type || 'item') + '-' + (p.osm_id || index),
+    name: p.name || p.street || '',
+    address: address || p.district || p.county || '',
+    lat,
+    lon,
+    type,
+    typeLabel: type.replaceAll('_', ' '),
+    capacity,
+    price,
+    equipment,
+    website: extra.website || p.website || '',
+    phone: extra.phone || p.phone || '',
+    source: 'OpenStreetMap / Photon',
   };
 }
 
-function buildQuery(mode, lat, lon, radius) {
-  const around = radius * 1000;
+const MODE_FILTERS = {
+  nearby: [
+    'osm.amenity.restaurant',
+    'osm.amenity.cafe',
+    'osm.amenity.fast_food',
+    'osm.amenity.bar',
+    'osm.amenity.pub',
+    'osm.amenity.cinema',
+    'osm.amenity.theatre',
+    'osm.amenity.museum',
+    'osm.amenity.arts_centre',
+    'osm.amenity.bowling_alley',
+    'osm.amenity.fitness_centre',
+    'osm.amenity.sports_centre',
+    'osm.tourism.attraction',
+    'osm.tourism.museum',
+    'osm.tourism.gallery',
+    'osm.tourism.viewpoint',
+    'osm.leisure.park',
+    'osm.leisure.playground',
+    'osm.leisure.sports_centre',
+    'osm.leisure.fitness_centre',
+    'osm.leisure.bowling_alley',
+    'osm.leisure.water_park',
+  ],
+  hall: [
+    'osm.amenity.community_centre',
+    'osm.amenity.social_centre',
+    'osm.amenity.conference_centre',
+    'osm.amenity.events_venue',
+    'osm.leisure.sports_hall',
+    'osm.leisure.sports_centre',
+    'osm.tourism.hotel',
+    'osm.tourism.guest_house',
+  ],
+};
 
-  if (mode === 'hall') {
-    return `[out:json][timeout:12];(
-      nwr(around:${around},${lat},${lon})[amenity~"community_centre|social_centre|conference_centre|events_venue"];
-      nwr(around:${around},${lat},${lon})[leisure~"sports_hall|sports_centre"];
-      nwr(around:${around},${lat},${lon})[tourism~"hotel|guest_house"];
-    );out center tags;`;
-  }
-
-  return `[out:json][timeout:12];(
-    nwr(around:${around},${lat},${lon})[amenity~"restaurant|cafe|bar|fast_food|pub|cinema|theatre|museum|arts_centre|bowling_alley|fitness_centre|sports_centre"];
-    nwr(around:${around},${lat},${lon})[tourism~"attraction|museum|gallery|viewpoint"];
-    nwr(around:${around},${lat},${lon})[leisure~"park|playground|sports_centre|fitness_centre|bowling_alley|water_park"];
-  );out center tags;`;
+function buildPhotonUrl(mode, lat, lon, radius, limit) {
+  const url = new URL(PHOTON_ENDPOINTS[0]);
+  url.searchParams.set('lat', String(lat));
+  url.searchParams.set('lon', String(lon));
+  url.searchParams.set('radius', String(radius));
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('lang', 'fr');
+  url.searchParams.set('dedupe', '1');
+  url.searchParams.set('include', MODE_FILTERS[mode].join(','));
+  return url.toString();
 }
 
-async function fetchOverpass(endpoint, query, timeoutMs) {
+async function fetchPhoton(url, timeoutMs = 6500) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': 'application/json',
-        'User-Agent': 'MyEvent/51.2 (OSM venue/place search; my-event-eosin.vercel.app)'
+        Accept: 'application/json',
+        'User-Agent': 'MyEvent/51.3 (nearby and venue search; my-event-eosin.vercel.app)',
       },
-      body: 'data=' + encodeURIComponent(query),
-      signal: controller.signal
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error('Overpass HTTP ' + response.status);
+      throw new Error('Photon HTTP ' + response.status);
     }
 
     const data = await response.json();
 
-    if (!data || !Array.isArray(data.elements)) {
-      throw new Error('Réponse Overpass invalide');
+    if (!data || !Array.isArray(data.features)) {
+      throw new Error('Réponse Photon invalide');
     }
 
     return data;
   } finally {
     clearTimeout(timer);
-  }
-}
-
-async function queryOverpass(query) {
-  try {
-    return await Promise.any(
-      OVERPASS_ENDPOINTS.map(endpoint =>
-        fetchOverpass(endpoint, query, 4500)
-      )
-    );
-  } catch (error) {
-    const reasons = Array.isArray(error?.errors)
-      ? error.errors.map(e => e?.message || String(e)).join(' | ')
-      : error?.message || 'Overpass indisponible';
-
-    throw new Error(reasons);
   }
 }
 
@@ -139,12 +174,11 @@ module.exports = async function handler(req, res) {
   const mode = String(req.query.mode || 'nearby').toLowerCase();
   const lat = number(req.query.lat);
   const lon = number(req.query.lon);
-  const radius =
-    number(req.query.radius) ?? (mode === 'hall' ? 5 : 3);
+  const radius = number(req.query.radius) ?? (mode === 'hall' ? 5 : 3);
   const minCapacity = number(req.query.minCapacity);
   const maxBudget = number(req.query.maxBudget);
 
-  if (!['nearby', 'hall'].includes(mode)) {
+  if (!Object.prototype.hasOwnProperty.call(MODE_FILTERS, mode)) {
     return send(res, 400, {
       error: 'Mode de recherche invalide.'
     });
@@ -181,14 +215,21 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const query = buildQuery(mode, lat, lon, radius);
+  const url = buildPhotonUrl(
+    mode,
+    lat,
+    lon,
+    radius,
+    mode === 'hall' ? 120 : 160
+  );
+
   let data;
 
   try {
-    data = await queryOverpass(query);
+    data = await fetchPhoton(url);
   } catch (error) {
     console.error(
-      '[MyEvent V51.2] Overpass failure:',
+      '[MyEvent V51.3] Photon failure:',
       error?.message || error
     );
 
@@ -196,16 +237,16 @@ module.exports = async function handler(req, res) {
       error:
         'Le service OpenStreetMap est temporairement indisponible.',
       detail:
-        error?.message || 'Overpass indisponible'
+        error?.message || 'Photon indisponible'
     });
   }
 
   const seen = new Set();
   const results = [];
 
-  for (let i = 0; i < data.elements.length; i += 1) {
-    const item = normalizePlace(
-      data.elements[i],
+  for (let i = 0; i < data.features.length; i += 1) {
+    const item = normalizeFeature(
+      data.features[i],
       i
     );
 
@@ -226,6 +267,8 @@ module.exports = async function handler(req, res) {
         item.lat,
         item.lon
       );
+
+    if (item.distance > radius) continue;
 
     if (
       mode === 'hall' &&
@@ -272,6 +315,6 @@ module.exports = async function handler(req, res) {
         ? (maxBudget || null)
         : null,
     source:
-      'OpenStreetMap / Overpass via MyEvent API'
+      'OpenStreetMap / Photon via MyEvent API'
   });
 };
