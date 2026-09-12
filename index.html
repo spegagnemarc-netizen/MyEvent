@@ -1149,12 +1149,12 @@ function setBusy(id,busy,label){
 
 
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
-let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null;
+let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationHallMarker=null;
 let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
-  if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
-  locationEventMarker=null; locationUserMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
+  if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); if(locationHallMarker)locationMap.removeLayer(locationHallMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
+  locationEventMarker=null; locationUserMarker=null; locationHallMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
 }
 function makeLocationIcon(emoji,bg='#278cff'){
   return L.divIcon({className:'',html:'<div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:19px">'+emoji+'</div>',iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]});
@@ -4187,7 +4187,7 @@ async function addManualHall(){
 document.addEventListener('click',e=>{
   const sel=e.target.closest('[data-hall-select]'); if(sel){const h=hallResultsData.find(x=>x.id===sel.dataset.hallSelect);if(h)saveHallSelection(h);return;}
   if(e.target.closest('[data-hall-unselect]')){hallSelectedId=null;renderHallSelected();msg('hallMsg','Sélection retirée.');return;}
-  const mp=e.target.closest('[data-hall-map]'); if(mp){const [lat,lon]=mp.dataset.hallMap.split('|').map(Number); if(Number.isFinite(lat)&&Number.isFinite(lon)){if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17);$('locationsPanel')?.scrollIntoView({behavior:'smooth',block:'center'});showEventTab('locations',true);}return;}
+  const mp=e.target.closest('[data-hall-map]'); if(mp){const [lat,lon]=mp.dataset.hallMap.split('|').map(Number); if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true); setTimeout(()=>{ if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17); if(locationMap){ if(locationHallMarker)locationMap.removeLayer(locationHallMarker); locationHallMarker=L.marker([lat,lon],{icon:makeLocationIcon('🏢','#278cff')}).addTo(locationMap).bindPopup('<b>🏢 Salle sélectionnée</b>').openPopup(); } $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'}); },180);}return;}
 });
 (function(){
  const bind=()=>{
