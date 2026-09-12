@@ -1440,15 +1440,6 @@ async function loadEvents(){
   document.querySelectorAll('.participantsEventBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
     ev.stopPropagation(); const card=btn.closest('.eventCard'); await selectEvent(card.dataset.eventId); showEventTab('members',true); document.querySelector('.tabPanel[data-panel="members"]')?.scrollIntoView({behavior:'smooth',block:'start'});
   }));
-  document.querySelectorAll('.inlineEventStat').forEach(btn=>btn.addEventListener('click',async ev=>{
-    ev.stopPropagation();
-    const card=btn.closest('.eventCard');
-    const tab=btn.dataset.shortcut;
-    if(!card || !tab)return;
-    await selectEvent(card.dataset.eventId);
-    showEventTab(tab,true);
-    document.querySelector('.tabPanel[data-panel="'+tab+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
-  }));
   document.querySelectorAll('.deleteEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();deleteEvent(btn.dataset.id)}));
   document.querySelectorAll('.leaveEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();leaveEvent(btn.dataset.id)}));
   document.addEventListener('click',function closeEventMenus(ev){
@@ -1473,7 +1464,19 @@ async function renderInlineSelectedEvent(){
   const members=(document.getElementById('memberCount')?.textContent||'').replace(/[^0-9]/g,'')||'0';
   const messages=String(document.querySelectorAll('#messages .messageRow').length);
   const photos=String(document.querySelectorAll('#mediaGrid .mediaItem').length);
-  stats.innerHTML='<button type="button" class="inlineEventStat" data-shortcut="members"><b>'+members+'</b><span>Participants</span></button><button type="button" class="inlineEventStat" data-shortcut="discussion"><b>'+messages+'</b><span>Messages</span></button><button type="button" class="inlineEventStat" data-shortcut="media"><b>'+photos+'</b><span>Souvenirs</span></button>'; box.appendChild(stats); card.appendChild(box);
+  stats.innerHTML='<button type="button" class="inlineEventStat" data-shortcut="members"><b>'+members+'</b><span>Participants</span></button><button type="button" class="inlineEventStat" data-shortcut="discussion"><b>'+messages+'</b><span>Messages</span></button><button type="button" class="inlineEventStat" data-shortcut="media"><b>'+photos+'</b><span>Souvenirs</span></button>'; box.appendChild(stats);
+  // Les raccourcis sont créés dynamiquement après le rendu de la liste :
+  // on leur attache donc leur action ici, immédiatement après leur création.
+  stats.querySelectorAll('.inlineEventStat').forEach(btn=>btn.addEventListener('click',async ev=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const tab=btn.dataset.shortcut;
+    if(!tab)return;
+    try{
+      await selectEvent(event.id);
+      showEventTab(tab,true);
+      document.querySelector('.tabPanel[data-panel="'+tab+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
+  })); card.appendChild(box);
 }
 
 async function selectEvent(id, options={}){
