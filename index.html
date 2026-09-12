@@ -1002,11 +1002,11 @@ body.discussionFullScreen{overflow:hidden!important}
     <p id="fundExpenseMsg" class="muted"></p>
   </div>
 </div>
-<div id="fundPendingBox" class="editEventBox hidden" style="margin-top:16px">
+<div id="fundPendingBox" class="editEventBox hidden" style="margin-top:16px;display:none">
   <div><b>🔎 Paiements à confirmer</b><p class="muted">Le responsable confirme uniquement les virements réellement reçus.</p></div>
   <div id="fundPendingEntries" class="fundEntryList"></div>
 </div>
-<div id="fundMemberTrackingBox" class="editEventBox hidden" style="margin-top:16px">
+<div id="fundMemberTrackingBox" class="editEventBox hidden" style="margin-top:16px;display:none">
   <div><b>👥 Suivi des participants</b><p class="muted">Visualise qui a payé, ce qui est en attente et ce qu’il reste à verser.</p></div>
   <div id="fundMemberTracking" class="fundMemberTracking"></div>
 </div>
@@ -1999,6 +1999,7 @@ async function loadFund(){
   const pendingBox=$('fundPendingBox'), pendingList=$('fundPendingEntries');
   if(pendingBox&&pendingList){
     pendingBox.classList.toggle('hidden',!(manager&&pending.length));
+    pendingBox.style.display=(manager&&pending.length)?'block':'none';
     if(manager&&pending.length){
       const ids=[...new Set(pending.map(x=>x.user_id).filter(Boolean))]; let pp=[];
       if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)pp=pr.data||[];}
@@ -2014,7 +2015,8 @@ async function loadFund(){
   // Suivi individuel des participants : le responsable voit tout le groupe,
   // chaque autre membre voit uniquement son propre statut.
   const trackingBox=$('fundMemberTrackingBox'), myBox=$('fundMyTrackingBox');
-  if(trackingBox) trackingBox.classList.toggle('hidden',!manager);
+  // V50.5 : le suivi est explicitement affiché pour le responsable / organisateur.
+  if(trackingBox){ trackingBox.classList.toggle('hidden',!manager); trackingBox.style.display=manager?'block':'none'; }
   if(myBox) myBox.classList.toggle('hidden',manager);
   const membersRes=await sb.from('event_members').select('user_id,nickname,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true});
   const eventMembers=membersRes.data||[];
@@ -2051,6 +2053,7 @@ async function loadFund(){
   if(manager && trackingBox){
     const list=$('fundMemberTracking');
     if(list) list.innerHTML=eventMembers.length?eventMembers.map(trackingHtml).join(''):'<p class="muted">Aucun participant.</p>';
+    if(trackingBox) trackingBox.style.display='block';
   }
   if(!manager && myBox){
     const mine=eventMembers.find(m=>m.user_id===user.id)||{user_id:user.id};
