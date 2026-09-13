@@ -628,6 +628,7 @@ body.discussionFullScreen{overflow:hidden!important}
   #discussionContent .voicePlayBtn{width:34px!important;height:34px!important;min-width:34px!important}
 }
 </style>
+<style id="myevent-v52-3-sortie-selected">.outingCardSelected{border-color:#3d8bfd;box-shadow:0 0 0 1px rgba(61,139,253,.22) inset}.outingSelectedBadge{display:inline-block;margin-left:5px;border:1px solid #3d8bfd;border-radius:999px;padding:3px 6px;font-size:10px;color:#8fc0ff;vertical-align:middle}.outingSelected{box-shadow:0 0 0 1px rgba(61,139,253,.18) inset}</style>
 </head>
 <body>
 <div class="app">
@@ -4120,6 +4121,14 @@ function outingCategory(type){
   if(['park','playground','beach','viewpoint'].includes(type))return 'nature';
   return 'activity';
 }
+function isSelectedOuting(p){
+  if(!outingSelected)return false;
+  const sameName=String(p.name||'').trim().toLowerCase()===String(outingSelected.name||'').trim().toLowerCase();
+  const sameCoords=Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lon))&&Number.isFinite(Number(outingSelected.lat))&&Number.isFinite(Number(outingSelected.lon))
+    &&Math.abs(Number(p.lat)-Number(outingSelected.lat))<0.00005
+    &&Math.abs(Number(p.lon)-Number(outingSelected.lon))<0.00005;
+  return sameName || sameCoords;
+}
 function renderOutingResults(){
   const el=$('outingResults'); if(!el)return;
   const q=outingSearch.trim().toLowerCase();
@@ -4137,7 +4146,8 @@ function renderOutingResults(){
   el.innerHTML=arr.slice(0,30).map(p=>{
     const price=Number.isFinite(Number(p.price))&&Number(p.price)>0?eur(Number(p.price)):'Tarif à vérifier';
     const typeLabel=outingCategory(p.type)==='restaurant'?'Restaurant':outingCategory(p.type)==='culture'?'Culture':outingCategory(p.type)==='nature'?'Nature':'Activité';
-    return '<div class="outingCard"><div class="outingCardTop"><div class="outingName">'+(locationIcons[p.type]||'🎯')+' '+esc(p.name)+'</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div><div class="outingMeta"><span class="outingChip">'+typeLabel+'</span><span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span><span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div><div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div><div class="outingActionsRow"><button type="button" data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">⭐ Ajouter à l’événement</button>'+(p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+(p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>';
+    const selected=isSelectedOuting(p);
+     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'"><div class="outingCardTop"><div class="outingName">'+(locationIcons[p.type]||'🎯')+' '+esc(p.name)+(selected?' <span class="outingSelectedBadge">⭐ Sélectionnée</span>':'')+'</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div><div class="outingMeta"><span class="outingChip">'+typeLabel+'</span><span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span><span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div><div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div><div class="outingActionsRow"><button type="button" '+(selected?'class="secondary"':'')+' data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">'+(selected?'🔄 Changer de sortie':'⭐ Ajouter à l’événement')+'</button>'+(p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+(p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>';
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
 }
 async function loadSelectedOuting(){
