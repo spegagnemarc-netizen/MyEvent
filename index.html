@@ -892,6 +892,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <button class="eventTab" data-tab="fund" role="tab">💰 Cagnotte</button>
 <button class="eventTab" data-tab="hall" role="tab">🏢 Salle</button>
 <button class="eventTab" data-tab="outings" role="tab">🍽️ Sorties</button>
+<button class="eventTab" data-tab="aioutings" role="tab">✨ Sortie IA</button>
 <button class="eventTab" data-tab="supplies" role="tab">🎒 Matériel</button>
 </div>
 
@@ -1109,6 +1110,19 @@ body.discussionFullScreen{overflow:hidden!important}
 </div>
 </details>
 
+<details class="card tabPanel collapsibleCard uniformToggle aiOutingPanel" data-panel="aioutings" id="aiOutingsPanel">
+<summary>✨ Organiser toute la sortie avec l’IA</summary>
+<div class="collapsibleBody">
+  <div class="aiOutingStandaloneHead">
+    <div><b>✨ Sortie IA</b><p class="muted">Crée un parcours complet pour le groupe, indépendamment de la sortie individuelle sélectionnée dans 🍽️ Sorties.</p></div>
+    <button type="button" id="aiOutingOpenBtn">✨ Organiser une sortie</button>
+  </div>
+  <div class="aiOutingStandaloneHint">L’IA peut combiner une ou plusieurs activités, un restaurant, les horaires et les informations disponibles autour de l’événement.</div>
+  <div id="aiPlanPanelBox"></div>
+  <div id="aiPlanReservationPanelBox"></div>
+</div>
+</details>
+
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="hall" id="hallPanel">
 <summary>🏢 Salle / lieu de réception</summary>
 <div class="collapsibleBody">
@@ -1255,6 +1269,7 @@ function showEventTab(name, forceState=null){
       if(name==='hall'){ loadHall(); }
       if(name==='supplies'){ loadSupplies(); }
       if(name==='outings'){ searchOutings(); }
+      if(name==='aioutings'){ if(typeof loadAiOutingPlan==='function') loadAiOutingPlan(); }
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
@@ -1754,16 +1769,11 @@ async function renderInlineSelectedEvent(){
         '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
         '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>'+
         ''+
-        '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
-        '<div class="planningAiNote">L’IA peut combiner restaurant + une ou plusieurs activités + horaires + trajets, puis enregistrer le planning complet.</div>'+
-        '<div id="homeAiPlanBox"></div>'+
-        '<div id="homeAiReservationBox"></div>'+
         '<div id="homeReservationBox"></div>';
     }else{
-      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
+      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> ou ouvre <b>✨ Sortie IA</b> pour organiser directement un parcours complet.</div><div id="homeReservationBox"></div>';
     }
     box.appendChild(planning);
-    if(typeof loadAiOutingPlan==='function') loadAiOutingPlan();
     planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
     planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
       if(outing.lat==null||outing.lon==null)return;
@@ -1777,7 +1787,6 @@ async function renderInlineSelectedEvent(){
         $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
       },180);
     });
-    planning.querySelector('[data-planning-ai]')?.addEventListener('click',()=>openAiOutingPlanner());
   }catch(_){ }
 
   card.appendChild(box);
@@ -1826,7 +1835,7 @@ async function selectEvent(id, options={}){
     });
   }else{
     const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
-    restoredTab=['discussion','polls','media','locations','fund','hall'].includes(savedTab)?savedTab:'discussion';
+    restoredTab=['discussion','polls','media','locations','fund','hall','aioutings'].includes(savedTab)?savedTab:'discussion';
     showEventTab(restoredTab,true);
   }
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
@@ -4916,10 +4925,21 @@ loadSelectedOuting=async function(){
 @media(max-width:600px){.planningActions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 
+<style id="myevent-v54-ai-standalone">
+.aiOutingPanel .collapsibleBody{padding-top:14px}
+.aiOutingStandaloneHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0 10px}
+.aiOutingStandaloneHead b{font-size:21px}
+.aiOutingStandaloneHead p{margin:4px 0 0}
+.aiOutingStandaloneHint{border:1px solid #28445b;border-radius:13px;background:#0b1824;padding:11px;color:#9eb2c4;font-size:13px;line-height:1.45;margin-bottom:12px}
+#aiPlanPanelBox{margin-top:8px}
+#aiPlanReservationPanelBox{margin-top:12px}
+@media(max-width:600px){.aiOutingStandaloneHead{flex-direction:column;align-items:stretch}.aiOutingStandaloneHead button{width:100%}}
+</style>
+
 <div id="aiPlanModal" class="aiPlanModal" aria-hidden="true">
   <div class="aiPlanPanel" role="dialog" aria-modal="true" aria-labelledby="aiPlanTitle">
     <div class="aiPlanHeader">
-      <h3 id="aiPlanTitle">✨ Organiser toute la sortie</h3>
+      <h3 id="aiPlanTitle">✨ Organiser une sortie avec l’IA</h3>
       <button type="button" class="secondary aiPlanClose" id="aiPlanClose">✕</button>
     </div>
     <div class="aiPlanIntro">L’IA va chercher des lieux autour de l’événement et construire une sortie complète : restaurant, activité(s), horaires et budget. Tu peux préciser l’heure de début et le type/heure du repas pour obtenir un planning plus réaliste.</div>
@@ -5152,10 +5172,13 @@ async function saveAiOutingPlan(index){
     if(dr.error)throw new Error(dr.error.message);
 
     closeAiOutingPlanner();
+    showEventTab('aioutings',true);
+    // V54 : le planning IA vit dans son propre onglet et ne dépend plus
+    // de la sortie individuelle sélectionnée.
     await renderInlineSelectedEvent();
     // V53.13 FIX 2 : afficher immédiatement le planning qui vient d'être enregistré.
     // Cela évite de dépendre d'un second SELECT Supabase au moment du rendu.
-    const savedBox=$('homeAiPlanBox');
+    const savedBox=$('aiPlanPanelBox');
     if(savedBox){
       savedBox.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
         '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
@@ -5177,7 +5200,7 @@ async function saveAiOutingPlan(index){
 let aiPlanLoadToken=0;
 
 async function loadAiOutingPlan(){
-  const box=$('homeAiPlanBox');
+  const box=$('aiPlanPanelBox');
   if(!box||!event)return;
 
   const loadToken=++aiPlanLoadToken;
@@ -5379,6 +5402,7 @@ async function loadAiOutingPlan(){
   }
 }
 document.addEventListener('click',e=>{
+  if(e.target.closest('#aiOutingOpenBtn')){openAiOutingPlanner();return;}
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
   if(e.target.closest('#aiPlanGenerate')){generateAiOutingPlan();return;}
   const c=e.target.closest('[data-ai-plan-index]'); if(c){saveAiOutingPlan(c.dataset.aiPlanIndex);return;}
@@ -5393,7 +5417,7 @@ document.addEventListener('click',e=>{
 </script>
 
 </body>
-<div style="display:none">V53.3</div>
+<div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
 
 <style id="myevent-v32-final">
@@ -5766,7 +5790,7 @@ function aiReservationStatusLabel(r){
   return 'À confirmer';
 }
 async function renderAiPlanReservations(plan,items){
-  const box=$('homeAiReservationBox');
+  const box=$('aiPlanReservationPanelBox');
   if(!box)return;
   if(!plan||!Array.isArray(items)||!items.length){box.innerHTML='';return;}
   window.__myeventAiReservationPlan=plan;
