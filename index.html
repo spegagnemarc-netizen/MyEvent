@@ -4152,20 +4152,28 @@ function renderOutingResults(){
 }
 async function loadSelectedOuting(){
   const box=$('outingSelectedBox'); if(!box||!event)return;
-  const r=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
-  if(r.error||!r.data){
+  // V52.6 : lecture via RPC SECURITY DEFINER pour fonctionner même si
+  // la policy SELECT de event_outings est absente ou restrictive.
+  let r=await sb.rpc('get_event_outing',{p_event_id:event.id});
+  let data=Array.isArray(r.data)?(r.data[0]||null):r.data;
+  // Compatibilité : si le RPC n'existe pas encore, on tente la lecture directe.
+  if(r.error){
+    const fallback=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
+    if(!fallback.error) data=fallback.data;
+  }
+  if(!data){
     outingSelected=null;
     box.classList.add('hidden');
     renderOutingResults();
     return;
   }
-  outingSelected=r.data;
+  outingSelected=data;
   box.classList.remove('hidden');
-  box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.outing_type?'<span class="outingChip">'+esc(r.data.outing_type)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+  box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(data.name)+'</b></div><div class="outingMeta">'+(data.outing_type?'<span class="outingChip">'+esc(data.outing_type)+'</span>':'')+(data.price_per_person!=null?'<span class="outingChip">💶 '+eur(data.price_per_person)+' / pers.</span>':'')+'</div>'+(data.address?'<div class="outingAddress">📍 '+esc(data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
   // V52.4 : re-rendre les résultats APRÈS le chargement de la sélection.
   // Sans cela, le message de confirmation était visible mais les cartes restaient sur « Ajouter ».
   renderOutingResults();
-  $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
+  $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
 }
 async function selectOuting(id){
   const p=outingResultsData.find(x=>String(x.id)===String(id)||String((x.lat||'')+'|'+(x.lon||''))===String(id)); if(!p||!event||!user)return;
@@ -4192,7 +4200,7 @@ async function selectOuting(id){
     if(box&&outingSelected){
       box.classList.remove('hidden');
       box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(outingSelected.name)+'</b></div><div class="outingMeta">'+(outingSelected.outing_type?'<span class="outingChip">'+esc(outingSelected.outing_type)+'</span>':'')+(outingSelected.price_per_person!=null?'<span class="outingChip">💶 '+eur(outingSelected.price_per_person)+' / pers.</span>':'')+'</div>'+(outingSelected.address?'<div class="outingAddress">📍 '+esc(outingSelected.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
-      $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
+      $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
     }
     renderOutingResults();
   } else {
