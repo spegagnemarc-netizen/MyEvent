@@ -4149,9 +4149,21 @@ async function loadSelectedOuting(){
 }
 async function selectOuting(id){
   const p=outingResultsData.find(x=>String(x.id)===String(id)||String((x.lat||'')+'|'+(x.lon||''))===String(id)); if(!p||!event||!user)return;
-  const payload={event_id:event.id,name:p.name,address:p.address||null,lat:Number(p.lat)||null,lon:Number(p.lon)||null,outing_type:outingCategory(p.type),price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,website:p.website||null,phone:p.phone||null,source:'openstreetmap',created_by:user.id,updated_at:new Date().toISOString()};
-  const r=await sb.from('event_outings').upsert(payload,{onConflict:'event_id'}); if(r.error){msg('outingMsg','Erreur de sauvegarde : '+r.error.message,'err');return;}
-  await loadSelectedOuting(); msg('outingMsg','Sortie ajoutée à l’événement.','ok');
+  const payload={
+    p_event_id:event.id,
+    p_name:p.name,
+    p_address:p.address||null,
+    p_lat:Number(p.lat)||null,
+    p_lon:Number(p.lon)||null,
+    p_outing_type:outingCategory(p.type),
+    p_price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,
+    p_website:p.website||null,
+    p_phone:p.phone||null,
+    p_source:'openstreetmap'
+  };
+  const r=await sb.rpc('save_event_outing',payload);
+  if(r.error){msg('outingMsg','Erreur de sauvegarde : '+r.error.message,'err');return;}
+  await loadSelectedOuting(); msg('outingMsg','⭐ Sortie sélectionnée et enregistrée dans ton événement.','ok');
 }
 async function searchOutings(){
   if(!event){return;} const el=$('outingResults'); if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du lieu de l’événement…</div>';
