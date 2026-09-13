@@ -1233,12 +1233,12 @@ function setBusy(id,busy,label){
 
 
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
-let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationHallMarker=null;
+let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationHallMarker=null, locationOutingMarker=null;
 let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
-  if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); if(locationHallMarker)locationMap.removeLayer(locationHallMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
-  locationEventMarker=null; locationUserMarker=null; locationHallMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
+  if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); if(locationHallMarker)locationMap.removeLayer(locationHallMarker); if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
+  locationEventMarker=null; locationUserMarker=null; locationHallMarker=null; locationOutingMarker=null; locationMemberMarkers=[]; locationPlaceMarkers=[];
 }
 function makeLocationIcon(emoji,bg='#278cff'){
   return L.divIcon({className:'',html:'<div style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:19px">'+emoji+'</div>',iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]});
@@ -4137,19 +4137,19 @@ function renderOutingResults(){
   el.innerHTML=arr.slice(0,30).map(p=>{
     const price=Number.isFinite(Number(p.price))&&Number(p.price)>0?eur(Number(p.price)):'Tarif à vérifier';
     const typeLabel=outingCategory(p.type)==='restaurant'?'Restaurant':outingCategory(p.type)==='culture'?'Culture':outingCategory(p.type)==='nature'?'Nature':'Activité';
-    return '<div class="outingCard"><div class="outingCardTop"><div class="outingName">'+(locationIcons[p.type]||'🎯')+' '+esc(p.name)+'</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div><div class="outingMeta"><span class="outingChip">'+typeLabel+'</span><span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span><span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div><div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div><div class="outingActionsRow"><button type="button" data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">⭐ Ajouter à l’événement</button>'+(p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'">📍 Voir</button>':'')+(p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>';
+    return '<div class="outingCard"><div class="outingCardTop"><div class="outingName">'+(locationIcons[p.type]||'🎯')+' '+esc(p.name)+'</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div><div class="outingMeta"><span class="outingChip">'+typeLabel+'</span><span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span><span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div><div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div><div class="outingActionsRow"><button type="button" data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">⭐ Ajouter à l’événement</button>'+(p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+(p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>';
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
 }
 async function loadSelectedOuting(){
   const box=$('outingSelectedBox'); if(!box||!event)return;
   const r=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
   if(r.error||!r.data){outingSelected=null;box.classList.add('hidden');return;}
-  outingSelected=r.data; box.classList.remove('hidden'); box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.kind?'<span class="outingChip">'+esc(r.data.kind)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+  outingSelected=r.data; box.classList.remove('hidden'); box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.outing_type?'<span class="outingChip">'+esc(r.data.outing_type)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
   $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');msg('outingMsg','Sortie retirée de l’événement.','ok');});
 }
 async function selectOuting(id){
   const p=outingResultsData.find(x=>String(x.id)===String(id)||String((x.lat||'')+'|'+(x.lon||''))===String(id)); if(!p||!event||!user)return;
-  const payload={event_id:event.id,name:p.name,address:p.address||null,lat:Number(p.lat)||null,lon:Number(p.lon)||null,kind:outingCategory(p.type),price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,website:p.website||null,phone:p.phone||null,source:'openstreetmap',updated_by:user.id,updated_at:new Date().toISOString()};
+  const payload={event_id:event.id,name:p.name,address:p.address||null,lat:Number(p.lat)||null,lon:Number(p.lon)||null,outing_type:outingCategory(p.type),price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,website:p.website||null,phone:p.phone||null,source:'openstreetmap',created_by:user.id,updated_at:new Date().toISOString()};
   const r=await sb.from('event_outings').upsert(payload,{onConflict:'event_id'}); if(r.error){msg('outingMsg','Erreur de sauvegarde : '+r.error.message,'err');return;}
   await loadSelectedOuting(); msg('outingMsg','Sortie ajoutée à l’événement.','ok');
 }
@@ -4169,7 +4169,7 @@ async function searchOutings(){
   document.addEventListener('click',e=>{
     const f=e.target.closest('.outingFilter'); if(f){outingFilter=f.dataset.outingFilter||'all';document.querySelectorAll('.outingFilter').forEach(b=>b.classList.toggle('active',b===f));renderOutingResults();return;}
     const s=e.target.closest('[data-outing-select]'); if(s){selectOuting(s.dataset.outingSelect);return;}
-    const m=e.target.closest('[data-outing-map]'); if(m){const [lat,lon]=m.dataset.outingMap.split('|').map(Number);if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true);setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17);},180);}return;}
+    const m=e.target.closest('[data-outing-map]'); if(m){const [lat,lon]=m.dataset.outingMap.split('|').map(Number);if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true);setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17); if(locationMap){if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker); locationOutingMarker=L.marker([lat,lon],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(m.dataset.outingName||'Sortie')+'</b>').openPopup();} $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});},180);}return;}
   });
 }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();})();
 </script>
