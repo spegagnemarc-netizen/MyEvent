@@ -4918,13 +4918,37 @@ async function saveAiOutingPlan(index){
 }
 async function loadAiOutingPlan(){
   const box=$('homeAiPlanBox'); if(!box||!event)return;
-  const p=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).eq('status','selected').maybeSingle();
-  if(p.error){
-    box.innerHTML='<div class="planningEmpty">⚠️ Planning IA enregistré mais lecture impossible : '+esc(p.error.message||'erreur Supabase')+'</div>';
+  // V53.18 : après une reconnexion, le rendu standard peut arriver avant que
+  // la session Supabase soit complètement rétablie. On retente la lecture.
+  box.innerHTML='<div class="planningEmpty">✨ Chargement du planning IA…</div>';
+  let p=null;
+  let lastError=null;
+  for(let attempt=0;attempt<3;attempt++){
+    const q=await sb.from('event_outing_plans')
+      .select('*')
+      .eq('event_id',event.id)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(!q.error && q.data){
+      p=q.data;
+      break;
+    }
+    if(q.error)lastError=q.error;
+    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500));
+  }
+  if(lastError && !p){
+    box.innerHTML='<div class="planningEmpty">⚠️ Impossible de relire le planning IA : '+esc(lastError.message||'erreur Supabase')+'</div>';
     return;
   }
-  if(!p.data){box.innerHTML='';return;}
-  const ir=await sb.from('event_outing_plan_items').select('*').eq('plan_id',p.data.id).order('step_order',{ascending:true});
+  if(!p){
+    box.innerHTML='<div class="aiPlanEmpty"><div class="aiPlanSavedTitle">✨ Planning IA</div><div class="muted">Aucun planning IA enregistré pour cet événement.</div></div>';
+    return;
+  }
+  const ir=await sb.from('event_outing_plan_items')
+    .select('*')
+    .eq('plan_id',p.id)
+    .order('step_order',{ascending:true});
   if(ir.error){
     box.innerHTML='<div class="planningEmpty">⚠️ Planning IA enregistré mais ses étapes ne peuvent pas être relues : '+esc(ir.error.message||'erreur Supabase')+'</div>';
     return;
@@ -4933,11 +4957,11 @@ async function loadAiOutingPlan(){
     box.innerHTML='<div class="planningEmpty">⚠️ Planning IA trouvé, mais aucune étape n’est enregistrée.</div>';
     return;
   }
-  box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(p.data.title||'Sortie complète')+' · '+esc(String(p.data.people||1))+' pers.</div>'+
+  box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(p.title||'Sortie complète')+' · '+esc(String(p.people||1))+' pers.</div>'+
     ir.data.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
     '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
   box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
-  if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(p.data,ir.data);
+  if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(p,ir.data);
 }
 document.addEventListener('click',e=>{
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
