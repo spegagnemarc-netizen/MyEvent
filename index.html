@@ -5483,7 +5483,6 @@ async function saveAiOutingPlan(index){
       request:String(aiOutingPlanData.request||$('aiPlanPrompt')?.value||'').slice(0,2000),
       people:Math.max(1,Number(aiOutingPlanData.people)||1),
       budget_per_person:aiOutingPlanData.budget_per_person!=null?Number(aiOutingPlanData.budget_per_person):null,
-      start_time:String($('aiPlanStartTime')?.value||'').trim(),
       status:'selected',
       created_by:user.id
     };
