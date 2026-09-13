@@ -1714,7 +1714,7 @@ async function renderInlineSelectedEvent(){
         '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
         '<button type="button" class="planningMapCta" data-home-outing-map="1">📍 Carte MyEvent</button>'+
         '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
-        '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div><div id="homeReservationBox" class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div id="homeReservationStatus" class="muted">Aucune réservation enregistrée.</div><button type="button" class="secondary" data-home-reserve="1">📅 Préparer la réservation</button></div>';
+        '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div><div id="homeReservationBox" class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div id="homeReservationStatus" class="muted">Aucune réservation enregistrée.</div><button type="button" class="secondary" data-home-reserve="1">📅 Préparer la réservation</button><div id="homeReservationHost"></div></div>';
     }else{
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
     }
@@ -4361,7 +4361,16 @@ function reservationBoxHtml(prefix){
 }
 async function openReservationForm(prefix){
   document.getElementById(prefix+'ReservationForm')?.remove();
-  const host=document.getElementById(prefix+'ReservationHost'); if(!host)return;
+  let host=document.getElementById(prefix+'ReservationHost');
+  if(!host){
+    const box=document.getElementById(prefix+'ReservationBox') || document.getElementById(prefix+'ReservationHost')?.parentElement || document.getElementById('homeReservationBox');
+    if(box){
+      host=document.createElement('div');
+      host.id=prefix+'ReservationHost';
+      box.appendChild(host);
+    }
+  }
+  if(!host)return;
   host.insertAdjacentHTML('beforeend',reservationFormHtml(prefix));
   if(currentReservation){
     const d=currentReservation.reserved_at?new Date(currentReservation.reserved_at):null;
