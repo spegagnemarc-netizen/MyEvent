@@ -4374,6 +4374,9 @@ async function loadEventReservation(){
     return null;
   }
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+  // V53.13 FIX : une réservation annulée ne doit plus rester affichée
+  // dans le bloc de la sortie ni être considérée comme une réservation active.
+  if(currentReservation?.status==='cancelled')currentReservation=null;
   return currentReservation;
 }
 async function saveEventReservation(outingId,prefix){
@@ -4443,7 +4446,14 @@ async function cancelEventReservation(){
   if(!event)return;
   const r=await sb.rpc('cancel_event_reservation',{p_event_id:event.id});
   if(r.error){alert('Impossible d’annuler : '+r.error.message);return;}
-  currentReservation=null; refreshReservationBoxes(); msg('outingMsg','Réservation annulée.','ok');
+  currentReservation=null;
+  const host=$('outingReservationHost');
+  if(host)host.innerHTML=reservationBoxHtml('outing');
+  const home=$('homeReservationBox');
+  if(home)home.innerHTML=reservationBoxHtml('home');
+  $('outingReservationOpen')?.addEventListener('click',()=>openReservationForm('outing'));
+  $('homeReservationOpen')?.addEventListener('click',()=>openReservationForm('home'));
+  msg('outingMsg','Réservation annulée.','ok');
 }
 function mountOutingReservationHost(){
   const box=$('outingSelectedBox'); if(!box||!outingSelected)return;
@@ -4783,9 +4793,11 @@ function renderAiOutingPlans(data){
       '<button type="button" class="aiPlanChoose" data-ai-plan-index="'+oi+'">✅ Choisir cette proposition</button></div>';
   }).join('');
 }
+let aiPlanSaving=false;
 async function saveAiOutingPlan(index){
   const o=aiOutingPlanData?.options?.[Number(index)];
-  if(!o||!event||!user)return;
+  if(!o||!event||!user||aiPlanSaving)return;
+  aiPlanSaving=true;
   const btn=document.querySelector('[data-ai-plan-index="'+index+'"]'); if(btn)btn.disabled=true;
   try{
     const planPayload={
@@ -4799,7 +4811,7 @@ async function saveAiOutingPlan(index){
     };
     const pr=await sb.from('event_outing_plans').upsert(planPayload,{onConflict:'event_id'}).select('*').single();
     if(pr.error)throw new Error(pr.error.message);
-    await sb.from('event_outing_plan_items').delete().eq('plan_id',pr.data.id);
+
     const items=(o.steps||[]).map((s,i)=>({
       plan_id:pr.data.id,event_id:event.id,step_order:i+1,
       outing_type:String(s.type||'activity'),
@@ -4811,8 +4823,21 @@ async function saveAiOutingPlan(index){
       created_by:user.id
     }));
     if(!items.length)throw new Error('La proposition ne contient aucune étape.');
-    const ir=await sb.from('event_outing_plan_items').insert(items).select('*');
+
+    // V53.13 FIX : la contrainte SQL est UNIQUE(plan_id, step_order).
+    // On met à jour les étapes existantes au lieu de les supprimer puis de les réinsérer.
+    const ir=await sb.from('event_outing_plan_items')
+      .upsert(items,{onConflict:'plan_id,step_order'})
+      .select('*');
     if(ir.error)throw new Error(ir.error.message);
+
+    // Si la nouvelle proposition comporte moins d’étapes, supprimer les anciennes en trop.
+    const dr=await sb.from('event_outing_plan_items')
+      .delete()
+      .eq('plan_id',pr.data.id)
+      .gt('step_order',items.length);
+    if(dr.error)throw new Error(dr.error.message);
+
     closeAiOutingPlanner();
     await renderInlineSelectedEvent();
     await refreshReservationBoxes();
@@ -4821,6 +4846,8 @@ async function saveAiOutingPlan(index){
     $('aiPlanStatus').textContent='Impossible d’enregistrer : '+(e.message||String(e));
     $('aiPlanStatus').className='aiPlanStatus err';
     if(btn)btn.disabled=false;
+  }finally{
+    aiPlanSaving=false;
   }
 }
 async function loadAiOutingPlan(){
