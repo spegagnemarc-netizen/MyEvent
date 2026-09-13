@@ -633,6 +633,9 @@ body.discussionFullScreen{overflow:hidden!important}
 <style id="myevent-v52-7-sortie-home">
 .inlineSelectedOuting{margin-top:12px;padding:13px;border:1px solid #3d8bfd;border-radius:15px;background:linear-gradient(145deg,#102a42,#0b1824);box-shadow:0 0 0 1px rgba(61,139,253,.16) inset}.inlineSelectedOutingTitle{font-size:16px;font-weight:850;margin-bottom:7px}.inlineSelectedOutingName{font-size:18px;font-weight:850}.inlineSelectedOutingMeta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.inlineSelectedOutingAddress{color:#b7c7d5;font-size:12px;line-height:1.4}.inlineSelectedOutingActions{display:flex;gap:7px;margin-top:10px}.inlineSelectedOutingActions>*{flex:1;min-width:0;text-align:center;text-decoration:none;display:grid;place-items:center}.inlineSelectedOutingReviews{margin-top:8px;padding:8px 10px;border:1px solid #28445b;border-radius:10px;color:#9eb2c4;font-size:11px;line-height:1.4}@media(max-width:600px){.inlineSelectedOutingActions{flex-wrap:wrap}.inlineSelectedOutingActions>*{min-width:120px}}
 </style>
+<style id="myevent-v52-8-planning-home">
+.inlineEventPlanning{margin-top:12px;border:1px solid #315b78;border-radius:14px;background:#0b1824;padding:12px}.inlineEventPlanningTitle{font-size:18px;font-weight:850}.inlineEventPlanningStatus{margin-top:5px;color:#91d0ff;font-size:13px}.planningStep{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:start;margin-top:12px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#08131e}.planningStepIcon{width:42px;height:42px;border-radius:12px;background:#10283b;display:grid;place-items:center;font-size:22px}.planningStepName{font-weight:800;font-size:15px}.planningStepMeta{margin-top:4px;color:#9eb2c4;font-size:12px;line-height:1.4}.planningActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.planningActions a,.planningActions button{min-height:42px}.planningAiCta{margin-top:10px;width:100%;min-height:44px!important}.planningEmpty{margin-top:12px;padding:12px;border:1px dashed #315b78;border-radius:12px;color:#9eb2c4;font-size:13px;line-height:1.45}.planningAiNote{margin-top:8px;color:#7f96aa;font-size:11px}@media(max-width:600px){.planningActions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1665,6 +1668,37 @@ async function renderInlineSelectedEvent(){
       document.querySelector('.tabPanel[data-panel="'+tab+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
   }));
+
+  // V52.8 : planning de l'événement sur l'accueil. La sortie sélectionnée devient
+  // la première étape du planning ; l'organisation IA complète viendra ensuite.
+  try{
+    const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
+    const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
+    const planning=document.createElement('div');
+    planning.className='inlineEventPlanning';
+    if(outing){
+      const t=String(outing.outing_type||'').toLowerCase();
+      const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
+      const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
+      const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query);
+      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
+        '<div class="inlineEventPlanningStatus">⭐ Sortie sélectionnée — à confirmer par le groupe</div>'+
+        '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
+        '<div class="planningActions"><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
+        '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
+        '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div>';
+    }else{
+      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
+    }
+    box.appendChild(planning);
+    planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    planning.querySelector('[data-planning-ai]')?.addEventListener('click',()=>{
+      showEventTab('outings',true);
+      const msgEl=$('outingMsg');
+      if(msgEl){msgEl.textContent='✨ L’organisation IA sera ajoutée dans l’étape suivante : repas + activité + horaires + vote du groupe.';msgEl.className='muted';}
+      document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }catch(_){ }
 
   // V52.7 : afficher la sortie sélectionnée directement dans la fiche d'accueil.
   try{
@@ -4271,6 +4305,7 @@ async function searchOutings(){
 </script>
 
 </body>
+<div style="display:none">V52.8</div>
 </html>
 
 <style id="myevent-v32-final">
