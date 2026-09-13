@@ -4183,7 +4183,22 @@ async function selectOuting(id){
   };
   const r=await sb.rpc('save_event_outing',payload);
   if(r.error){msg('outingMsg','Erreur de sauvegarde : '+r.error.message,'err');return;}
-  await loadSelectedOuting(); msg('outingMsg','⭐ Sortie sélectionnée et enregistrée dans ton événement.','ok');
+  // V52.5 : le RPC retourne directement la ligne sauvegardée.
+  // On l'utilise immédiatement pour l'affichage afin de ne pas dépendre
+  // d'une policy SELECT event_outings éventuellement absente.
+  if(r.data){
+    outingSelected=Array.isArray(r.data)?(r.data[0]||null):r.data;
+    const box=$('outingSelectedBox');
+    if(box&&outingSelected){
+      box.classList.remove('hidden');
+      box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(outingSelected.name)+'</b></div><div class="outingMeta">'+(outingSelected.outing_type?'<span class="outingChip">'+esc(outingSelected.outing_type)+'</span>':'')+(outingSelected.price_per_person!=null?'<span class="outingChip">💶 '+eur(outingSelected.price_per_person)+' / pers.</span>':'')+'</div>'+(outingSelected.address?'<div class="outingAddress">📍 '+esc(outingSelected.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+      $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
+    }
+    renderOutingResults();
+  } else {
+    await loadSelectedOuting();
+  }
+  msg('outingMsg','⭐ Sortie sélectionnée et enregistrée dans ton événement.','ok');
 }
 async function searchOutings(){
   if(!event){return;} const el=$('outingResults'); if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du lieu de l’événement…</div>';
