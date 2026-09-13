@@ -4533,12 +4533,26 @@ loadSelectedOuting=async function(){
     if(!date||!time){alert('Choisis une date et une heure.');return;}
     const localDate=new Date(date+'T'+time);
     if(Number.isNaN(localDate.getTime())){alert('La date ou l’heure est invalide.');return;}
-    const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
-    if(r.error){alert('Impossible d’enregistrer la réservation : '+r.error.message);return;}
-    currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
-    document.getElementById(prefix+'ReservationForm')?.remove();
-    refreshReservationBoxes();
-    msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
+    const saveBtn=document.getElementById(prefix+'ReservationSave');
+    if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='⏳ Enregistrement…';}
+    try{
+      const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
+      if(r.error){
+        console.error('save_event_reservation',r.error);
+        alert('Impossible d’enregistrer la réservation.\n\n'+r.error.message+'\n\nSi la fonction V53 n’a pas encore été créée dans Supabase, exécute le SQL V53.');
+        return;
+      }
+      currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+      if(!currentReservation){alert('La réservation n’a pas été retournée par Supabase.');return;}
+      document.getElementById(prefix+'ReservationForm')?.remove();
+      await refreshReservationBoxes();
+      msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
+    }catch(err){
+      console.error(err);
+      alert('Erreur pendant l’enregistrement : '+(err?.message||err));
+    }finally{
+      if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='💾 Enregistrer';}
+    }
   };
 })();
 </script>
@@ -4554,6 +4568,8 @@ loadSelectedOuting=async function(){
 .reservationEditControl{width:100%!important;box-sizing:border-box!important;min-height:54px!important;padding:12px!important;border:1px solid #3b6683!important;border-radius:12px!important;background:#08131e!important;color:#fff!important;font:inherit!important;font-size:18px!important;opacity:1!important;pointer-events:auto!important;user-select:text!important;-webkit-user-select:text!important;position:relative!important;z-index:100001!important}
 .reservationEditControl[type=number]{font-size:20px}
 .reservationEditBody textarea{min-height:120px!important;resize:vertical!important}
+.reservationActions button{touch-action:manipulation!important;pointer-events:auto!important;position:relative!important;z-index:100002!important}
+#homeReservationBox,#outingReservationHost{position:relative!important;z-index:10!important}
 </style>
 
 </body>
