@@ -1817,16 +1817,12 @@ async function renderInlineSelectedEvent(){
       '<button type="button" class="secondary eventPlanningChoice '+(choice==='ai'?'active':'')+'" data-event-planning-choice="ai" '+(!aiPlan||!aiItems.length?'disabled title="Aucun planning IA disponible"':'')+'>✨ IA</button>'+
       '</div>'+
       '<div id="eventPlanningSelectedContent">'+(choice==='ai'?renderAi():renderManual())+'</div>'+
-      '<div id="homeReservationBox"></div>';
+      '<div id="homeAiReservationBox" style="display:'+(choice==='ai'?'block':'none')+'"></div>'+
+      '<div id="homeReservationBox" style="display:'+(choice==='manual'?'block':'none')+'"></div>';
     box.appendChild(planning);
 
     const content=planning.querySelector('#eventPlanningSelectedContent');
-    const updateChoice=(next)=>{
-      if(next==='ai'&&(!aiPlan||!aiItems.length))return;
-      choice=next;
-      try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
-      planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
-      if(content)content.innerHTML=choice==='ai'?renderAi():renderManual();
+    const bindPlanningActions=()=>{
       planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
       planning.querySelector('[data-open-ai-planning]')?.addEventListener('click',()=>{showEventTab('aioutings',true);document.querySelector('.tabPanel[data-panel="aioutings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
       planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
@@ -1842,7 +1838,30 @@ async function renderInlineSelectedEvent(){
         },180);
       });
     };
+    const updateChoice=async(next)=>{
+      if(next==='ai'&&(!aiPlan||!aiItems.length))return;
+      choice=next;
+      try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
+      planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
+      if(content)content.innerHTML=choice==='ai'?renderAi():renderManual();
+      const manualBox=planning.querySelector('#homeReservationBox');
+      const aiBox=planning.querySelector('#homeAiReservationBox');
+      if(manualBox)manualBox.style.display=choice==='manual'?'block':'none';
+      if(aiBox)aiBox.style.display=choice==='ai'?'block':'none';
+      bindPlanningActions();
+      if(choice==='ai'){
+        if(manualBox)manualBox.innerHTML='';
+        if(typeof renderAiPlanReservations==='function'&&aiPlan&&aiItems.length)await renderAiPlanReservations(aiPlan,aiItems,'homeAiReservationBox');
+      }else{
+        if(aiBox)aiBox.innerHTML='';
+        if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes();
+      }
+    };
     planning.querySelectorAll('[data-event-planning-choice]').forEach(btn=>btn.addEventListener('click',()=>updateChoice(btn.dataset.eventPlanningChoice)));
+    bindPlanningActions();
+    if(choice==='ai'&&typeof renderAiPlanReservations==='function'&&aiPlan&&aiItems.length){
+      renderAiPlanReservations(aiPlan,aiItems,'homeAiReservationBox');
+    }
     updateChoice(choice);
   }catch(_){ }
 
@@ -4741,8 +4760,15 @@ async function openReservationForm(prefix){
 }
 async function refreshReservationBoxes(){
   await loadEventReservation();
+  const choiceKey=user&&event?'myevent_event_planning_choice_'+user.id+'_'+event.id:'';
+  let planningChoice='manual';
+  try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){ }
   const host=$('outingReservationHost'); if(host)host.innerHTML=reservationBoxHtml('outing');
-  const home=$('homeReservationBox'); if(home)home.innerHTML=reservationBoxHtml('home');
+  const home=$('homeReservationBox');
+  if(home){
+    home.style.display=planningChoice==='manual'?'block':'none';
+    home.innerHTML=planningChoice==='manual'?reservationBoxHtml('home'):'';
+  }
   $('outingReservationOpen')?.addEventListener('click',()=>openReservationForm('outing'));
   $('homeReservationOpen')?.addEventListener('click',()=>openReservationForm('home'));
   $('outingReservationDelete')?.addEventListener('click',cancelEventReservation);
@@ -5980,8 +6006,8 @@ function aiReservationStatusLabel(r){
   if(r.status==='cancelled')return 'Annulée';
   return 'À confirmer';
 }
-async function renderAiPlanReservations(plan,items){
-  const box=$('aiPlanReservationPanelBox');
+async function renderAiPlanReservations(plan,items,targetId){
+  const box=$(targetId||'aiPlanReservationPanelBox');
   if(!box)return;
   if(!plan||!Array.isArray(items)||!items.length){box.innerHTML='';return;}
   window.__myeventAiReservationPlan=plan;
