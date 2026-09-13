@@ -596,6 +596,8 @@ body.discussionFullScreen{overflow:hidden!important}
 @media(max-width:600px){
   #discussionPanel.active>summary{padding-left:12px!important;padding-right:12px!important}
 }
+
+.planningMapCta{width:100%;margin-top:8px;padding:12px 14px;border:1px solid #294d67;border-radius:14px;background:#0d1a26;color:#f4f8fb;font-weight:800;font-size:15px;cursor:pointer}.planningMapCta:active{transform:scale(.99)}
 </style>
 <!-- MyEvent V47 — vitesse vocaux par clic, multiplicateur à côté de la durée -->
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
@@ -1669,7 +1671,7 @@ async function renderInlineSelectedEvent(){
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
   }));
 
-  // V52.8 : planning de l'événement sur l'accueil. La sortie sélectionnée devient
+  // V52.9 : planning de l'événement sur l'accueil. La sortie sélectionnée devient
   // la première étape du planning ; l'organisation IA complète viendra ensuite.
   try{
     const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
@@ -1680,11 +1682,14 @@ async function renderInlineSelectedEvent(){
       const t=String(outing.outing_type||'').toLowerCase();
       const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
       const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
-      const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query);
+      const mapsSearch='https://www.google.com/maps/search/?api=1&query='+query;
+      const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
+      const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
         '<div class="inlineEventPlanningStatus">⭐ Sortie sélectionnée — à confirmer par le groupe</div>'+
         '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
-        '<div class="planningActions"><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
+        '<div class="planningActions"><a class="secondary" href="'+mapsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
+        '<button type="button" class="planningMapCta" data-home-outing-map="1">📍 Carte MyEvent</button>'+
         '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
         '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div>';
     }else{
@@ -1692,47 +1697,24 @@ async function renderInlineSelectedEvent(){
     }
     box.appendChild(planning);
     planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
+      if(outing.lat==null||outing.lon==null)return;
+      showEventTab('locations',true);
+      setTimeout(()=>{
+        if(typeof setLocationMapView==='function')setLocationMapView(Number(outing.lat),Number(outing.lon),17);
+        if(locationMap){
+          if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
+          locationOutingMarker=L.marker([Number(outing.lat),Number(outing.lon)],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(outing.name||'Sortie')+'</b>').openPopup();
+        }
+        $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
+      },180);
+    });
     planning.querySelector('[data-planning-ai]')?.addEventListener('click',()=>{
       showEventTab('outings',true);
       const msgEl=$('outingMsg');
       if(msgEl){msgEl.textContent='✨ L’organisation IA sera ajoutée dans l’étape suivante : repas + activité + horaires + vote du groupe.';msgEl.className='muted';}
       document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});
     });
-  }catch(_){ }
-
-  // V52.7 : afficher la sortie sélectionnée directement dans la fiche d'accueil.
-  try{
-    const ro=await sb.rpc('get_event_outing',{p_event_id:event.id});
-    const outing=Array.isArray(ro.data)?(ro.data[0]||null):ro.data;
-    if(outing){
-      const outingBox=document.createElement('div');
-      outingBox.className='inlineSelectedOuting';
-      const t=String(outing.outing_type||'').toLowerCase();
-      const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
-      const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
-      const mapsSearch='https://www.google.com/maps/search/?api=1&query='+query;
-      const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
-      const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
-      outingBox.innerHTML='<div class="inlineSelectedOutingTitle">⭐ Sortie sélectionnée</div>'+
-        '<div class="inlineSelectedOutingName">'+esc(outing.name||'Sortie')+'</div>'+
-        '<div class="inlineSelectedOutingMeta"><span class="outingChip">'+typeLabel+'</span>'+(outing.price_per_person!=null?'<span class="outingChip">💶 '+eur(outing.price_per_person)+' / pers.</span>':'')+'</div>'+
-        (outing.address?'<div class="inlineSelectedOutingAddress">📍 '+esc(outing.address)+'</div>':'')+
-        '<div class="inlineSelectedOutingActions"><a class="secondary" href="'+mapsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>'+
-        '<div class="inlineSelectedOutingReviews">⭐ Les avis s’ouvrent dans Google Maps pour afficher les notes et commentaires à jour.</div>';
-      box.appendChild(outingBox);
-      outingBox.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
-        if(outing.lat==null||outing.lon==null)return;
-        showEventTab('locations',true);
-        setTimeout(()=>{
-          if(typeof setLocationMapView==='function')setLocationMapView(Number(outing.lat),Number(outing.lon),17);
-          if(locationMap){
-            if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
-            locationOutingMarker=L.marker([Number(outing.lat),Number(outing.lon)],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(outing.name||'Sortie')+'</b>').openPopup();
-          }
-          $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
-        },180);
-      });
-    }
   }catch(_){ }
 
   card.appendChild(box);
@@ -4305,7 +4287,7 @@ async function searchOutings(){
 </script>
 
 </body>
-<div style="display:none">V52.8</div>
+<div style="display:none">V52.9</div>
 </html>
 
 <style id="myevent-v32-final">
