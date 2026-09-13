@@ -1748,15 +1748,50 @@ async function renderInlineSelectedEvent(){
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
   }));
 
-  // V52.9 : planning de l'événement sur l'accueil. La sortie sélectionnée devient
-  // la première étape du planning ; l'organisation IA complète viendra ensuite.
+  // V55 : le planning affiché sur l'accueil de l'événement peut être
+  // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
+  // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
     const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
     const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
     if(renderToken!==inlineEventRenderToken)return;
+
+    // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
+    let aiPlan=null, aiItems=[];
+    const aiLocalKey=user ? 'myevent_ai_plan_'+user.id+'_'+event.id : '';
+    if(aiLocalKey){
+      try{
+        const raw=localStorage.getItem(aiLocalKey);
+        const lp=raw?JSON.parse(raw):null;
+        if(lp?.event_id===event.id&&Array.isArray(lp.items)&&lp.items.length){
+          aiPlan={id:lp.plan_id||null,event_id:event.id,title:lp.title||'Sortie organisée avec l’IA',people:Number(lp.people)||1,budget_per_person:lp.budget_per_person,request:lp.request||''};
+          aiItems=lp.items;
+        }
+      }catch(_){ }
+    }
+    if(!aiPlan){
+      const aq=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+      if(renderToken!==inlineEventRenderToken)return;
+      if(!aq.error&&Array.isArray(aq.data)&&aq.data[0]){
+        aiPlan=aq.data[0];
+        if(aiPlan.id){
+          const ar=await sb.from('event_outing_plan_items').select('*').eq('plan_id',aiPlan.id).order('step_order',{ascending:true});
+          if(renderToken!==inlineEventRenderToken)return;
+          if(!ar.error)aiItems=Array.isArray(ar.data)?ar.data:[];
+        }
+      }
+    }
+
     const planning=document.createElement('div');
     planning.className='inlineEventPlanning';
-    if(outing){
+    const choiceKey=user ? 'myevent_event_planning_choice_'+user.id+'_'+event.id : '';
+    let choice='manual';
+    try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai'&&aiPlan&&aiItems.length)choice='ai'; }catch(_){ }
+
+    const renderManual=()=>{
+      if(!outing){
+        return '<div class="planningEmpty">Aucune sortie manuelle n’est sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> ou sélectionne le planning IA.</div>';
+      }
       const t=String(outing.outing_type||'').toLowerCase();
       const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
       const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
@@ -1764,29 +1799,51 @@ async function renderInlineSelectedEvent(){
       const reviewsSearch='https://www.google.com/search?q='+encodeURIComponent([outing.name,outing.address||'','avis'].filter(Boolean).join(' '));
       const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
       const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
-      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
-        '<div class="inlineEventPlanningStatus">📋 Planning standard — sortie sélectionnée</div>'+
+      return '<div class="inlineEventPlanningStatus">📋 Planning manuel — sortie sélectionnée</div>'+
         '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
-        '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>'+
-        ''+
-        '<div id="homeReservationBox"></div>';
-    }else{
-      planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> ou ouvre <b>✨ Sortie IA</b> pour organiser directement un parcours complet.</div><div id="homeReservationBox"></div>';
-    }
+        '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>';
+    };
+    const renderAi=()=>{
+      if(!aiPlan||!aiItems.length)return '<div class="planningEmpty">Aucun planning IA n’est encore sélectionné. Ouvre <b>✨ Sortie IA</b> pour organiser toute la sortie.</div>';
+      return '<div class="inlineEventPlanningStatus">✨ Planning IA sélectionné</div>'+
+        '<div class="muted" style="margin-bottom:10px">'+esc(aiPlan.title||'Sortie complète')+' · '+esc(String(aiPlan.people||1))+' pers.</div>'+
+        aiItems.map((x,i)=>'<div class="planningStep"><div class="planningStepIcon">'+(i+1)+'</div><div><div class="planningStepName">'+esc(x.name||'Étape')+'</div><div class="planningStepMeta">'+aiPlanCandidateLabel(x.outing_type||x.type||'activity')+(x.start_time?' · 🕐 '+esc(x.start_time):'')+(x.address?' · 📍 '+esc(x.address):'')+'</div></div></div>').join('')+
+        '<div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Ouvrir le planning IA</button></div>';
+    };
+
+    planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
+      '<div class="eventPlanningChooser" role="tablist" aria-label="Choix du planning de l’événement">'+
+      '<button type="button" class="secondary eventPlanningChoice '+(choice==='manual'?'active':'')+'" data-event-planning-choice="manual">📋 Manuel</button>'+
+      '<button type="button" class="secondary eventPlanningChoice '+(choice==='ai'?'active':'')+'" data-event-planning-choice="ai" '+(!aiPlan||!aiItems.length?'disabled title="Aucun planning IA disponible"':'')+'>✨ IA</button>'+
+      '</div>'+
+      '<div id="eventPlanningSelectedContent">'+(choice==='ai'?renderAi():renderManual())+'</div>'+
+      '<div id="homeReservationBox"></div>';
     box.appendChild(planning);
-    planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
-    planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
-      if(outing.lat==null||outing.lon==null)return;
-      showEventTab('locations',true);
-      setTimeout(()=>{
-        if(typeof setLocationMapView==='function')setLocationMapView(Number(outing.lat),Number(outing.lon),17);
-        if(locationMap){
-          if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
-          locationOutingMarker=L.marker([Number(outing.lat),Number(outing.lon)],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(outing.name||'Sortie')+'</b>').openPopup();
-        }
-        $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
-      },180);
-    });
+
+    const content=planning.querySelector('#eventPlanningSelectedContent');
+    const updateChoice=(next)=>{
+      if(next==='ai'&&(!aiPlan||!aiItems.length))return;
+      choice=next;
+      try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
+      planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
+      if(content)content.innerHTML=choice==='ai'?renderAi():renderManual();
+      planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
+      planning.querySelector('[data-open-ai-planning]')?.addEventListener('click',()=>{showEventTab('aioutings',true);document.querySelector('.tabPanel[data-panel="aioutings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
+      planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
+        if(!outing||outing.lat==null||outing.lon==null)return;
+        showEventTab('locations',true);
+        setTimeout(()=>{
+          if(typeof setLocationMapView==='function')setLocationMapView(Number(outing.lat),Number(outing.lon),17);
+          if(locationMap){
+            if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
+            locationOutingMarker=L.marker([Number(outing.lat),Number(outing.lon)],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(outing.name||'Sortie')+'</b>').openPopup();
+          }
+          $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
+        },180);
+      });
+    };
+    planning.querySelectorAll('[data-event-planning-choice]').forEach(btn=>btn.addEventListener('click',()=>updateChoice(btn.dataset.eventPlanningChoice)));
+    updateChoice(choice);
   }catch(_){ }
 
   card.appendChild(box);
