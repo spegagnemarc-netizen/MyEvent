@@ -58,7 +58,7 @@ export default async function handler(req, res) {
           : 'repas à placer à une heure naturelle selon le déroulé';
 
     const candidates = Array.isArray(body.candidates)
-      ? body.candidates.slice(0, 80)
+      ? body.candidates.slice(0, 120)
       : [];
 
     const safeCandidates = candidates
@@ -147,7 +147,10 @@ OBJECTIF :
 - Si un prix est inconnu, conserver null.
 - Calculer le budget uniquement avec les prix connus.
 - Si certains prix sont inconnus, le signaler.
-- Proposer 2 ou 3 parcours différents lorsque les candidats le permettent.
+- Proposer jusqu'à 6 parcours complets réellement différents lorsque les candidats le permettent.
+- Chaque parcours doit respecter EXACTEMENT le nombre d'étapes demandé.
+- Varier les activités, ambiances et combinaisons entre les parcours autant que possible.
+- Ne pas répéter exactement le même parcours sous des titres différents.
 
 Exemples de parcours :
 
@@ -262,7 +265,7 @@ ${JSON.stringify(safeCandidates)}
 
     const options = Array.isArray(parsed.options)
       ? parsed.options
-          .slice(0, 3)
+          .slice(0, 6)
           .map(option => {
 
             const steps =
@@ -356,6 +359,7 @@ ${JSON.stringify(safeCandidates)}
               );
 
             if (
+              steps.length !== requestedSteps ||
               !hasRestaurant ||
               !hasActivity
             ) {
