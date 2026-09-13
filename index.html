@@ -4591,7 +4591,45 @@ loadSelectedOuting=async function(){
 #homeReservationBox,#outingReservationHost{position:relative!important;z-index:10!important}
 </style>
 
-\n<script id="myevent-v53-6-reservation-confirm">\n/* V53.6 — Confirmation de réservation par l'organisateur */\n(function(){\n  function isOrganizer(){ return !!(event && user && event.creator_id === user.id); }\n  async function confirmEventReservation(){\n    if(!event)return;\n    if(!isOrganizer()){ alert('Seul l’organisateur peut confirmer la réservation.'); return; }\n    const r=await sb.rpc('confirm_event_reservation',{p_event_id:event.id});\n    if(r.error){ alert('Impossible de confirmer la réservation : '+r.error.message); return; }\n    currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;\n    await refreshReservationBoxes();\n    msg('outingMsg','✅ Réservation confirmée.','ok');\n  }\n  window.confirmEventReservationV536=confirmEventReservation;\n  const oldReservationBoxHtmlV536=reservationBoxHtml;\n  reservationBoxHtml=function(prefix){\n    if(!currentReservation) return oldReservationBoxHtmlV536(prefix);\n    const cancelled=currentReservation.status==='cancelled';\n    const confirmed=currentReservation.status==='confirmed';\n    const cls=cancelled?'cancelled':confirmed?'confirmed':'pending';\n    const confirmBtn=(!cancelled&&!confirmed&&isOrganizer())\n      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Confirmer la réservation</button>' : '';\n    return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div>'+\n      '<div class="reservationStatus '+cls+'">'+reservationStatusLabel(currentReservation)+'</div>'+\n      confirmBtn+\n      '<div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationOpen">✏️ Modifier</button>'+\n      (cancelled?'':'<button type="button" class="secondary" id="'+prefix+'ReservationDelete">✕ Annuler</button>')+\n      '</div><div id="'+prefix+'ReservationHost"></div></div>';\n  };\n  const oldRefreshReservationBoxesV536=refreshReservationBoxes;\n  refreshReservationBoxes=async function(){\n    await oldRefreshReservationBoxesV536();\n    $('outingReservationConfirm')?.addEventListener('click',confirmEventReservation);\n    $('homeReservationConfirm')?.addEventListener('click',confirmEventReservation);\n  };\n})();\n</script>\n</body>
+
+<script id="myevent-v53-6-reservation-confirm">
+/* V53.6 — Confirmation de réservation par l'organisateur */
+(function(){
+  function isOrganizer(){ return !!(event && user && event.creator_id === user.id); }
+  async function confirmEventReservation(){
+    if(!event)return;
+    if(!isOrganizer()){ alert('Seul l’organisateur peut confirmer la réservation.'); return; }
+    const r=await sb.rpc('confirm_event_reservation',{p_event_id:event.id});
+    if(r.error){ alert('Impossible de confirmer la réservation : '+r.error.message); return; }
+    currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+    await refreshReservationBoxes();
+    msg('outingMsg','✅ Réservation confirmée.','ok');
+  }
+  window.confirmEventReservationV536=confirmEventReservation;
+  const oldReservationBoxHtmlV536=reservationBoxHtml;
+  reservationBoxHtml=function(prefix){
+    if(!currentReservation) return oldReservationBoxHtmlV536(prefix);
+    const cancelled=currentReservation.status==='cancelled';
+    const confirmed=currentReservation.status==='confirmed';
+    const cls=cancelled?'cancelled':confirmed?'confirmed':'pending';
+    const confirmBtn=(!cancelled&&!confirmed&&isOrganizer())
+      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Confirmer la réservation</button>' : '';
+    return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div>'+
+      '<div class="reservationStatus '+cls+'">'+reservationStatusLabel(currentReservation)+'</div>'+
+      confirmBtn+
+      '<div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationOpen">✏️ Modifier</button>'+
+      (cancelled?'':'<button type="button" class="secondary" id="'+prefix+'ReservationDelete">✕ Annuler</button>')+
+      '</div><div id="'+prefix+'ReservationHost"></div></div>';
+  };
+  const oldRefreshReservationBoxesV536=refreshReservationBoxes;
+  refreshReservationBoxes=async function(){
+    await oldRefreshReservationBoxesV536();
+    $('outingReservationConfirm')?.addEventListener('click',confirmEventReservation);
+    $('homeReservationConfirm')?.addEventListener('click',confirmEventReservation);
+  };
+})();
+</script>
+</body>
 <div style="display:none">V53.3</div>
 </html>
 
