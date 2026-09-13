@@ -4991,13 +4991,19 @@ loadSelectedOuting=async function(){
 <script id="myevent-v53-13-ai-planner-js">
 let aiOutingPlanData=null;
 
-// V54.5 : helper global pour les valeurs injectées dans les attributs HTML.
-// L'ancien escAttr était enfermé dans une IIFE du module réservation et
-// n'était donc pas accessible à l'éditeur du planning IA.
-if(typeof window.escAttr !== 'function'){
-  window.escAttr=function(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');};
+// V54.6 : helper global unique pour les valeurs injectées dans les attributs HTML.
+// Important : ne pas créer un wrapper qui rappelle window.escAttr, car une
+// déclaration globale function escAttr() référence elle-même window.escAttr
+// et provoque une récursion infinie sur iOS.
+function escAttr(v){
+  return String(v??'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\"/g,'&quot;')
+    .replace(/'/g,'&#39;');
 }
-function escAttr(v){return window.escAttr(v);}
+window.escAttr=escAttr;
 
 function ensureAiPlanEditorModal(){
   if($('aiPlanEditorModal'))return;
@@ -5020,7 +5026,7 @@ function ensureAiPlanEditorModal(){
   wrap.addEventListener('click',e=>{if(e.target===wrap)closeAiPlanEditor();});
 }
 window.__myeventOpenAiPlanEditor=function(){
-  try{ openAiPlanEditor(); }catch(e){ console.error('[MyEvent V54.4] openAiPlanEditor:',e); alert('Impossible d’ouvrir la modification du planning : '+(e.message||String(e))); }
+  try{ openAiPlanEditor(); }catch(e){ console.error('[MyEvent V54.6] openAiPlanEditor:',e); alert('Impossible d’ouvrir la modification du planning : '+(e.message||String(e))); }
 };
 function openAiPlanEditor(){
   ensureAiPlanEditorModal();
