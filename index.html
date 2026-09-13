@@ -832,6 +832,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <button class="eventTab" data-tab="locations" role="tab">📍 Localisation</button>
 <button class="eventTab" data-tab="fund" role="tab">💰 Cagnotte</button>
 <button class="eventTab" data-tab="hall" role="tab">🏢 Salle</button>
+<button class="eventTab" data-tab="outings" role="tab">🍽️ Sorties</button>
 <button class="eventTab" data-tab="supplies" role="tab">🎒 Matériel</button>
 </div>
 
@@ -1023,6 +1024,32 @@ body.discussionFullScreen{overflow:hidden!important}
 </div>
 </details>
 
+
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="outings" id="outingsPanel">
+<summary>🍽️ Restaurants & activités</summary>
+<div class="collapsibleBody">
+<div class="outingIntro"><b>Trouve une sortie pour ton événement</b><p class="muted">Compare des restaurants et activités autour du lieu de l’événement. La réservation sera ajoutée en V53.</p></div>
+<div class="outingControls">
+  <div><label class="smallLabel">📏 Rayon</label><select id="outingRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></div>
+  <div><label class="smallLabel">👥 Participants</label><input id="outingPeople" type="number" min="1" step="1" value="10" placeholder="Ex. 10"></div>
+  <div><label class="smallLabel">💰 Budget max / pers.</label><input id="outingMaxBudget" type="number" min="0" step="1" placeholder="Ex. 40"></div>
+</div>
+<div class="outingFilters" aria-label="Type de sortie">
+  <button type="button" class="outingFilter active" data-outing-filter="all">✨ Tout</button>
+  <button type="button" class="outingFilter" data-outing-filter="restaurant">🍽️ Restaurants</button>
+  <button type="button" class="outingFilter" data-outing-filter="activity">🎯 Activités</button>
+  <button type="button" class="outingFilter" data-outing-filter="culture">🏛️ Culture</button>
+  <button type="button" class="outingFilter" data-outing-filter="nature">🌳 Nature</button>
+</div>
+<div class="locationSearchRow" style="margin-top:10px"><input id="outingSearch" type="search" placeholder="🔎 Rechercher un restaurant, bowling, cinéma…" autocomplete="off"></div>
+<div class="outingActions"><button type="button" id="outingSearchBtn">🔎 Rechercher</button><button type="button" class="secondary" id="outingResetBtn">↻ Réinitialiser</button></div>
+<p id="outingMsg" class="muted"></p>
+<div id="outingSelectedBox" class="outingSelected hidden"></div>
+<div id="outingResults" class="outingResults"><div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div></div>
+<div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations seront gérées dans <b>V53</b>.</div>
+</div>
+</details>
+
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="hall" id="hallPanel">
 <summary>🏢 Salle / lieu de réception</summary>
 <div class="collapsibleBody">
@@ -1110,6 +1137,10 @@ body.discussionFullScreen{overflow:hidden!important}
 </style>
 <style>
 .fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundTrackingSummary{border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824;line-height:1.55}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
+<style id="myevent-v52-sorties-css">
+.outingIntro{margin-bottom:12px}.outingIntro b{font-size:18px}.outingControls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.outingControls>div{min-width:0}.outingFilters{display:flex;gap:7px;overflow:auto;margin-top:10px;padding-bottom:2px}.outingFilter{white-space:nowrap;border:1px solid #28445b;background:#0b1824;color:#a9b9c8;border-radius:999px;padding:8px 11px;font-weight:700;font-size:12px}.outingFilter.active{background:#173047;color:#fff;border-color:#4d7395}.outingActions{display:flex;gap:8px;margin-top:10px}.outingActions button{flex:1}.outingResults{display:flex;flex-direction:column;gap:8px;margin-top:12px}.outingCard{border:1px solid #28445b;border-radius:14px;padding:11px;background:#0b1824}.outingCardTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.outingName{font-size:16px;font-weight:800}.outingDistance{font-size:12px;color:#9eb2c4;white-space:nowrap}.outingMeta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.outingChip{border:1px solid #28445b;border-radius:999px;padding:4px 7px;font-size:11px;color:#b7c7d5}.outingAddress{font-size:12px;color:#9eb2c4;line-height:1.4}.outingActionsRow{display:flex;gap:6px;margin-top:9px}.outingActionsRow>*{flex:1;min-width:0}.outingSelected{border:1px solid #3d8bfd;border-radius:14px;padding:11px;background:#0b1824;margin-top:12px}.outingSelected b{font-size:16px}.outingEmpty{padding:12px;border:1px dashed #28445b;border-radius:12px;color:#9eb2c4}.outingCompare{margin-top:10px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#0b1824;color:#9eb2c4;font-size:12px;line-height:1.45}@media(max-width:600px){.outingControls{grid-template-columns:1fr}.outingActions{flex-direction:column}.outingActionsRow{flex-wrap:wrap}.outingActionsRow>*{min-width:130px}}
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let sb=null,user=null,event=null;
@@ -1156,6 +1187,7 @@ function showEventTab(name, forceState=null){
       if(name==='fund') loadFund();
       if(name==='hall'){ loadHall(); }
       if(name==='supplies'){ loadSupplies(); }
+      if(name==='outings'){ searchOutings(); }
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
@@ -4078,6 +4110,70 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 <style id="myevent-v35-persistence">
 /* V35 — la persistance visuelle est gérée côté compte Supabase ; aucun changement visuel. */
 </style>
+
+<script id="myevent-v52-sorties-js">
+let outingResultsData=[], outingFilter='all', outingSearch='', outingSelected=null;
+function outingCategory(type){
+  type=String(type||'').toLowerCase();
+  if(['restaurant','fast_food'].includes(type))return 'restaurant';
+  if(['museum','gallery','theatre','cinema','arts_centre','attraction'].includes(type))return 'culture';
+  if(['park','playground','beach','viewpoint'].includes(type))return 'nature';
+  return 'activity';
+}
+function renderOutingResults(){
+  const el=$('outingResults'); if(!el)return;
+  const q=outingSearch.trim().toLowerCase();
+  const max=Number($('outingMaxBudget')?.value||0)||0;
+  const arr=outingResultsData.filter(p=>{
+    const cat=outingCategory(p.type);
+    const okCat=outingFilter==='all'||cat===outingFilter;
+    const hay=(String(p.name||'')+' '+String(p.type||'')+' '+String(p.address||'')).toLowerCase();
+    const okQ=!q||hay.includes(q);
+    const price=Number(p.price);
+    const okBudget=!max||!Number.isFinite(price)||price<=max;
+    return okCat&&okQ&&okBudget;
+  });
+  const count=arr.length; const msg=$('outingMsg'); if(msg)msg.textContent=count+' résultat'+(count>1?'s':'');
+  el.innerHTML=arr.slice(0,30).map(p=>{
+    const price=Number.isFinite(Number(p.price))&&Number(p.price)>0?eur(Number(p.price)):'Tarif à vérifier';
+    const typeLabel=outingCategory(p.type)==='restaurant'?'Restaurant':outingCategory(p.type)==='culture'?'Culture':outingCategory(p.type)==='nature'?'Nature':'Activité';
+    return '<div class="outingCard"><div class="outingCardTop"><div class="outingName">'+(locationIcons[p.type]||'🎯')+' '+esc(p.name)+'</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div><div class="outingMeta"><span class="outingChip">'+typeLabel+'</span><span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span><span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div><div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div><div class="outingActionsRow"><button type="button" data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">⭐ Ajouter à l’événement</button>'+(p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'">📍 Voir</button>':'')+(p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>';
+  }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
+}
+async function loadSelectedOuting(){
+  const box=$('outingSelectedBox'); if(!box||!event)return;
+  const r=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
+  if(r.error||!r.data){outingSelected=null;box.classList.add('hidden');return;}
+  outingSelected=r.data; box.classList.remove('hidden'); box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.kind?'<span class="outingChip">'+esc(r.data.kind)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+  $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');msg('outingMsg','Sortie retirée de l’événement.','ok');});
+}
+async function selectOuting(id){
+  const p=outingResultsData.find(x=>String(x.id)===String(id)||String((x.lat||'')+'|'+(x.lon||''))===String(id)); if(!p||!event||!user)return;
+  const payload={event_id:event.id,name:p.name,address:p.address||null,lat:Number(p.lat)||null,lon:Number(p.lon)||null,kind:outingCategory(p.type),price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,website:p.website||null,phone:p.phone||null,source:'openstreetmap',updated_by:user.id,updated_at:new Date().toISOString()};
+  const r=await sb.from('event_outings').upsert(payload,{onConflict:'event_id'}); if(r.error){msg('outingMsg','Erreur de sauvegarde : '+r.error.message,'err');return;}
+  await loadSelectedOuting(); msg('outingMsg','Sortie ajoutée à l’événement.','ok');
+}
+async function searchOutings(){
+  if(!event){return;} const el=$('outingResults'); if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du lieu de l’événement…</div>';
+  const geo=await geocodeEventLocation(); if(!geo){if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour rechercher des sorties.</div>';return;}
+  const km=Number($('outingRadius')?.value||5); const api='/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km);
+  try{const r=await fetch(api,{headers:{Accept:'application/json'}});const d=await r.json().catch(()=>null);if(!r.ok||!d)throw new Error(d?.error||'Recherche indisponible');outingResultsData=(d.results||[]).map(x=>({...x,lat:+x.lat,lon:+x.lon,distance:Number(x.distance),price:x.price!=null?Number(x.price):null})).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));renderOutingResults();await loadSelectedOuting();}
+  catch(e){if(el)el.innerHTML='<div class="outingEmpty">La recherche est momentanément indisponible. Réessaie dans un instant.</div>';msg('outingMsg',e.message||String(e),'err');}
+}
+(function(){const bind=()=>{
+  $('outingSearchBtn')?.addEventListener('click',searchOutings);
+  $('outingResetBtn')?.addEventListener('click',()=>{outingSearch='';outingFilter='all';if($('outingSearch'))$('outingSearch').value='';if($('outingMaxBudget'))$('outingMaxBudget').value='';document.querySelectorAll('.outingFilter').forEach(b=>b.classList.toggle('active',b.dataset.outingFilter==='all'));renderOutingResults();});
+  $('outingSearch')?.addEventListener('input',e=>{outingSearch=e.target.value||'';renderOutingResults();});
+  $('outingMaxBudget')?.addEventListener('input',renderOutingResults);
+  $('outingRadius')?.addEventListener('change',()=>{if(event)searchOutings();});
+  document.addEventListener('click',e=>{
+    const f=e.target.closest('.outingFilter'); if(f){outingFilter=f.dataset.outingFilter||'all';document.querySelectorAll('.outingFilter').forEach(b=>b.classList.toggle('active',b===f));renderOutingResults();return;}
+    const s=e.target.closest('[data-outing-select]'); if(s){selectOuting(s.dataset.outingSelect);return;}
+    const m=e.target.closest('[data-outing-map]'); if(m){const [lat,lon]=m.dataset.outingMap.split('|').map(Number);if(Number.isFinite(lat)&&Number.isFinite(lon)){showEventTab('locations',true);setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17);},180);}return;}
+  });
+}; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();})();
+</script>
+
 </body>
 </html>
 
