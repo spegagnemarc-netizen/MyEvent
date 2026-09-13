@@ -1020,6 +1020,16 @@ body.discussionFullScreen{overflow:hidden!important}
 </div>
 <div class="fundProgress"><div id="fundProgressBar"></div></div>
 <div class="fundHeader"><span id="fundTargetLabel" class="muted">Objectif : 0,00 €</span><span id="fundPerPerson" class="muted">· 0,00 € / personne</span></div>
+<div id="fundSmartBox" class="fundSmartBox" style="margin-top:12px">
+  <div class="fundSmartHead"><div><b>✨ Cagnotte intelligente</b><p id="fundSmartText" class="muted">Calcule automatiquement le budget à partir du planning sélectionné lorsque les prix sont disponibles.</p></div></div>
+  <div class="fundSmartGrid">
+    <div><span class="muted">Budget estimé</span><b id="fundSmartEstimate">—</b></div>
+    <div><span class="muted">Part recommandée</span><b id="fundSmartShare">—</b></div>
+    <div><span class="muted">Participants</span><b id="fundSmartMembers">—</b></div>
+  </div>
+  <button type="button" id="fundSmartCalculateBtn" class="secondary">✨ Calculer depuis le planning</button>
+  <p id="fundSmartMsg" class="muted"></p>
+</div>
 <div id="fundOrganizerBox" class="editEventBox hidden" style="margin-top:12px">
   <div style="margin-top:12px">
     <input id="fundTargetInput" type="number" min="0" step="0.01" placeholder="Objectif en €">
@@ -1209,7 +1219,7 @@ body.discussionFullScreen{overflow:hidden!important}
 .suppliesShortcut{margin-top:14px;padding:12px;border:1px solid #28445b;border-radius:14px;background:#0b1824;display:flex;align-items:center;justify-content:space-between;gap:12px}.suppliesShortcut b{font-size:18px}.suppliesShortcut button{white-space:nowrap}.suppliesBox{margin-top:14px;padding:12px;border:1px solid #28445b;border-radius:14px;background:#0b1824}.suppliesHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.suppliesHead b{font-size:18px}.suppliesHead button{white-space:nowrap}.suppliesList{display:flex;flex-direction:column;gap:8px;margin-top:10px}.supplyCard{border:1px solid #28445b;border-radius:12px;padding:10px;background:#091522}.supplyTop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.supplyTitle{font-weight:800;font-size:16px}.supplyMeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.supplyChip{border:1px solid #28445b;border-radius:999px;padding:3px 7px;font-size:11px;color:#b7c7d5}.supplyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.supplyActions>*{flex:1;min-width:120px}.supplyAssign{display:flex;gap:6px;align-items:center;margin-top:8px}.supplyAssign select{flex:1;margin:0}.supplyStatusPlanned{color:#f4c86b}.supplyStatusReserved{color:#8fc9ff}.supplyStatusBrought{color:#7ee2a8}@media(max-width:600px){.supplyAssign{flex-direction:column;align-items:stretch}.suppliesHead{align-items:flex-start}.supplyActions{flex-direction:column}}
 </style>
 <style>
-.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundTrackingSummary{border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824;line-height:1.55}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
+.fundSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundStat{border:1px solid #28445b;border-radius:12px;padding:10px;text-align:center;background:#0b1824}.fundStat b{display:block;font-size:20px}.fundStat span{font-size:12px;color:#9eb2c4}.fundProgress{height:10px;background:#0b1824;border:1px solid #28445b;border-radius:999px;overflow:hidden;margin:10px 0}.fundProgress>div{height:100%;width:0;background:#3d8bfd;border-radius:999px;transition:width .25s}.fundForms{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fundHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.fundEntryList{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundEntry{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundEntryMain{min-width:0}.fundEntryMain b,.fundEntryMain span{display:block}.fundEntryMain span{font-size:12px;color:#9eb2c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fundContribution{color:#7ee2a8}.fundExpense{color:#ffb3b3}.fundPending{color:#f4c86b}.fundConfirmed{color:#7ee2a8}.fundRejected{color:#ff9b9b}.fundStatus{display:inline-block;font-size:11px;border:1px solid #28445b;border-radius:999px;padding:2px 7px;margin-left:6px}.fundVerifyActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.fundVerifyActions button{flex:1;min-width:130px}.fundMemberTracking{display:flex;flex-direction:column;gap:8px;margin-top:12px}.fundTrackingSummary{border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824;line-height:1.55}.fundMemberRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border:1px solid #28445b;border-radius:12px;padding:10px;background:#0b1824}.fundMemberName{min-width:0}.fundMemberName b,.fundMemberName span{display:block}.fundMemberName span{font-size:12px;color:#9eb2c4}.fundMemberAmount{white-space:nowrap;font-weight:800}.fundMemberRemain{white-space:nowrap;font-size:12px;color:#9eb2c4}.fundMemberStatus{white-space:nowrap}.fundVerifyActions button{flex:1;min-width:130px}.fundActions{display:flex;gap:8px;flex-wrap:wrap}.fundActions button{flex:1;min-width:150px}.fundPaymentHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.fundPaymentHead b{font-size:18px}.fundPaymentDetails{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824;margin-top:8px}.fundPaymentRow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}.fundPaymentRow span{color:#9eb2c4}.fundPaymentIban{font-weight:800;letter-spacing:.5px;word-break:break-all}.fundPaymentBox{padding:12px;border-radius:12px}.fundPrivateHint{font-size:12px;color:#9eb2c4;margin-top:6px}.fundSmartBox{border:1px solid #28445b;border-radius:12px;padding:12px;background:#0b1824}.fundSmartHead b{font-size:18px}.fundSmartGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.fundSmartGrid>div{border:1px solid #28445b;border-radius:10px;padding:9px;background:#101f2d}.fundSmartGrid span,.fundSmartGrid b{display:block}.fundSmartGrid b{font-size:17px;margin-top:3px}.fundSmartBox button{width:100%}@media(max-width:600px){.fundSmartGrid{grid-template-columns:1fr 1fr}.fundSmartGrid>div:last-child{grid-column:1/-1}}@media(max-width:600px){.fundSummary{grid-template-columns:1fr 1fr 1fr}.fundForms{grid-template-columns:1fr}.fundActions button{min-width:0}.fundEntry{align-items:flex-start}.fundEntryAmount{white-space:nowrap}}</style>
 <style id="myevent-v52-sorties-css">
 .outingIntro{margin-bottom:12px}.outingIntro b{font-size:18px}.outingControls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.outingControls>div{min-width:0}.outingFilters{display:flex;gap:7px;overflow:auto;margin-top:10px;padding-bottom:2px}.outingFilter{white-space:nowrap;border:1px solid #28445b;background:#0b1824;color:#a9b9c8;border-radius:999px;padding:8px 11px;font-weight:700;font-size:12px}.outingFilter.active{background:#173047;color:#fff;border-color:#4d7395}.outingActions{display:flex;gap:8px;margin-top:10px}.outingActions button{flex:1}.outingResults{display:flex;flex-direction:column;gap:8px;margin-top:12px}.outingCard{border:1px solid #28445b;border-radius:14px;padding:11px;background:#0b1824}.outingCardTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.outingName{font-size:16px;font-weight:800}.outingDistance{font-size:12px;color:#9eb2c4;white-space:nowrap}.outingMeta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.outingChip{border:1px solid #28445b;border-radius:999px;padding:4px 7px;font-size:11px;color:#b7c7d5}.outingAddress{font-size:12px;color:#9eb2c4;line-height:1.4}.outingActionsRow{display:flex;gap:6px;margin-top:9px}.outingActionsRow>*{flex:1;min-width:0}.outingSelected{border:1px solid #3d8bfd;border-radius:14px;padding:11px;background:#0b1824;margin-top:12px}.outingSelected b{font-size:16px}.outingEmpty{padding:12px;border:1px dashed #28445b;border-radius:12px;color:#9eb2c4}.outingCompare{margin-top:10px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#0b1824;color:#9eb2c4;font-size:12px;line-height:1.45}@media(max-width:600px){.outingControls{grid-template-columns:1fr}.outingActions{flex-direction:column}.outingActionsRow{flex-wrap:wrap}.outingActionsRow>*{min-width:130px}}
 </style>
@@ -2291,6 +2301,55 @@ async function openFundPaymentForm(){
   $('fundAccountHolder').value=d.account_holder||''; $('fundIban').value=d.iban?formatIban(d.iban):''; $('fundBic').value=d.bic||''; $('fundPaymentNote').value=d.payment_note||'';
   fundPaymentFormOpen(true);
 }
+async function calculateSmartFund(){
+  if(!event||!user||!sb)return;
+  const btn=$('fundSmartCalculateBtn'), msgBox=$('fundSmartMsg');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Calcul…';}
+  if(msgBox)msgBox.textContent='Lecture du planning sélectionné…';
+  try{
+    const membersRes=await sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id);
+    const members=Math.max(1,Number(membersRes.count||0));
+    let choice='manual';
+    try{const key='myevent_event_planning_choice_'+user.id+'_'+event.id; if(localStorage.getItem(key)==='ai')choice='ai';}catch(_){ }
+    let prices=[];
+    if(choice==='ai'){
+      let plan=null;
+      const aq=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+      if(!aq.error&&Array.isArray(aq.data)&&aq.data[0]) plan=aq.data[0];
+      if(plan?.id){
+        const ar=await sb.from('event_outing_plan_items').select('price_per_person').eq('plan_id',plan.id).order('step_order',{ascending:true});
+        if(!ar.error)prices=(ar.data||[]).map(x=>Number(x.price_per_person)).filter(x=>Number.isFinite(x)&&x>0);
+      }
+    }else{
+      const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
+      const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
+      const price=Number(outing?.price_per_person);
+      if(Number.isFinite(price)&&price>0)prices=[price];
+    }
+    const estimatePerPerson=prices.reduce((a,b)=>a+b,0);
+    const estimate=estimatePerPerson*members;
+    $('fundSmartMembers').textContent=String(members);
+    if(!(estimate>0)){
+      $('fundSmartEstimate').textContent='—'; $('fundSmartShare').textContent='—';
+      if(msgBox)msgBox.textContent='Aucun prix exploitable n’est disponible dans le planning sélectionné. Tu peux définir l’objectif manuellement.';
+      return;
+    }
+    $('fundSmartEstimate').textContent=eur(estimate);
+    $('fundSmartShare').textContent=eur(estimatePerPerson)+' / personne';
+    if(msgBox)msgBox.textContent='Estimation basée sur '+prices.length+' prix connu'+(prices.length>1?'s':'')+' du planning '+(choice==='ai'?'IA':'manuel')+'.';
+    const targetInput=$('fundTargetInput');
+    if(targetInput && (!Number(targetInput.value)||Number(targetInput.value)<=0)){
+      targetInput.value=estimate.toFixed(2);
+      if(typeof fundSetFormOpen==='function' && fundIsManager({manager_user_id:null})) fundSetFormOpen(true);
+      if(msgBox)msgBox.textContent+=' L’objectif a été prérempli à '+eur(estimate)+'. Clique sur « Enregistrer le budget » pour le valider.';
+    }
+  }catch(e){
+    if(msgBox)msgBox.textContent='Impossible de calculer le budget : '+(e.message||String(e));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='✨ Calculer depuis le planning';}
+  }
+}
+
 async function loadFund(){
   if(!event||!user||!sb)return;
   const sr=await sb.from('event_fund_settings').select('*').eq('event_id',event.id).maybeSingle();
@@ -5970,6 +6029,7 @@ document.addEventListener('click',e=>{
     $('addExpenseBtn')?.addEventListener('click',()=>{if(fundIsOrganizer())fundExpenseFormOpen(true);else alert('Seul l’organisateur peut enregistrer une dépense.');});
     $('cancelExpenseBtn')?.addEventListener('click',()=>fundExpenseFormOpen(false));
     $('saveExpenseBtn')?.addEventListener('click',saveExpense);
+    $('fundSmartCalculateBtn')?.addEventListener('click',calculateSmartFund);
     $('editFundPaymentBtn')?.addEventListener('click',openFundPaymentForm);
     $('cancelFundPaymentBtn')?.addEventListener('click',()=>fundPaymentFormOpen(false));
     $('saveFundPaymentBtn')?.addEventListener('click',saveFundPayment);
