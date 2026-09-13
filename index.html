@@ -2400,7 +2400,10 @@ async function calculateSmartFund(opts={}){
     }
 
     if(msgBox && !silent){
+      let estimatedCount=0;
+      if(choice==='ai') items.forEach(x=>{if(x.source==='ai_estimate')estimatedCount++;});
       let text='Estimation basée sur '+knownCount+' prix connu'+(knownCount>1?'s':'')+' du planning '+(choice==='ai'?'IA':'manuel')+'.';
+      if(estimatedCount>0)text+=' '+estimatedCount+' prix sont des estimations IA à confirmer.';
       if(planTitle)text+=' '+planTitle+'.';
       if(missingCount>0)text+=' '+missingCount+' étape'+(missingCount>1?'s':'')+' sans prix reste'+(missingCount>1?'nt':'')+' à confirmer.';
       msgBox.textContent=text;
@@ -5300,7 +5303,7 @@ async function saveAiPlanEdits(){
     closeAiPlanEditor();
     const box=$('aiPlanPanelBox');
     if(box){
-      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
+      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
     if(typeof renderAiPlanReservations==='function')await renderAiPlanReservations(current.plan,clean);
@@ -5419,6 +5422,7 @@ async function generateAiOutingPlan(){
       address:String(p.address||'').trim(),
       lat:Number(p.lat),lon:Number(p.lon),
       price_per_person:Number.isFinite(Number(p.price))&&Number(p.price)>0?Number(p.price):null,
+      price_is_estimate:false,
       website:p.website||null,phone:p.phone||null,
       distance_km:Number.isFinite(Number(p.distance))?Number(p.distance):null
     })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).slice(0,120);
@@ -5462,7 +5466,7 @@ function renderAiOutingPlans(data){
     const total=o.total_estimated_per_person!=null?'<div class="aiPlanOptionMeta">💶 Environ '+esc(String(o.total_estimated_per_person))+' € / pers.</div>':'';
     return '<div class="aiPlanOption"><div class="aiPlanOptionTitle">'+esc(o.title||('Proposition '+(oi+1)))+'</div>'+
       '<div class="aiPlanOptionMeta">'+esc(o.summary||'Sortie complète')+'</div>'+total+
-      steps.map((s,si)=>'<div class="aiPlanStep"><div class="aiPlanStepNum">'+(si+1)+'</div><div><div class="aiPlanStepName">'+esc(s.name||'Étape')+'</div><div class="aiPlanStepMeta">'+aiPlanCandidateLabel(String(s.type||'activity'))+(s.start_time?' · 🕐 '+esc(s.start_time):'')+(s.duration_minutes?' · '+esc(String(s.duration_minutes))+' min':'')+(s.address?' · 📍 '+esc(s.address):'')+(s.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(s.price_per_person):'')+'</div></div></div>').join('')+
+      steps.map((s,si)=>'<div class="aiPlanStep"><div class="aiPlanStepNum">'+(si+1)+'</div><div><div class="aiPlanStepName">'+esc(s.name||'Étape')+'</div><div class="aiPlanStepMeta">'+aiPlanCandidateLabel(String(s.type||'activity'))+(s.start_time?' · 🕐 '+esc(s.start_time):'')+(s.duration_minutes?' · '+esc(String(s.duration_minutes))+' min':'')+(s.address?' · 📍 '+esc(s.address):'')+(s.price_per_person!=null?' · '+(s.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(s.price_per_person)+(s.source==='ai_estimate'?' (estimé)':''):'')+'</div></div></div>').join('')+
       '<button type="button" class="aiPlanChoose" data-ai-plan-index="'+oi+'">✅ Choisir cette proposition</button></div>';
   }).join('');
 }
@@ -5544,7 +5548,7 @@ async function saveAiOutingPlan(index){
     if(savedBox){
       savedBox.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
         '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
-        items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
+        items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
