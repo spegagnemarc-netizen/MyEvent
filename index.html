@@ -5011,6 +5011,9 @@ function ensureAiPlanEditorModal(){
   $('aiPlanEditorSave')?.addEventListener('click',saveAiPlanEdits);
   wrap.addEventListener('click',e=>{if(e.target===wrap)closeAiPlanEditor();});
 }
+window.__myeventOpenAiPlanEditor=function(){
+  try{ openAiPlanEditor(); }catch(e){ console.error('[MyEvent V54.4] openAiPlanEditor:',e); alert('Impossible d’ouvrir la modification du planning : '+(e.message||String(e))); }
+};
 function openAiPlanEditor(){
   ensureAiPlanEditorModal();
   const current=window.__myeventAiCurrentPlan;
@@ -5075,7 +5078,7 @@ async function saveAiPlanEdits(){
     closeAiPlanEditor();
     const box=$('aiPlanPanelBox');
     if(box){
-      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
+      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
     if(typeof renderAiPlanReservations==='function')await renderAiPlanReservations(current.plan,clean);
@@ -5320,7 +5323,7 @@ async function saveAiOutingPlan(index){
       savedBox.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
         '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
         items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
-        '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
+        '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
     if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(pr.data,items);
@@ -5498,7 +5501,7 @@ async function loadAiOutingPlan(){
         (x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+
         '</span></div>'
       ).join('')+
-      '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button>'+
+      '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button>'+
       '</div>';
 
     box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
@@ -5926,7 +5929,7 @@ async function renderAiPlanReservations(plan,items){
     const status=aiReservationStatusLabel(r);
     return '<div class="aiPlanReservationRow" data-ai-res-step="'+step+'">'+
       '<div class="aiPlanReservationMain"><b>'+step+'. '+esc(item.name||'Étape')+'</b><div class="muted">'+type+when+' · '+esc(status)+'</div></div>'+
-      '<button type="button" class="secondary aiPlanReservationOpen" data-ai-res-open="'+step+'" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiReservation(this);return false;">'+(r&&r.status!=='cancelled'?'✏️ Modifier':'📅 Préparer')+'</button>'+
+      '<button type="button" class="secondary aiPlanReservationOpen" data-ai-res-open="'+step+'" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiReservation(this);return false;" onpointerup="event.preventDefault();event.stopPropagation();window.__myeventOpenAiReservation(this);return false;">'+(r&&r.status!=='cancelled'?'✏️ Modifier':'📅 Préparer')+'</button>'+
       '<div class="aiPlanReservationFormHost" id="aiResHost'+step+'"></div>'+
       '</div>';
   }).join('');
@@ -5979,6 +5982,20 @@ async function saveAiPlanReservation(plan,item,step){
     if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}
   }
 }
+// V54.4 : gestion prioritaire des taps mobiles en phase capture.
+// Certains conteneurs de l’événement interceptent les clics avant le listener local.
+document.addEventListener('click',e=>{
+  const edit=e.target.closest?.('[data-ai-plan-edit]');
+  if(edit){ e.preventDefault(); e.stopPropagation(); window.__myeventOpenAiPlanEditor?.(); return; }
+  const res=e.target.closest?.('[data-ai-res-open]');
+  if(res){ e.preventDefault(); e.stopPropagation(); window.__myeventOpenAiReservation?.(res); return; }
+},true);
+document.addEventListener('pointerup',e=>{
+  const edit=e.target.closest?.('[data-ai-plan-edit]');
+  if(edit){ e.preventDefault(); e.stopPropagation(); window.__myeventOpenAiPlanEditor?.(); return; }
+  const res=e.target.closest?.('[data-ai-res-open]');
+  if(res){ e.preventDefault(); e.stopPropagation(); window.__myeventOpenAiReservation?.(res); return; }
+},true);
 // V53.20 : délégation de clic pour les boutons « Préparer » du planning IA.
 document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-ai-res-open]');
