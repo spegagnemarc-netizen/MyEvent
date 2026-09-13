@@ -651,7 +651,7 @@ body.discussionFullScreen{overflow:hidden!important}
 .reservationTitle{font-size:17px;font-weight:800;margin-bottom:8px}
 .reservationGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .reservationGrid label{display:grid;gap:6px;font-size:12px;color:#9fb1c2}
-.reservationGrid input,.reservationGrid textarea{width:100%;box-sizing:border-box;background:#0b1724;border:1px solid #2d526b;color:#eef5fb;border-radius:12px;padding:11px;font:inherit}
+.reservationGrid input,.reservationGrid textarea{width:100%;box-sizing:border-box;background:#0b1724;border:1px solid #2d526b;color:#eef5fb;border-radius:12px;padding:11px;font:inherit;pointer-events:auto!important;position:relative;z-index:20;opacity:1;-webkit-user-select:text;user-select:text;-webkit-appearance:auto;appearance:auto}.reservationFormActive{position:relative;z-index:10}
 .reservationGrid textarea{min-height:74px;resize:vertical}
 .reservationFull{grid-column:1/-1}
 .reservationActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
@@ -4321,10 +4321,14 @@ function reservationDefaultDate(){
 }
 function reservationFormHtml(prefix){
   const dt=reservationDefaultDate();
+  const datePart=dt?dt.slice(0,10):'';
+  const timePart=dt?dt.slice(11,16):'';
   const people=Math.max(1,Number($('outingPeople')?.value||10)||10);
-  return '<div class="reservationBox" id="'+prefix+'ReservationForm"><div class="reservationTitle">📅 Préparer la réservation</div><div class="reservationGrid">'+
-    '<label>Date et heure<input id="'+prefix+'ReservationDate" type="datetime-local" value="'+dt+'"></label>'+
-    '<label>Personnes<input id="'+prefix+'ReservationPeople" type="number" min="1" step="1" value="'+people+'"></label>'+
+  return '<div class="reservationBox reservationFormActive" id="'+prefix+'ReservationForm"><div class="reservationTitle">📅 Préparer la réservation</div>'+
+    '<div class="reservationGrid">'+
+    '<label>Date<input id="'+prefix+'ReservationDate" type="date" value="'+datePart+'" autocomplete="off"></label>'+
+    '<label>Heure<input id="'+prefix+'ReservationTime" type="time" value="'+timePart+'" autocomplete="off"></label>'+
+    '<label>Personnes<input id="'+prefix+'ReservationPeople" type="number" min="1" step="1" value="'+people+'" inputmode="numeric" autocomplete="off"></label>'+
     '<label class="reservationFull">Note pour la réservation<textarea id="'+prefix+'ReservationNote" placeholder="Ex. table à l’intérieur, anniversaire…"></textarea></label>'+
     '</div><div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationSave">💾 Enregistrer</button><button type="button" class="secondary" id="'+prefix+'ReservationCancel">Annuler</button></div></div>';
 }
@@ -4338,10 +4342,13 @@ async function loadEventReservation(){
 async function saveEventReservation(outingId,prefix){
   if(!event||!outingSelected)return;
   const date=$(prefix+'ReservationDate')?.value||'';
+  const time=$(prefix+'ReservationTime')?.value||'';
   const people=Math.max(1,Number($(prefix+'ReservationPeople')?.value||1)||1);
   const note=$(prefix+'ReservationNote')?.value||null;
-  if(!date){alert('Choisis une date et une heure.');return;}
-  const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:new Date(date).toISOString(),p_party_size:people,p_note:note});
+  if(!date||!time){alert('Choisis une date et une heure.');return;}
+  const localDate=new Date(date+'T'+time);
+  if(Number.isNaN(localDate.getTime())){alert('La date ou l’heure est invalide.');return;}
+  const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
   if(r.error){alert('Impossible d’enregistrer la réservation : '+r.error.message);return;}
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
   document.getElementById(prefix+'ReservationForm')?.remove();
@@ -4376,7 +4383,8 @@ async function openReservationForm(prefix){
     const d=currentReservation.reserved_at?new Date(currentReservation.reserved_at):null;
     if(d&&!Number.isNaN(d.getTime())){
       const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
-      $(prefix+'ReservationDate').value=local.toISOString().slice(0,16);
+      $(prefix+'ReservationDate').value=local.toISOString().slice(0,10);
+      $(prefix+'ReservationTime').value=local.toISOString().slice(11,16);
     }
     $(prefix+'ReservationPeople').value=currentReservation.party_size||1;
     $(prefix+'ReservationNote').value=currentReservation.note||'';
