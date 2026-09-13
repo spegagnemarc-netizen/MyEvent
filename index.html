@@ -2301,52 +2301,114 @@ async function openFundPaymentForm(){
   $('fundAccountHolder').value=d.account_holder||''; $('fundIban').value=d.iban?formatIban(d.iban):''; $('fundBic').value=d.bic||''; $('fundPaymentNote').value=d.payment_note||'';
   fundPaymentFormOpen(true);
 }
-async function calculateSmartFund(){
+async function calculateSmartFund(opts={}){
   if(!event||!user||!sb)return;
+  const silent=!!opts.silent;
   const btn=$('fundSmartCalculateBtn'), msgBox=$('fundSmartMsg');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Calcul…';}
-  if(msgBox)msgBox.textContent='Lecture du planning sélectionné…';
+  if(!silent && btn){btn.disabled=true;btn.textContent='⏳ Calcul…';}
+  if(msgBox && !silent)msgBox.textContent='Lecture du planning sélectionné…';
   try{
     const membersRes=await sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id);
     const members=Math.max(1,Number(membersRes.count||0));
+
     let choice='manual';
-    try{const key='myevent_event_planning_choice_'+user.id+'_'+event.id; if(localStorage.getItem(key)==='ai')choice='ai';}catch(_){ }
+    const choiceKey='myevent_event_planning_choice_'+user.id+'_'+event.id;
+    try{
+      const saved=localStorage.getItem(choiceKey);
+      if(saved==='ai')choice='ai';
+      else if(saved==='manual')choice='manual';
+    }catch(_){ }
+
     let prices=[];
+    let knownCount=0;
+    let missingCount=0;
+    let planTitle='';
+
     if(choice==='ai'){
       let plan=null;
-      const aq=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
-      if(!aq.error&&Array.isArray(aq.data)&&aq.data[0]) plan=aq.data[0];
-      if(plan?.id){
-        const ar=await sb.from('event_outing_plan_items').select('price_per_person').eq('plan_id',plan.id).order('step_order',{ascending:true});
-        if(!ar.error)prices=(ar.data||[]).map(x=>Number(x.price_per_person)).filter(x=>Number.isFinite(x)&&x>0);
+      let items=[];
+
+      // V56.1 : priorité au planning IA déjà chargé en mémoire.
+      try{
+        const current=window.__myeventAiCurrentPlan;
+        if(current?.plan?.event_id===event.id && Array.isArray(current.items) && current.items.length){
+          plan=current.plan;
+          items=current.items;
+        }
+      }catch(_){ }
+
+      // V56.1 : secours local pour que la cagnotte fonctionne même avant
+      // qu'une lecture Supabase soit disponible après actualisation.
+      if(!items.length){
+        try{
+          const raw=localStorage.getItem('myevent_ai_plan_'+user.id+'_'+event.id);
+          const localPlan=raw?JSON.parse(raw):null;
+          if(localPlan?.event_id===event.id && Array.isArray(localPlan.items) && localPlan.items.length){
+            plan={id:localPlan.plan_id||null,event_id:event.id,title:localPlan.title||'Planning IA',people:localPlan.people||1};
+            items=localPlan.items;
+          }
+        }catch(_){ }
+      }
+
+      // Dernier secours : lecture de Supabase.
+      if(!items.length){
+        const aq=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+        if(!aq.error&&Array.isArray(aq.data)&&aq.data[0]){
+          plan=aq.data[0];
+          const ar=await sb.from('event_outing_plan_items').select('*').eq('plan_id',plan.id).order('step_order',{ascending:true});
+          if(!ar.error)items=ar.data||[];
+        }
+      }
+
+      if(items.length){
+        planTitle=plan?.title||'Planning IA';
+        items.forEach(x=>{
+          const n=Number(x.price_per_person);
+          if(Number.isFinite(n)&&n>0){prices.push(n);knownCount++;}
+          else missingCount++;
+        });
       }
     }else{
       const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
       const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
       const price=Number(outing?.price_per_person);
-      if(Number.isFinite(price)&&price>0)prices=[price];
+      if(Number.isFinite(price)&&price>0){prices=[price];knownCount=1;planTitle=outing?.title||outing?.name||'Sortie manuelle';}
+      else if(outing)missingCount=1;
     }
+
     const estimatePerPerson=prices.reduce((a,b)=>a+b,0);
     const estimate=estimatePerPerson*members;
     $('fundSmartMembers').textContent=String(members);
+
     if(!(estimate>0)){
-      $('fundSmartEstimate').textContent='—'; $('fundSmartShare').textContent='—';
-      if(msgBox)msgBox.textContent='Aucun prix exploitable n’est disponible dans le planning sélectionné. Tu peux définir l’objectif manuellement.';
+      $('fundSmartEstimate').textContent='—';
+      $('fundSmartShare').textContent='—';
+      if(msgBox && !silent)msgBox.textContent=choice==='ai'
+        ? (missingCount>0
+          ? 'Le planning IA est bien trouvé, mais aucun prix exploitable n’est renseigné pour ses '+missingCount+' étape'+(missingCount>1?'s':'')+'.'
+          : 'Aucun planning IA sélectionné.')
+        : 'Aucun prix exploitable n’est disponible dans le planning manuel.';
       return;
     }
+
     $('fundSmartEstimate').textContent=eur(estimate);
     $('fundSmartShare').textContent=eur(estimatePerPerson)+' / personne';
-    if(msgBox)msgBox.textContent='Estimation basée sur '+prices.length+' prix connu'+(prices.length>1?'s':'')+' du planning '+(choice==='ai'?'IA':'manuel')+'.';
+
     const targetInput=$('fundTargetInput');
     if(targetInput && (!Number(targetInput.value)||Number(targetInput.value)<=0)){
       targetInput.value=estimate.toFixed(2);
-      if(typeof fundSetFormOpen==='function' && fundIsManager({manager_user_id:null})) fundSetFormOpen(true);
-      if(msgBox)msgBox.textContent+=' L’objectif a été prérempli à '+eur(estimate)+'. Clique sur « Enregistrer le budget » pour le valider.';
+    }
+
+    if(msgBox && !silent){
+      let text='Estimation basée sur '+knownCount+' prix connu'+(knownCount>1?'s':'')+' du planning '+(choice==='ai'?'IA':'manuel')+'.';
+      if(planTitle)text+=' '+planTitle+'.';
+      if(missingCount>0)text+=' '+missingCount+' étape'+(missingCount>1?'s':'')+' sans prix reste'+(missingCount>1?'nt':'')+' à confirmer.';
+      msgBox.textContent=text;
     }
   }catch(e){
-    if(msgBox)msgBox.textContent='Impossible de calculer le budget : '+(e.message||String(e));
+    if(msgBox && !silent)msgBox.textContent='Impossible de calculer le budget : '+(e.message||String(e));
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='✨ Calculer depuis le planning';}
+    if(!silent && btn){btn.disabled=false;btn.textContent='✨ Calculer depuis le planning';}
   }
 }
 
@@ -2461,6 +2523,10 @@ async function loadFund(){
     let state=d.confirmed>0?'🟢 '+eur(d.confirmed)+' confirmé':d.pending>0?'🟠 '+eur(d.pending)+' en attente':'🔴 Aucune participation déclarée';
     $('fundMyTracking').innerHTML='<b>'+esc(state)+'</b>'+(expectedPerPerson>0?' · Reste '+eur(remaining):'');
   }
+
+  // V56.1 : la cagnotte se recalcule automatiquement depuis le planning sélectionné.
+  // Le bouton reste disponible pour forcer un recalcul manuel.
+  await calculateSmartFund({silent:true});
 
   if(!entries.length){ $('fundEntries').innerHTML='<p class="muted">Aucune participation ou dépense pour le moment.</p>'; return; }
   const ids=[...new Set(entries.map(x=>x.user_id).filter(Boolean))]; let profiles=[]; if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
