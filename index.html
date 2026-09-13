@@ -1723,6 +1723,10 @@ async function renderInlineSelectedEvent(){
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
     }
     box.appendChild(planning);
+    // V53.7 : après reconnexion, la réservation doit être relue depuis Supabase
+    // avant d'afficher le planning sur l'accueil. Elle ne doit pas dépendre
+    // de currentReservation, qui est réinitialisé à chaque nouvelle session.
+    await refreshReservationBoxes();
     planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
     planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
       if(outing.lat==null||outing.lon==null)return;
