@@ -4112,7 +4112,7 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 /* V35 — la persistance visuelle est gérée côté compte Supabase ; aucun changement visuel. */
 </style>
 
-<script id="myevent-v52-sorties-js">
+<script id="myevent-v52-4-sorties-js">
 let outingResultsData=[], outingFilter='all', outingSearch='', outingSelected=null;
 function outingCategory(type){
   type=String(type||'').toLowerCase();
@@ -4153,9 +4153,19 @@ function renderOutingResults(){
 async function loadSelectedOuting(){
   const box=$('outingSelectedBox'); if(!box||!event)return;
   const r=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
-  if(r.error||!r.data){outingSelected=null;box.classList.add('hidden');return;}
-  outingSelected=r.data; box.classList.remove('hidden'); box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.outing_type?'<span class="outingChip">'+esc(r.data.outing_type)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
-  $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');msg('outingMsg','Sortie retirée de l’événement.','ok');});
+  if(r.error||!r.data){
+    outingSelected=null;
+    box.classList.add('hidden');
+    renderOutingResults();
+    return;
+  }
+  outingSelected=r.data;
+  box.classList.remove('hidden');
+  box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(r.data.name)+'</b></div><div class="outingMeta">'+(r.data.outing_type?'<span class="outingChip">'+esc(r.data.outing_type)+'</span>':'')+(r.data.price_per_person!=null?'<span class="outingChip">💶 '+eur(r.data.price_per_person)+' / pers.</span>':'')+'</div>'+(r.data.address?'<div class="outingAddress">📍 '+esc(r.data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+  // V52.4 : re-rendre les résultats APRÈS le chargement de la sélection.
+  // Sans cela, le message de confirmation était visible mais les cartes restaient sur « Ajouter ».
+  renderOutingResults();
+  $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.from('event_outings').delete().eq('event_id',event.id);if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
 }
 async function selectOuting(id){
   const p=outingResultsData.find(x=>String(x.id)===String(id)||String((x.lat||'')+'|'+(x.lon||''))===String(id)); if(!p||!event||!user)return;
