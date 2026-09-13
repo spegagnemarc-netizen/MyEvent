@@ -69,17 +69,21 @@ export default async function handler(req, res) {
         address: String(c.address || '').slice(0, 240),
         lat: Number(c.lat),
         lon: Number(c.lon),
+
         price_per_person:
           c.price_per_person == null
             ? null
             : Number(c.price_per_person),
+
         distance_km:
           c.distance_km == null
             ? null
             : Number(c.distance_km),
+
         website: c.website
           ? String(c.website).slice(0, 500)
           : null,
+
         phone: c.phone
           ? String(c.phone).slice(0, 80)
           : null
@@ -141,12 +145,22 @@ OBJECTIF :
 - Ne jamais placer automatiquement un déjeuner ou un dîner à 16h00 ou à une heure manifestement peu naturelle.
 - Ne jamais inventer un lieu.
 - Ne jamais inventer une adresse.
-- Ne jamais inventer un prix.
-- Ne jamais inventer des coordonnées.
+- Ne jamais inventer un lieu, une adresse ou des coordonnées.
 - Utiliser uniquement les candidats fournis.
-- Si un prix est inconnu, conserver null.
-- Calculer le budget uniquement avec les prix connus.
-- Si certains prix sont inconnus, le signaler.
+
+PRIX :
+
+- Utiliser en priorité le prix fourni par le candidat.
+- Si le prix du candidat est inconnu (null), tu peux fournir une ESTIMATION raisonnable du prix par personne uniquement si le type et le nom du lieu permettent une estimation crédible.
+- Une estimation doit être marquée avec price_is_estimate=true.
+- Une estimation doit utiliser source="ai_estimate".
+- Ne présente jamais une estimation comme un tarif vérifié.
+- Si aucune estimation crédible n'est possible, conserver price_per_person=null et price_is_estimate=false.
+- Le total_estimated_per_person peut additionner les prix connus et les estimations.
+- Le total doit rester présenté comme une estimation lorsqu'une ou plusieurs étapes utilisent une estimation.
+
+PROPOSITIONS :
+
 - Proposer 6 parcours complets réellement différents dès que les candidats permettent 6 combinaisons distinctes.
 - IMPORTANT : ne pas limiter volontairement la réponse à 3 propositions.
 - Si 6 combinaisons distinctes sont possibles, retourner EXACTEMENT 6 propositions.
@@ -154,11 +168,24 @@ OBJECTIF :
 - Varier les activités, ambiances et combinaisons entre les parcours autant que possible.
 - Ne pas répéter exactement le même parcours sous des titres différents.
 
+Exemples :
+
+Restaurant → Bowling
+
+Restaurant → Bowling → Bar
+
+Restaurant → Cinéma → Dessert
+
+Restaurant → Activité sportive → Restaurant
+
+Restaurant → Musée → Activité
+
 La sortie doit être pratique pour le groupe.
 
 RÉPONSE JSON STRICTE UNIQUEMENT :
 
-Retourne 6 objets dans "options" lorsque 6 parcours distincts sont possibles. Ne retourne pas seulement 3 propositions par défaut.
+Retourne 6 objets dans "options" lorsque 6 parcours distincts sont possibles.
+Ne retourne pas seulement 3 propositions par défaut.
 
 {
   "people": ${people},
@@ -180,6 +207,7 @@ Retourne 6 objets dans "options" lorsque 6 parcours distincts sont possibles. Ne
           "lat": 0,
           "lon": 0,
           "price_per_person": null,
+          "price_is_estimate": false,
           "start_time": "HH:MM",
           "duration_minutes": 90,
           "website": null,
@@ -277,6 +305,31 @@ ${JSON.stringify(safeCandidates)}
                         return null;
                       }
 
+                      const aiPrice =
+                        Number.isFinite(
+                          Number(step.price_per_person)
+                        ) &&
+                        Number(step.price_per_person) > 0
+                          ? Number(step.price_per_person)
+                          : null;
+
+                      const candidatePrice =
+                        Number.isFinite(
+                          Number(candidate.price_per_person)
+                        ) &&
+                        Number(candidate.price_per_person) > 0
+                          ? Number(candidate.price_per_person)
+                          : null;
+
+                      const finalPrice =
+                        candidatePrice != null
+                          ? candidatePrice
+                          : aiPrice;
+
+                      const isEstimate =
+                        candidatePrice == null &&
+                        aiPrice != null;
+
                       return {
                         candidate_id: candidate.id,
 
@@ -301,7 +354,10 @@ ${JSON.stringify(safeCandidates)}
                         lon: candidate.lon,
 
                         price_per_person:
-                          candidate.price_per_person,
+                          finalPrice,
+
+                        price_is_estimate:
+                          isEstimate,
 
                         start_time:
                           /^\d{2}:\d{2}$/.test(
@@ -334,7 +390,9 @@ ${JSON.stringify(safeCandidates)}
                           candidate.phone,
 
                         source:
-                          'openstreetmap'
+                          isEstimate
+                            ? 'ai_estimate'
+                            : 'openstreetmap'
                       };
                     })
                     .filter(Boolean)
