@@ -629,6 +629,10 @@ body.discussionFullScreen{overflow:hidden!important}
 }
 </style>
 <style id="myevent-v52-3-sortie-selected">.outingCardSelected{border-color:#3d8bfd;box-shadow:0 0 0 1px rgba(61,139,253,.22) inset}.outingSelectedBadge{display:inline-block;margin-left:5px;border:1px solid #3d8bfd;border-radius:999px;padding:3px 6px;font-size:10px;color:#8fc0ff;vertical-align:middle}.outingSelected{box-shadow:0 0 0 1px rgba(61,139,253,.18) inset}</style>
+
+<style id="myevent-v52-7-sortie-home">
+.inlineSelectedOuting{margin-top:12px;padding:13px;border:1px solid #3d8bfd;border-radius:15px;background:linear-gradient(145deg,#102a42,#0b1824);box-shadow:0 0 0 1px rgba(61,139,253,.16) inset}.inlineSelectedOutingTitle{font-size:16px;font-weight:850;margin-bottom:7px}.inlineSelectedOutingName{font-size:18px;font-weight:850}.inlineSelectedOutingMeta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.inlineSelectedOutingAddress{color:#b7c7d5;font-size:12px;line-height:1.4}.inlineSelectedOutingActions{display:flex;gap:7px;margin-top:10px}.inlineSelectedOutingActions>*{flex:1;min-width:0;text-align:center;text-decoration:none;display:grid;place-items:center}.inlineSelectedOutingReviews{margin-top:8px;padding:8px 10px;border:1px solid #28445b;border-radius:10px;color:#9eb2c4;font-size:11px;line-height:1.4}@media(max-width:600px){.inlineSelectedOutingActions{flex-wrap:wrap}.inlineSelectedOutingActions>*{min-width:120px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1660,7 +1664,44 @@ async function renderInlineSelectedEvent(){
       showEventTab(tab,true);
       document.querySelector('.tabPanel[data-panel="'+tab+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
-  })); card.appendChild(box);
+  }));
+
+  // V52.7 : afficher la sortie sélectionnée directement dans la fiche d'accueil.
+  try{
+    const ro=await sb.rpc('get_event_outing',{p_event_id:event.id});
+    const outing=Array.isArray(ro.data)?(ro.data[0]||null):ro.data;
+    if(outing){
+      const outingBox=document.createElement('div');
+      outingBox.className='inlineSelectedOuting';
+      const t=String(outing.outing_type||'').toLowerCase();
+      const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
+      const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
+      const mapsSearch='https://www.google.com/maps/search/?api=1&query='+query;
+      const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
+      const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
+      outingBox.innerHTML='<div class="inlineSelectedOutingTitle">⭐ Sortie sélectionnée</div>'+
+        '<div class="inlineSelectedOutingName">'+esc(outing.name||'Sortie')+'</div>'+
+        '<div class="inlineSelectedOutingMeta"><span class="outingChip">'+typeLabel+'</span>'+(outing.price_per_person!=null?'<span class="outingChip">💶 '+eur(outing.price_per_person)+' / pers.</span>':'')+'</div>'+
+        (outing.address?'<div class="inlineSelectedOutingAddress">📍 '+esc(outing.address)+'</div>':'')+
+        '<div class="inlineSelectedOutingActions"><a class="secondary" href="'+mapsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>'+
+        '<div class="inlineSelectedOutingReviews">⭐ Les avis s’ouvrent dans Google Maps pour afficher les notes et commentaires à jour.</div>';
+      box.appendChild(outingBox);
+      outingBox.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
+        if(outing.lat==null||outing.lon==null)return;
+        showEventTab('locations',true);
+        setTimeout(()=>{
+          if(typeof setLocationMapView==='function')setLocationMapView(Number(outing.lat),Number(outing.lon),17);
+          if(locationMap){
+            if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
+            locationOutingMarker=L.marker([Number(outing.lat),Number(outing.lon)],{icon:makeLocationIcon('🍽️','#278cff')}).addTo(locationMap).bindPopup('<b>🍽️ '+esc(outing.name||'Sortie')+'</b>').openPopup();
+          }
+          $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
+        },180);
+      });
+    }
+  }catch(_){ }
+
+  card.appendChild(box);
 }
 
 async function selectEvent(id, options={}){
