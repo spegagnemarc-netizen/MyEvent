@@ -5119,6 +5119,24 @@ async function saveAiOutingPlan(index){
     }));
     if(!items.length)throw new Error('La proposition ne contient aucune étape.');
 
+    // V53.25 — copie locale de secours : si Supabase renvoie temporairement
+    // une liste vide après actualisation, le planning choisi reste récupérable
+    // sur cet appareil et pourra être resynchronisé.
+    try{
+      localStorage.setItem(
+        'myevent_ai_plan_'+user.id+'_'+event.id,
+        JSON.stringify({
+          event_id:event.id,
+          title:planPayload.title,
+          request:planPayload.request,
+          people:planPayload.people,
+          budget_per_person:planPayload.budget_per_person,
+          saved_at:Date.now(),
+          items
+        })
+      );
+    }catch(_){}
+
     // V53.13 FIX : la contrainte SQL est UNIQUE(plan_id, step_order).
     // On met à jour les étapes existantes au lieu de les supprimer puis de les réinsérer.
     const ir=await sb.from('event_outing_plan_items')
@@ -5164,26 +5182,15 @@ async function loadAiOutingPlan(){
 
   const loadToken=++aiPlanLoadToken;
   const eventId=event.id;
+  const localKey=user ? 'myevent_ai_plan_'+user.id+'_'+eventId : '';
 
   box.innerHTML='<div class="planningEmpty">✨ Chargement du planning IA…</div>';
 
   try{
-    // V53.24 — attendre la restauration de session après actualisation.
-    let session=null;
-
-    for(let attempt=0;attempt<8;attempt++){
-      const sr=await sb.auth.getSession();
-      session=sr?.data?.session||null;
-      if(session)break;
-      await new Promise(resolve=>setTimeout(resolve,500));
-    }
-
-    if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
-
     let plans=[];
     let lastError=null;
 
-    // V53.24 — une réponse vide temporaire n'efface plus le planning.
+    // Lecture Supabase avec plusieurs tentatives.
     for(let attempt=0;attempt<8;attempt++){
       const q=await sb.from('event_outing_plans')
         .select('*')
@@ -5192,45 +5199,136 @@ async function loadAiOutingPlan(){
 
       if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
-      if(q.error){
-        lastError=q.error;
-      }else{
+      if(!q.error){
         plans=Array.isArray(q.data)?q.data:[];
         if(plans.length)break;
+      }else{
+        lastError=q.error;
       }
 
-      if(attempt<7){
-        await new Promise(resolve=>setTimeout(resolve,800));
-      }
+      if(attempt<7)await new Promise(resolve=>setTimeout(resolve,800));
     }
 
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
-    if(lastError&&!plans.length){
-      throw new Error(lastError.message||'Lecture Supabase impossible.');
+    let p=plans[0]||null;
+    let items=[];
+
+    // Si Supabase ne renvoie rien, utiliser la copie locale du planning choisi.
+    if(!p&&localKey){
+      try{
+        const raw=localStorage.getItem(localKey);
+        const localPlan=raw?JSON.parse(raw):null;
+
+        if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
+          p={
+            id:null,
+            event_id:eventId,
+            title:localPlan.title||'Sortie organisée avec l’IA',
+            request:localPlan.request||'',
+            people:Number(localPlan.people)||1,
+            budget_per_person:localPlan.budget_per_person
+          };
+          items=localPlan.items;
+
+          // Tentative de resynchronisation Supabase après reconnexion.
+          try{
+            if(user){
+              const rp=await sb.from('event_outing_plans')
+                .upsert({
+                  event_id:eventId,
+                  title:p.title,
+                  request:p.request,
+                  people:p.people,
+                  budget_per_person:p.budget_per_person,
+                  status:'selected',
+                  created_by:user.id
+                },{onConflict:'event_id'})
+                .select('*')
+                .single();
+
+              if(!rp.error&&rp.data){
+                p=rp.data;
+
+                const ri=await sb.from('event_outing_plan_items')
+                  .upsert(
+                    items.map((s,i)=>({
+                      plan_id:p.id,
+                      event_id:eventId,
+                      step_order:i+1,
+                      outing_type:String(s.outing_type||s.type||'activity'),
+                      name:String(s.name||'Étape'),
+                      address:s.address||null,
+                      lat:Number.isFinite(Number(s.lat))?Number(s.lat):null,
+                      lon:Number.isFinite(Number(s.lon))?Number(s.lon):null,
+                      price_per_person:s.price_per_person!=null?Number(s.price_per_person):null,
+                      start_time:s.start_time||null,
+                      duration_minutes:s.duration_minutes!=null?Number(s.duration_minutes):null,
+                      website:s.website||null,
+                      phone:s.phone||null,
+                      source:s.source||'ai',
+                      created_by:user.id
+                    })),
+                    {onConflict:'plan_id,step_order'}
+                  );
+
+                if(!ri.error){
+                  // V53.26 : on conserve volontairement la copie locale.
+                  // Elle sert de filet de sécurité si une lecture Supabase est
+                  // temporairement vide après un rechargement.
+                }
+              }
+            }
+          }catch(_){}
+        }
+      }catch(_){}
     }
 
-    const p=plans[0]||null;
-
     if(!p){
+      if(lastError)throw new Error(lastError.message||'Lecture Supabase impossible.');
       box.innerHTML='';
       return;
     }
 
-    const ir=await sb.from('event_outing_plan_items')
-      .select('*')
-      .eq('plan_id',p.id)
-      .order('step_order',{ascending:true});
+    // Si le planning vient de Supabase, charger ses étapes.
+    if(!items.length&&p.id){
+      const ir=await sb.from('event_outing_plan_items')
+        .select('*')
+        .eq('plan_id',p.id)
+        .order('step_order',{ascending:true});
 
-    if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
+      if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
-    if(ir.error){
-      throw new Error(
-        ir.error.message||'Impossible de lire les étapes du planning IA.'
-      );
+      if(ir.error){
+        // V53.26 : si les étapes Supabase sont momentanément illisibles,
+        // revenir à la copie locale plutôt que d'effacer le planning.
+        if(localKey){
+          try{
+            const raw=localStorage.getItem(localKey);
+            const localPlan=raw?JSON.parse(raw):null;
+            if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
+              items=localPlan.items;
+              p={...p, title:localPlan.title||p.title, request:localPlan.request||p.request, people:Number(localPlan.people)||Number(p.people)||1, budget_per_person:localPlan.budget_per_person};
+            }
+          }catch(_){}
+        }
+        if(!items.length)throw new Error(ir.error.message||'Impossible de lire les étapes du planning IA.');
+      }else{
+        items=Array.isArray(ir.data)?ir.data:[];
+        // V53.26 : une ligne de planning sans étapes n'est pas considérée
+        // comme une preuve que le planning a disparu. Utiliser le secours local.
+        if(!items.length&&localKey){
+          try{
+            const raw=localStorage.getItem(localKey);
+            const localPlan=raw?JSON.parse(raw):null;
+            if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
+              items=localPlan.items;
+              p={...p, title:localPlan.title||p.title, request:localPlan.request||p.request, people:Number(localPlan.people)||Number(p.people)||1, budget_per_person:localPlan.budget_per_person};
+            }
+          }catch(_){}
+        }
+      }
     }
-
-    const items=Array.isArray(ir.data)?ir.data:[];
 
     if(!items.length){
       box.innerHTML='<div class="planningEmpty">⚠️ Le planning IA est enregistré mais ses étapes sont introuvables.</div>';
@@ -5242,8 +5340,7 @@ async function loadAiOutingPlan(){
       title:p.title||'Sortie organisée avec l’IA',
       people:Number(p.people)||1,
       budget_per_person:p.budget_per_person,
-      request:p.request||'',
-      options:aiOutingPlanData?.options||[]
+      request:p.request||''
     };
 
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
@@ -5255,7 +5352,7 @@ async function loadAiOutingPlan(){
         '<div class="aiPlanSavedStep"><b>'+
         (i+1)+'. '+esc(x.name||'Étape')+
         '</b> <span>· '+
-        aiPlanCandidateLabel(x.outing_type)+
+        aiPlanCandidateLabel(x.outing_type||x.type||'activity')+
         (x.start_time?' · '+esc(x.start_time):'')+
         (x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+
         '</span></div>'
@@ -5273,11 +5370,8 @@ async function loadAiOutingPlan(){
     }
 
   }catch(e){
-
     if(loadToken!==aiPlanLoadToken)return;
-
-    console.error('[MyEvent V53.24] loadAiOutingPlan:',e);
-
+    console.error('[MyEvent V53.25] loadAiOutingPlan:',e);
     box.innerHTML=
       '<div class="planningEmpty">⚠️ Impossible de charger le planning IA : '+
       esc(e.message||String(e))+
