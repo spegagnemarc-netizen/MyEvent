@@ -4681,12 +4681,41 @@ loadSelectedOuting=async function(){
       <h3 id="aiPlanTitle">✨ Organiser toute la sortie</h3>
       <button type="button" class="secondary aiPlanClose" id="aiPlanClose">✕</button>
     </div>
-    <div class="aiPlanIntro">L’IA va chercher des lieux autour de l’événement et construire une sortie complète : restaurant, activité(s), horaires et budget. Tu pourras choisir la proposition qui te convient.</div>
+    <div class="aiPlanIntro">L’IA va chercher des lieux autour de l’événement et construire une sortie complète : restaurant, activité(s), horaires et budget. Tu peux préciser l’heure de début et le type/heure du repas pour obtenir un planning plus réaliste.</div>
     <div class="aiPlanGrid">
       <label>👥 Participants<input id="aiPlanPeople" type="number" min="1" max="5000" value="10"></label>
       <label>💰 Budget max / personne (€)<input id="aiPlanBudget" type="number" min="0" step="1" placeholder="Ex. 60"></label>
       <label>📏 Rayon<select id="aiPlanRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></label>
       <label>🎯 Nombre d’étapes<select id="aiPlanSteps"><option value="2">2 étapes</option><option value="3" selected>3 étapes</option><option value="4">4 étapes</option><option value="5">5 étapes</option></select></label>
+      <label>🕐 Heure de début
+        <select id="aiPlanStartTime">
+          <option value="">Automatique</option>
+          <option value="10:00">10:00</option><option value="11:00">11:00</option>
+          <option value="12:00">12:00</option><option value="13:00">13:00</option>
+          <option value="14:00">14:00</option><option value="15:00">15:00</option>
+          <option value="16:00">16:00</option><option value="17:00">17:00</option>
+          <option value="18:00">18:00</option><option value="19:00">19:00</option>
+          <option value="20:00">20:00</option>
+        </select>
+      </label>
+      <label>🍽️ Repas
+        <select id="aiPlanMealType">
+          <option value="none" selected>Automatique</option>
+          <option value="lunch">Déjeuner</option>
+          <option value="dinner">Dîner</option>
+        </select>
+      </label>
+      <label>🕐 Heure du repas
+        <select id="aiPlanMealTime">
+          <option value="">Automatique</option>
+          <option value="12:00">12:00</option><option value="12:30">12:30</option>
+          <option value="13:00">13:00</option><option value="13:30">13:30</option>
+          <option value="14:00">14:00</option>
+          <option value="19:00">19:00</option><option value="19:30">19:30</option>
+          <option value="20:00">20:00</option><option value="20:30">20:30</option>
+          <option value="21:00">21:00</option>
+        </select>
+      </label>
       <label class="aiPlanFull">💬 Ce que tu veux<input id="aiPlanPrompt" placeholder="Ex. restaurant sympa + bowling + dessert, soirée fun"></label>
     </div>
     <div class="aiPlanActions">
@@ -4705,6 +4734,10 @@ function openAiOutingPlanner(){
   if(!event){alert('Choisis d’abord un événement.');return;}
   const m=$('aiPlanModal'); if(!m)return;
   $('aiPlanPeople').value=Math.max(1,Number($('outingPeople')?.value||10)||10);
+  if($('aiPlanStartTime'))$('aiPlanStartTime').value='';
+  if($('aiPlanMealType'))$('aiPlanMealType').value='none';
+  if($('aiPlanMealTime'))$('aiPlanMealTime').value='';
+  syncAiMealTime();
   $('aiPlanResults').innerHTML='';
   $('aiPlanStatus').textContent='';
   $('aiPlanModal').classList.add('open');
@@ -4725,6 +4758,21 @@ function aiPlanCandidateLabel(t){
 function aiPlanFormatPrice(v){
   return Number.isFinite(Number(v))&&Number(v)>0?eur(Number(v))+' / pers.':'Tarif à vérifier';
 }
+function syncAiMealTime(){
+  const type=$('aiPlanMealType')?.value||'none';
+  const sel=$('aiPlanMealTime');
+  if(!sel)return;
+  sel.disabled=type==='none';
+  const values=type==='lunch'
+    ? ['','12:00','12:30','13:00','13:30','14:00']
+    : type==='dinner'
+      ? ['','19:00','19:30','20:00','20:30','21:00']
+      : [''];
+  Array.from(sel.options).forEach(o=>{
+    o.hidden=!values.includes(o.value);
+  });
+  if(!values.includes(sel.value))sel.value='';
+}
 async function generateAiOutingPlan(){
   if(!event||!user)return;
   const btn=$('aiPlanGenerate'); if(btn?.disabled)return;
@@ -4732,6 +4780,9 @@ async function generateAiOutingPlan(){
   const budget=Math.max(0,Number($('aiPlanBudget')?.value||0)||0);
   const radius=Number($('aiPlanRadius')?.value||5);
   const steps=Math.min(5,Math.max(2,Number($('aiPlanSteps')?.value||3)||3));
+  const startTime=String($('aiPlanStartTime')?.value||'').trim();
+  const mealType=String($('aiPlanMealType')?.value||'none');
+  const mealTime=String($('aiPlanMealTime')?.value||'').trim();
   const prompt=String($('aiPlanPrompt')?.value||'').trim();
   btn.disabled=true;
   $('aiPlanResults').innerHTML='';
@@ -4766,6 +4817,9 @@ async function generateAiOutingPlan(){
         event_location:event.location||'',
         people,budget_per_person:budget||null,
         requested_steps:steps,
+        start_time:startTime||null,
+        meal_type:mealType,
+        meal_time:mealTime||null,
         request:prompt,
         candidates
       })
@@ -4886,6 +4940,9 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
   if(e.target.closest('#aiPlanGenerate')){generateAiOutingPlan();return;}
   const c=e.target.closest('[data-ai-plan-index]'); if(c){saveAiOutingPlan(c.dataset.aiPlanIndex);return;}
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='aiPlanMealType')syncAiMealTime();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAiOutingPlanner();});
 document.addEventListener('click',e=>{
