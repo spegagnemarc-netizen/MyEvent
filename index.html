@@ -4348,7 +4348,7 @@ async function saveEventReservation(outingId,prefix){
   if(!date||!time){alert('Choisis une date et une heure.');return;}
   const localDate=new Date(date+'T'+time);
   if(Number.isNaN(localDate.getTime())){alert('La date ou l’heure est invalide.');return;}
-  const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
+  const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||selected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
   if(r.error){alert('Impossible d’enregistrer la réservation : '+r.error.message);return;}
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
   document.getElementById(prefix+'ReservationForm')?.remove();
@@ -4526,7 +4526,11 @@ loadSelectedOuting=async function(){
     form.scrollIntoView({behavior:'smooth',block:'center'});
   };
   window.saveEventReservation=async function(outingId,prefix){
-    if(!event||!outingSelected)return;
+    if(!event){alert('Aucun événement sélectionné.');return;}
+    if(!sb){alert('Connexion à Supabase indisponible. Recharge la page puis réessaie.');return;}
+    let selected=outingSelected;
+    if(!selected){try{await loadSelectedOuting();selected=outingSelected;}catch(e){console.error(e);}}
+    if(!selected){alert('Aucune sortie sélectionnée. Sélectionne d’abord une sortie.');return;}
     const d=draftEl(prefix); if(!d){alert('Formulaire introuvable.');return;}
     const date=d.dataset.date||''; const time=d.dataset.time||'';
     const people=Math.max(1,parseInt(d.dataset.people||'1',10)||1); const note=d.dataset.note||null;
@@ -4534,7 +4538,7 @@ loadSelectedOuting=async function(){
     const localDate=new Date(date+'T'+time);
     if(Number.isNaN(localDate.getTime())){alert('La date ou l’heure est invalide.');return;}
     const saveBtn=document.getElementById(prefix+'ReservationSave');
-    if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='⏳ Enregistrement…';}
+    if(saveBtn){if(saveBtn.dataset.saving==='1')return;saveBtn.dataset.saving='1';saveBtn.disabled=true;saveBtn.textContent='⏳ Enregistrement…';}
     try{
       const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:localDate.toISOString(),p_party_size:people,p_note:note});
       if(r.error){
@@ -4551,9 +4555,16 @@ loadSelectedOuting=async function(){
       console.error(err);
       alert('Erreur pendant l’enregistrement : '+(err?.message||err));
     }finally{
-      if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='💾 Enregistrer';}
+      if(saveBtn){saveBtn.disabled=false;saveBtn.dataset.saving='';saveBtn.textContent='💾 Enregistrer';}
     }
   };
+  // V53.5 : secours tactile iPhone pour le bouton Enregistrer.
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('[id$="ReservationSave"]');
+    if(!b || b.dataset.saving==='1')return;
+    const prefix=b.id.replace(/ReservationSave$/,'');
+    window.saveEventReservation(outingSelected?.id,prefix);
+  },true);
 })();
 </script>
 <style id="myevent-v53-3-reservation-touch-css">
