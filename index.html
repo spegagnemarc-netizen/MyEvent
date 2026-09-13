@@ -638,6 +638,13 @@ body.discussionFullScreen{overflow:hidden!important}
 <style id="myevent-v52-8-planning-home">
 .inlineEventPlanning{margin-top:12px;border:1px solid #315b78;border-radius:14px;background:#0b1824;padding:12px}.inlineEventPlanningTitle{font-size:18px;font-weight:850}.inlineEventPlanningStatus{margin-top:5px;color:#91d0ff;font-size:13px}.planningStep{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:start;margin-top:12px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#08131e}.planningStepIcon{width:42px;height:42px;border-radius:12px;background:#10283b;display:grid;place-items:center;font-size:22px}.planningStepName{font-weight:800;font-size:15px}.planningStepMeta{margin-top:4px;color:#9eb2c4;font-size:12px;line-height:1.4}.planningActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.planningActions a,.planningActions button{min-height:42px}.planningAiCta{margin-top:10px;width:100%;min-height:44px!important}.planningEmpty{margin-top:12px;padding:12px;border:1px dashed #315b78;border-radius:12px;color:#9eb2c4;font-size:13px;line-height:1.45}.planningAiNote{margin-top:8px;color:#7f96aa;font-size:11px}@media(max-width:600px){.planningActions{grid-template-columns:1fr}}
 </style>
+
+<style id="v52_10_planning_actions">
+.planningActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.planningActions .secondary{display:flex;align-items:center;justify-content:center;min-height:52px;padding:10px 14px;border:1px solid #294f6a;border-radius:16px;background:#0b1723;color:#f5f8fb;text-decoration:none;font-weight:700;text-align:center;box-sizing:border-box}
+.planningActions .secondary:hover{background:#102235}
+@media(max-width:520px){.planningActions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1688,7 +1695,7 @@ async function renderInlineSelectedEvent(){
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
         '<div class="inlineEventPlanningStatus">⭐ Sortie sélectionnée — à confirmer par le groupe</div>'+
         '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
-        '<div class="planningActions"><a class="secondary" href="'+mapsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
+        '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
         '<button type="button" class="planningMapCta" data-home-outing-map="1">📍 Carte MyEvent</button>'+
         '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
         '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div>';
