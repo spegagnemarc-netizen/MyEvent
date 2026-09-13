@@ -4991,21 +4991,145 @@ loadSelectedOuting=async function(){
 <script id="myevent-v53-13-ai-planner-js">
 let aiOutingPlanData=null;
 
-function openAiOutingPlanner(editMode=false){
+function ensureAiPlanEditorModal(){
+  if($('aiPlanEditorModal'))return;
+  const wrap=document.createElement('div');
+  wrap.id='aiPlanEditorModal';
+  wrap.className='aiPlanModal';
+  wrap.setAttribute('aria-hidden','true');
+  wrap.innerHTML='<div class="aiPlanPanel" role="dialog" aria-modal="true" aria-labelledby="aiPlanEditorTitle">'+
+    '<div class="aiPlanHeader"><h3 id="aiPlanEditorTitle">✏️ Modifier le planning IA</h3><button type="button" class="secondary aiPlanClose" id="aiPlanEditorClose">✕</button></div>'+
+    '<div class="aiPlanIntro">Modifie directement les étapes du planning actuel. Aucun appel à l’IA n’est nécessaire.</div>'+
+    '<div id="aiPlanEditorStatus" class="aiPlanStatus"></div><div id="aiPlanEditorSteps"></div>'+
+    '<div class="aiPlanActions"><button type="button" id="aiPlanEditorSave">💾 Enregistrer les modifications</button><button type="button" class="secondary" id="aiPlanEditorRegenerate">✨ Régénérer avec l’IA</button></div>'+
+    '<button type="button" class="secondary" id="aiPlanEditorCancel" style="width:100%;margin-top:8px">Annuler</button>'+
+    '</div>';
+  document.body.appendChild(wrap);
+  $('aiPlanEditorClose')?.addEventListener('click',closeAiPlanEditor);
+  $('aiPlanEditorCancel')?.addEventListener('click',closeAiPlanEditor);
+  $('aiPlanEditorRegenerate')?.addEventListener('click',()=>{const current=window.__myeventAiCurrentPlan||{};closeAiPlanEditor();openAiOutingPlanner(true);});
+  $('aiPlanEditorSave')?.addEventListener('click',saveAiPlanEdits);
+  wrap.addEventListener('click',e=>{if(e.target===wrap)closeAiPlanEditor();});
+}
+function openAiPlanEditor(){
+  ensureAiPlanEditorModal();
+  const current=window.__myeventAiCurrentPlan;
+  if(!current?.plan||!Array.isArray(current.items)||!current.items.length){
+    alert('Le planning IA actuel n’est pas disponible pour modification.');
+    return;
+  }
+  const box=$('aiPlanEditorSteps');
+  box.innerHTML=current.items.map((item,i)=>{
+    const step=i+1;
+    const type=String(item.outing_type||item.type||'activity');
+    return '<div class="aiPlanOption" style="margin-top:10px">'+
+      '<div class="aiPlanOptionTitle">'+step+'. '+esc(item.name||'Étape')+'</div>'+
+      '<div class="aiPlanGrid" style="margin-top:8px">'+
+      '<label>Nom<input id="aiEditName'+step+'" value="'+escAttr(item.name||'')+'"></label>'+ 
+      '<label>Type<select id="aiEditType'+step+'"><option value="activity" '+(type==='activity'?'selected':'')+'>🎯 Activité</option><option value="restaurant" '+(type==='restaurant'?'selected':'')+'>🍽️ Restaurant</option><option value="culture" '+(type==='culture'?'selected':'')+'>🏛️ Culture</option><option value="nature" '+(type==='nature'?'selected':'')+'>🌳 Nature</option></select></label>'+ 
+      '<label>Heure<input id="aiEditTime'+step+'" type="time" value="'+escAttr(String(item.start_time||'').slice(0,5))+'"></label>'+ 
+      '<label>Durée (min)<input id="aiEditDuration'+step+'" type="number" min="0" step="5" value="'+escAttr(item.duration_minutes!=null?String(item.duration_minutes):'')+'"></label>'+ 
+      '<label class="aiPlanFull">Adresse<input id="aiEditAddress'+step+'" value="'+escAttr(item.address||'')+'"></label>'+ 
+      '</div></div>';
+  }).join('');
+  $('aiPlanEditorStatus').textContent='';
+  const m=$('aiPlanEditorModal');m.classList.add('open');m.setAttribute('aria-hidden','false');
+}
+function closeAiPlanEditor(){
+  const m=$('aiPlanEditorModal');if(!m)return;
+  m.classList.remove('open');m.setAttribute('aria-hidden','true');
+}
+let aiPlanEditingSaving=false;
+async function saveAiPlanEdits(){
+  const current=window.__myeventAiCurrentPlan;
+  if(!current?.plan?.id||!Array.isArray(current.items)||!current.items.length||aiPlanEditingSaving)return;
+  aiPlanEditingSaving=true;
+  const btn=$('aiPlanEditorSave');if(btn){btn.disabled=true;btn.textContent='⏳ Enregistrement…';}
+  const status=$('aiPlanEditorStatus');
+  try{
+    const items=current.items.map((old,i)=>{
+      const step=i+1;
+      const durationVal=$('aiEditDuration'+step)?.value||'';
+      return {...old,
+        plan_id:current.plan.id,event_id:event.id,step_order:step,
+        outing_type:String($('aiEditType'+step)?.value||old.outing_type||old.type||'activity'),
+        name:String($('aiEditName'+step)?.value||'Étape').trim().slice(0,180),
+        start_time:String($('aiEditTime'+step)?.value||'').trim()||null,
+        duration_minutes:durationVal!==''?Math.max(0,Number(durationVal)||0):null,
+        address:String($('aiEditAddress'+step)?.value||'').trim()||null,
+        created_by:old.created_by||user.id
+      };
+    });
+    if(items.some(x=>!x.name))throw new Error('Chaque étape doit avoir un nom.');
+    const clean=items.map(x=>({plan_id:x.plan_id,event_id:x.event_id,step_order:x.step_order,outing_type:x.outing_type,name:x.name,address:x.address,lat:x.lat??null,lon:x.lon??null,price_per_person:x.price_per_person??null,start_time:x.start_time,duration_minutes:x.duration_minutes,website:x.website??null,phone:x.phone??null,source:x.source||'ai',created_by:x.created_by}));
+    const r=await sb.from('event_outing_plan_items').upsert(clean,{onConflict:'plan_id,step_order'});
+    if(r.error)throw new Error(r.error.message);
+    current.items=clean;
+    window.__myeventAiCurrentPlan=current;
+    aiOutingPlanData={...(aiOutingPlanData||{}),title:current.plan.title,people:Number(current.plan.people)||1,budget_per_person:current.plan.budget_per_person,request:current.plan.request||'',items:clean};
+    try{
+      const key='myevent_ai_plan_'+user.id+'_'+event.id;
+      const oldLocal=JSON.parse(localStorage.getItem(key)||'{}');
+      localStorage.setItem(key,JSON.stringify({...oldLocal,plan_id:current.plan.id,event_id:event.id,title:current.plan.title,request:current.plan.request||'',people:Number(current.plan.people)||1,budget_per_person:current.plan.budget_per_person,saved_at:Date.now(),items:clean}));
+    }catch(_){ }
+    closeAiPlanEditor();
+    const box=$('aiPlanPanelBox');
+    if(box){
+      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
+      box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
+    }
+    if(typeof renderAiPlanReservations==='function')await renderAiPlanReservations(current.plan,clean);
+    alert('✅ Modifications du planning IA enregistrées.');
+  }catch(e){
+    if(status)status.textContent='Impossible d’enregistrer : '+(e.message||String(e));
+    if(status)status.className='aiPlanStatus err';
+  }finally{
+    aiPlanEditingSaving=false;
+    if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer les modifications';}
+  }
+}
+async function openAiOutingPlanner(editMode=false){
   if(!event){alert('Choisis d’abord un événement.');return;}
   const m=$('aiPlanModal'); if(!m)return;
   let existing=null;
   if(editMode&&user){
+    // V54.2 : en modification, charger d'abord le planning actuellement
+    // sélectionné depuis Supabase. Le localStorage sert de secours.
     try{ existing=JSON.parse(localStorage.getItem('myevent_ai_plan_'+user.id+'_'+event.id)||'null'); }catch(_){existing=null;}
+    try{
+      const pr=await sb.from('event_outing_plans')
+        .select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+      if(!pr.error && Array.isArray(pr.data) && pr.data[0]){
+        const dbPlan=pr.data[0];
+        const ir=await sb.from('event_outing_plan_items')
+          .select('*').eq('plan_id',dbPlan.id).order('step_order',{ascending:true});
+        if(!ir.error){
+          existing={
+            event_id:event.id,
+            title:dbPlan.title||'',
+            request:dbPlan.request||'',
+            people:dbPlan.people||10,
+            budget_per_person:dbPlan.budget_per_person,
+            items:Array.isArray(ir.data)?ir.data:[]
+          };
+          try{localStorage.setItem('myevent_ai_plan_'+user.id+'_'+event.id,JSON.stringify(existing));}catch(_){}
+        }
+      }
+    }catch(_){}
   }
   $('aiPlanPeople').value=Math.max(1,Number(existing?.people||$('outingPeople')?.value||10)||10);
   if($('aiPlanBudget'))$('aiPlanBudget').value=existing?.budget_per_person!=null?existing.budget_per_person:'';
-  if($('aiPlanStartTime'))$('aiPlanStartTime').value=existing?.items?.[0]?.start_time||'';
+  if($('aiPlanRadius'))$('aiPlanRadius').value=String(existing?.radius||5);
+  if($('aiPlanSteps'))$('aiPlanSteps').value=String(Math.min(5,Math.max(2,Number(existing?.items?.length||3)||3)));
+  if($('aiPlanStartTime'))$('aiPlanStartTime').value=existing?.start_time||existing?.items?.[0]?.start_time||'';
   if($('aiPlanMealType')){
-    const hasRestaurant=Array.isArray(existing?.items)&&existing.items.some(x=>String(x.outing_type||x.type||'').toLowerCase()==='restaurant');
-    $('aiPlanMealType').value=hasRestaurant?'dinner':'none';
+    const restaurantItem=Array.isArray(existing?.items)&&existing.items.find(x=>String(x.outing_type||x.type||'').toLowerCase()==='restaurant');
+    $('aiPlanMealType').value=restaurantItem?'dinner':'none';
   }
-  if($('aiPlanMealTime'))$('aiPlanMealTime').value='';
+  if($('aiPlanMealTime')){
+    const restaurantItem=Array.isArray(existing?.items)&&existing.items.find(x=>String(x.outing_type||x.type||'').toLowerCase()==='restaurant');
+    $('aiPlanMealTime').value=restaurantItem?.start_time||'';
+  }
   syncAiMealTime();
   $('aiPlanResults').innerHTML='';
   $('aiPlanStatus').textContent=editMode&&existing?'✏️ Modification du planning IA existant. Génère une nouvelle proposition pour le remplacer.':'';
@@ -5130,6 +5254,8 @@ async function saveAiOutingPlan(index){
       request:String(aiOutingPlanData.request||$('aiPlanPrompt')?.value||'').slice(0,2000),
       people:Math.max(1,Number(aiOutingPlanData.people)||1),
       budget_per_person:aiOutingPlanData.budget_per_person!=null?Number(aiOutingPlanData.budget_per_person):null,
+      radius:Number($('aiPlanRadius')?.value||5),
+      start_time:String($('aiPlanStartTime')?.value||'').trim(),
       status:'selected',
       created_by:user.id
     };
@@ -5181,6 +5307,7 @@ async function saveAiOutingPlan(index){
       );
     }catch(_){ }
 
+    window.__myeventAiCurrentPlan={plan:pr.data,items};
     closeAiOutingPlanner();
     showEventTab('aioutings',true);
     // V54 : le planning IA vit dans son propre onglet et ne dépend plus
@@ -5194,7 +5321,7 @@ async function saveAiOutingPlan(index){
         '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
         items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
-      savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',()=>openAiOutingPlanner(true));
+      savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
     if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(pr.data,items);
     await refreshReservationBoxes();
@@ -5355,6 +5482,7 @@ async function loadAiOutingPlan(){
       budget_per_person:p.budget_per_person,
       request:p.request||''
     };
+    window.__myeventAiCurrentPlan={plan:p,items:items};
 
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
@@ -5373,10 +5501,7 @@ async function loadAiOutingPlan(){
       '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button>'+
       '</div>';
 
-    box.querySelector('[data-ai-plan-edit]')?.addEventListener(
-      'click',
-      ()=>openAiOutingPlanner(true)
-    );
+    box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
 
     if(typeof renderAiPlanReservations==='function'){
       await renderAiPlanReservations(p,items);
@@ -5400,7 +5525,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   if(e.target.id==='aiPlanMealType')syncAiMealTime();
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAiOutingPlanner();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAiPlanEditor();closeAiOutingPlanner();}});
 document.addEventListener('click',e=>{
   if(e.target.id==='aiPlanModal')closeAiOutingPlanner();
 });
@@ -5758,6 +5883,8 @@ document.addEventListener('click',e=>{
 <style id="myevent-v53-17-ai-reservations-css">
 .aiPlanReservationBox{margin-top:12px!important}
 .aiPlanReservationRow{border:1px solid #315a74;border-radius:14px;padding:12px;margin-top:10px;background:#08131e}
+.aiPlanReservationOpen{position:relative!important;z-index:100!important;pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important;-webkit-tap-highlight-color:rgba(39,140,255,.18)!important}
+.aiPlanReservationRow{position:relative;z-index:1}
 .aiPlanReservationMain{margin-bottom:9px;font-size:16px}
 .aiPlanReservationEdit{display:grid;gap:9px;margin-top:10px;padding:10px;border-radius:12px;background:#07101a}
 .aiPlanReservationEdit label{display:grid;gap:5px;font-weight:600}
@@ -5799,13 +5926,19 @@ async function renderAiPlanReservations(plan,items){
     const status=aiReservationStatusLabel(r);
     return '<div class="aiPlanReservationRow" data-ai-res-step="'+step+'">'+
       '<div class="aiPlanReservationMain"><b>'+step+'. '+esc(item.name||'Étape')+'</b><div class="muted">'+type+when+' · '+esc(status)+'</div></div>'+
-      '<button type="button" class="secondary aiPlanReservationOpen" data-ai-res-open="'+step+'">'+(r&&r.status!=='cancelled'?'✏️ Modifier':'📅 Préparer')+'</button>'+
+      '<button type="button" class="secondary aiPlanReservationOpen" data-ai-res-open="'+step+'" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiReservation(this);return false;">'+(r&&r.status!=='cancelled'?'✏️ Modifier':'📅 Préparer')+'</button>'+
       '<div class="aiPlanReservationFormHost" id="aiResHost'+step+'"></div>'+
       '</div>';
   }).join('');
   box.innerHTML='<div class="reservationBox aiPlanReservationBox"><div class="reservationTitle">📅 Réservations du planning IA</div><div class="muted">Une réservation indépendante pour chaque étape du parcours.</div>'+rows+'</div>';
   box.querySelectorAll('[data-ai-res-open]').forEach(btn=>btn.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();openAiPlanReservationForm(plan,items,Number(btn.dataset.aiResOpen));}));
 }
+window.__myeventOpenAiReservation=function(btn){
+  const plan=window.__myeventAiReservationPlan;
+  const items=window.__myeventAiReservationItems;
+  const step=Number(btn?.dataset?.aiResOpen);
+  if(plan&&Array.isArray(items)&&step>0)openAiPlanReservationForm(plan,items,step);
+};
 function openAiPlanReservationForm(plan,items,step){
   const item=items.find((x,i)=>i+1===step);
   if(!item)return;
