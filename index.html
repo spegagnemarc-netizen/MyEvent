@@ -1666,7 +1666,10 @@ async function loadEvents(){
   },{once:true});
 
   $('eventListMsg').textContent=events.length ? events.length+' événement'+(events.length>1?'s':'') : '';
-  if(event && events.some(e=>e.id===event.id)) await renderInlineSelectedEvent();
+  if(event && events.some(e=>e.id===event.id)){
+    await renderInlineSelectedEvent();
+    if(typeof refreshReservationBoxes==='function') await refreshReservationBoxes();
+  }
   return events;
 }
 
@@ -1723,10 +1726,6 @@ async function renderInlineSelectedEvent(){
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
     }
     box.appendChild(planning);
-    // V53.7 : après reconnexion, la réservation doit être relue depuis Supabase
-    // avant d'afficher le planning sur l'accueil. Elle ne doit pas dépendre
-    // de currentReservation, qui est réinitialisé à chaque nouvelle session.
-    await refreshReservationBoxes();
     planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
     planning.querySelector('[data-home-outing-map]')?.addEventListener('click',()=>{
       if(outing.lat==null||outing.lon==null)return;
@@ -1772,6 +1771,9 @@ async function selectEvent(id, options={}){
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   await renderInlineSelectedEvent();
+  // V53.10 : la réservation est chargée après le rendu final du planning.
+  // Évite les courses entre plusieurs renderInlineSelectedEvent().
+  await refreshReservationBoxes();
   global('Événement actif : '+event.name,'ok');
 
   // Changer d'événement doit toujours ramener à l'accueil de cet événement.
@@ -1799,6 +1801,8 @@ async function selectEvent(id, options={}){
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia(),loadFund()]);
   if(restoredTab==='locations') await loadEventLocations();
   await renderInlineSelectedEvent();
+  // V53.10 : second/final render = source of truth for the DOM.
+  await refreshReservationBoxes();
   if(!restoreView){
     // Sécurité : un changement d'événement ne doit jamais ouvrir automatiquement Discussion.
     document.body.classList.remove('discussionFullScreen');
@@ -4343,7 +4347,11 @@ function reservationFormHtml(prefix){
 async function loadEventReservation(){
   if(!event)return null;
   const r=await sb.rpc('get_event_reservation',{p_event_id:event.id});
-  if(r.error){currentReservation=null;return null;}
+  if(r.error){
+    console.error('get_event_reservation:', r.error);
+    currentReservation=null;
+    return null;
+  }
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
   return currentReservation;
 }
