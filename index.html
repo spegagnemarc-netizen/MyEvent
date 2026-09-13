@@ -4991,18 +4991,27 @@ loadSelectedOuting=async function(){
 <script id="myevent-v53-13-ai-planner-js">
 let aiOutingPlanData=null;
 
-function openAiOutingPlanner(){
+function openAiOutingPlanner(editMode=false){
   if(!event){alert('Choisis d’abord un événement.');return;}
   const m=$('aiPlanModal'); if(!m)return;
-  $('aiPlanPeople').value=Math.max(1,Number($('outingPeople')?.value||10)||10);
-  if($('aiPlanStartTime'))$('aiPlanStartTime').value='';
-  if($('aiPlanMealType'))$('aiPlanMealType').value='none';
+  let existing=null;
+  if(editMode&&user){
+    try{ existing=JSON.parse(localStorage.getItem('myevent_ai_plan_'+user.id+'_'+event.id)||'null'); }catch(_){existing=null;}
+  }
+  $('aiPlanPeople').value=Math.max(1,Number(existing?.people||$('outingPeople')?.value||10)||10);
+  if($('aiPlanBudget'))$('aiPlanBudget').value=existing?.budget_per_person!=null?existing.budget_per_person:'';
+  if($('aiPlanStartTime'))$('aiPlanStartTime').value=existing?.items?.[0]?.start_time||'';
+  if($('aiPlanMealType')){
+    const hasRestaurant=Array.isArray(existing?.items)&&existing.items.some(x=>String(x.outing_type||x.type||'').toLowerCase()==='restaurant');
+    $('aiPlanMealType').value=hasRestaurant?'dinner':'none';
+  }
   if($('aiPlanMealTime'))$('aiPlanMealTime').value='';
   syncAiMealTime();
   $('aiPlanResults').innerHTML='';
-  $('aiPlanStatus').textContent='';
+  $('aiPlanStatus').textContent=editMode&&existing?'✏️ Modification du planning IA existant. Génère une nouvelle proposition pour le remplacer.':'';
   $('aiPlanModal').classList.add('open');
   $('aiPlanModal').setAttribute('aria-hidden','false');
+  $('aiPlanPrompt').value=existing?.request||'';
   $('aiPlanPrompt')?.focus();
 }
 function closeAiOutingPlanner(){
@@ -5139,23 +5148,6 @@ async function saveAiOutingPlan(index){
     }));
     if(!items.length)throw new Error('La proposition ne contient aucune étape.');
 
-    // V53.25 — copie locale de secours : si Supabase renvoie temporairement
-    // une liste vide après actualisation, le planning choisi reste récupérable
-    // sur cet appareil et pourra être resynchronisé.
-    try{
-      localStorage.setItem(
-        'myevent_ai_plan_'+user.id+'_'+event.id,
-        JSON.stringify({
-          event_id:event.id,
-          title:planPayload.title,
-          request:planPayload.request,
-          people:planPayload.people,
-          budget_per_person:planPayload.budget_per_person,
-          saved_at:Date.now(),
-          items
-        })
-      );
-    }catch(_){}
 
     // V53.13 FIX : la contrainte SQL est UNIQUE(plan_id, step_order).
     // On met à jour les étapes existantes au lieu de les supprimer puis de les réinsérer.
@@ -5171,6 +5163,24 @@ async function saveAiOutingPlan(index){
       .gt('step_order',items.length);
     if(dr.error)throw new Error(dr.error.message);
 
+    // V54.1 — le dernier planning choisi devient la référence locale de cet événement.
+    // On conserve aussi l'id Supabase du planning pour retrouver ses réservations après actualisation.
+    try{
+      localStorage.setItem(
+        'myevent_ai_plan_'+user.id+'_'+event.id,
+        JSON.stringify({
+          plan_id:pr.data.id,
+          event_id:event.id,
+          title:planPayload.title,
+          request:planPayload.request,
+          people:planPayload.people,
+          budget_per_person:planPayload.budget_per_person,
+          saved_at:Date.now(),
+          items
+        })
+      );
+    }catch(_){ }
+
     closeAiOutingPlanner();
     showEventTab('aioutings',true);
     // V54 : le planning IA vit dans son propre onglet et ne dépend plus
@@ -5184,7 +5194,7 @@ async function saveAiOutingPlan(index){
         '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
         items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
-      savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
+      savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',()=>openAiOutingPlanner(true));
     }
     if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(pr.data,items);
     await refreshReservationBoxes();
@@ -5234,77 +5244,57 @@ async function loadAiOutingPlan(){
 
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
-    let p=plans[0]||null;
+    let p=null;
     let items=[];
+    let localPlan=null;
 
-    // Si Supabase ne renvoie rien, utiliser la copie locale du planning choisi.
-    if(!p&&localKey){
+    // V54.1 — la dernière proposition choisie sur cet appareil est prioritaire.
+    // Cela évite qu'un ancien enregistrement Supabase reprenne la main après actualisation.
+    if(localKey){
       try{
         const raw=localStorage.getItem(localKey);
-        const localPlan=raw?JSON.parse(raw):null;
+        localPlan=raw?JSON.parse(raw):null;
+      }catch(_){localPlan=null;}
+    }
 
-        if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
-          p={
-            id:null,
-            event_id:eventId,
-            title:localPlan.title||'Sortie organisée avec l’IA',
-            request:localPlan.request||'',
-            people:Number(localPlan.people)||1,
-            budget_per_person:localPlan.budget_per_person
-          };
-          items=localPlan.items;
+    if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
+      p={
+        id:localPlan.plan_id||null,
+        event_id:eventId,
+        title:localPlan.title||'Sortie organisée avec l’IA',
+        request:localPlan.request||'',
+        people:Number(localPlan.people)||1,
+        budget_per_person:localPlan.budget_per_person
+      };
+      items=localPlan.items;
+    }else{
+      // Aucun secours local : utiliser Supabase.
+      p=plans[0]||null;
+    }
 
-          // Tentative de resynchronisation Supabase après reconnexion.
-          try{
-            if(user){
-              const rp=await sb.from('event_outing_plans')
-                .upsert({
-                  event_id:eventId,
-                  title:p.title,
-                  request:p.request,
-                  people:p.people,
-                  budget_per_person:p.budget_per_person,
-                  status:'selected',
-                  created_by:user.id
-                },{onConflict:'event_id'})
-                .select('*')
-                .single();
-
-              if(!rp.error&&rp.data){
-                p=rp.data;
-
-                const ri=await sb.from('event_outing_plan_items')
-                  .upsert(
-                    items.map((s,i)=>({
-                      plan_id:p.id,
-                      event_id:eventId,
-                      step_order:i+1,
-                      outing_type:String(s.outing_type||s.type||'activity'),
-                      name:String(s.name||'Étape'),
-                      address:s.address||null,
-                      lat:Number.isFinite(Number(s.lat))?Number(s.lat):null,
-                      lon:Number.isFinite(Number(s.lon))?Number(s.lon):null,
-                      price_per_person:s.price_per_person!=null?Number(s.price_per_person):null,
-                      start_time:s.start_time||null,
-                      duration_minutes:s.duration_minutes!=null?Number(s.duration_minutes):null,
-                      website:s.website||null,
-                      phone:s.phone||null,
-                      source:s.source||'ai',
-                      created_by:user.id
-                    })),
-                    {onConflict:'plan_id,step_order'}
-                  );
-
-                if(!ri.error){
-                  // V53.26 : on conserve volontairement la copie locale.
-                  // Elle sert de filet de sécurité si une lecture Supabase est
-                  // temporairement vide après un rechargement.
-                }
-              }
-            }
-          }catch(_){}
+    // Si le planning local n'a pas encore d'id Supabase, tenter de le synchroniser.
+    if(p&&items.length&&localPlan&&!localPlan.plan_id&&user){
+      try{
+        const rp=await sb.from('event_outing_plans').upsert({
+          event_id:eventId,title:p.title,request:p.request,people:p.people,
+          budget_per_person:p.budget_per_person,status:'selected',created_by:user.id
+        },{onConflict:'event_id'}).select('*').single();
+        if(!rp.error&&rp.data){
+          p=rp.data;
+          const ri=await sb.from('event_outing_plan_items').upsert(
+            items.map((s,i)=>({plan_id:p.id,event_id:eventId,step_order:i+1,
+              outing_type:String(s.outing_type||s.type||'activity'),name:String(s.name||'Étape'),
+              address:s.address||null,lat:Number.isFinite(Number(s.lat))?Number(s.lat):null,
+              lon:Number.isFinite(Number(s.lon))?Number(s.lon):null,
+              price_per_person:s.price_per_person!=null?Number(s.price_per_person):null,
+              start_time:s.start_time||null,duration_minutes:s.duration_minutes!=null?Number(s.duration_minutes):null,
+              website:s.website||null,phone:s.phone||null,source:s.source||'ai',created_by:user.id
+            })),{onConflict:'plan_id,step_order'});
+          if(!ri.error){
+            try{localPlan.plan_id=p.id;localStorage.setItem(localKey,JSON.stringify(localPlan));}catch(_){ }
+          }
         }
-      }catch(_){}
+      }catch(_){ }
     }
 
     if(!p){
@@ -5385,7 +5375,7 @@ async function loadAiOutingPlan(){
 
     box.querySelector('[data-ai-plan-edit]')?.addEventListener(
       'click',
-      openAiOutingPlanner
+      ()=>openAiOutingPlanner(true)
     );
 
     if(typeof renderAiPlanReservations==='function'){
