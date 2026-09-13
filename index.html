@@ -2320,13 +2320,13 @@ async function calculateSmartFund(opts={}){
     }catch(_){ }
 
     let prices=[];
+    let items=[];
     let knownCount=0;
     let missingCount=0;
     let planTitle='';
 
     if(choice==='ai'){
       let plan=null;
-      let items=[];
 
       // V56.1 : priorité au planning IA déjà chargé en mémoire.
       try{
