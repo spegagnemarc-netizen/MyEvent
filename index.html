@@ -1322,7 +1322,7 @@ async function geocodeEventLocation(){
   if(!event)return null; const text=String(event.location||'').trim(); if(!text)return null;
   try{ const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'}}); if(!r.ok)return null; const d=await r.json(); if(d?.[0])return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name}; }catch(e){} return null;
 }
-let locationSearchRadiusKm=10;
+let locationSearchRadiusKm=3;
 function distanceKm(a,b,c,d){ const R=6371,rad=Math.PI/180, x=(c-a)*rad, y=(d-b)*rad; const q=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2; return 2*R*Math.asin(Math.sqrt(q)); }
 async function fetchJsonWithTimeout(url,opts={},ms=12000){ const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),ms); try{ const r=await fetch(url,{...opts,signal:ctl.signal,headers:{Accept:'application/json',...(opts.headers||{})}}); if(!r.ok)throw new Error('HTTP '+r.status); return await r.json(); } finally{clearTimeout(t);} }
 // V51.3 — Les recherches OSM passent désormais par l'API serveur MyEvent / Photon.
@@ -1345,14 +1345,14 @@ function renderNearbyPlaces(){
   });
   const countEl=$('locationResultCount'); if(countEl)countEl.textContent=filtered.length+' résultat'+(filtered.length>1?'s':'');
   if(locationMap){locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m));locationPlaceMarkers=[];}
-  filtered.slice(0,100).forEach(p=>{
+  filtered.slice(0,40).forEach(p=>{
     if(locationMap){
       const m=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon(locationIcons[p.type]||'📍','#16a085')}).addTo(locationMap);
       m.bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km');
       locationPlaceMarkers.push(m);
     }
   });
-  el.innerHTML=filtered.slice(0,50).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu ne correspond à ta recherche.</p>';
+  el.innerHTML=filtered.slice(0,20).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu ne correspond à ta recherche.</p>';
   el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=(ev)=>{
     ev.preventDefault();ev.stopPropagation();
     const lat=+b.dataset.lat,lon=+b.dataset.lon;setLocationMapView(lat,lon,17);
@@ -1739,13 +1739,14 @@ async function renderInlineSelectedEvent(){
       const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
       const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
-        '<div class="inlineEventPlanningStatus">⭐ Sortie sélectionnée — à confirmer par le groupe</div>'+
+        '<div class="inlineEventPlanningStatus">📋 Planning standard — sortie sélectionnée</div>'+
         '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
         '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>'+
         ''+
         '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
         '<div class="planningAiNote">L’IA peut combiner restaurant + une ou plusieurs activités + horaires + trajets, puis enregistrer le planning complet.</div>'+
         '<div id="homeAiPlanBox"></div>'+
+        '<div id="homeAiReservationBox"></div>'+
         '<div id="homeReservationBox"></div>';
     }else{
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
@@ -4904,6 +4905,7 @@ async function saveAiOutingPlan(index){
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
       savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
     }
+    if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(pr.data,items);
     await refreshReservationBoxes();
     alert('✅ Planning IA enregistré : '+items.length+' étapes.');
   }catch(e){
@@ -4935,6 +4937,7 @@ async function loadAiOutingPlan(){
     ir.data.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
     '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
   box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
+  if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(p.data,ir.data);
 }
 document.addEventListener('click',e=>{
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
@@ -5296,4 +5299,96 @@ document.addEventListener('click',e=>{
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
+</script>
+
+
+<style id="myevent-v53-17-ai-reservations-css">
+.aiPlanReservationBox{margin-top:12px!important}
+.aiPlanReservationRow{border:1px solid #315a74;border-radius:14px;padding:12px;margin-top:10px;background:#08131e}
+.aiPlanReservationMain{margin-bottom:9px;font-size:16px}
+.aiPlanReservationEdit{display:grid;gap:9px;margin-top:10px;padding:10px;border-radius:12px;background:#07101a}
+.aiPlanReservationEdit label{display:grid;gap:5px;font-weight:600}
+.aiPlanReservationEdit input,.aiPlanReservationEdit textarea{width:100%;box-sizing:border-box;min-height:48px;padding:10px;border:1px solid #3b6683;border-radius:10px;background:#08131e;color:#fff;font:inherit}
+.aiPlanReservationEdit textarea{min-height:80px;resize:vertical}
+</style><script id="myevent-v53-17-ai-reservations">
+/* V53.17 — Réservations multiples pour un planning IA */
+let aiPlanReservationsCache=[];
+function aiReservationDateTimeValue(value){
+  if(!value)return '';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return '';
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,16);
+}
+function aiReservationStatusLabel(r){
+  if(!r)return 'À préparer';
+  if(r.status==='confirmed')return 'Confirmée';
+  if(r.status==='cancelled')return 'Annulée';
+  return 'À confirmer';
+}
+async function renderAiPlanReservations(plan,items){
+  const box=$('homeAiReservationBox');
+  if(!box)return;
+  if(!plan||!Array.isArray(items)||!items.length){box.innerHTML='';return;}
+  const q=await sb.from('event_outing_plan_reservations').select('*').eq('plan_id',plan.id).order('step_order',{ascending:true});
+  if(q.error){
+    box.innerHTML='<div class="reservationBox"><div class="reservationTitle">📅 Réservations du planning IA</div><div class="muted">⚠️ La table des réservations IA n’est pas encore activée dans Supabase.</div></div>';
+    return;
+  }
+  aiPlanReservationsCache=q.data||[];
+  const rows=items.map((item,i)=>{
+    const step=i+1;
+    const r=aiPlanReservationsCache.find(x=>Number(x.step_order)===step)||null;
+    const type=aiPlanCandidateLabel(String(item.outing_type||'activity'));
+    const when=item.start_time?' · 🕐 '+esc(item.start_time):'';
+    const status=aiReservationStatusLabel(r);
+    return '<div class="aiPlanReservationRow" data-ai-res-step="'+step+'">'+
+      '<div class="aiPlanReservationMain"><b>'+step+'. '+esc(item.name||'Étape')+'</b><div class="muted">'+type+when+' · '+esc(status)+'</div></div>'+
+      '<button type="button" class="secondary aiPlanReservationOpen" data-ai-res-open="'+step+'">'+(r&&r.status!=='cancelled'?'✏️ Modifier':'📅 Préparer')+'</button>'+
+      '<div class="aiPlanReservationFormHost" id="aiResHost'+step+'"></div>'+
+      '</div>';
+  }).join('');
+  box.innerHTML='<div class="reservationBox aiPlanReservationBox"><div class="reservationTitle">📅 Réservations du planning IA</div><div class="muted">Une réservation indépendante pour chaque étape du parcours.</div>'+rows+'</div>';
+  box.querySelectorAll('[data-ai-res-open]').forEach(btn=>btn.addEventListener('click',()=>openAiPlanReservationForm(plan,items,Number(btn.dataset.aiResOpen))));
+}
+function openAiPlanReservationForm(plan,items,step){
+  const item=items.find((x,i)=>i+1===step);
+  if(!item)return;
+  const host=$('aiResHost'+step);
+  if(!host)return;
+  host.innerHTML='';
+  const existing=aiPlanReservationsCache.find(x=>Number(x.step_order)===step)||null;
+  let dateTime=aiReservationDateTimeValue(existing?.reserved_at);
+  if(!dateTime&&item.start_time&&event?.event_date)dateTime=String(event.event_date).slice(0,10)+'T'+String(item.start_time).slice(0,5);
+  const people=Math.max(1,Number(existing?.party_size||aiOutingPlanData?.people||$('outingPeople')?.value||10)||10);
+  host.innerHTML='<div class="aiPlanReservationEdit">'+
+    '<label>Date et heure<input type="datetime-local" id="aiResDate'+step+'" value="'+escAttr(dateTime)+'"></label>'+
+    '<label>Personnes<input type="number" min="1" step="1" id="aiResPeople'+step+'" value="'+people+'" inputmode="numeric"></label>'+
+    '<label>Note<textarea id="aiResNote'+step+'" placeholder="Ex. table intérieure, anniversaire…">'+esc(existing?.note||'')+'</textarea></label>'+
+    '<div class="reservationActions"><button type="button" class="secondary" data-ai-res-save="'+step+'">💾 Enregistrer</button><button type="button" class="secondary" data-ai-res-cancel="'+step+'">Annuler</button></div>'+
+    '</div>';
+  host.querySelector('[data-ai-res-cancel]')?.addEventListener('click',()=>{host.innerHTML='';});
+  host.querySelector('[data-ai-res-save]')?.addEventListener('click',()=>saveAiPlanReservation(plan,item,step));
+}
+async function saveAiPlanReservation(plan,item,step){
+  const dateTime=$('aiResDate'+step)?.value||'';
+  const people=Math.max(1,Number($('aiResPeople'+step)?.value||1)||1);
+  const note=$('aiResNote'+step)?.value||null;
+  if(!dateTime){alert('Choisis une date et une heure.');return;}
+  const d=new Date(dateTime);
+  if(Number.isNaN(d.getTime())){alert('La date ou l’heure est invalide.');return;}
+  const btn=document.querySelector('[data-ai-res-save="'+step+'"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enregistrement…';}
+  try{
+    const payload={plan_id:plan.id,event_id:event.id,step_order:step,reserved_at:d.toISOString(),party_size:people,note,status:'pending',created_by:user?.id||null};
+    const r=await sb.from('event_outing_plan_reservations').upsert(payload,{onConflict:'plan_id,step_order'}).select('*').single();
+    if(r.error)throw new Error(r.error.message);
+    const ir=await sb.from('event_outing_plan_items').select('*').eq('plan_id',plan.id).order('step_order',{ascending:true});
+    if(ir.error)throw new Error(ir.error.message);
+    await renderAiPlanReservations(plan,ir.data||[]);
+  }catch(e){
+    alert('Impossible d’enregistrer la réservation : '+(e.message||String(e)));
+    if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}
+  }
+}
 </script>
