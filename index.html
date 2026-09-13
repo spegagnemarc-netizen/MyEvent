@@ -4991,6 +4991,14 @@ loadSelectedOuting=async function(){
 <script id="myevent-v53-13-ai-planner-js">
 let aiOutingPlanData=null;
 
+// V54.5 : helper global pour les valeurs injectées dans les attributs HTML.
+// L'ancien escAttr était enfermé dans une IIFE du module réservation et
+// n'était donc pas accessible à l'éditeur du planning IA.
+if(typeof window.escAttr !== 'function'){
+  window.escAttr=function(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');};
+}
+function escAttr(v){return window.escAttr(v);}
+
 function ensureAiPlanEditorModal(){
   if($('aiPlanEditorModal'))return;
   const wrap=document.createElement('div');
