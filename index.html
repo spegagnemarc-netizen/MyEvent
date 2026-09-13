@@ -1690,6 +1690,7 @@ async function renderInlineSelectedEvent(){
       const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
       const query=encodeURIComponent([outing.name,outing.address||''].filter(Boolean).join(', '));
       const mapsSearch='https://www.google.com/maps/search/?api=1&query='+query;
+      const reviewsSearch='https://www.google.com/search?q='+encodeURIComponent([outing.name,outing.address||'','avis'].filter(Boolean).join(' '));
       const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
       const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
