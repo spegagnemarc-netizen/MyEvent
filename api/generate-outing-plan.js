@@ -34,12 +34,10 @@ export default async function handler(req, res) {
     const eventDate = String(body.event_date || '').trim();
     const eventLocation = String(body.event_location || '').trim();
 
-    // Contraintes horaires facultatives envoyées par le formulaire MyEvent.
-    // Si elles sont absentes, l'IA doit choisir un horaire réaliste,
-    // notamment pour éviter un repas à une heure inhabituelle.
-    const startTime = /^\d{2}:\d{2}$/.test(String(body.start_time || ''))
-      ? String(body.start_time)
-      : null;
+    const startTime =
+      /^\d{2}:\d{2}$/.test(String(body.start_time || ''))
+        ? String(body.start_time)
+        : null;
 
     const mealType = ['lunch', 'dinner', 'none'].includes(
       String(body.meal_type || '')
@@ -47,9 +45,17 @@ export default async function handler(req, res) {
       ? String(body.meal_type)
       : 'none';
 
-    const mealTime = /^\d{2}:\d{2}$/.test(String(body.meal_time || ''))
-      ? String(body.meal_time)
-      : null;
+    const mealTime =
+      /^\d{2}:\d{2}$/.test(String(body.meal_time || ''))
+        ? String(body.meal_time)
+        : null;
+
+    const mealInstruction =
+      mealType === 'lunch'
+        ? `déjeuner${mealTime ? ' vers ' + mealTime : ' entre 12h00 et 14h00'}`
+        : mealType === 'dinner'
+          ? `dîner${mealTime ? ' vers ' + mealTime : ' entre 19h00 et 21h00'}`
+          : 'repas à placer à une heure naturelle selon le déroulé';
 
     const candidates = Array.isArray(body.candidates)
       ? body.candidates.slice(0, 80)
@@ -100,18 +106,6 @@ ${eventDate || 'non précisée'}
 Lieu :
 ${eventLocation || 'non précisé'}
 
-Heure de début souhaitée :
-${startTime || 'non précisée — choisir une heure réaliste'}
-
-Repas :
-${
-  mealType === 'lunch'
-    ? \`déjeuner${mealTime ? \` vers ${mealTime}\` : ' — choisir un créneau cohérent entre 12h et 14h'}\`
-    : mealType === 'dinner'
-      ? \`dîner${mealTime ? \` vers ${mealTime}\` : ' — choisir un créneau cohérent entre 19h et 21h'}\`
-      : 'aucune préférence de repas fournie'
-}
-
 Participants :
 ${people}
 
@@ -121,29 +115,30 @@ ${budget == null ? 'non précisé' : budget + ' €'}
 Nombre d'étapes souhaité :
 ${requestedSteps}
 
+Heure de début souhaitée :
+${startTime || 'non précisée'}
+
+Repas :
+${mealInstruction}
+
 Demande de l'utilisateur :
 ${request || 'sortie conviviale et équilibrée'}
 
 OBJECTIF :
 
 - Combiner obligatoirement un restaurant ET une ou plusieurs activités.
-- Produire EXACTEMENT ${requestedSteps} étapes dans chaque option.
-- Le restaurant compte comme UNE étape.
-- Ne jamais produire moins ou plus de ${requestedSteps} étapes.
+- Produire entre 2 et 5 étapes.
 - Une étape doit être un restaurant.
 - Les autres étapes doivent être des activités, culture ou nature.
 - Éviter les trajets absurdes.
 - Privilégier les lieux proches les uns des autres.
 - Proposer des horaires cohérents et chronologiques.
 - Respecter l'heure de début souhaitée lorsqu'elle est fournie.
-- Le restaurant doit être placé à une heure réaliste pour un repas :
-  déjeuner généralement entre 12h00 et 14h00, dîner généralement entre 19h00 et 21h00.
-- Ne jamais placer volontairement un repas à 16h00 ou à une autre heure inhabituelle,
-  sauf si l'utilisateur demande explicitement cette heure.
-- Si aucune heure de repas n'est fournie, choisir le créneau de repas le plus naturel
-  en fonction de l'heure de début et des durées des activités.
-- Les horaires des étapes doivent tenir compte de leurs durées et des déplacements.
 - Proposer des durées réalistes.
+- Si le repas est un déjeuner, placer le restaurant autour de 12h00-14h00.
+- Si le repas est un dîner, placer le restaurant autour de 19h00-21h00.
+- Si une heure de repas est fournie, placer le restaurant aussi près que possible de cette heure.
+- Ne jamais placer automatiquement un déjeuner ou un dîner à 16h00 ou à une heure manifestement peu naturelle.
 - Ne jamais inventer un lieu.
 - Ne jamais inventer une adresse.
 - Ne jamais inventer un prix.
@@ -214,7 +209,7 @@ ${JSON.stringify(safeCandidates)}
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-            \`Bearer ${process.env.OPENAI_API_KEY}\`
+            `Bearer ${process.env.OPENAI_API_KEY}`
         },
 
         body: JSON.stringify({
@@ -349,12 +344,6 @@ ${JSON.stringify(safeCandidates)}
                     })
                     .filter(Boolean)
                 : [];
-
-            // Le backend impose le nombre d'étapes demandé :
-            // l'IA ne peut pas renvoyer silencieusement une sortie plus courte.
-            if (steps.length !== requestedSteps) {
-              return null;
-            }
 
             const hasRestaurant =
               steps.some(
