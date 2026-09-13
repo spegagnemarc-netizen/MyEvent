@@ -4802,7 +4802,7 @@ async function generateAiOutingPlan(){
       price_per_person:Number.isFinite(Number(p.price))&&Number(p.price)>0?Number(p.price):null,
       website:p.website||null,phone:p.phone||null,
       distance_km:Number.isFinite(Number(p.distance))?Number(p.distance):null
-    })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).slice(0,80);
+    })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).slice(0,120);
     const restaurants=candidates.filter(x=>x.type==='restaurant');
     const activities=candidates.filter(x=>x.type!=='restaurant');
     if(!restaurants.length||!activities.length)throw new Error('Je ne trouve pas assez de lieux pour composer restaurant + activité dans ce rayon. Essaie un rayon plus large.');
@@ -4828,7 +4828,7 @@ async function generateAiOutingPlan(){
     if(!ar.ok)throw new Error(data.error||'Le service IA est indisponible.');
     aiOutingPlanData=data;
     renderAiOutingPlans(data);
-    $('aiPlanStatus').textContent=(data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning.':'Aucune proposition adaptée.';
+    $('aiPlanStatus').textContent=(data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.';
   }catch(e){
     $('aiPlanStatus').textContent=e.message||'Impossible de générer le planning.';
     $('aiPlanStatus').className='aiPlanStatus err';
