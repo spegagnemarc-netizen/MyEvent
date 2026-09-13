@@ -4917,51 +4917,74 @@ async function saveAiOutingPlan(index){
   }
 }
 async function loadAiOutingPlan(){
-  const box=$('homeAiPlanBox'); if(!box||!event)return;
-  // V53.18 : après une reconnexion, le rendu standard peut arriver avant que
-  // la session Supabase soit complètement rétablie. On retente la lecture.
+  const box=$('homeAiPlanBox');
+  if(!box||!event)return;
+
   box.innerHTML='<div class="planningEmpty">✨ Chargement du planning IA…</div>';
-  let p=null;
-  let lastError=null;
-  for(let attempt=0;attempt<3;attempt++){
-    const q=await sb.from('event_outing_plans')
-      .select('*')
-      .eq('event_id',event.id)
-      .order('created_at',{ascending:false})
-      .limit(1)
-      .maybeSingle();
-    if(!q.error && q.data){
-      p=q.data;
-      break;
+
+  try{
+    // V53.19 : lecture robuste après reconnexion.
+    // On ne dépend ni du statut ni d'un maybeSingle() : on récupère les
+    // plannings de l'événement puis on prend le plus récent côté navigateur.
+    let plans=[];
+    let lastError=null;
+    for(let attempt=0;attempt<4;attempt++){
+      const q=await sb.from('event_outing_plans')
+        .select('*')
+        .eq('event_id',event.id)
+        .order('created_at',{ascending:false});
+      if(!q.error){
+        plans=Array.isArray(q.data)?q.data:[];
+        break;
+      }
+      lastError=q.error;
+      if(attempt<3)await new Promise(resolve=>setTimeout(resolve,700));
     }
-    if(q.error)lastError=q.error;
-    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500));
+
+    if(lastError&& !plans.length){
+      throw new Error(lastError.message||'Lecture Supabase impossible.');
+    }
+
+    const p=plans[0]||null;
+    if(!p){
+      box.innerHTML='';
+      return;
+    }
+
+    const ir=await sb.from('event_outing_plan_items')
+      .select('*')
+      .eq('plan_id',p.id)
+      .order('step_order',{ascending:true});
+
+    if(ir.error)throw new Error(ir.error.message||'Impossible de lire les étapes du planning IA.');
+
+    const items=Array.isArray(ir.data)?ir.data:[];
+    if(!items.length){
+      box.innerHTML='<div class="planningEmpty">⚠️ Le planning IA est enregistré mais ses étapes sont introuvables.</div>';
+      return;
+    }
+
+    aiOutingPlanData={
+      ...(aiOutingPlanData||{}),
+      title:p.title||'Sortie organisée avec l’IA',
+      people:Number(p.people)||1,
+      budget_per_person:p.budget_per_person,
+      request:p.request||''
+    };
+
+    box.innerHTML='<div class="aiPlanSaved">'+
+      '<div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
+      '<div class="muted">'+esc(p.title||'Sortie complète')+' · '+esc(String(p.people||1))+' pers.</div>'+
+      items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
+      '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button>'+ 
+      '</div>';
+
+    box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
+    if(typeof renderAiPlanReservations==='function')await renderAiPlanReservations(p,items);
+  }catch(e){
+    console.error('[MyEvent V53.19] loadAiOutingPlan:',e);
+    box.innerHTML='<div class="planningEmpty">⚠️ Impossible de charger le planning IA : '+esc(e.message||String(e))+'</div>';
   }
-  if(lastError && !p){
-    box.innerHTML='<div class="planningEmpty">⚠️ Impossible de relire le planning IA : '+esc(lastError.message||'erreur Supabase')+'</div>';
-    return;
-  }
-  if(!p){
-    box.innerHTML='<div class="aiPlanEmpty"><div class="aiPlanSavedTitle">✨ Planning IA</div><div class="muted">Aucun planning IA enregistré pour cet événement.</div></div>';
-    return;
-  }
-  const ir=await sb.from('event_outing_plan_items')
-    .select('*')
-    .eq('plan_id',p.id)
-    .order('step_order',{ascending:true});
-  if(ir.error){
-    box.innerHTML='<div class="planningEmpty">⚠️ Planning IA enregistré mais ses étapes ne peuvent pas être relues : '+esc(ir.error.message||'erreur Supabase')+'</div>';
-    return;
-  }
-  if(!ir.data?.length){
-    box.innerHTML='<div class="planningEmpty">⚠️ Planning IA trouvé, mais aucune étape n’est enregistrée.</div>';
-    return;
-  }
-  box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(p.title||'Sortie complète')+' · '+esc(String(p.people||1))+' pers.</div>'+
-    ir.data.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · 💶 '+aiPlanFormatPrice(x.price_per_person):'')+'</span></div>').join('')+
-    '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1">✏️ Modifier le planning IA</button></div>';
-  box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiOutingPlanner);
-  if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(p,ir.data);
 }
 document.addEventListener('click',e=>{
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
@@ -5354,6 +5377,8 @@ async function renderAiPlanReservations(plan,items){
   const box=$('homeAiReservationBox');
   if(!box)return;
   if(!plan||!Array.isArray(items)||!items.length){box.innerHTML='';return;}
+  window.__myeventAiReservationPlan=plan;
+  window.__myeventAiReservationItems=items;
   const q=await sb.from('event_outing_plan_reservations').select('*').eq('plan_id',plan.id).order('step_order',{ascending:true});
   if(q.error){
     box.innerHTML='<div class="reservationBox"><div class="reservationTitle">📅 Réservations du planning IA</div><div class="muted">⚠️ La table des réservations IA n’est pas encore activée dans Supabase.</div></div>';
@@ -5373,7 +5398,7 @@ async function renderAiPlanReservations(plan,items){
       '</div>';
   }).join('');
   box.innerHTML='<div class="reservationBox aiPlanReservationBox"><div class="reservationTitle">📅 Réservations du planning IA</div><div class="muted">Une réservation indépendante pour chaque étape du parcours.</div>'+rows+'</div>';
-  box.querySelectorAll('[data-ai-res-open]').forEach(btn=>btn.addEventListener('click',()=>openAiPlanReservationForm(plan,items,Number(btn.dataset.aiResOpen))));
+  box.querySelectorAll('[data-ai-res-open]').forEach(btn=>btn.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();openAiPlanReservationForm(plan,items,Number(btn.dataset.aiResOpen));}));
 }
 function openAiPlanReservationForm(plan,items,step){
   const item=items.find((x,i)=>i+1===step);
@@ -5415,4 +5440,15 @@ async function saveAiPlanReservation(plan,item,step){
     if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}
   }
 }
+// V53.20 : délégation de clic pour les boutons « Préparer » du planning IA.
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-ai-res-open]');
+  if(!btn)return;
+  e.preventDefault();
+  e.stopPropagation();
+  const plan=window.__myeventAiReservationPlan;
+  const items=window.__myeventAiReservationItems;
+  const step=Number(btn.dataset.aiResOpen);
+  if(plan&&Array.isArray(items))openAiPlanReservationForm(plan,items,step);
+});
 </script>
