@@ -1,8 +1,6 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      error: 'Méthode non autorisée.'
-    });
+    return res.status(405).json({ error: 'Méthode non autorisée.' });
   }
 
   if (!process.env.OPENAI_API_KEY) {
@@ -14,10 +12,7 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
 
-    const people = Math.max(
-      1,
-      Math.min(5000, Number(body.people) || 1)
-    );
+    const people = Math.max(1, Math.min(5000, Number(body.people) || 1));
 
     const budget =
       body.budget_per_person == null
@@ -147,32 +142,26 @@ OBJECTIF :
 - Si un prix est inconnu, conserver null.
 - Calculer le budget uniquement avec les prix connus.
 - Si certains prix sont inconnus, le signaler.
-- Proposer jusqu'à 6 parcours complets réellement différents lorsque les candidats le permettent.
+
+PROPOSITIONS :
+
+- Proposer 6 parcours complets réellement différents dès que les candidats permettent 6 combinaisons distinctes.
+- IMPORTANT : ne pas limiter volontairement la réponse à 3 propositions.
+- Si 6 combinaisons distinctes sont possibles, retourner EXACTEMENT 6 propositions.
 - Chaque parcours doit respecter EXACTEMENT le nombre d'étapes demandé.
 - Varier les activités, ambiances et combinaisons entre les parcours autant que possible.
 - Ne pas répéter exactement le même parcours sous des titres différents.
-
-Exemples de parcours :
-
-Restaurant → Bowling
-
-Restaurant → Bowling → Bar
-
-Restaurant → Cinéma → Dessert
-
-Restaurant → Activité sportive → Restaurant
-
-Restaurant → Musée → Activité
 
 La sortie doit être pratique pour le groupe.
 
 RÉPONSE JSON STRICTE UNIQUEMENT :
 
+Retourne 6 objets dans "options" lorsque 6 parcours distincts sont possibles.
+Ne retourne pas seulement 3 propositions par défaut.
+
 {
   "people": ${people},
-  "budget_per_person": ${
-    budget == null ? 'null' : budget
-  },
+  "budget_per_person": ${budget == null ? 'null' : budget},
   "request": ${JSON.stringify(request)},
   "options": [
     {
@@ -208,21 +197,16 @@ ${JSON.stringify(safeCandidates)}
       'https://api.openai.com/v1/responses',
       {
         method: 'POST',
-
         headers: {
           'Content-Type': 'application/json',
-          'Authorization':
-            `Bearer ${process.env.OPENAI_API_KEY}`
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
         },
-
         body: JSON.stringify({
           model:
             process.env.OPENAI_MATERIAL_MODEL ||
             'gpt-5.6-luna',
-
           input: prompt,
-
-          max_output_tokens: 5000
+          max_output_tokens: 9000
         })
       }
     );
@@ -276,9 +260,7 @@ ${JSON.stringify(safeCandidates)}
 
                       const candidate =
                         candidateMap.get(
-                          String(
-                            step.candidate_id || ''
-                          )
+                          String(step.candidate_id || '')
                         );
 
                       if (!candidate) {
@@ -293,33 +275,22 @@ ${JSON.stringify(safeCandidates)}
                           'activity',
                           'culture',
                           'nature'
-                        ].includes(
-                          String(step.type)
-                        )
+                        ].includes(String(step.type))
                           ? String(step.type)
                           : candidate.type,
 
                         name: candidate.name,
-
-                        address:
-                          candidate.address,
-
+                        address: candidate.address,
                         lat: candidate.lat,
-
                         lon: candidate.lon,
-
                         price_per_person:
                           candidate.price_per_person,
 
                         start_time:
                           /^\d{2}:\d{2}$/.test(
-                            String(
-                              step.start_time || ''
-                            )
+                            String(step.start_time || '')
                           )
-                            ? String(
-                                step.start_time
-                              )
+                            ? String(step.start_time)
                             : null,
 
                         duration_minutes:
@@ -328,35 +299,24 @@ ${JSON.stringify(safeCandidates)}
                             Math.min(
                               360,
                               Math.round(
-                                Number(
-                                  step.duration_minutes
-                                ) || 90
+                                Number(step.duration_minutes) || 90
                               )
                             )
                           ),
 
-                        website:
-                          candidate.website,
-
-                        phone:
-                          candidate.phone,
-
-                        source:
-                          'openstreetmap'
+                        website: candidate.website,
+                        phone: candidate.phone,
+                        source: 'openstreetmap'
                       };
                     })
                     .filter(Boolean)
                 : [];
 
             const hasRestaurant =
-              steps.some(
-                s => s.type === 'restaurant'
-              );
+              steps.some(s => s.type === 'restaurant');
 
             const hasActivity =
-              steps.some(
-                s => s.type !== 'restaurant'
-              );
+              steps.some(s => s.type !== 'restaurant');
 
             if (
               steps.length !== requestedSteps ||
@@ -372,13 +332,9 @@ ${JSON.stringify(safeCandidates)}
                   sum +
                   (
                     Number.isFinite(
-                      Number(
-                        step.price_per_person
-                      )
+                      Number(step.price_per_person)
                     )
-                      ? Number(
-                          step.price_per_person
-                        )
+                      ? Number(step.price_per_person)
                       : 0
                   ),
                 0
@@ -387,21 +343,17 @@ ${JSON.stringify(safeCandidates)}
             return {
               title:
                 String(
-                  option.title ||
-                  'Proposition'
+                  option.title || 'Proposition'
                 ).slice(0, 180),
 
               summary:
                 String(
-                  option.summary ||
-                  'Sortie complète'
+                  option.summary || 'Sortie complète'
                 ).slice(0, 400),
 
               total_estimated_per_person:
                 total > 0
-                  ? Math.round(
-                      total * 100
-                    ) / 100
+                  ? Math.round(total * 100) / 100
                   : null,
 
               steps
@@ -421,7 +373,6 @@ ${JSON.stringify(safeCandidates)}
     });
 
   } catch (error) {
-
     console.error(
       'generate-outing-plan:',
       error
