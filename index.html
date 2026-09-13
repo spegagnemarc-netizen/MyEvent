@@ -645,6 +645,21 @@ body.discussionFullScreen{overflow:hidden!important}
 .planningActions .secondary:hover{background:#102235}
 @media(max-width:520px){.planningActions{grid-template-columns:1fr}}
 </style>
+
+<style id="myevent-v53-reservations-css">
+.reservationBox{margin-top:12px;padding:14px;border:1px solid #2d526b;border-radius:16px;background:rgba(10,25,38,.72)}
+.reservationTitle{font-size:17px;font-weight:800;margin-bottom:8px}
+.reservationGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reservationGrid label{display:grid;gap:6px;font-size:12px;color:#9fb1c2}
+.reservationGrid input,.reservationGrid textarea{width:100%;box-sizing:border-box;background:#0b1724;border:1px solid #2d526b;color:#eef5fb;border-radius:12px;padding:11px;font:inherit}
+.reservationGrid textarea{min-height:74px;resize:vertical}
+.reservationFull{grid-column:1/-1}
+.reservationActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.reservationStatus{margin:8px 0;color:#79e2ad;font-weight:700}
+.reservationStatus.pending{color:#9fc8ff}
+.reservationStatus.cancelled{color:#ff9c9c}
+@media(max-width:520px){.reservationGrid{grid-template-columns:1fr}.reservationFull{grid-column:auto}.reservationActions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1045,7 +1060,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="outings" id="outingsPanel">
 <summary>🍽️ Restaurants & activités</summary>
 <div class="collapsibleBody">
-<div class="outingIntro"><b>Trouve une sortie pour ton événement</b><p class="muted">Compare des restaurants et activités autour du lieu de l’événement. La réservation sera ajoutée en V53.</p></div>
+<div class="outingIntro"><b>Trouve une sortie pour ton événement</b><p class="muted">Compare des restaurants et activités autour du lieu de l’événement. La réservation peut maintenant être préparée directement depuis la sortie sélectionnée.</p></div>
 <div class="outingControls">
   <div><label class="smallLabel">📏 Rayon</label><select id="outingRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></div>
   <div><label class="smallLabel">👥 Participants</label><input id="outingPeople" type="number" min="1" step="1" value="10" placeholder="Ex. 10"></div>
@@ -1063,7 +1078,7 @@ body.discussionFullScreen{overflow:hidden!important}
 <p id="outingMsg" class="muted"></p>
 <div id="outingSelectedBox" class="outingSelected hidden"></div>
 <div id="outingResults" class="outingResults"><div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div></div>
-<div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations seront gérées dans <b>V53</b>.</div>
+<div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations sont maintenant disponibles directement depuis la sortie sélectionnée.</div>
 </div>
 </details>
 
@@ -1699,7 +1714,7 @@ async function renderInlineSelectedEvent(){
         '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button></div>'+
         '<button type="button" class="planningMapCta" data-home-outing-map="1">📍 Carte MyEvent</button>'+
         '<button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser toute la sortie avec l’IA</button>'+
-        '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div>';
+        '<div class="planningAiNote">L’IA pourra proposer repas + activité + horaires, puis le groupe pourra modifier et voter.</div><div id="homeReservationBox" class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div id="homeReservationStatus" class="muted">Aucune réservation enregistrée.</div><button type="button" class="secondary" data-home-reserve="1">📅 Préparer la réservation</button></div>';
     }else{
       planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div><div class="planningEmpty">Aucune sortie n’est encore sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> pour commencer le planning.</div><button type="button" class="planningAiCta" data-planning-ai="1">✨ Organiser une sortie avec l’IA</button>';
     }
@@ -4234,7 +4249,7 @@ async function loadSelectedOuting(){
   }
   outingSelected=data;
   box.classList.remove('hidden');
-  box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(data.name)+'</b></div><div class="outingMeta">'+(data.outing_type?'<span class="outingChip">'+esc(data.outing_type)+'</span>':'')+(data.price_per_person!=null?'<span class="outingChip">💶 '+eur(data.price_per_person)+' / pers.</span>':'')+'</div>'+(data.address?'<div class="outingAddress">📍 '+esc(data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+  box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(data.name)+'</b></div><div class="outingMeta">'+(data.outing_type?'<span class="outingChip">'+esc(data.outing_type)+'</span>':'')+(data.price_per_person!=null?'<span class="outingChip">💶 '+eur(data.price_per_person)+' / pers.</span>':'')+'</div>'+(data.address?'<div class="outingAddress">📍 '+esc(data.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div><div id="outingReservationHost"></div>';
   // V52.4 : re-rendre les résultats APRÈS le chargement de la sélection.
   // Sans cela, le message de confirmation était visible mais les cartes restaient sur « Ajouter ».
   renderOutingResults();
@@ -4264,7 +4279,7 @@ async function selectOuting(id){
     const box=$('outingSelectedBox');
     if(box&&outingSelected){
       box.classList.remove('hidden');
-      box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(outingSelected.name)+'</b></div><div class="outingMeta">'+(outingSelected.outing_type?'<span class="outingChip">'+esc(outingSelected.outing_type)+'</span>':'')+(outingSelected.price_per_person!=null?'<span class="outingChip">💶 '+eur(outingSelected.price_per_person)+' / pers.</span>':'')+'</div>'+(outingSelected.address?'<div class="outingAddress">📍 '+esc(outingSelected.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div>';
+      box.innerHTML='<div>⭐ <b>Sortie sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(outingSelected.name)+'</b></div><div class="outingMeta">'+(outingSelected.outing_type?'<span class="outingChip">'+esc(outingSelected.outing_type)+'</span>':'')+(outingSelected.price_per_person!=null?'<span class="outingChip">💶 '+eur(outingSelected.price_per_person)+' / pers.</span>':'')+'</div>'+(outingSelected.address?'<div class="outingAddress">📍 '+esc(outingSelected.address)+'</div>':'')+'<div class="outingActionsRow"><button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button><button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button></div><div id="outingReservationHost"></div>';
       $('outingUnselectBtn')?.addEventListener('click',async()=>{const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');return;}outingSelected=null;box.classList.add('hidden');renderOutingResults();msg('outingMsg','Sortie retirée de l’événement.','ok');});
     }
     renderOutingResults();
@@ -4294,8 +4309,115 @@ async function searchOutings(){
 }; if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();})();
 </script>
 
+
+<script id="myevent-v53-reservations-js">
+let currentReservation=null;
+function reservationDefaultDate(){
+  if(!event?.event_date)return '';
+  const d=new Date(event.event_date);
+  if(Number.isNaN(d.getTime()))return '';
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,16);
+}
+function reservationFormHtml(prefix){
+  const dt=reservationDefaultDate();
+  const people=Math.max(1,Number($('outingPeople')?.value||10)||10);
+  return '<div class="reservationBox" id="'+prefix+'ReservationForm"><div class="reservationTitle">📅 Préparer la réservation</div><div class="reservationGrid">'+
+    '<label>Date et heure<input id="'+prefix+'ReservationDate" type="datetime-local" value="'+dt+'"></label>'+
+    '<label>Personnes<input id="'+prefix+'ReservationPeople" type="number" min="1" step="1" value="'+people+'"></label>'+
+    '<label class="reservationFull">Note pour la réservation<textarea id="'+prefix+'ReservationNote" placeholder="Ex. table à l’intérieur, anniversaire…"></textarea></label>'+
+    '</div><div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationSave">💾 Enregistrer</button><button type="button" class="secondary" id="'+prefix+'ReservationCancel">Annuler</button></div></div>';
+}
+async function loadEventReservation(){
+  if(!event)return null;
+  const r=await sb.rpc('get_event_reservation',{p_event_id:event.id});
+  if(r.error){currentReservation=null;return null;}
+  currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+  return currentReservation;
+}
+async function saveEventReservation(outingId,prefix){
+  if(!event||!outingSelected)return;
+  const date=$(prefix+'ReservationDate')?.value||'';
+  const people=Math.max(1,Number($(prefix+'ReservationPeople')?.value||1)||1);
+  const note=$(prefix+'ReservationNote')?.value||null;
+  if(!date){alert('Choisis une date et une heure.');return;}
+  const r=await sb.rpc('save_event_reservation',{p_event_id:event.id,p_outing_id:outingId||outingSelected.id,p_reserved_at:new Date(date).toISOString(),p_party_size:people,p_note:note});
+  if(r.error){alert('Impossible d’enregistrer la réservation : '+r.error.message);return;}
+  currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+  document.getElementById(prefix+'ReservationForm')?.remove();
+  refreshReservationBoxes();
+  msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
+}
+function reservationStatusLabel(r){
+  if(!r)return 'Aucune réservation enregistrée.';
+  const d=r.reserved_at?new Date(r.reserved_at):null;
+  const when=d&&!Number.isNaN(d.getTime())?d.toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'';
+  const status=r.status==='confirmed'?'confirmée':r.status==='cancelled'?'annulée':'à confirmer';
+  return '📅 Réservation <b>'+status+'</b>'+(when?' · '+esc(when):'')+' · '+esc(String(r.party_size||1))+' pers.';
+}
+function reservationBoxHtml(prefix){
+  if(!currentReservation)return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div class="muted">Aucune réservation enregistrée.</div><button type="button" class="secondary" id="'+prefix+'ReservationOpen">📅 Préparer la réservation</button><div id="'+prefix+'ReservationHost"></div></div>';
+  return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div class="reservationStatus '+(currentReservation.status==='cancelled'?'cancelled':'pending')+'">'+reservationStatusLabel(currentReservation)+'</div><div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationOpen">✏️ Modifier</button><button type="button" class="secondary" id="'+prefix+'ReservationDelete">✕ Annuler</button></div><div id="'+prefix+'ReservationHost"></div></div>';
+}
+async function openReservationForm(prefix){
+  document.getElementById(prefix+'ReservationForm')?.remove();
+  const host=document.getElementById(prefix+'ReservationHost'); if(!host)return;
+  host.insertAdjacentHTML('beforeend',reservationFormHtml(prefix));
+  if(currentReservation){
+    const d=currentReservation.reserved_at?new Date(currentReservation.reserved_at):null;
+    if(d&&!Number.isNaN(d.getTime())){
+      const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+      $(prefix+'ReservationDate').value=local.toISOString().slice(0,16);
+    }
+    $(prefix+'ReservationPeople').value=currentReservation.party_size||1;
+    $(prefix+'ReservationNote').value=currentReservation.note||'';
+  }
+  $(prefix+'ReservationCancel')?.addEventListener('click',()=>document.getElementById(prefix+'ReservationForm')?.remove());
+  $(prefix+'ReservationSave')?.addEventListener('click',()=>saveEventReservation(outingSelected?.id,prefix));
+}
+async function refreshReservationBoxes(){
+  await loadEventReservation();
+  const host=$('outingReservationHost'); if(host)host.innerHTML=reservationBoxHtml('outing');
+  const home=$('homeReservationBox'); if(home)home.innerHTML=reservationBoxHtml('home');
+  $('outingReservationOpen')?.addEventListener('click',()=>openReservationForm('outing'));
+  $('homeReservationOpen')?.addEventListener('click',()=>openReservationForm('home'));
+  $('outingReservationDelete')?.addEventListener('click',cancelEventReservation);
+  $('homeReservationDelete')?.addEventListener('click',cancelEventReservation);
+  $('homeReserve')?.addEventListener('click',()=>openReservationForm('home'));
+}
+async function cancelEventReservation(){
+  if(!event)return;
+  const r=await sb.rpc('cancel_event_reservation',{p_event_id:event.id});
+  if(r.error){alert('Impossible d’annuler : '+r.error.message);return;}
+  currentReservation=null; refreshReservationBoxes(); msg('outingMsg','Réservation annulée.','ok');
+}
+function mountOutingReservationHost(){
+  const box=$('outingSelectedBox'); if(!box||!outingSelected)return;
+  let host=$('outingReservationHost');
+  if(!host){host=document.createElement('div');host.id='outingReservationHost';box.appendChild(host);}
+  refreshReservationBoxes();
+}
+// V53 : branchement sur les boutons de réservation déjà injectés dans les cartes sélectionnées.
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#outingReservationBtn');
+  if(b){e.preventDefault();mountOutingReservationHost();setTimeout(()=>openReservationForm('outing'),30);}
+  const h=e.target.closest('[data-home-reserve]');
+  if(h){e.preventDefault();openReservationForm('home');}
+});
+// Après changement/sélection, actualise les informations de réservation.
+const oldSelectOutingV53=selectOuting;
+selectOuting=async function(id){
+  await oldSelectOutingV53(id);
+  setTimeout(()=>{mountOutingReservationHost();refreshReservationBoxes();},60);
+};
+const oldLoadSelectedOutingV53=loadSelectedOuting;
+loadSelectedOuting=async function(){
+  await oldLoadSelectedOutingV53();
+  setTimeout(()=>{if(outingSelected){mountOutingReservationHost();refreshReservationBoxes();}},60);
+};
+</script>
 </body>
-<div style="display:none">V52.9</div>
+<div style="display:none">V53</div>
 </html>
 
 <style id="myevent-v32-final">
