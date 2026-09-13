@@ -1210,12 +1210,19 @@ let notificationPollTimer=null;
 function showEventTab(name, forceState=null){
   const target=document.querySelector('.tabPanel[data-panel="'+name+'"]');
   if(!target)return;
-  if(user&&event){
-    localStorage.setItem('myevent_active_tab_'+user.id+'_'+event.id,name);
-  }
   const alreadyActive=target.classList.contains('active');
   const shouldOpen=forceState===null ? !alreadyActive : forceState;
   const initialRestore = forceState===true;
+
+  // Ne mémorise une vue que lorsqu'elle est réellement ouverte.
+  // Si l'utilisateur referme l'onglet actif, on supprime son ancienne
+  // préférence afin qu'il ne se rouvre pas automatiquement au prochain
+  // affichage/rechargement de l'événement.
+  if(user&&event){
+    const key='myevent_active_tab_'+user.id+'_'+event.id;
+    if(shouldOpen) localStorage.setItem(key,name);
+    else if(forceState!==true) localStorage.removeItem(key);
+  }
 
   document.querySelectorAll('.eventTab').forEach(btn=>{
     const active=btn.dataset.tab===name && shouldOpen;
