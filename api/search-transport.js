@@ -1,5 +1,7 @@
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
     const {
@@ -21,11 +23,14 @@ module.exports = async function handler(req, res) {
     const results = [];
     const warnings = [];
 
-    /* =========================
-       SNCF
-       ========================= */
+    // =========================================================
+    // 🚆 SNCF
+    // =========================================================
 
-    if ((wanted === 'all' || wanted === 'train') && process.env.SNCF_API_TOKEN) {
+    if (
+      (wanted === 'all' || wanted === 'train') &&
+      process.env.SNCF_API_TOKEN
+    ) {
       const auth = Buffer
         .from(process.env.SNCF_API_TOKEN + ':')
         .toString('base64');
@@ -137,7 +142,8 @@ module.exports = async function handler(req, res) {
             provider: 'SNCF',
             id:
               'sncf:' +
-              (j.id || Math.random().toString(36).slice(2)),
+              (j.id ||
+                Math.random().toString(36).slice(2)),
 
             title:
               modeName +
@@ -177,18 +183,134 @@ module.exports = async function handler(req, res) {
             train_number: trainNumber
           });
         }
+
       } catch (e) {
         warnings.push('SNCF : ' + e.message);
       }
-    } else if (wanted === 'all' || wanted === 'train') {
+
+    } else if (
+      wanted === 'all' ||
+      wanted === 'train'
+    ) {
       warnings.push(
         'Recherche train indisponible : ajoutez SNCF_API_TOKEN dans Vercel.'
       );
     }
 
-    /* =========================
-       AVION
-       ========================= */
+    // =========================================================
+    // 🚌 BLABLACAR BUS
+    // =========================================================
+
+    if (
+      wanted === 'bus' ||
+      wanted === 'all'
+    ) {
+      const bookingUrl =
+        'https://www.blablacar.fr/bus';
+
+      results.push({
+        kind: 'bus',
+        provider: 'BlaBlaCar Bus',
+
+        id:
+          'blablacar:bus:' +
+          v58Slug(from) +
+          ':' +
+          v58Slug(to),
+
+        title:
+          'Bus ' +
+          from +
+          ' → ' +
+          to,
+
+        from,
+        to,
+
+        departure: '',
+        arrival: '',
+
+        duration_minutes: null,
+        price: null,
+        currency: 'EUR',
+
+        passengers:
+          Number(passengers) || 1,
+
+        booking_url: bookingUrl,
+
+        source_url:
+          'https://bus-api.blablacar.com/',
+
+        external_only: true
+      });
+    }
+
+    // =========================================================
+    // 🚗 BLABLACAR COVOITURAGE
+    // =========================================================
+
+    if (
+      wanted === 'carpool' ||
+      wanted === 'all'
+    ) {
+      const bookingUrl =
+        'https://www.blablacar.fr/carpool/routes/' +
+        v58Slug(from) +
+        '/' +
+        v58Slug(to);
+
+      results.push({
+        kind: 'carpool',
+        provider: 'BlaBlaCar',
+
+        id:
+          'blablacar:carpool:' +
+          v58Slug(from) +
+          ':' +
+          v58Slug(to),
+
+        title:
+          'Covoiturage ' +
+          from +
+          ' → ' +
+          to,
+
+        from,
+        to,
+
+        departure: '',
+        arrival: '',
+
+        duration_minutes: null,
+        price: null,
+        currency: 'EUR',
+
+        passengers:
+          Number(passengers) || 1,
+
+        booking_url: bookingUrl,
+
+        source_url:
+          'https://blog.fr.blablacar.be/about-us/partenaires',
+
+        external_only: true
+      });
+    }
+
+    if (
+      wanted === 'bus' ||
+      wanted === 'carpool' ||
+      wanted === 'all'
+    ) {
+      warnings.push(
+        'ℹ️ BlaBlaCar est disponible dans MyEvent. Les offres en temps réel nécessitent encore un accès partenaire/API BlaBlaCar ; MyEvent ouvre donc pour le moment la recherche officielle.'
+      );
+    }
+
+    // =========================================================
+    // ✈️ AVION
+    // =========================================================
 
     if (
       (wanted === 'all' || wanted === 'plane') &&
@@ -204,7 +326,9 @@ module.exports = async function handler(req, res) {
         ]);
 
         if (!a || !b) {
-          throw new Error('Ville/aéroport introuvable.');
+          throw new Error(
+            'Ville/aéroport introuvable.'
+          );
         }
 
         const params = new URLSearchParams({
@@ -214,7 +338,10 @@ module.exports = async function handler(req, res) {
           adults: String(
             Math.min(
               9,
-              Math.max(1, Number(passengers) || 1)
+              Math.max(
+                1,
+                Number(passengers) || 1
+              )
             )
           ),
           currencyCode: 'EUR',
@@ -223,10 +350,11 @@ module.exports = async function handler(req, res) {
 
         const r = await fetch(
           'https://api.amadeus.com/v2/shopping/flight-offers?' +
-            params.toString(),
+          params.toString(),
           {
             headers: {
-              Authorization: 'Bearer ' + token,
+              Authorization:
+                'Bearer ' + token,
               Accept: 'application/json'
             }
           }
@@ -237,25 +365,28 @@ module.exports = async function handler(req, res) {
         if (!r.ok) {
           throw new Error(
             d?.errors?.[0]?.detail ||
-              'Amadeus ' + r.status
+            'Amadeus ' + r.status
           );
         }
 
         for (const f of d.data || []) {
-          const first = f.itineraries?.[0];
+          const first =
+            f.itineraries?.[0];
 
           const last =
             first?.segments?.[
               first.segments.length - 1
             ];
 
-          const seg0 = first?.segments?.[0];
+          const seg0 =
+            first?.segments?.[0];
 
           results.push({
             kind: 'plane',
             provider: 'Amadeus',
 
-            id: 'amadeus:' + f.id,
+            id:
+              'amadeus:' + f.id,
 
             title:
               (seg0?.carrierCode || '') +
@@ -282,7 +413,9 @@ module.exports = async function handler(req, res) {
               last?.arrival?.at || '',
 
             duration_minutes:
-              parseDuration(first?.duration),
+              parseDuration(
+                first?.duration
+              ),
 
             price:
               Number(
@@ -292,7 +425,8 @@ module.exports = async function handler(req, res) {
               ) || null,
 
             currency:
-              f.price?.currency || 'EUR',
+              f.price?.currency ||
+              'EUR',
 
             passengers:
               Number(passengers) || 1,
@@ -304,11 +438,13 @@ module.exports = async function handler(req, res) {
               'https://developers.amadeus.com/'
           });
         }
+
       } catch (e) {
         warnings.push(
           'Avion : ' + e.message
         );
       }
+
     } else if (
       wanted === 'all' ||
       wanted === 'plane'
@@ -318,18 +454,9 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    /* =========================
-       BUS / COVOITURAGE
-       ========================= */
-
-    if (
-      wanted === 'bus' ||
-      wanted === 'carpool'
-    ) {
-      warnings.push(
-        'Bus et covoiturage : aucun fournisseur temps réel n’est encore connecté à MyEvent pour ce mode.'
-      );
-    }
+    // =========================================================
+    // 📭 AUCUN RÉSULTAT
+    // =========================================================
 
     if (
       wanted === 'all' &&
@@ -338,10 +465,6 @@ module.exports = async function handler(req, res) {
     ) {
       warnings.push('Aucun résultat.');
     }
-
-    /* =========================
-       TRI
-       ========================= */
 
     results.sort(
       (x, y) =>
@@ -364,25 +487,31 @@ module.exports = async function handler(req, res) {
 };
 
 
-/* =========================
-   AMADEUS
-   ========================= */
+// =========================================================
+// ✈️ AMADEUS
+// =========================================================
 
 async function amadeusToken() {
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
-    client_id: process.env.AMADEUS_CLIENT_ID,
-    client_secret: process.env.AMADEUS_CLIENT_SECRET
+
+    client_id:
+      process.env.AMADEUS_CLIENT_ID,
+
+    client_secret:
+      process.env.AMADEUS_CLIENT_SECRET
   });
 
   const r = await fetch(
     'https://api.amadeus.com/v1/security/oauth2/token',
     {
       method: 'POST',
+
       headers: {
         'Content-Type':
           'application/x-www-form-urlencoded'
       },
+
       body
     }
   );
@@ -392,7 +521,7 @@ async function amadeusToken() {
   if (!r.ok) {
     throw new Error(
       d?.error_description ||
-        'Authentification Amadeus impossible.'
+      'Authentification Amadeus impossible.'
     );
   }
 
@@ -403,15 +532,17 @@ async function amadeusToken() {
 async function amadeusCity(token, text) {
   const p = new URLSearchParams({
     subType: 'CITY,AIRPORT',
-    keyword: String(text).slice(0, 10)
+    keyword:
+      String(text).slice(0, 10)
   });
 
   const r = await fetch(
     'https://api.amadeus.com/v1/reference-data/locations?' +
-      p.toString(),
+    p.toString(),
     {
       headers: {
-        Authorization: 'Bearer ' + token
+        Authorization:
+          'Bearer ' + token
       }
     }
   );
@@ -421,47 +552,68 @@ async function amadeusCity(token, text) {
   if (!r.ok) {
     throw new Error(
       d?.errors?.[0]?.detail ||
-        'Recherche ville Amadeus impossible.'
+      'Recherche ville Amadeus impossible.'
     );
   }
 
   return (
-    (d.data || []).find(x => x.iataCode) ||
-    null
-  );
+    d.data || []
+  ).find(x => x.iataCode) || null;
 }
 
 
-/* =========================
-   OUTILS
-   ========================= */
+// =========================================================
+// 🔧 OUTILS
+// =========================================================
+
+function v58Slug(v) {
+  return String(v || '')
+    .normalize('NFD')
+    .replace(
+      /[\u0300-\u036f]/g,
+      ''
+    )
+    .toLowerCase()
+    .trim()
+    .replace(
+      /[^a-z0-9]+/g,
+      '-'
+    )
+    .replace(
+      /^-+|-+$/g,
+      '');
+}
+
 
 function normalizeSncfDate(v) {
   const s = String(v);
 
   return s.length >= 15
     ? s.slice(0, 4) +
-        '-' +
-        s.slice(4, 6) +
-        '-' +
-        s.slice(6, 8) +
-        'T' +
-        s.slice(9, 11) +
-        ':' +
-        s.slice(11, 13) +
-        ':' +
-        s.slice(13, 15)
+      '-' +
+      s.slice(4, 6) +
+      '-' +
+      s.slice(6, 8) +
+      'T' +
+      s.slice(9, 11) +
+      ':' +
+      s.slice(11, 13) +
+      ':' +
+      s.slice(13, 15)
     : s;
 }
 
 
 function parseDuration(v) {
-  const m = String(v || '').match(
-    /PT(?:(\d+)H)?(?:(\d+)M)?/
-  );
+  const m = String(v || '')
+    .match(
+      /PT(?:(\d+)H)?(?:(\d+)M)?/
+    );
 
   return m
-    ? Number(m[1] || 0) * 60 +
+    ? (
+        Number(m[1] || 0) * 60 +
         Number(m[2] || 0)
+      )
     : null;
 }
