@@ -1138,7 +1138,7 @@ body.discussionFullScreen{overflow:hidden!important}
     <div class="m58SearchTitle">🔎 Recherche de transport</div>
     <div class="fieldRow"><label class="m58Field"><span>📍 Départ</span><input id="m58TransportFrom" placeholder="Ville, gare ou aéroport"></label><label class="m58Field"><span>🏁 Destination</span><input id="m58TransportTo" placeholder="Ville, gare ou aéroport"></label></div>
     <div class="fieldRow"><label class="m58Field"><span>📅 Date du départ</span><input id="m58TransportDate" type="date"></label><label class="m58Field"><span>🕐 Heure du départ</span><input id="m58TransportTime" type="time" value="06:00"></label></div><label class="m58Field"><span>👥 Nombre de voyageurs</span><input id="m58TransportPassengers" type="number" min="1" value="1" placeholder="Ex. 1"></label>
-    <select id="m58TransportMode"><option value="all">🚗 Tous les moyens</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 BlaBlaCar Bus</option><option value="carpool">🚗 BlaBlaCar Covoiturage</option></select>
+    <select id="m58TransportMode"><option value="all">🚗 Tous les moyens</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 BlaBlaCar Bus</option><option value="carpool">🚗 BlaBlaCar Covoiturage</option><option value="taxi">🚕 Taxi / VTC</option></select>
     <div class="m58ModuleActions"><button type="button" id="m58TransportSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58TransportSearchCancel">Annuler</button></div>
     <div id="m58TransportSearchResult" class="m58SearchResult"></div>
   </div>
@@ -7136,7 +7136,7 @@ function v58RenderAvailabilityCards(container, results, warnings, kind){
   const hasExternal=results.some(r=>r.external_only);
   const hasSncf=results.some(r=>r.kind==='train');
   if(hasSncf) html+='<div class="m58AvailabilityWarnings">ℹ️ Les horaires train viennent de l’API horaire SNCF. Ils ne correspondent pas forcément aux offres commerciales affichées par SNCF Connect.</div>';
-  if(hasExternal) html+='<div class="m58AvailabilityWarnings">🔗 Pour BlaBlaCar et BlaBlaCar Bus, MyEvent ouvre actuellement la recherche officielle. L’accès aux offres intégrées directement dans MyEvent dépend de l’accès partenaire/API.</div>';
+  if(hasExternal) html+='<div class="m58AvailabilityWarnings">🔗 Pour les services partenaires (BlaBlaCar, BlaBlaCar Bus, Taxi/VTC), MyEvent ouvre actuellement la recherche officielle. L’accès aux offres intégrées directement dans MyEvent dépend encore des accès partenaires/API.</div>';
   html+='<div class="m58AvailabilityCount">'+results.length+' option(s) proposée(s)</div><div class="m58AvailabilityResults">';
   results.forEach((r,i)=>{
     const title=r.kind==='hotel'?(r.name||'Hôtel'):(r.title||'Trajet');
@@ -7144,8 +7144,8 @@ function v58RenderAvailabilityCards(container, results, warnings, kind){
     const timing=r.kind==='hotel'?('🛬 '+fmt(r.checkin)+' · 🛫 '+fmt(r.checkout)):('🕐 '+fmt(r.departure)+(r.arrival?' → '+fmt(r.arrival):''));
     const meta=[timing,route,r.duration_minutes?('⏱️ '+r.duration_minutes+' min'):'',r.rooms?'🛏️ '+r.rooms+' chambre(s)':'',r.room?'🛏️ '+r.room:'',r.guests?'👥 '+r.guests+' voyageur(s)':'',r.passengers?'👥 '+r.passengers+' voyageur(s)':''].filter(Boolean).join(' · ');
     const offerUrl=r.kind==='train'?v58SncfOfferUrl(r):(r.booking_url||'');
-    const providerIcon=r.kind==='hotel'?'🏨':r.kind==='train'?'🚆':r.kind==='bus'?'🚌':'🚗';
-    const externalLabel=r.kind==='train'?'🔗 Rechercher sur SNCF Connect':r.kind==='bus'?'🔗 Rechercher sur BlaBlaCar Bus':r.kind==='carpool'?'🔗 Rechercher sur BlaBlaCar':'🔗 Ouvrir la recherche';
+    const providerIcon=r.kind==='hotel'?'🏨':r.kind==='train'?'🚆':r.kind==='bus'?'🚌':r.kind==='carpool'?'🚗':r.kind==='taxi'?'🚕':r.kind==='plane'?'✈️':'🚗';
+    const externalLabel=r.kind==='train'?'🔗 Rechercher sur SNCF Connect':r.kind==='bus'?'🔗 Rechercher sur BlaBlaCar Bus':r.kind==='carpool'?'🔗 Rechercher sur BlaBlaCar':r.kind==='taxi'?'🔗 Ouvrir Uber':'🔗 Ouvrir la recherche';
     const addLabel=r.external_only?'➕ Ajouter comme trajet à vérifier':'➕ Ajouter au planning';
     html+='<div class="m58AvailabilityCard"><div class="m58AvailabilityProvider">'+esc(providerIcon+' '+r.provider)+'</div><div class="m58AvailabilityTitle">'+esc(title)+'</div><div class="m58AvailabilityMeta">'+esc(meta)+'</div><div class="m58AvailabilityPrice">'+(r.external_only?'🔎 Recherche en direct à ouvrir':'💶 '+esc(money(r.price))+(r.currency&&Number(r.price)>0?' '+esc(r.currency):''))+'</div><div class="m58ModuleCardActions"><button type="button" class="secondary" data-m58-add-result="'+i+'">'+addLabel+'</button>'+(offerUrl?'<button type="button" class="secondary" data-m58-open-result="'+i+'">'+externalLabel+'</button>':'')+(r.lat&&r.lon?'<button type="button" class="secondary" data-m58-map-result="'+i+'">📍 Carte</button>':'')+'</div></div>';
   });
@@ -7158,7 +7158,7 @@ async function v58SaveSearchResult(r,kind,btn){
   if(!user||!event||event.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un résultat au planning.');return;}
   btn.disabled=true;btn.textContent='⏳ Ajout…';
   let payload;
-  if(kind==='transport') payload={type:r.kind==='train'?'train':r.kind==='plane'?'plane':r.kind==='bus'?'bus':r.kind==='carpool'?'carpool':'other',from:r.from||'',to:r.to||'',departure:r.departure||'',arrival:r.arrival||'',people:(r.passengers||1)+' voyageur(s)',cost:Number(r.price||0),booking:r.booking_url||'',note:r.external_only?('Source : '+(r.provider||'fournisseur')+' · Recherche officielle à vérifier lors de la réservation.'):'Source : '+(r.provider||'fournisseur')+' · Horaire API SNCF, à vérifier sur SNCF Connect le '+new Date().toLocaleString('fr-FR'),title:r.title||([r.from,r.to].filter(Boolean).join(' → '))};
+  if(kind==='transport') payload={type:r.kind==='train'?'train':r.kind==='plane'?'plane':r.kind==='bus'?'bus':r.kind==='carpool'?'carpool':r.kind==='taxi'?'taxi':'other',from:r.from||'',to:r.to||'',departure:r.departure||'',arrival:r.arrival||'',people:(r.passengers||1)+' voyageur(s)',cost:Number(r.price||0),booking:r.booking_url||'',note:r.external_only?('Source : '+(r.provider||'fournisseur')+' · Recherche officielle à vérifier lors de la réservation.'):'Source : '+(r.provider||'fournisseur')+' · Horaire API SNCF, à vérifier sur SNCF Connect le '+new Date().toLocaleString('fr-FR'),title:r.title||([r.from,r.to].filter(Boolean).join(' → '))};
   else payload={type:'hotel',name:r.name||'Hébergement',address:r.address||'',checkin:r.checkin||'',checkout:r.checkout||'',people:String(r.guests||1),rooms:String(r.rooms||1),capacity:Number(r.guests||0),price_per_night:0,total_cost:Number(r.price||0),booking:r.booking_url||'',note:'Source : '+(r.provider||'fournisseur')+' · '+(r.room||'')};
   const marker=kind==='transport'?V58_TRANSPORT_MARKER:V58_ACCOMMODATION_MARKER;
   try{const ins=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content:marker+JSON.stringify(payload)}).select('id').single();if(ins.error)throw ins.error;rememberLocalCreated('messages',ins.data?.id);btn.textContent='✅ Ajouté au planning';await v58LoadModuleLists();}catch(e){alert('Impossible d’ajouter ce résultat : '+(e.message||String(e)));btn.disabled=false;btn.textContent='➕ Ajouter au planning';}
