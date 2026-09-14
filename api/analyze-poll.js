@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: 'Méthode non autorisée.'
@@ -7,7 +7,24 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const eventName = String(body.eventName || 'Événement').slice(0, 180);
+
+    const apiKey = String(
+      process.env.OPENAI_API_KEY || ''
+    ).trim();
+
+    const model = String(
+      process.env.OPENAI_MATERIAL_MODEL || 'gpt-5.6-luna'
+    ).trim();
+
+    if (!apiKey) {
+      return res.status(500).json({
+        error: 'OPENAI_API_KEY est absente.'
+      });
+    }
+
+    const eventName = String(
+      body.eventName || 'Événement'
+    ).trim().slice(0, 180);
 
     const incomingPolls = Array.isArray(body.polls)
       ? body.polls
@@ -19,84 +36,83 @@ export default async function handler(req, res) {
       });
     }
 
-    const polls = incomingPolls.slice(0, 30).map((p, i) => ({
-      question: String(
-        p.question || `Sondage ${i + 1}`
-      ).slice(0, 500),
+    const polls = incomingPolls
+      .slice(0, 30)
+      .map((p, i) => ({
+        question: String(
+          p.question || `Sondage ${i + 1}`
+        ).trim().slice(0, 500),
 
-      allow_multiple: !!p.allow_multiple,
+        allow_multiple: !!p.allow_multiple,
 
-      voterCount: Math.max(
-        0,
-        Number(p.voterCount) || 0
-      ),
+        voterCount: Math.max(
+          0,
+          Number(p.voterCount) || 0
+        ),
 
-      totalVotes: Math.max(
-        0,
-        Number(p.totalVotes) || 0
-      ),
+        totalVotes: Math.max(
+          0,
+          Number(p.totalVotes) || 0
+        ),
 
-      results: Array.isArray(p.results)
-        ? p.results
-            .slice(0, 30)
-            .map(r => ({
-              text: String(r.text || '').slice(0, 300),
-              votes: Math.max(
-                0,
-                Number(r.votes) || 0
-              )
-            }))
-            .filter(r => r.text)
-        : []
-    }));
+        results: Array.isArray(p.results)
+          ? p.results
+              .slice(0, 30)
+              .map(r => ({
+                text: String(
+                  r.text || ''
+                ).trim().slice(0, 300),
+
+                votes: Math.max(
+                  0,
+                  Number(r.votes) || 0
+                )
+              }))
+              .filter(r => r.text)
+          : []
+      }));
 
     const prompt = `
 Tu es l'assistant de décision de MyEvent.
 
 Événement : ${eventName}
 
-Tu dois analyser les sondages ci-dessous UNIQUEMENT à partir des votes fournis.
-
-Ne prétends jamais qu'un résultat est certain si les données sont faibles ou ex æquo.
+Analyse uniquement les résultats des sondages fournis.
 
 Pour chaque sondage :
-- identifie le choix majoritaire quand il existe ;
-- sinon indique qu'il n'y a pas de consensus fiable ;
-- prends en compte le nombre de participants ayant voté ;
+- identifie le choix majoritaire lorsqu'il existe ;
+- indique "Aucun consensus" en cas d'égalité ou de données insuffisantes ;
+- tiens compte du nombre de participants ;
 - pour les sondages à réponses multiples, tiens compte du fait que plusieurs choix peuvent être sélectionnés.
 
-OBJECTIFS :
-
-- produire une synthèse très claire des préférences du groupe ;
-- déterminer le meilleur choix pour chaque sondage quand les données le permettent ;
-- faire ressortir les préférences fortes et les incertitudes ;
-- proposer une action concrète et prudente pour l'organisateur ;
-- ne jamais effectuer cette action automatiquement.
+Objectifs :
+- résumer clairement les préférences du groupe ;
+- déterminer les meilleurs choix lorsque les données le permettent ;
+- signaler les incertitudes ;
+- proposer une action concrète à l'organisateur.
 
 IMPORTANT :
-
-L'IA conseille, l'organisateur valide.
-
+L'IA conseille.
+L'organisateur valide.
 Ne réserve rien.
 Ne modifie rien.
-Ne décide pas à la place du groupe.
+Ne décide jamais automatiquement à la place du groupe.
 
-RÉPONSE JSON STRICTE :
+Retourne UNIQUEMENT un JSON valide sous cette forme :
 
 {
   "summary": "synthèse en 2 à 5 phrases",
   "decisions": [
     {
-      "question": "question exacte",
+      "question": "question du sondage",
       "best_choice": "meilleur choix ou Aucun consensus",
-      "reason": "raison courte basée sur les votes",
+      "reason": "raison basée sur les votes",
       "action": "action proposée à l'organisateur"
     }
   ]
 }
 
 SONDAGES :
-
 ${JSON.stringify(polls)}
 `;
 
@@ -107,16 +123,12 @@ ${JSON.stringify(polls)}
 
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+          'Authorization': `Bearer ${apiKey}`
         },
 
         body: JSON.stringify({
-          model:
-            process.env.OPENAI_MATERIAL_MODEL ||
-            'gpt-5.6-luna',
-
+          model,
           input: prompt,
-
           max_output_tokens: 5000
         })
       }
@@ -136,28 +148,38 @@ ${JSON.stringify(polls)}
 
     if (!text && Array.isArray(data.output)) {
       text = data.output
-        .flatMap(o =>
-          Array.isArray(o.content)
-            ? o.content
+        .flatMap(item =>
+          Array.isArray(item.content)
+            ? item.content
             : []
         )
-        .map(c => c.text || '')
+        .map(content => content.text || '')
         .join('');
     }
 
     text = String(text)
       .trim()
       .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/, '')
-      .replace(/\s*```$/, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
       .trim();
 
-    const parsed = JSON.parse(text);
+    let parsed;
 
-    /*
-     * Compatibilité avec l'ancien fonctionnement
-     * d'analyse d'un seul sondage.
-     */
+    try {
+      parsed = JSON.parse(text);
+    } catch (jsonError) {
+      console.error(
+        'Réponse IA non JSON :',
+        text
+      );
+
+      return res.status(500).json({
+        error: 'La réponse de l’IA n’est pas un JSON valide.'
+      });
+    }
+
+    // Compatibilité avec l'analyse individuelle
     if (body.poll && !body.polls) {
       const first =
         Array.isArray(parsed.decisions)
@@ -167,9 +189,38 @@ ${JSON.stringify(polls)}
       return res.status(200).json({
         analysis:
           parsed.summary ||
-          (first?.reason ||
-            'Analyse terminée.'),
+          first?.reason ||
+          'Analyse terminée.',
 
         decision:
           first?.action
-            ? `${first.best_choice || 'Choix recommandé
+            ? `${first.best_choice || 'Choix recommandé'} — ${first.action}`
+            : (first?.best_choice || '')
+      });
+    }
+
+    // Analyse globale
+    return res.status(200).json({
+      summary: String(
+        parsed.summary || ''
+      ).slice(0, 1500),
+
+      decisions:
+        Array.isArray(parsed.decisions)
+          ? parsed.decisions.slice(0, 30)
+          : []
+    });
+
+  } catch (error) {
+    console.error(
+      'analyze-poll:',
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        error?.message ||
+        'Impossible d’analyser les sondages.'
+    });
+  }
+};
