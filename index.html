@@ -1865,6 +1865,8 @@ async function renderInlineSelectedEvent(){
     // V58.2 — Transport intégré au planning central.
     try{ await renderEventTransport(box,event); }catch(_){ }
     try{ await renderEventAccommodation(box,event); }catch(_){ }
+    // V58.4 — Déplacements locaux entre les étapes.
+    try{ await renderEventLocalTravel(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
 
     const content=planning.querySelector('#eventPlanningSelectedContent');
     const bindPlanningActions=()=>{
@@ -6566,6 +6568,92 @@ async function renderEventTransport(box,eventObj){
 }
 </script>
 
+
+<style id="myevent-v58-4-local-travel-css">
+.inlineEventLocalTravel{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
+.inlineEventLocalTravelTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
+.inlineEventLocalTravelSub{font-size:13px;color:#91a7b9;margin-bottom:12px;line-height:1.4}
+.inlineEventLocalTravelList{display:grid;gap:10px}
+.inlineEventLocalTravelItem{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}
+.inlineEventLocalTravelName{font-weight:900;color:#e8f0f6}
+.inlineEventLocalTravelMeta{font-size:13px;color:#9fb2c2;margin-top:4px;line-height:1.45}
+.inlineEventLocalTravelForm{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #29485c}
+.inlineEventLocalTravelForm label{display:grid;gap:5px;font-size:13px;color:#b7c8d5;font-weight:700}
+.inlineEventLocalTravelForm input,.inlineEventLocalTravelForm select,.inlineEventLocalTravelForm textarea{width:100%;box-sizing:border-box}
+.inlineEventLocalTravelActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.inlineEventLocalTravelActions button{margin:0}
+.inlineEventLocalTravelEmpty{padding:8px 0;color:#9fb2c2;font-size:14px}
+@media(max-width:430px){.inlineEventLocalTravel{padding:12px}}
+</style>
+<script id="myevent-v58-4-local-travel-js">
+/* V58.4 — Déplacements locaux entre les étapes du planning. */
+const V58_LOCAL_TRAVEL_MARKER='[[MYEVENT_LOCAL_TRAVEL]]';
+function v58LocalTravelModeLabel(mode){
+  const map={walk:'🚶 À pied',bike:'🚲 Vélo',car:'🚗 Voiture',carpool:'👥 Covoiturage',bus:'🚌 Bus',taxi:'🚕 Taxi / VTC',transfer:'🚐 Transfert',other:'🧭 Autre'};
+  return map[String(mode||'other').toLowerCase()]||map.other;
+}
+async function getEventLocalTravels(eventId){
+  if(!eventId)return [];
+  try{
+    const r=await sb.from('messages').select('id,content,created_at,user_id').eq('event_id',eventId).like('content',V58_LOCAL_TRAVEL_MARKER+'%').order('created_at',{ascending:true});
+    if(r.error)return [];
+    return (r.data||[]).map(m=>{
+      try{return {...JSON.parse(String(m.content).slice(V58_LOCAL_TRAVEL_MARKER.length)),_message_id:m.id,_created_at:m.created_at,_user_id:m.user_id};}catch(_){return null;}
+    }).filter(Boolean);
+  }catch(_){return []}
+}
+async function renderEventLocalTravel(box,eventObj,choice,outing,aiPlan,aiItems){
+  if(!box||!eventObj)return;
+  const old=box.querySelector('#eventLocalTravel'); if(old)old.remove();
+  const wrap=document.createElement('div'); wrap.className='inlineEventLocalTravel'; wrap.id='eventLocalTravel';
+  const available=[];
+  if(choice==='ai'&&Array.isArray(aiItems))aiItems.forEach(x=>{if(x?.name)available.push(x.name)});
+  if(choice!=='ai'&&outing?.name)available.push(outing.name);
+  const travels=await getEventLocalTravels(eventObj.id);
+  wrap.innerHTML=`<div class="inlineEventLocalTravelTitle">🧭 Déplacements locaux</div>
+    <div class="inlineEventLocalTravelSub">Gère les trajets entre les étapes : mode, distance, durée, horaires, participants et coût. Chaque déplacement devient une étape du planning.</div>
+    <div class="inlineEventLocalTravelList" id="eventLocalTravelList"></div>
+    <div class="inlineEventLocalTravelActions"><button type="button" class="secondary" id="eventLocalTravelAddBtn">➕ Ajouter un déplacement</button></div>
+    <div class="inlineEventLocalTravelForm" id="eventLocalTravelForm" style="display:none">
+      <label>Départ<input id="eventLocalTravelFrom" list="eventLocalTravelPlaces" placeholder="Ex. Hôtel du Parc"></label>
+      <label>Destination<input id="eventLocalTravelTo" list="eventLocalTravelPlaces" placeholder="Ex. La Cantina GG"></label>
+      <datalist id="eventLocalTravelPlaces">${available.map(x=>'<option value="'+escAttr(x)+'"></option>').join('')}</datalist>
+      <label>Mode<select id="eventLocalTravelMode"><option value="walk">🚶 À pied</option><option value="bike">🚲 Vélo</option><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select></label>
+      <label>Distance (km)<input type="number" min="0" step="0.1" id="eventLocalTravelDistance" inputmode="decimal" placeholder="Ex. 2,4"></label>
+      <label>Durée estimée (minutes)<input type="number" min="1" step="1" id="eventLocalTravelDuration" inputmode="numeric" placeholder="Ex. 12"></label>
+      <label>Départ — date et heure<input type="datetime-local" id="eventLocalTravelDeparture"></label>
+      <label>Arrivée — date et heure<input type="datetime-local" id="eventLocalTravelArrival"></label>
+      <label>Participants / conducteur<input id="eventLocalTravelPeople" placeholder="Ex. 4 personnes, Marc conducteur"></label>
+      <label>Coût total (€)<input type="number" min="0" step="0.01" id="eventLocalTravelCost" inputmode="decimal" placeholder="0"></label>
+      <label>Note<textarea id="eventLocalTravelNote" rows="2" placeholder="Ex. point de rendez-vous, parking…"></textarea></label>
+      <div class="inlineEventLocalTravelActions"><button type="button" class="secondary" id="eventLocalTravelSaveBtn">💾 Ajouter au planning</button><button type="button" class="secondary" id="eventLocalTravelCancelBtn">Annuler</button></div>
+    </div>`;
+  box.appendChild(wrap);
+  const list=wrap.querySelector('#eventLocalTravelList');
+  if(!travels.length)list.innerHTML='<div class="inlineEventLocalTravelEmpty">Aucun déplacement local n’est encore défini.</div>';
+  else list.innerHTML=travels.map(t=>'<div class="inlineEventLocalTravelItem"><div class="inlineEventLocalTravelName">'+esc([t.from,t.to].filter(Boolean).join(' → ')||'Déplacement local')+'</div><div class="inlineEventLocalTravelMeta">'+esc(v58LocalTravelModeLabel(t.mode))+(t.distance!=null&&Number(t.distance)>0?' · 📏 '+String(t.distance).replace('.',',')+' km':'')+(t.duration_minutes!=null&&Number(t.duration_minutes)>0?' · ⏱️ '+Number(t.duration_minutes)+' min':'')+(t.people?' · 👥 '+esc(t.people):'')+(Number(t.cost)>0?' · 💶 '+eur(Number(t.cost)):'')+'</div>'+(t.departure?'<div class="inlineEventLocalTravelMeta">🕐 '+esc(new Date(t.departure).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))+(t.arrival?' → '+esc(new Date(t.arrival).toLocaleString('fr-FR',{hour:'2-digit',minute:'2-digit'})):'')+'</div>':'')+(t.note?'<div class="inlineEventLocalTravelMeta">📝 '+esc(t.note)+'</div>':'')+'</div>').join('');
+  const form=wrap.querySelector('#eventLocalTravelForm');
+  wrap.querySelector('#eventLocalTravelAddBtn').addEventListener('click',()=>{form.style.display='grid';wrap.querySelector('#eventLocalTravelFrom')?.focus()});
+  wrap.querySelector('#eventLocalTravelCancelBtn').addEventListener('click',()=>{form.style.display='none'});
+  wrap.querySelector('#eventLocalTravelSaveBtn').addEventListener('click',async()=>{
+    if(!user||eventObj.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un déplacement au planning.');return}
+    const from=$('eventLocalTravelFrom')?.value.trim()||'',to=$('eventLocalTravelTo')?.value.trim()||'';
+    const departure=$('eventLocalTravelDeparture')?.value||'',arrival=$('eventLocalTravelArrival')?.value||'';
+    if(!from||!to||!departure){alert('Indique au minimum le départ, la destination et la date/heure de départ.');return}
+    const distance=Number($('eventLocalTravelDistance')?.value||0),duration=Number($('eventLocalTravelDuration')?.value||0),cost=Number($('eventLocalTravelCost')?.value||0);
+    const payload={from,to,mode:$('eventLocalTravelMode')?.value||'other',distance_km:Number.isFinite(distance)?distance:0,duration_minutes:Number.isFinite(duration)?duration:0,departure,arrival,people:$('eventLocalTravelPeople')?.value.trim()||'',people_count:(String($('eventLocalTravelPeople')?.value||'').match(/\d+/)?.[0]?Number(String($('eventLocalTravelPeople')?.value||'').match(/\d+/)[0]):Number(aiPlan?.people||1)),cost:Number.isFinite(cost)?cost:0,note:$('eventLocalTravelNote')?.value.trim()||'',title:(from+' → '+to).trim()};
+    const btn=wrap.querySelector('#eventLocalTravelSaveBtn'); btn.disabled=true; btn.textContent='⏳ Enregistrement…';
+    try{
+      const r=await sb.from('messages').insert({event_id:eventObj.id,user_id:user.id,content:V58_LOCAL_TRAVEL_MARKER+JSON.stringify(payload)}).select('id').single();
+      if(r.error)throw r.error;
+      rememberLocalCreated('messages',r.data?.id);
+      await renderEventLocalTravel(box,eventObj,choice,outing,aiPlan,aiItems);
+      const oldTimeline=box.querySelector('#eventPlanningTimeline'); if(oldTimeline)oldTimeline.remove();
+      try{await renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiItems)}catch(_){ }
+    }catch(e){alert('Impossible d’ajouter le déplacement : '+(e.message||String(e)));btn.disabled=false;btn.textContent='💾 Ajouter au planning';}
+  });
+}
+</script>
 <style id="myevent-v58-3-accommodation-css">
 .inlineEventAccommodation{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
 .inlineEventAccommodationTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
@@ -6630,6 +6718,23 @@ async function renderEventAccommodation(box,eventObj){
     '</div>';
   box.appendChild(wrap);
   const list=wrap.querySelector('#eventAccommodationList');
+  const localTravels=await getEventLocalTravels(eventObj.id);
+  if(localTravels.length){
+    localTravels.forEach((t,i)=>steps.push({
+      order:15000+i,
+      name:[t.from,t.to].filter(Boolean).join(' → ')||'Déplacement local',
+      type:'local_travel',
+      time:t.departure||'',
+      duration:Number(t.duration_minutes)>0?Number(t.duration_minutes):null,
+      address:t.to||'',
+      price:Number(t.cost)>0?(Number(t.cost)/Math.max(1,Number(t.people_count||aiPlan?.people||1))):null,
+      source:'local_travel',
+      fullDate:t.departure||'',
+      distance:t.distance_km,
+      mode:t.mode||''
+    }));
+  }
+
   const accommodations=await getEventAccommodations(eventObj.id);
   if(!accommodations.length){list.innerHTML='<div class="inlineEventAccommodationEmpty">Aucun hébergement n’est encore défini.</div>'}
   else{
@@ -6720,7 +6825,8 @@ function v58TypeLabel(type,name){
   if(t.includes('restaurant')||t.includes('meal')||t.includes('repas')||n.includes('restaurant')||n.includes('dîner')||n.includes('diner')||n.includes('déjeuner')||n.includes('dejeuner'))return '🍽️ Repas';
   if(t.includes('culture'))return '🏛️ Culture';
   if(t.includes('nature'))return '🌳 Nature';
-  if(t.includes('transport')||t.includes('travel')||t.includes('déplacement')||t.includes('deplacement'))return '🚗 Déplacement';
+  if(t.includes('local_travel')||t.includes('déplacement local')||t.includes('deplacement local'))return '🧭 Déplacement local';
+  if(t.includes('transport')||t.includes('travel')||t.includes('déplacement')||t.includes('deplacement'))return '🚗 Transport';
   if(t.includes('accommodation')||t.includes('hébergement')||t.includes('hebergement')||n.includes('arrivée ·')||n.includes('départ ·'))return '🏨 Hébergement';
   return '🎯 Activité';
 }
@@ -6819,6 +6925,8 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       const parts=[v58TypeLabel(step.type,step.name)];
       if(step.duration!=null && Number(step.duration)>0)parts.push('⏱️ '+Number(step.duration)+' min');
       if(step.address)parts.push('📍 '+step.address);
+      if(step.distance!=null && Number.isFinite(Number(step.distance)) && Number(step.distance)>0)parts.push('📏 '+String(step.distance).replace('.',',')+' km');
+      if(step.mode)parts.push(String(step.mode));
       if(step.price!=null && Number.isFinite(Number(step.price)))parts.push('💶 '+eur(Number(step.price))+' / pers.');
       meta.textContent=parts.join(' · ');
       content.append(time,name,meta);
