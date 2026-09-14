@@ -1864,6 +1864,7 @@ async function renderInlineSelectedEvent(){
     try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
     // V58.2 — Transport intégré au planning central.
     try{ await renderEventTransport(box,event); }catch(_){ }
+    try{ await renderEventAccommodation(box,event); }catch(_){ }
 
     const content=planning.querySelector('#eventPlanningSelectedContent');
     const bindPlanningActions=()=>{
@@ -6565,6 +6566,127 @@ async function renderEventTransport(box,eventObj){
 }
 </script>
 
+<style id="myevent-v58-3-accommodation-css">
+.inlineEventAccommodation{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
+.inlineEventAccommodationTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
+.inlineEventAccommodationSub{font-size:13px;color:#91a7b9;margin-bottom:12px;line-height:1.4}
+.inlineEventAccommodationList{display:grid;gap:10px}
+.inlineEventAccommodationItem{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}
+.inlineEventAccommodationName{font-weight:900;color:#e8f0f6}
+.inlineEventAccommodationMeta{font-size:13px;color:#9fb2c2;margin-top:4px;line-height:1.45}
+.inlineEventAccommodationForm{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #29485c}
+.inlineEventAccommodationForm label{display:grid;gap:5px;font-size:13px;color:#b7c8d5;font-weight:700}
+.inlineEventAccommodationForm input,.inlineEventAccommodationForm select,.inlineEventAccommodationForm textarea{width:100%;box-sizing:border-box}
+.inlineEventAccommodationActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.inlineEventAccommodationActions button{margin:0}
+.inlineEventAccommodationEmpty{padding:8px 0;color:#9fb2c2;font-size:14px}
+@media(max-width:430px){.inlineEventAccommodation{padding:12px}}
+</style>
+<script id="myevent-v58-3-accommodation-js">
+/* V58.3 — Hébergement partagé, intégré au planning de l’événement. */
+const V58_ACCOMMODATION_MARKER='[[MYEVENT_ACCOMMODATION]]';
+function v58AccommodationLabel(type){
+  const map={hotel:'🏨 Hôtel',apartment:'🏠 Appartement / maison',camping:'⛺ Camping',other:'🛏️ Autre'};
+  return map[String(type||'other').toLowerCase()]||map.other;
+}
+async function getEventAccommodations(eventId){
+  if(!eventId)return [];
+  try{
+    const r=await sb.from('messages').select('id,content,created_at,user_id').eq('event_id',eventId).like('content',V58_ACCOMMODATION_MARKER+'%').order('created_at',{ascending:true});
+    if(r.error)return [];
+    return (r.data||[]).map(m=>{
+      try{return {...JSON.parse(String(m.content).slice(V58_ACCOMMODATION_MARKER.length)),_message_id:m.id,_created_at:m.created_at,_user_id:m.user_id};}catch(_){return null;}
+    }).filter(Boolean);
+  }catch(_){return []}
+}
+function v58AccommodationDate(value,withTime=false){
+  if(!value)return '';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return String(value);
+  return d.toLocaleString('fr-FR',withTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+async function renderEventAccommodation(box,eventObj){
+  if(!box||!eventObj)return;
+  const old=box.querySelector('#eventAccommodation'); if(old)old.remove();
+  const wrap=document.createElement('div'); wrap.className='inlineEventAccommodation'; wrap.id='eventAccommodation';
+  wrap.innerHTML='<div class="inlineEventAccommodationTitle">🏨 Hébergement</div>'+
+    '<div class="inlineEventAccommodationSub">Ajoute les hébergements nécessaires : dates, participants, chambres, capacité, coût, adresse et réservation. L’hébergement est intégré au planning de l’événement.</div>'+
+    '<div class="inlineEventAccommodationList" id="eventAccommodationList"></div>'+
+    '<div class="inlineEventAccommodationActions"><button type="button" class="secondary" id="eventAccommodationAddBtn">➕ Ajouter un hébergement</button></div>'+
+    '<div class="inlineEventAccommodationForm" id="eventAccommodationForm" style="display:none">'+
+      '<label>Type<select id="eventAccommodationType"><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option><option value="other">🛏️ Autre</option></select></label>'+
+      '<label>Nom de l’hébergement<input id="eventAccommodationName" placeholder="Ex. Hôtel du Parc"></label>'+
+      '<label>Adresse<input id="eventAccommodationAddress" placeholder="Ex. 12 rue des Alpes, Gap"></label>'+
+      '<label>Arrivée — date et heure<input type="datetime-local" id="eventAccommodationCheckin"></label>'+
+      '<label>Départ — date et heure<input type="datetime-local" id="eventAccommodationCheckout"></label>'+
+      '<label>Participants<input id="eventAccommodationPeople" placeholder="Ex. 10 personnes"></label>'+
+      '<label>Chambres / logements<input id="eventAccommodationRooms" placeholder="Ex. 4 chambres"></label>'+
+      '<label>Capacité par logement<input type="number" min="1" step="1" id="eventAccommodationCapacity" inputmode="numeric" placeholder="2"></label>'+ 
+      '<label>Prix / nuit (€)<input type="number" min="0" step="0.01" id="eventAccommodationNightPrice" inputmode="decimal" placeholder="0"></label>'+ 
+      '<label>Coût total (€)<input type="number" min="0" step="0.01" id="eventAccommodationTotalCost" inputmode="decimal" placeholder="0"></label>'+ 
+      '<label>Réservation / référence<input id="eventAccommodationBooking" placeholder="Ex. Booking ABC123 ou lien de réservation"></label>'+ 
+      '<label>Note<textarea id="eventAccommodationNote" rows="2" placeholder="Ex. petit-déjeuner, arrivée tardive, répartition des chambres…"></textarea></label>'+ 
+      '<div class="inlineEventAccommodationActions"><button type="button" class="secondary" id="eventAccommodationSaveBtn">💾 Ajouter au planning</button><button type="button" class="secondary" id="eventAccommodationCancelBtn">Annuler</button></div>'+ 
+    '</div>';
+  box.appendChild(wrap);
+  const list=wrap.querySelector('#eventAccommodationList');
+  const accommodations=await getEventAccommodations(eventObj.id);
+  if(!accommodations.length){list.innerHTML='<div class="inlineEventAccommodationEmpty">Aucun hébergement n’est encore défini.</div>'}
+  else{
+    list.innerHTML=accommodations.map(a=>{
+      const dates=[a.checkin?'🛬 Arrivée '+v58AccommodationDate(a.checkin,true):'',a.checkout?'🛫 Départ '+v58AccommodationDate(a.checkout,true):''].filter(Boolean).join(' · ');
+      const people=a.people?'👥 '+a.people:'';
+      const rooms=a.rooms?'🛏️ '+a.rooms:'';
+      const cap=Number(a.capacity)>0?'👤 '+Number(a.capacity)+' pers./logement':'';
+      const night=Number(a.price_per_night)>0?'💶 '+eur(Number(a.price_per_night))+' / nuit':'';
+      const total=Number(a.total_cost)>0?'💰 Total '+eur(Number(a.total_cost)):'';
+      return '<div class="inlineEventAccommodationItem">'+
+        '<div class="inlineEventAccommodationName">'+v58AccommodationLabel(a.type)+(a.name?' · '+esc(a.name):'')+'</div>'+
+        (a.address?'<div class="inlineEventAccommodationMeta">📍 '+esc(a.address)+'</div>':'')+
+        (dates?'<div class="inlineEventAccommodationMeta">'+esc(dates)+'</div>':'')+
+        ((people||rooms||cap)?'<div class="inlineEventAccommodationMeta">'+esc([people,rooms,cap].filter(Boolean).join(' · '))+'</div>':'')+
+        ((night||total)?'<div class="inlineEventAccommodationMeta">'+esc([night,total].filter(Boolean).join(' · '))+'</div>':'')+
+        (a.booking?'<div class="inlineEventAccommodationMeta">🎫 '+esc(a.booking)+'</div>':'')+
+        (a.note?'<div class="inlineEventAccommodationMeta">📝 '+esc(a.note)+'</div>':'')+
+        '</div>';
+    }).join('');
+  }
+  const form=wrap.querySelector('#eventAccommodationForm');
+  wrap.querySelector('#eventAccommodationAddBtn').addEventListener('click',()=>{form.style.display='grid';wrap.querySelector('#eventAccommodationName')?.focus()});
+  wrap.querySelector('#eventAccommodationCancelBtn').addEventListener('click',()=>{form.style.display='none'});
+  wrap.querySelector('#eventAccommodationSaveBtn').addEventListener('click',async()=>{
+    if(!user||eventObj.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un hébergement au planning.');return}
+    const name=$('eventAccommodationName')?.value.trim()||'',address=$('eventAccommodationAddress')?.value.trim()||'';
+    const checkin=$('eventAccommodationCheckin')?.value||'',checkout=$('eventAccommodationCheckout')?.value||'';
+    if(!name||!checkin||!checkout){alert('Indique au minimum le nom, la date/heure d’arrivée et la date/heure de départ.');return}
+    if(new Date(checkout)<=new Date(checkin)){alert('La date de départ doit être après la date d’arrivée.');return}
+    const payload={
+      type:$('eventAccommodationType')?.value||'other',name,address,checkin,checkout,
+      people:$('eventAccommodationPeople')?.value.trim()||'',rooms:$('eventAccommodationRooms')?.value.trim()||'',
+      capacity:Number($('eventAccommodationCapacity')?.value||0),
+      price_per_night:Number($('eventAccommodationNightPrice')?.value||0),
+      total_cost:Number($('eventAccommodationTotalCost')?.value||0),
+      booking:$('eventAccommodationBooking')?.value.trim()||'',note:$('eventAccommodationNote')?.value.trim()||''
+    };
+    payload.capacity=Number.isFinite(payload.capacity)?payload.capacity:0;
+    payload.price_per_night=Number.isFinite(payload.price_per_night)?payload.price_per_night:0;
+    payload.total_cost=Number.isFinite(payload.total_cost)?payload.total_cost:0;
+    const btn=wrap.querySelector('#eventAccommodationSaveBtn'); btn.disabled=true; btn.textContent='⏳ Enregistrement…';
+    try{
+      const r=await sb.from('messages').insert({event_id:eventObj.id,user_id:user.id,content:V58_ACCOMMODATION_MARKER+JSON.stringify(payload)}).select('id').single();
+      if(r.error)throw r.error;
+      rememberLocalCreated('messages',r.data?.id);
+      await renderEventAccommodation(box,eventObj);
+      const oldTimeline=box.querySelector('#eventPlanningTimeline'); if(oldTimeline)oldTimeline.remove();
+      try{
+        const choice=localStorage.getItem('myevent_event_planning_choice_'+user.id+'_'+eventObj.id)||'manual';
+        await renderEventPlanningTimeline(box,eventObj,choice,null,null,[]);
+      }catch(_){ }
+    }catch(e){alert('Impossible d’ajouter l’hébergement : '+(e.message||String(e)));btn.disabled=false;btn.textContent='💾 Ajouter au planning';}
+  });
+}
+</script>
+
 <style id="myevent-v58-1-planning-timeline-css">
 .inlineEventTimeline{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
 .inlineEventTimelineTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
@@ -6599,6 +6721,7 @@ function v58TypeLabel(type,name){
   if(t.includes('culture'))return '🏛️ Culture';
   if(t.includes('nature'))return '🌳 Nature';
   if(t.includes('transport')||t.includes('travel')||t.includes('déplacement')||t.includes('deplacement'))return '🚗 Déplacement';
+  if(t.includes('accommodation')||t.includes('hébergement')||t.includes('hebergement')||n.includes('arrivée ·')||n.includes('départ ·'))return '🏨 Hébergement';
   return '🎯 Activité';
 }
 async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiItems){
@@ -6646,14 +6769,29 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       order:10000+i,
       name:[t.from,t.to].filter(Boolean).join(' → ')||'Trajet',
       type:'transport',
-      time:t.departure?String(t.departure).slice(11,16):'',
+      time:t.departure||'',
       duration:t.departure&&t.arrival?Math.max(0,Math.round((new Date(t.arrival)-new Date(t.departure))/60000)):null,
       address:t.to||'',
-      price:Number(t.cost)>0?(Number(t.cost)/Math.max(1,Number(aiPlan?.people||1))):null,
-      source:'transport'
+      price:Number(t.cost)>0?(Number(t.cost)/Math.max(1,Number(t.people_count||aiPlan?.people||1))):null,
+      source:'transport',
+      fullDate:t.departure||''
     }));
   }
-  steps.sort((a,b)=>v58TimeMinutes(a.time)-v58TimeMinutes(b.time)||a.order-b.order);
+  const accommodations=await getEventAccommodations(eventObj.id);
+  if(accommodations.length){
+    accommodations.forEach((a,i)=>{
+      const baseName=a.name||'Hébergement';
+      const cost=Number(a.total_cost)>0?Number(a.total_cost):0;
+      const peopleCount=Number(a.people_count||0)||Number(String(a.people||'').match(/\d+/)?.[0]||0)||Number(aiPlan?.people||0)||1;
+      steps.push({order:20000+i*2,name:'Arrivée · '+baseName,type:'accommodation',time:a.checkin||'',duration:null,address:a.address||'',price:cost>0?cost/Math.max(1,peopleCount):null,source:'accommodation',fullDate:a.checkin||''});
+      steps.push({order:20001+i*2,name:'Départ · '+baseName,type:'accommodation',time:a.checkout||'',duration:null,address:a.address||'',price:null,source:'accommodation',fullDate:a.checkout||''});
+    });
+  }
+  steps.sort((a,b)=>{
+    const da=a.fullDate||a.time||'', db=b.fullDate||b.time||'';
+    if(da&&db){const ta=new Date(da).getTime(),tb=new Date(db).getTime();if(Number.isFinite(ta)&&Number.isFinite(tb))return ta-tb||a.order-b.order;}
+    return v58TimeMinutes(a.time)-v58TimeMinutes(b.time)||a.order-b.order;
+  });
 
   if(!steps.length){
     const empty=document.createElement('div');
@@ -6672,7 +6810,7 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       const content=document.createElement('div');
       const time=document.createElement('div');
       time.className='inlineEventTimelineTime';
-      time.textContent=step.time||'Horaire à définir';
+      time.textContent=step.fullDate?(new Date(step.fullDate).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):((step.time&&/^\d{4}-\d{2}-\d{2}T/.test(String(step.time)))?new Date(step.time).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):(step.time||'Horaire à définir'));
       const name=document.createElement('div');
       name.className='inlineEventTimelineName';
       name.textContent=step.name;
