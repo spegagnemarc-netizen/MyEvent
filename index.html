@@ -1780,7 +1780,8 @@ async function renderInlineSelectedEvent(){
       if(payload){
         const actionBox=document.createElement('div');
         actionBox.className='inlineEventAiAction';
-        actionBox.innerHTML='<div class="inlineEventAiActionTitle">⚡ Décision transformée en action</div>'+          '<div class="inlineEventAiActionMain"><b>'+esc(payload.question||'Décision du groupe')+'</b></div>'+          '<div class="inlineEventAiActionChoice">✓ '+esc(payload.choice||'')+'</div>'+          (payload.action?'<div class="inlineEventAiActionText">'+esc(payload.action)+'</div>':'')+          '<div class="inlineEventAiActionStatus">Action validée et publiée dans cet événement</div>';
+        const displayAction=pollActionDisplay(payload.action,payload.choice);
+        actionBox.innerHTML='<div class="inlineEventAiActionTitle">⚡ Décision transformée en action</div>'+          '<div class="inlineEventAiActionMain"><b>'+esc(payload.question||'Décision du groupe')+'</b></div>'+          '<div class="inlineEventAiActionChoice">✓ '+esc(payload.choice||'')+'</div>'+          (displayAction?'<div class="inlineEventAiActionText">'+esc(displayAction)+'</div>':'')+          '<div class="inlineEventAiActionStatus">Action validée et publiée dans cet événement</div>';
         box.appendChild(actionBox);
       }
     }
@@ -2878,7 +2879,8 @@ async function loadMessages(){
     if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_AI_ACTION]]')){
       let payload=null; try{payload=JSON.parse(m.content.slice('[[MYEVENT_AI_ACTION]]'.length));}catch{}
       if(!payload)return '';
-      return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">⚡ Action créée</div><div class="chatPollHint">Décision issue du sondage : '+esc(payload.question||'Sondage')+'</div><p><b>Choix :</b> '+esc(payload.choice||'')+'</p>'+(payload.action?'<p><b>Action :</b> '+esc(payload.action)+'</p>':'')+'<div class="pollDecisionValidated">⚡ Action publiée dans l’événement</div></div></div>';
+      const displayAction=pollActionDisplay(payload.action,payload.choice);
+      return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">⚡ Action créée</div><div class="chatPollHint">Décision issue du sondage : '+esc(payload.question||'Sondage')+'</div><p><b>Choix :</b> '+esc(payload.choice||'')+'</p>'+(displayAction?'<p><b>Action :</b> '+esc(displayAction)+'</p>':'')+'<div class="pollDecisionValidated">⚡ Action publiée dans l’événement</div></div></div>';
     }
     if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){ 
       let a=null; try{a=JSON.parse(m.content.slice('[[MYEVENT_ATTACHMENT]]'.length));}catch{}
@@ -3696,6 +3698,19 @@ async function analyzeAllPolls(){
 }
 
 document.getElementById('pollAiGlobalBtn')?.addEventListener('click',analyzeAllPolls);
+
+function pollActionDisplay(action,choice){
+  const a=String(action||'').trim();
+  const c=String(choice||'').trim();
+  if(!a)return '';
+  if(c){
+    const re=new RegExp('^'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*(?:[—–-]\\s*)?','i');
+    const cleaned=a.replace(re,'').trim();
+    if(cleaned && cleaned.toLowerCase()!==c.toLowerCase())return cleaned;
+    if(!cleaned)return '';
+  }
+  return a;
+}
 
 async function validatePollDecision({pollId=null,question='',choice='',reason='',action='',container=null}){
   if(!event||!user){alert('Connecte-toi pour valider une décision.');return;}
