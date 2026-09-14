@@ -1860,6 +1860,9 @@ async function renderInlineSelectedEvent(){
       '<div id="homeReservationBox" style="display:'+(choice==='manual'?'block':'none')+'"></div>';
     box.appendChild(planning);
 
+    // V58.1 — Timeline centrale du planning de l’événement.
+    try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
+
     const content=planning.querySelector('#eventPlanningSelectedContent');
     const bindPlanningActions=()=>{
       planning.querySelector('[data-planning-open-outings]')?.addEventListener('click',()=>{showEventTab('outings',true);document.querySelector('.tabPanel[data-panel="outings"]')?.scrollIntoView({behavior:'smooth',block:'start'});});
@@ -1888,6 +1891,9 @@ async function renderInlineSelectedEvent(){
       if(manualBox)manualBox.style.display=choice==='manual'?'block':'none';
       if(aiBox)aiBox.style.display=choice==='ai'?'block':'none';
       bindPlanningActions();
+      const oldTimeline=box.querySelector('#eventPlanningTimeline');
+      if(oldTimeline)oldTimeline.remove();
+      try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
       if(choice==='ai'){
         if(manualBox)manualBox.innerHTML='';
         if(typeof renderAiPlanReservations==='function'&&aiPlan&&aiItems.length)await renderAiPlanReservations(aiPlan,aiItems,'homeAiReservationBox');
@@ -6458,4 +6464,132 @@ document.addEventListener('click',e=>{
   const step=Number(btn.dataset.aiResOpen);
   if(plan&&Array.isArray(items))openAiPlanReservationForm(plan,items,step);
 });
+</script>
+
+
+<style id="myevent-v58-1-planning-timeline-css">
+.inlineEventTimeline{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
+.inlineEventTimelineTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
+.inlineEventTimelineSub{font-size:13px;color:#91a7b9;margin-bottom:12px}
+.inlineEventTimelineList{position:relative;margin-left:8px}
+.inlineEventTimelineList:before{content:'';position:absolute;left:17px;top:8px;bottom:8px;width:2px;background:#315a74}
+.inlineEventTimelineItem{position:relative;display:grid;grid-template-columns:44px 1fr;gap:10px;margin:0 0 12px}
+.inlineEventTimelineDot{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#102a3d;border:1px solid #3a6884;font-size:17px}
+.inlineEventTimelineTime{font-size:13px;font-weight:900;color:#8fc7ff;margin-bottom:2px}
+.inlineEventTimelineName{font-size:16px;font-weight:850;color:#e8f0f6}
+.inlineEventTimelineMeta{font-size:13px;color:#9fb2c2;margin-top:3px;line-height:1.4}
+.inlineEventTimelineEmpty{padding:10px 0;color:#9fb2c2;font-size:14px}
+.inlineEventTimelineAction{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.inlineEventTimelineAction button{margin:0}
+@media(max-width:430px){
+  .inlineEventTimeline{padding:12px}
+  .inlineEventTimelineName{font-size:15px}
+  .inlineEventTimelineMeta{font-size:12px}
+}
+</style>
+<script id="myevent-v58-1-planning-timeline-js">
+/* V58.1 — Planning central : timeline de l’événement */
+function v58TimeMinutes(value){
+  const m=String(value||'').match(/^(\d{1,2}):(\d{2})/);
+  if(!m)return 9999;
+  return Number(m[1])*60+Number(m[2]);
+}
+function v58TypeLabel(type,name){
+  const t=String(type||'').toLowerCase();
+  const n=String(name||'').toLowerCase();
+  if(t.includes('restaurant')||t.includes('meal')||t.includes('repas')||n.includes('restaurant')||n.includes('dîner')||n.includes('diner')||n.includes('déjeuner')||n.includes('dejeuner'))return '🍽️ Repas';
+  if(t.includes('culture'))return '🏛️ Culture';
+  if(t.includes('nature'))return '🌳 Nature';
+  if(t.includes('transport')||t.includes('travel')||t.includes('déplacement')||t.includes('deplacement'))return '🚗 Déplacement';
+  return '🎯 Activité';
+}
+async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiItems){
+  if(!box||!eventObj)return;
+  const wrap=document.createElement('div');
+  wrap.className='inlineEventTimeline';
+  wrap.id='eventPlanningTimeline';
+  const title=document.createElement('div');
+  title.className='inlineEventTimelineTitle';
+  title.textContent='📅 Déroulement de l’événement';
+  const sub=document.createElement('div');
+  sub.className='inlineEventTimelineSub';
+  sub.textContent=choice==='ai'?'Timeline issue du planning IA sélectionné':'Timeline du planning manuel';
+  wrap.append(title,sub);
+
+  let steps=[];
+  if(choice==='ai' && Array.isArray(aiItems) && aiItems.length){
+    steps=aiItems.map((x,i)=>({
+      order:i+1,
+      name:x.name||'Étape',
+      type:x.outing_type||x.type||'activity',
+      time:x.start_time||'',
+      duration:x.duration_minutes,
+      address:x.address||'',
+      price:x.price_per_person,
+      source:x.source||'ai'
+    }));
+  }else if(outing){
+    steps=[{
+      order:1,
+      name:outing.name||'Sortie',
+      type:outing.outing_type||'activity',
+      time:outing.start_time||outing.time||'',
+      duration:outing.duration_minutes,
+      address:outing.address||'',
+      price:outing.price_per_person,
+      source:'manual'
+    }];
+  }
+
+  steps.sort((a,b)=>v58TimeMinutes(a.time)-v58TimeMinutes(b.time)||a.order-b.order);
+
+  if(!steps.length){
+    const empty=document.createElement('div');
+    empty.className='inlineEventTimelineEmpty';
+    empty.textContent='Aucune étape n’est encore définie dans le planning.';
+    wrap.appendChild(empty);
+  }else{
+    const list=document.createElement('div');
+    list.className='inlineEventTimelineList';
+    steps.forEach((step,i)=>{
+      const row=document.createElement('div');
+      row.className='inlineEventTimelineItem';
+      const dot=document.createElement('div');
+      dot.className='inlineEventTimelineDot';
+      dot.textContent=v58TypeLabel(step.type,step.name).slice(0,2);
+      const content=document.createElement('div');
+      const time=document.createElement('div');
+      time.className='inlineEventTimelineTime';
+      time.textContent=step.time||'Horaire à définir';
+      const name=document.createElement('div');
+      name.className='inlineEventTimelineName';
+      name.textContent=step.name;
+      const meta=document.createElement('div');
+      meta.className='inlineEventTimelineMeta';
+      const parts=[v58TypeLabel(step.type,step.name)];
+      if(step.duration!=null && Number(step.duration)>0)parts.push('⏱️ '+Number(step.duration)+' min');
+      if(step.address)parts.push('📍 '+step.address);
+      if(step.price!=null && Number.isFinite(Number(step.price)))parts.push('💶 '+eur(Number(step.price))+' / pers.');
+      meta.textContent=parts.join(' · ');
+      content.append(time,name,meta);
+      row.append(dot,content);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  }
+
+  const action=document.createElement('div');
+  action.className='inlineEventTimelineAction';
+  const openBtn=document.createElement('button');
+  openBtn.type='button';
+  openBtn.className='secondary';
+  openBtn.textContent=choice==='ai'?'✨ Ouvrir le planning IA':'📋 Ouvrir le planning';
+  openBtn.addEventListener('click',()=>{
+    showEventTab(choice==='ai'?'aioutings':'outings',true);
+    document.querySelector('.tabPanel[data-panel="'+(choice==='ai'?'aioutings':'outings')+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  action.appendChild(openBtn);
+  wrap.appendChild(action);
+  box.appendChild(wrap);
+}
 </script>
