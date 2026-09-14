@@ -955,6 +955,8 @@ body.discussionFullScreen{overflow:hidden!important}
 <input id="options" placeholder="Choix séparés par des virgules">
 <label class="checkRow"><input id="allowMultiple" type="checkbox"> Autoriser plusieurs réponses</label>
 <button id="pollBtn">Créer le sondage</button>
+<button type="button" id="pollAiGlobalBtn" class="secondary pollAnalyzeBtn">✨ Analyser les sondages du groupe</button>
+<div id="pollAiGlobalBox" class="pollAiBox hidden"></div>
 <div id="polls"></div>
 </div>
 </details>
@@ -3561,7 +3563,7 @@ async function loadPolls(){
 }
 
 async function analyzePollResults(pollId){
-  const box=$('pollAi-'+pollId), button=document.querySelector('[data-analyze-poll=\"'+pollId+'\"]');
+  const box=$('pollAi-'+pollId), button=document.querySelector('[data-analyze-poll="'+pollId+'"]');
   if(!box||!button||!event)return;
   box.classList.remove('hidden');
   box.innerHTML='<b>✨ Analyse du groupe</b><p>Analyse des résultats…</p>';
@@ -3579,12 +3581,59 @@ async function analyzePollResults(pollId){
     const r=await fetch('/api/analyze-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventName:event.name||'Événement',poll:{question:pr.data.question,allow_multiple:!!pr.data.allow_multiple,voterCount,totalVotes:votes.length,results}})});
     const data=await r.json();
     if(!r.ok)throw new Error(data?.error||'Erreur du service IA.');
-    box.innerHTML='<b>✨ Analyse du groupe</b><p>'+esc(data.analysis||'Aucune analyse disponible.')+'</p>';
+    box.innerHTML='<b>✨ Analyse du groupe</b><p>'+esc(data.analysis||'Aucune analyse disponible.')+'</p>'+
+      (data.decision?'<p><b>➡️ Décision proposée :</b> '+esc(data.decision)+'</p>':'');
   }catch(e){
     console.warn('Analyse sondage:',e.message||e);
     box.innerHTML='<b>✨ Analyse du groupe</b><p class="err">'+esc(e.message||'Impossible d’analyser ce sondage.')+'</p>';
   }finally{button.disabled=false;}
 }
+
+async function analyzeAllPolls(){
+  const box=$('pollAiGlobalBox'), button=$('pollAiGlobalBtn');
+  if(!box||!button||!event)return;
+  box.classList.remove('hidden');
+  box.innerHTML='<b>✨ Analyse IA du groupe</b><p>Analyse de tous les sondages…</p>';
+  button.disabled=true;
+  try{
+    const pr=await sb.from('polls').select('id,question,allow_multiple,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+    if(pr.error)throw pr.error;
+    const polls=pr.data||[];
+    if(!polls.length){box.innerHTML='<b>✨ Analyse IA du groupe</b><p>Aucun sondage à analyser.</p>';return;}
+    const ids=polls.map(p=>p.id);
+    const [or,vr]=await Promise.all([
+      sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',ids),
+      sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',ids)
+    ]);
+    if(or.error)throw or.error;
+    if(vr.error)throw vr.error;
+    const options=or.data||[], votes=vr.data||[];
+    const payloadPolls=polls.map(p=>{
+      const po=options.filter(o=>o.poll_id===p.id);
+      const pv=votes.filter(v=>v.poll_id===p.id);
+      const voterCount=new Set(pv.map(v=>v.user_id)).size;
+      return {question:p.question,allow_multiple:!!p.allow_multiple,voterCount,totalVotes:pv.length,
+        results:po.map(o=>({text:o.option_text,votes:pv.filter(v=>v.option_id===o.id).length}))};
+    });
+    const r=await fetch('/api/analyze-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventName:event.name||'Événement',polls:payloadPolls})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data?.error||'Erreur du service IA.');
+    const decisions=Array.isArray(data.decisions)?data.decisions:[];
+    box.innerHTML='<b>✨ Analyse IA du groupe</b>'+
+      (data.summary?'<p>'+esc(data.summary)+'</p>':'')+
+      (decisions.length?'<div>'+decisions.map((d,i)=>'<div class="missedSummary"><b>'+(i+1)+'. '+esc(d.question||'Sondage')+'</b>'+
+        '<div><b>Choix recommandé :</b> '+esc(d.best_choice||'Aucun consensus')+'</div>'+
+        (d.reason?'<div class="notificationDetail">'+esc(d.reason)+'</div>':'')+
+        (d.action?'<div class="notificationDetail"><b>Action proposée :</b> '+esc(d.action)+'</div>':'')+
+        '</div>').join('')+'</div>':'<p>Aucune décision fiable ne peut encore être proposée.</p>');
+  }catch(e){
+    console.warn('Analyse globale des sondages:',e.message||e);
+    box.innerHTML='<b>✨ Analyse IA du groupe</b><p class="err">'+esc(e.message||'Impossible d’analyser les sondages.')+'</p>';
+  }finally{button.disabled=false;}
+}
+
+document.getElementById('pollAiGlobalBtn')?.addEventListener('click',analyzeAllPolls);
+
 
 
 function formatNotificationTime(value){
