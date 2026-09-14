@@ -690,6 +690,7 @@ body.discussionFullScreen{overflow:hidden!important}
 @media(max-width:600px){.aiPlanGrid{grid-template-columns:1fr}.aiPlanFull{grid-column:auto}.aiPlanActions{grid-template-columns:1fr}}
 </style>
 
+<style id="myevent-v54-payment-css">.fundMyPaymentBox{border:1px solid #2d6a91;border-radius:14px;padding:13px;background:linear-gradient(145deg,#102b3f,#0b1b28)}.fundMyPaymentHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.fundMyPaymentHead b{font-size:18px}.fundMyPaymentHead p{margin:4px 0 0}.fundMyPaymentAmount{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:14px 0;padding:11px 12px;border:1px solid #28445b;border-radius:12px;background:#0b1824}.fundMyPaymentAmount b{font-size:24px}.fundMyPaymentBox button{width:100%}@media(max-width:430px){.fundMyPaymentHead{display:block}.fundMyPaymentHead .fundStatus{display:inline-block;margin-top:8px}.fundMyPaymentAmount b{font-size:22px}}</style>
 </head>
 <body>
 <div class="app">
@@ -1047,6 +1048,15 @@ body.discussionFullScreen{overflow:hidden!important}
     <button id="saveFundSettingsBtn">💾 Enregistrer le budget</button>
     <p id="fundSettingsMsg" class="muted"></p>
   </div>
+</div>
+<div id="fundMyPaymentBox" class="fundMyPaymentBox" style="margin-top:12px">
+  <div class="fundMyPaymentHead">
+    <div><b>💳 Ma participation</b><p class="muted">Le montant prévu pour ma participation à cet événement.</p></div>
+    <span id="fundMyPaymentStatus" class="fundStatus fundPending">🟠 En attente</span>
+  </div>
+  <div class="fundMyPaymentAmount"><span class="muted">Montant à payer</span><b id="fundMyPaymentAmount">—</b></div>
+  <button type="button" id="fundMyPaymentBtn" disabled>💳 Payer ma participation</button>
+  <p id="fundMyPaymentHint" class="fundPrivateHint">Le paiement en ligne sera activé dans la prochaine étape de V54.</p>
 </div>
 <div id="fundPaymentBox" class="editEventBox fundPaymentBox" style="margin-top:12px">
   <div class="fundPaymentHead"><div><b>🏦 Paiement par virement</b><p id="fundPaymentStatus" class="muted">Aucune coordonnée bancaire configurée.</p></div></div>
@@ -2545,6 +2555,20 @@ async function calculateSmartFund(opts={}){
   }
 }
 
+function updateMyFundPaymentCard(target,memberCount,entries){
+  const amount=memberCount>0&&target>0?target/memberCount:0;
+  const mine=(entries||[]).filter(x=>x.entry_type==='contribution'&&x.user_id===user.id);
+  const confirmed=mine.filter(x=>(x.status||'pending')==='confirmed').reduce((a,x)=>a+Number(x.amount||0),0);
+  const pending=mine.filter(x=>(x.status||'pending')==='pending').reduce((a,x)=>a+Number(x.amount||0),0);
+  const amountEl=$('fundMyPaymentAmount'), statusEl=$('fundMyPaymentStatus'), hintEl=$('fundMyPaymentHint');
+  if(!amountEl||!statusEl||!hintEl)return;
+  amountEl.textContent=amount>0?eur(amount):'—';
+  const paid=amount>0&&confirmed>=amount;
+  statusEl.className='fundStatus '+(paid?'fundConfirmed':'fundPending');
+  statusEl.textContent=paid?'🟢 Payé':pending>0?'🟠 En attente':'🟠 En attente';
+  hintEl.textContent=paid?'Ma participation est confirmée dans la cagnotte.':'Le paiement en ligne sera activé dans la prochaine étape de V54.';
+}
+
 async function loadFund(){
   if(!event||!user||!sb)return;
   const sr=await sb.from('event_fund_settings').select('*').eq('event_id',event.id).maybeSingle();
@@ -2573,6 +2597,7 @@ async function loadFund(){
   const pct=target>0?Math.min(100,(collected/target)*100):0; $('fundProgressBar').style.width=pct+'%';
   const memberCountResult=await sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id); const memberCount=Number(memberCountResult.count||0);
   $('fundPerPerson').textContent='· '+(memberCount?eur(target/memberCount):eur(target))+' / personne';
+  updateMyFundPaymentCard(target,memberCount,entries);
 
   const pending=contributions.filter(x=>(x.status||'pending')==='pending');
   const pendingBox=$('fundPendingBox'), pendingList=$('fundPendingEntries');
