@@ -1862,6 +1862,8 @@ async function renderInlineSelectedEvent(){
 
     // V58.1 — Timeline centrale du planning de l’événement.
     try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
+    // V58.2 — Transport intégré au planning central.
+    try{ await renderEventTransport(box,event); }catch(_){ }
 
     const content=planning.querySelector('#eventPlanningSelectedContent');
     const bindPlanningActions=()=>{
@@ -6467,6 +6469,102 @@ document.addEventListener('click',e=>{
 </script>
 
 
+<style id="myevent-v58-2-transport-css">
+.inlineEventTransport{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
+.inlineEventTransportTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
+.inlineEventTransportSub{font-size:13px;color:#91a7b9;margin-bottom:12px;line-height:1.4}
+.inlineEventTransportList{display:grid;gap:10px}
+.inlineEventTransportItem{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}
+.inlineEventTransportHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.inlineEventTransportName{font-weight:900;color:#e8f0f6}
+.inlineEventTransportMeta{font-size:13px;color:#9fb2c2;margin-top:4px;line-height:1.45}
+.inlineEventTransportForm{display:grid;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #29485c}
+.inlineEventTransportForm label{display:grid;gap:5px;font-size:13px;color:#b7c8d5;font-weight:700}
+.inlineEventTransportForm input,.inlineEventTransportForm select,.inlineEventTransportForm textarea{width:100%;box-sizing:border-box}
+.inlineEventTransportActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.inlineEventTransportActions button{margin:0}
+.inlineEventTransportEmpty{padding:8px 0;color:#9fb2c2;font-size:14px}
+@media(max-width:430px){.inlineEventTransport{padding:12px}.inlineEventTransportHead{display:block}}
+</style>
+<script id="myevent-v58-2-transport-js">
+/* V58.2 — Transport partagé, intégré au planning de l’événement. */
+const V58_TRANSPORT_MARKER='[[MYEVENT_TRANSPORT]]';
+function v58TransportLabel(type){
+  const map={car:'🚗 Voiture',carpool:'👥 Covoiturage',train:'🚆 Train',plane:'✈️ Avion',bus:'🚌 Bus',taxi:'🚕 Taxi / VTC',transfer:'🚐 Transfert',other:'🧭 Autre'};
+  return map[String(type||'other').toLowerCase()]||map.other;
+}
+function v58TransportEsc(v){return esc(v??'');}
+async function getEventTransports(eventId){
+  if(!eventId)return [];
+  try{
+    const r=await sb.from('messages').select('id,content,created_at,user_id').eq('event_id',eventId).like('content',V58_TRANSPORT_MARKER+'%').order('created_at',{ascending:true});
+    if(r.error)return [];
+    return (r.data||[]).map(m=>{
+      try{return {...JSON.parse(String(m.content).slice(V58_TRANSPORT_MARKER.length)),_message_id:m.id,_created_at:m.created_at,_user_id:m.user_id};}catch(_){return null;}
+    }).filter(Boolean);
+  }catch(_){return []}
+}
+async function renderEventTransport(box,eventObj){
+  if(!box||!eventObj)return;
+  const old=box.querySelector('#eventTransport'); if(old)old.remove();
+  const wrap=document.createElement('div'); wrap.className='inlineEventTransport'; wrap.id='eventTransport';
+  wrap.innerHTML='<div class="inlineEventTransportTitle">🚗 Transport</div>'+
+    '<div class="inlineEventTransportSub">Ajoute les trajets nécessaires : départ, arrivée, horaires, participants, coût et réservation. Chaque trajet devient une étape du planning.</div>'+
+    '<div class="inlineEventTransportList" id="eventTransportList"></div>'+
+    '<div class="inlineEventTransportActions"><button type="button" class="secondary" id="eventTransportAddBtn">➕ Ajouter un trajet</button></div>'+
+    '<div class="inlineEventTransportForm" id="eventTransportForm" style="display:none">'+
+      '<label>Type<select id="eventTransportType"><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select></label>'+
+      '<label>Départ<input id="eventTransportFrom" placeholder="Ex. Paris Gare de Lyon"></label>'+
+      '<label>Destination<input id="eventTransportTo" placeholder="Ex. Lyon Part-Dieu"></label>'+
+      '<label>Départ — date et heure<input type="datetime-local" id="eventTransportDeparture"></label>'+
+      '<label>Arrivée — date et heure<input type="datetime-local" id="eventTransportArrival"></label>'+
+      '<label>Participants / conducteur<input id="eventTransportPeople" placeholder="Ex. Marc, Julie + 3 passagers"></label>'+
+      '<label>Coût total (€)<input type="number" min="0" step="0.01" id="eventTransportCost" inputmode="decimal" placeholder="0"></label>'+
+      '<label>Réservation / référence<input id="eventTransportBooking" placeholder="Ex. SNCF 8F3K2 ou lien de réservation"></label>'+
+      '<label>Note<textarea id="eventTransportNote" rows="2" placeholder="Ex. billets à récupérer, bagages, heure de rendez-vous…"></textarea></label>'+
+      '<div class="inlineEventTransportActions"><button type="button" class="secondary" id="eventTransportSaveBtn">💾 Ajouter au planning</button><button type="button" class="secondary" id="eventTransportCancelBtn">Annuler</button></div>'+
+    '</div>';
+  box.appendChild(wrap);
+  const list=wrap.querySelector('#eventTransportList');
+  const transports=await getEventTransports(eventObj.id);
+  if(!transports.length){list.innerHTML='<div class="inlineEventTransportEmpty">Aucun transport n’est encore défini.</div>'}
+  else{
+    list.innerHTML=transports.map((t,i)=>{
+      const dep=t.departure?new Date(t.departure):null, arr=t.arrival?new Date(t.arrival):null;
+      const fmt=d=>d&&!Number.isNaN(d.getTime())?d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+      const route=[t.from,t.to].filter(Boolean).join(' → ');
+      const schedule=[dep&&fmt(dep)?'🕐 Départ '+fmt(dep):'',arr&&fmt(arr)?'Arrivée '+fmt(arr):''].filter(Boolean).join(' · ');
+      const cost=Number.isFinite(Number(t.cost))&&Number(t.cost)>0?' · 💶 '+eur(Number(t.cost)):'';
+      return '<div class="inlineEventTransportItem"><div class="inlineEventTransportHead"><div class="inlineEventTransportName">'+v58TransportEsc(v58TransportLabel(t.type))+(route?' · '+v58TransportEsc(route):'')+'</div></div>'+
+        (schedule||t.people||cost?'<div class="inlineEventTransportMeta">'+v58TransportEsc([schedule,t.people?'👥 '+t.people:'',cost].filter(Boolean).join(' · '))+'</div>':'')+
+        (t.booking?'<div class="inlineEventTransportMeta">🎫 '+v58TransportEsc(t.booking)+'</div>':'')+
+        (t.note?'<div class="inlineEventTransportMeta">📝 '+v58TransportEsc(t.note)+'</div>':'')+'</div>';
+    }).join('');
+  }
+  const form=wrap.querySelector('#eventTransportForm');
+  wrap.querySelector('#eventTransportAddBtn').addEventListener('click',()=>{form.style.display='grid';wrap.querySelector('#eventTransportFrom')?.focus()});
+  wrap.querySelector('#eventTransportCancelBtn').addEventListener('click',()=>{form.style.display='none'});
+  wrap.querySelector('#eventTransportSaveBtn').addEventListener('click',async()=>{
+    if(!user||eventObj.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un transport au planning.');return}
+    const from=$('eventTransportFrom')?.value.trim()||'',to=$('eventTransportTo')?.value.trim()||'';
+    const departure=$('eventTransportDeparture')?.value||'',arrival=$('eventTransportArrival')?.value||'';
+    if(!from||!to||!departure){alert('Indique au minimum le départ, la destination et la date/heure de départ.');return}
+    const cost=Number($('eventTransportCost')?.value||0);
+    const payload={type:$('eventTransportType')?.value||'other',from,to,departure,arrival,people:$('eventTransportPeople')?.value.trim()||'',cost:Number.isFinite(cost)?cost:0,booking:$('eventTransportBooking')?.value.trim()||'',note:$('eventTransportNote')?.value.trim()||'',title:(from+' → '+to).trim()};
+    const btn=wrap.querySelector('#eventTransportSaveBtn'); btn.disabled=true; btn.textContent='⏳ Enregistrement…';
+    try{
+      const r=await sb.from('messages').insert({event_id:eventObj.id,user_id:user.id,content:V58_TRANSPORT_MARKER+JSON.stringify(payload)}).select('id').single();
+      if(r.error)throw r.error;
+      rememberLocalCreated('messages',r.data?.id);
+      await renderEventTransport(box,eventObj);
+      const oldTimeline=box.querySelector('#eventPlanningTimeline');
+      if(oldTimeline)oldTimeline.remove();
+      try{await renderEventPlanningTimeline(box,eventObj,'manual',null,null,[])}catch(_){ }
+    }catch(e){alert('Impossible d’ajouter le transport : '+(e.message||String(e)));btn.disabled=false;btn.textContent='💾 Ajouter au planning';}
+  });
+}
+</script>
+
 <style id="myevent-v58-1-planning-timeline-css">
 .inlineEventTimeline{margin-top:12px;padding:14px;border:1px solid #315a74;border-radius:16px;background:#08131e}
 .inlineEventTimelineTitle{font-size:18px;font-weight:900;color:#d8e5ef;margin-bottom:4px}
@@ -6517,6 +6615,8 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
   wrap.append(title,sub);
 
   let steps=[];
+  // Les trajets V58.2 sont des étapes à part entière de la timeline.
+  const transports=await getEventTransports(eventObj.id);
   if(choice==='ai' && Array.isArray(aiItems) && aiItems.length){
     steps=aiItems.map((x,i)=>({
       order:i+1,
@@ -6541,6 +6641,18 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
     }];
   }
 
+  if(transports.length){
+    transports.forEach((t,i)=>steps.push({
+      order:10000+i,
+      name:[t.from,t.to].filter(Boolean).join(' → ')||'Trajet',
+      type:'transport',
+      time:t.departure?String(t.departure).slice(11,16):'',
+      duration:t.departure&&t.arrival?Math.max(0,Math.round((new Date(t.arrival)-new Date(t.departure))/60000)):null,
+      address:t.to||'',
+      price:Number(t.cost)>0?(Number(t.cost)/Math.max(1,Number(aiPlan?.people||1))):null,
+      source:'transport'
+    }));
+  }
   steps.sort((a,b)=>v58TimeMinutes(a.time)-v58TimeMinutes(b.time)||a.order-b.order);
 
   if(!steps.length){
