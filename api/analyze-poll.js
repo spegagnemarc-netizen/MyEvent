@@ -1,103 +1,175 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Méthode non autorisée." });
+  if (req.method !== 'POST') {
+    return res.status(405).json({
+      error: 'Méthode non autorisée.'
+    });
   }
 
   try {
-    const { eventName, poll } = req.body || {};
+    const body = req.body || {};
+    const eventName = String(body.eventName || 'Événement').slice(0, 180);
 
-    if (!poll || !poll.question || !Array.isArray(poll.results)) {
+    const incomingPolls = Array.isArray(body.polls)
+      ? body.polls
+      : (body.poll ? [body.poll] : []);
+
+    if (!incomingPolls.length) {
       return res.status(400).json({
-        error: "Données du sondage manquantes."
+        error: 'Aucun sondage à analyser.'
       });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const polls = incomingPolls.slice(0, 30).map((p, i) => ({
+      question: String(
+        p.question || `Sondage ${i + 1}`
+      ).slice(0, 500),
 
-    if (!apiKey) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY manquante."
-      });
-    }
+      allow_multiple: !!p.allow_multiple,
 
-    const results = poll.results.map((r) => ({
-      choix: String(r.text || ""),
-      votes: Number(r.votes || 0)
+      voterCount: Math.max(
+        0,
+        Number(p.voterCount) || 0
+      ),
+
+      totalVotes: Math.max(
+        0,
+        Number(p.totalVotes) || 0
+      ),
+
+      results: Array.isArray(p.results)
+        ? p.results
+            .slice(0, 30)
+            .map(r => ({
+              text: String(r.text || '').slice(0, 300),
+              votes: Math.max(
+                0,
+                Number(r.votes) || 0
+              )
+            }))
+            .filter(r => r.text)
+        : []
     }));
 
     const prompt = `
-Tu analyses les résultats d'un sondage pour un groupe.
+Tu es l'assistant de décision de MyEvent.
 
-Événement : ${eventName || "Événement"}
+Événement : ${eventName}
 
-Question :
-${poll.question}
+Tu dois analyser les sondages ci-dessous UNIQUEMENT à partir des votes fournis.
 
-Réponses :
-${results.map((r) => `- ${r.choix} : ${r.votes} vote(s)`).join("\n")}
+Ne prétends jamais qu'un résultat est certain si les données sont faibles ou ex æquo.
 
-Nombre total de votes : ${poll.totalVotes || 0}
+Pour chaque sondage :
+- identifie le choix majoritaire quand il existe ;
+- sinon indique qu'il n'y a pas de consensus fiable ;
+- prends en compte le nombre de participants ayant voté ;
+- pour les sondages à réponses multiples, tiens compte du fait que plusieurs choix peuvent être sélectionnés.
 
-Donne une analyse courte en français, en 2 à 4 phrases.
+OBJECTIFS :
 
-Indique clairement :
-- le choix gagnant ;
-- son nombre de votes ;
-- s'il y a égalité ;
-- éventuellement une observation simple sur la répartition.
+- produire une synthèse très claire des préférences du groupe ;
+- déterminer le meilleur choix pour chaque sondage quand les données le permettent ;
+- faire ressortir les préférences fortes et les incertitudes ;
+- proposer une action concrète et prudente pour l'organisateur ;
+- ne jamais effectuer cette action automatiquement.
 
-N'invente aucune information.
-Ne parle pas de toi ni d'intelligence artificielle.
+IMPORTANT :
+
+L'IA conseille, l'organisateur valide.
+
+Ne réserve rien.
+Ne modifie rien.
+Ne décide pas à la place du groupe.
+
+RÉPONSE JSON STRICTE :
+
+{
+  "summary": "synthèse en 2 à 5 phrases",
+  "decisions": [
+    {
+      "question": "question exacte",
+      "best_choice": "meilleur choix ou Aucun consensus",
+      "reason": "raison courte basée sur les votes",
+      "action": "action proposée à l'organisateur"
+    }
+  ]
+}
+
+SONDAGES :
+
+${JSON.stringify(polls)}
 `;
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-5-nano",
-        input: prompt
-      })
-    });
+    const response = await fetch(
+      'https://api.openai.com/v1/responses',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+
+        body: JSON.stringify({
+          model:
+            process.env.OPENAI_MATERIAL_MODEL ||
+            'gpt-5.6-luna',
+
+          input: prompt,
+
+          max_output_tokens: 5000
+        })
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data?.error?.message || "Erreur OpenAI."
+        error:
+          data?.error?.message ||
+          'Erreur du service IA.'
       });
     }
 
-    const analysis =
-      data?.output_text ||
-      data?.output?.flatMap((item) => item.content || [])
-        ?.map((item) => item.text || "")
-        ?.join(" ")
-        ?.trim();
+    let text = data.output_text || '';
 
-    if (!analysis) {
-      return res.status(500).json({
-        error: "Aucune analyse générée."
-      });
+    if (!text && Array.isArray(data.output)) {
+      text = data.output
+        .flatMap(o =>
+          Array.isArray(o.content)
+            ? o.content
+            : []
+        )
+        .map(c => c.text || '')
+        .join('');
     }
 
-    const maxVotes = Math.max(...results.map((r) => r.votes), 0);
+    text = String(text)
+      .trim()
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/, '')
+      .replace(/\s*```$/, '')
+      .trim();
 
-    const winners = results
-      .filter((r) => r.votes === maxVotes && maxVotes > 0)
-      .map((r) => r.choix);
+    const parsed = JSON.parse(text);
 
-    return res.status(200).json({
-      analysis,
-      winners,
-      totalVotes: poll.totalVotes || 0
-    });
+    /*
+     * Compatibilité avec l'ancien fonctionnement
+     * d'analyse d'un seul sondage.
+     */
+    if (body.poll && !body.polls) {
+      const first =
+        Array.isArray(parsed.decisions)
+          ? parsed.decisions[0]
+          : null;
 
-  } catch (error) {
-    return res.status(500).json({
-      error: error?.message || "Erreur serveur."
-    });
-  }
-}
+      return res.status(200).json({
+        analysis:
+          parsed.summary ||
+          (first?.reason ||
+            'Analyse terminée.'),
+
+        decision:
+          first?.action
+            ? `${first.best_choice || 'Choix recommandé
