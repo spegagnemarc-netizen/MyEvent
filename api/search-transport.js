@@ -1,7 +1,5 @@
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const {
@@ -23,14 +21,11 @@ module.exports = async function handler(req, res) {
     const results = [];
     const warnings = [];
 
-    // =========================
-    // 🚆 SNCF
-    // =========================
+    /* =========================
+       SNCF
+       ========================= */
 
-    if (
-      (wanted === 'all' || wanted === 'train') &&
-      process.env.SNCF_API_TOKEN
-    ) {
+    if ((wanted === 'all' || wanted === 'train') && process.env.SNCF_API_TOKEN) {
       const auth = Buffer
         .from(process.env.SNCF_API_TOKEN + ':')
         .toString('base64');
@@ -40,178 +35,160 @@ module.exports = async function handler(req, res) {
         Accept: 'application/json'
       };
 
-      async function places(query) {
-        const url =
+      async function places(q) {
+        const u =
           'https://api.sncf.com/v1/coverage/sncf/places?q=' +
-          encodeURIComponent(query);
+          encodeURIComponent(q);
 
-        const response = await fetch(url, { headers });
+        const r = await fetch(u, { headers });
 
-        if (!response.ok) {
-          throw new Error('SNCF places ' + response.status);
+        if (!r.ok) {
+          throw new Error('SNCF places ' + r.status);
         }
 
-        return response.json();
+        return r.json();
       }
 
-      async function findPlace(query) {
-        const data = await places(query);
-        const list = Array.isArray(data.places)
-          ? data.places
-          : [];
+      async function findPlace(q) {
+        const d = await places(q);
+        const arr = Array.isArray(d.places) ? d.places : [];
 
         return (
-          list.find(
+          arr.find(
             p =>
               p.embedded_type === 'stop_area' ||
               String(p.id || '').includes('stop_area')
           ) ||
-          list[0] ||
+          arr[0] ||
           null
         );
       }
 
       try {
-        const [departurePlace, arrivalPlace] =
-          await Promise.all([
-            findPlace(from),
-            findPlace(to)
-          ]);
+        const [a, b] = await Promise.all([
+          findPlace(from),
+          findPlace(to)
+        ]);
 
-        if (!departurePlace || !arrivalPlace) {
+        if (!a || !b) {
           throw new Error(
             'Gare introuvable pour le départ ou la destination.'
           );
         }
 
-        const departureId = departurePlace.id;
-        const arrivalId = arrivalPlace.id;
+        const fromId = a.id;
+        const toId = b.id;
 
-        const cleanTime = String(time || '06:00')
-          .replace(':', '');
+        const hm = String(time || '06:00').replace(':', '');
 
-        const dateTime =
+        const dt =
           String(date).replace(/-/g, '') +
           'T' +
-          cleanTime.padEnd(6, '0');
+          hm.padEnd(6, '0');
 
         const url =
           'https://api.sncf.com/v1/coverage/sncf/journeys?' +
           'from=' +
-          encodeURIComponent(departureId) +
+          encodeURIComponent(fromId) +
           '&to=' +
-          encodeURIComponent(arrivalId) +
+          encodeURIComponent(toId) +
           '&datetime=' +
-          dateTime +
+          dt +
           '&datetime_represents=departure' +
           '&count=8';
 
-        const response = await fetch(url, { headers });
+        const r = await fetch(url, { headers });
 
-        if (!response.ok) {
-          throw new Error(
-            'SNCF journeys ' + response.status
-          );
+        if (!r.ok) {
+          throw new Error('SNCF journeys ' + r.status);
         }
 
-        const data = await response.json();
+        const d = await r.json();
 
-        for (const journey of data.journeys || []) {
-          const sections = (journey.sections || []).filter(
-            section =>
-              section.type === 'public_transport' ||
-              section.type === 'on_demand_transport'
+        for (const j of d.journeys || []) {
+          const sections = (j.sections || []).filter(
+            s =>
+              s.type === 'public_transport' ||
+              s.type === 'on_demand_transport'
           );
 
           const main = sections[0];
 
-          const departure =
-            journey.departure_date_time ||
+          const dep =
+            j.departure_date_time ||
             main?.departure_date_time;
 
-          const arrival =
-            journey.arrival_date_time ||
+          const arr =
+            j.arrival_date_time ||
             main?.arrival_date_time;
 
-          const transportName =
+          const modeName =
             main?.display_informations?.commercial_mode ||
             main?.display_informations?.label ||
             'Train';
 
+          const trainNumber =
+            main?.display_informations?.number ||
+            main?.display_informations?.trip_short_name ||
+            '';
+
           results.push({
             kind: 'train',
             provider: 'SNCF',
-
             id:
               'sncf:' +
-              (journey.id ||
-                Math.random()
-                  .toString(36)
-                  .slice(2)),
+              (j.id || Math.random().toString(36).slice(2)),
 
             title:
-              transportName +
+              modeName +
               ' · ' +
-              (departurePlace.name || from) +
+              (a.name || from) +
               ' → ' +
-              (arrivalPlace.name || to),
+              (b.name || to),
 
-            from:
-              departurePlace.name || from,
+            from: a.name || from,
+            to: b.name || to,
 
-            to:
-              arrivalPlace.name || to,
+            departure: dep
+              ? normalizeSncfDate(dep)
+              : '',
 
-            departure:
-              departure
-                ? normalizeSncfDate(departure)
-                : '',
-
-            arrival:
-              arrival
-                ? normalizeSncfDate(arrival)
-                : '',
+            arrival: arr
+              ? normalizeSncfDate(arr)
+              : '',
 
             duration_minutes:
-              Number(journey.duration || 0)
-                ? Math.round(
-                    Number(journey.duration) / 60
-                  )
+              Number(j.duration || 0)
+                ? Math.round(Number(j.duration) / 60)
                 : null,
 
             price: null,
-
             currency: 'EUR',
 
             passengers:
               Number(passengers) || 1,
 
             booking_url:
-              'https://www.sncf-connect.com/',
+              'https://www.sncf-connect.com/app/home/search',
 
             source_url:
-              'https://numerique.sncf.com/startup/api/'
+              'https://numerique.sncf.com/startup/api/',
+
+            train_number: trainNumber
           });
         }
-
-      } catch (error) {
-        warnings.push(
-          'SNCF : ' + error.message
-        );
+      } catch (e) {
+        warnings.push('SNCF : ' + e.message);
       }
-
-    } else if (
-      wanted === 'all' ||
-      wanted === 'train'
-    ) {
+    } else if (wanted === 'all' || wanted === 'train') {
       warnings.push(
         'Recherche train indisponible : ajoutez SNCF_API_TOKEN dans Vercel.'
       );
     }
 
-    // =========================
-    // ✈️ AMADEUS — AVION
-    // =========================
+    /* =========================
+       AVION
+       ========================= */
 
     if (
       (wanted === 'all' || wanted === 'plane') &&
@@ -221,129 +198,101 @@ module.exports = async function handler(req, res) {
       try {
         const token = await amadeusToken();
 
-        const [departureCity, arrivalCity] =
-          await Promise.all([
-            amadeusCity(token, from),
-            amadeusCity(token, to)
-          ]);
+        const [a, b] = await Promise.all([
+          amadeusCity(token, from),
+          amadeusCity(token, to)
+        ]);
 
-        if (!departureCity || !arrivalCity) {
-          throw new Error(
-            'Ville ou aéroport introuvable.'
-          );
+        if (!a || !b) {
+          throw new Error('Ville/aéroport introuvable.');
         }
 
         const params = new URLSearchParams({
-          originLocationCode:
-            departureCity.iataCode,
-
-          destinationLocationCode:
-            arrivalCity.iataCode,
-
+          originLocationCode: a.iataCode,
+          destinationLocationCode: b.iataCode,
           departureDate: date,
-
           adults: String(
             Math.min(
               9,
-              Math.max(
-                1,
-                Number(passengers) || 1
-              )
+              Math.max(1, Number(passengers) || 1)
             )
           ),
-
           currencyCode: 'EUR',
-
           max: '10'
         });
 
-        const response = await fetch(
+        const r = await fetch(
           'https://api.amadeus.com/v2/shopping/flight-offers?' +
-          params.toString(),
+            params.toString(),
           {
             headers: {
-              Authorization:
-                'Bearer ' + token,
-
-              Accept:
-                'application/json'
+              Authorization: 'Bearer ' + token,
+              Accept: 'application/json'
             }
           }
         );
 
-        const data = await response.json();
+        const d = await r.json();
 
-        if (!response.ok) {
+        if (!r.ok) {
           throw new Error(
-            data?.errors?.[0]?.detail ||
-            'Amadeus ' + response.status
+            d?.errors?.[0]?.detail ||
+              'Amadeus ' + r.status
           );
         }
 
-        for (const flight of data.data || []) {
-          const itinerary =
-            flight.itineraries?.[0];
+        for (const f of d.data || []) {
+          const first = f.itineraries?.[0];
 
-          const lastSegment =
-            itinerary?.segments?.[
-              itinerary.segments.length - 1
+          const last =
+            first?.segments?.[
+              first.segments.length - 1
             ];
 
-          const firstSegment =
-            itinerary?.segments?.[0];
+          const seg0 = first?.segments?.[0];
 
           results.push({
             kind: 'plane',
-
             provider: 'Amadeus',
 
-            id:
-              'amadeus:' +
-              flight.id,
+            id: 'amadeus:' + f.id,
 
             title:
-              (firstSegment?.carrierCode || '') +
-              (
-                firstSegment?.number
-                  ? ' ' + firstSegment.number
-                  : ''
-              ) +
+              (seg0?.carrierCode || '') +
+              (seg0?.number
+                ? ' ' + seg0.number
+                : '') +
               ' · ' +
-              departureCity.name +
+              a.name +
               ' → ' +
-              arrivalCity.name,
+              b.name,
 
             from:
-              firstSegment?.departure?.iataCode ||
-              departureCity.iataCode,
+              seg0?.departure?.iataCode ||
+              a.iataCode,
 
             to:
-              lastSegment?.arrival?.iataCode ||
-              arrivalCity.iataCode,
+              last?.arrival?.iataCode ||
+              b.iataCode,
 
             departure:
-              firstSegment?.departure?.at ||
-              '',
+              seg0?.departure?.at || '',
 
             arrival:
-              lastSegment?.arrival?.at ||
-              '',
+              last?.arrival?.at || '',
 
             duration_minutes:
-              parseDuration(
-                itinerary?.duration
-              ),
+              parseDuration(first?.duration),
 
             price:
               Number(
-                flight.price?.grandTotal ||
-                flight.price?.total ||
+                f.price?.grandTotal ||
+                f.price?.total ||
                 0
               ) || null,
 
             currency:
-              flight.price?.currency ||
-              'EUR',
+              f.price?.currency || 'EUR',
 
             passengers:
               Number(passengers) || 1,
@@ -355,13 +304,11 @@ module.exports = async function handler(req, res) {
               'https://developers.amadeus.com/'
           });
         }
-
-      } catch (error) {
+      } catch (e) {
         warnings.push(
-          'Avion : ' + error.message
+          'Avion : ' + e.message
         );
       }
-
     } else if (
       wanted === 'all' ||
       wanted === 'plane'
@@ -371,9 +318,9 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    // =========================
-    // 🚌 BUS / 🚗 COVOITURAGE
-    // =========================
+    /* =========================
+       BUS / COVOITURAGE
+       ========================= */
 
     if (
       wanted === 'bus' ||
@@ -392,10 +339,14 @@ module.exports = async function handler(req, res) {
       warnings.push('Aucun résultat.');
     }
 
+    /* =========================
+       TRI
+       ========================= */
+
     results.sort(
-      (a, b) =>
-        new Date(a.departure || 0) -
-        new Date(b.departure || 0)
+      (x, y) =>
+        new Date(x.departure || 0) -
+        new Date(y.departure || 0)
     );
 
     return res.status(200).json({
@@ -403,138 +354,114 @@ module.exports = async function handler(req, res) {
       warnings
     });
 
-  } catch (error) {
-
+  } catch (e) {
     return res.status(500).json({
       error:
-        error.message ||
+        e.message ||
         'Erreur de recherche transport.'
     });
   }
 };
 
 
-// ======================================
-// ✈️ AUTHENTIFICATION AMADEUS
-// ======================================
+/* =========================
+   AMADEUS
+   ========================= */
 
 async function amadeusToken() {
-
   const body = new URLSearchParams({
-    grant_type:
-      'client_credentials',
-
-    client_id:
-      process.env.AMADEUS_CLIENT_ID,
-
-    client_secret:
-      process.env.AMADEUS_CLIENT_SECRET
+    grant_type: 'client_credentials',
+    client_id: process.env.AMADEUS_CLIENT_ID,
+    client_secret: process.env.AMADEUS_CLIENT_SECRET
   });
 
-  const response = await fetch(
+  const r = await fetch(
     'https://api.amadeus.com/v1/security/oauth2/token',
     {
       method: 'POST',
-
       headers: {
         'Content-Type':
           'application/x-www-form-urlencoded'
       },
-
       body
     }
   );
 
-  const data = await response.json();
+  const d = await r.json();
 
-  if (!response.ok) {
+  if (!r.ok) {
     throw new Error(
-      data?.error_description ||
-      'Authentification Amadeus impossible.'
+      d?.error_description ||
+        'Authentification Amadeus impossible.'
     );
   }
 
-  return data.access_token;
+  return d.access_token;
 }
 
 
-// ======================================
-// ✈️ RECHERCHE VILLE / AÉROPORT
-// ======================================
-
 async function amadeusCity(token, text) {
-
-  const params = new URLSearchParams({
+  const p = new URLSearchParams({
     subType: 'CITY,AIRPORT',
     keyword: String(text).slice(0, 10)
   });
 
-  const response = await fetch(
+  const r = await fetch(
     'https://api.amadeus.com/v1/reference-data/locations?' +
-    params.toString(),
+      p.toString(),
     {
       headers: {
-        Authorization:
-          'Bearer ' + token
+        Authorization: 'Bearer ' + token
       }
     }
   );
 
-  const data = await response.json();
+  const d = await r.json();
 
-  if (!response.ok) {
+  if (!r.ok) {
     throw new Error(
-      data?.errors?.[0]?.detail ||
-      'Recherche ville Amadeus impossible.'
+      d?.errors?.[0]?.detail ||
+        'Recherche ville Amadeus impossible.'
     );
   }
 
   return (
-    data.data || []
-  ).find(
-    item => item.iataCode
-  ) || null;
+    (d.data || []).find(x => x.iataCode) ||
+    null
+  );
 }
 
 
-// ======================================
-// 🚆 FORMAT DATE SNCF
-// ======================================
+/* =========================
+   OUTILS
+   ========================= */
 
-function normalizeSncfDate(value) {
+function normalizeSncfDate(v) {
+  const s = String(v);
 
-  const text = String(value);
-
-  return text.length >= 15
-    ? text.slice(0, 4) +
-      '-' +
-      text.slice(4, 6) +
-      '-' +
-      text.slice(6, 8) +
-      'T' +
-      text.slice(9, 11) +
-      ':' +
-      text.slice(11, 13) +
-      ':' +
-      text.slice(13, 15)
-    : text;
+  return s.length >= 15
+    ? s.slice(0, 4) +
+        '-' +
+        s.slice(4, 6) +
+        '-' +
+        s.slice(6, 8) +
+        'T' +
+        s.slice(9, 11) +
+        ':' +
+        s.slice(11, 13) +
+        ':' +
+        s.slice(13, 15)
+    : s;
 }
 
 
-// ======================================
-// ⏱️ DURÉE VOL
-// ======================================
+function parseDuration(v) {
+  const m = String(v || '').match(
+    /PT(?:(\d+)H)?(?:(\d+)M)?/
+  );
 
-function parseDuration(value) {
-
-  const match =
-    String(value || '')
-      .match(
-        /PT(?:(\d+)H)?(?:(\d+)M)?/
-      );
-
-  return match
-    ? Number(match[1] || 0) * 60 +
-      Number(match[2] || 0)
+  return m
+    ? Number(m[1] || 0) * 60 +
+        Number(m[2] || 0)
     : null;
 }
