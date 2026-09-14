@@ -1136,8 +1136,8 @@ body.discussionFullScreen{overflow:hidden!important}
   <div class="m58ModuleActions"><button type="button" id="m58TransportSearchBtn">🔎 Rechercher des disponibilités</button><button type="button" class="secondary" id="m58TransportAddBtn">➕ Ajouter un trajet</button></div>
   <div id="m58TransportSearchBox" class="m58SearchBox hidden">
     <div class="m58SearchTitle">🔎 Recherche de transport</div>
-    <div class="fieldRow"><input id="m58TransportFrom" placeholder="📍 Départ (ville, gare, aéroport)"><input id="m58TransportTo" placeholder="📍 Destination"></div>
-    <div class="fieldRow"><input id="m58TransportDate" type="date"><input id="m58TransportTime" type="time" value="06:00" aria-label="Heure de départ"></div><input id="m58TransportPassengers" type="number" min="1" value="1" placeholder="Voyageurs">
+    <div class="fieldRow"><label class="m58Field"><span>📍 Départ</span><input id="m58TransportFrom" placeholder="Ville, gare ou aéroport"></label><label class="m58Field"><span>🏁 Destination</span><input id="m58TransportTo" placeholder="Ville, gare ou aéroport"></label></div>
+    <div class="fieldRow"><label class="m58Field"><span>📅 Date du départ</span><input id="m58TransportDate" type="date"></label><label class="m58Field"><span>🕐 Heure du départ</span><input id="m58TransportTime" type="time" value="06:00"></label></div><label class="m58Field"><span>👥 Nombre de voyageurs</span><input id="m58TransportPassengers" type="number" min="1" value="1" placeholder="Ex. 1"></label>
     <select id="m58TransportMode"><option value="all">🚗 Tous les moyens</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 Bus</option><option value="carpool">👥 Covoiturage</option></select>
     <div class="m58ModuleActions"><button type="button" id="m58TransportSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58TransportSearchCancel">Annuler</button></div>
     <div id="m58TransportSearchResult" class="m58SearchResult"></div>
@@ -1145,9 +1145,9 @@ body.discussionFullScreen{overflow:hidden!important}
   <div id="m58TransportForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un trajet</div>
     <select id="m58TransportType"><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select>
-    <input id="m58TransportManualFrom" placeholder="Départ">
-    <input id="m58TransportManualTo" placeholder="Destination">
-    <div class="fieldRow"><input id="m58TransportManualDeparture" type="datetime-local"><input id="m58TransportManualArrival" type="datetime-local"></div>
+    <label class="m58Field"><span>📍 Départ</span><input id="m58TransportManualFrom" placeholder="Ville, gare ou aéroport"></label>
+    <label class="m58Field"><span>🏁 Destination</span><input id="m58TransportManualTo" placeholder="Ville, gare ou aéroport"></label>
+    <div class="fieldRow"><label class="m58Field"><span>📅 Date et heure de départ</span><input id="m58TransportManualDeparture" type="datetime-local"></label><label class="m58Field"><span>📅 Date et heure d’arrivée</span><input id="m58TransportManualArrival" type="datetime-local"></label></div>
     <input id="m58TransportManualPeople" placeholder="Participants / conducteur">
     <input id="m58TransportManualCost" type="number" min="0" step="0.01" placeholder="Coût total (€)">
     <input id="m58TransportManualBooking" placeholder="Réservation / référence / lien">
@@ -1166,9 +1166,9 @@ body.discussionFullScreen{overflow:hidden!important}
   <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher des disponibilités</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button></div>
   <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
     <div class="m58SearchTitle">🔎 Recherche d’hébergement</div>
-    <input id="m58AccommodationDestination" placeholder="📍 Ville ou destination">
-    <div class="fieldRow"><input id="m58AccommodationCheckin" type="date"><input id="m58AccommodationCheckout" type="date"></div>
-    <div class="fieldRow"><input id="m58AccommodationGuests" type="number" min="1" value="2" placeholder="Voyageurs"><input id="m58AccommodationRooms" type="number" min="1" value="1" placeholder="Chambres"></div>
+    <label class="m58Field"><span>📍 Ville ou destination</span><input id="m58AccommodationDestination" placeholder="Ville, région ou adresse"></label>
+    <div class="fieldRow"><label class="m58Field"><span>📅 Date d’arrivée</span><input id="m58AccommodationCheckin" type="date"></label><label class="m58Field"><span>📅 Date de départ</span><input id="m58AccommodationCheckout" type="date"></label></div>
+    <div class="fieldRow"><label class="m58Field"><span>👥 Voyageurs</span><input id="m58AccommodationGuests" type="number" min="1" value="2" placeholder="Ex. 2"></label><label class="m58Field"><span>🛏️ Chambres</span><input id="m58AccommodationRooms" type="number" min="1" value="1" placeholder="Ex. 1"></label></div>
     <select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select>
     <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58AccommodationSearchCancel">Annuler</button></div>
     <div id="m58AccommodationSearchResult" class="m58SearchResult"></div>
@@ -1176,9 +1176,9 @@ body.discussionFullScreen{overflow:hidden!important}
   <div id="m58AccommodationForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un hébergement</div>
     <select id="m58AccommodationManualType"><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option><option value="other">🛏️ Autre</option></select>
-    <input id="m58AccommodationManualName" placeholder="Nom de l’hébergement">
-    <input id="m58AccommodationManualAddress" placeholder="Adresse">
-    <div class="fieldRow"><input id="m58AccommodationManualCheckin" type="datetime-local"><input id="m58AccommodationManualCheckout" type="datetime-local"></div>
+    <label class="m58Field"><span>🏨 Nom de l’hébergement</span><input id="m58AccommodationManualName" placeholder="Ex. Hôtel du Parc"></label>
+    <label class="m58Field"><span>📍 Adresse</span><input id="m58AccommodationManualAddress" placeholder="Adresse ou ville"></label>
+    <div class="fieldRow"><label class="m58Field"><span>📅 Date et heure d’arrivée</span><input id="m58AccommodationManualCheckin" type="datetime-local"></label><label class="m58Field"><span>📅 Date et heure de départ</span><input id="m58AccommodationManualCheckout" type="datetime-local"></label></div>
     <input id="m58AccommodationManualPeople" placeholder="Participants">
     <input id="m58AccommodationManualRooms" placeholder="Chambres / logements">
     <div class="fieldRow"><input id="m58AccommodationManualCapacity" type="number" min="1" placeholder="Capacité / logement"><input id="m58AccommodationManualNight" type="number" min="0" step="0.01" placeholder="Prix / nuit (€)"></div>
@@ -1200,11 +1200,11 @@ body.discussionFullScreen{overflow:hidden!important}
   <div id="m58LocalTravelForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un déplacement</div>
     <select id="m58LocalTravelType"><option value="walk">🚶 À pied</option><option value="bike">🚲 Vélo</option><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select>
-    <input id="m58LocalTravelFrom" placeholder="📍 Départ (lieu, adresse)">
-    <input id="m58LocalTravelTo" placeholder="📍 Destination (lieu, adresse)">
+    <label class="m58Field"><span>📍 Lieu de départ</span><input id="m58LocalTravelFrom" placeholder="Adresse, lieu ou point de départ"></label>
+    <label class="m58Field"><span>🏁 Lieu d’arrivée</span><input id="m58LocalTravelTo" placeholder="Adresse, lieu ou point d’arrivée"></label>
     <div class="m58ModuleActions"><button type="button" class="secondary" id="m58LocalTravelRouteBtn">📏 Calculer distance & durée</button></div>
     <div class="fieldRow"><input id="m58LocalTravelDistance" type="number" min="0" step="0.1" placeholder="Distance (km)"><input id="m58LocalTravelDuration" type="number" min="1" step="1" placeholder="Durée (minutes)"></div>
-    <div class="fieldRow"><input id="m58LocalTravelDeparture" type="datetime-local"><input id="m58LocalTravelArrival" type="datetime-local"></div>
+    <div class="fieldRow"><label class="m58Field"><span>📅 Date et heure de départ</span><input id="m58LocalTravelDeparture" type="datetime-local"></label><label class="m58Field"><span>📅 Date et heure d’arrivée</span><input id="m58LocalTravelArrival" type="datetime-local"></label></div>
     <input id="m58LocalTravelPeople" placeholder="👥 Participants / conducteur">
     <input id="m58LocalTravelCost" type="number" min="0" step="0.01" placeholder="Coût total (€)">
     <textarea id="m58LocalTravelNote" rows="2" placeholder="Note optionnelle : parking, point de rendez-vous…"></textarea>
@@ -7081,7 +7081,21 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
 
 
 <style id="myevent-v58-modules-css">
-.m58ModuleIntro{margin-bottom:12px}.m58ModuleIntro b{font-size:19px}.m58ModuleActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.m58ModuleActions button{flex:1;min-width:150px}.m58SearchBox,.m58Form{margin-top:12px;padding:13px;border:1px solid #315a74;border-radius:15px;background:#08131e;display:grid;gap:9px}.m58SearchBox.hidden,.m58Form.hidden{display:none}.m58SearchTitle,.m58FormTitle{font-size:17px;font-weight:900}.m58SearchResult{padding:10px;border:1px dashed #315a74;border-radius:12px;color:#9fb2c2;line-height:1.5}.m58ModuleList{display:grid;gap:9px;margin-top:14px}.m58ModuleCard{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}.m58ModuleCardTitle{font-weight:900;color:#e8f0f6}.m58ModuleCardMeta{font-size:13px;color:#9fb2c2;line-height:1.45;margin-top:4px}.m58ModuleCardActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.m58ModuleCardActions button{flex:1;min-width:120px}.m58AvailabilityHint{margin-top:10px;padding:10px;border:1px solid #29485c;border-radius:12px;background:#0b1a27;color:#9fb2c2;font-size:12px;line-height:1.45}@media(max-width:600px){.m58ModuleActions{flex-direction:column}.m58ModuleActions button{min-width:0}.m58ModuleCardActions{flex-direction:column}}
+.m58Field{display:block;min-width:0}.m58Field>span{display:block;color:#9eb2c4;font-size:12px;font-weight:750;margin:2px 0 3px}.m58SearchBox input,.m58SearchBox select,.m58SearchBox textarea,.m58Form input,.m58Form select,.m58Form textarea{width:100%;min-width:0;box-sizing:border-box}.m58SearchBox .fieldRow,.m58Form .fieldRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.m58SearchBox .fieldRow>* ,.m58Form .fieldRow>*{min-width:0}.m58SearchBox select,.m58Form select{box-sizing:border-box;max-width:100%}.m58ModuleIntro{margin-bottom:12px}.m58ModuleIntro b{font-size:19px}.m58ModuleActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.m58ModuleActions button{flex:1;min-width:150px}.m58SearchBox,.m58Form{margin-top:12px;padding:13px;border:1px solid #315a74;border-radius:15px;background:#08131e;display:grid;gap:9px}.m58SearchBox.hidden,.m58Form.hidden{display:none}.m58SearchTitle,.m58FormTitle{font-size:17px;font-weight:900}.m58SearchResult{padding:10px;border:1px dashed #315a74;border-radius:12px;color:#9fb2c2;line-height:1.5}.m58ModuleList{display:grid;gap:9px;margin-top:14px}.m58ModuleCard{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}.m58ModuleCardTitle{font-weight:900;color:#e8f0f6}.m58ModuleCardMeta{font-size:13px;color:#9fb2c2;line-height:1.45;margin-top:4px}.m58ModuleCardActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.m58ModuleCardActions button{flex:1;min-width:120px}.m58AvailabilityHint{margin-top:10px;padding:10px;border:1px solid #29485c;border-radius:12px;background:#0b1a27;color:#9fb2c2;font-size:12px;line-height:1.45}@media(max-width:600px){.m58ModuleActions{flex-direction:column}.m58ModuleActions button{min-width:0}.m58ModuleCardActions{flex-direction:column}}
+/* V58.5 — formulaires mobiles : libellés clairs et aucun débordement */
+.m58SearchBox,.m58Form{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}
+.m58SearchBox>* ,.m58Form>*{max-width:100%;box-sizing:border-box}
+.m58Field{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
+.m58Field>span{white-space:normal;line-height:1.25}
+.m58Field input,.m58Field select,.m58Field textarea,.m58SearchBox input,.m58SearchBox select,.m58SearchBox textarea,.m58Form input,.m58Form select,.m58Form textarea{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.m58SearchBox .fieldRow,.m58Form .fieldRow{width:100%;max-width:100%;box-sizing:border-box;min-width:0}
+.m58SearchBox .fieldRow>*,.m58Form .fieldRow>*{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+@media(max-width:600px){
+  .m58SearchBox,.m58Form{padding:12px;gap:10px}
+  .m58SearchBox .fieldRow,.m58Form .fieldRow{grid-template-columns:minmax(0,1fr);gap:8px}
+  .m58Field input[type="date"],.m58Field input[type="time"],.m58Field input[type="datetime-local"]{min-height:46px}
+  .m58ModuleActions button{width:100%;max-width:100%;box-sizing:border-box}
+}
 .m58AvailabilityResults{display:grid;gap:10px;margin-top:10px}.m58AvailabilityCard{padding:12px;border:1px solid #315a74;border-radius:14px;background:#0b1a27}.m58AvailabilityProvider{font-size:12px;color:#7fa9c2;font-weight:800}.m58AvailabilityTitle{font-size:16px;font-weight:900;color:#e8f0f6;margin-top:3px}.m58AvailabilityMeta{font-size:13px;color:#9fb2c2;line-height:1.45;margin-top:5px}.m58AvailabilityPrice{font-size:16px;font-weight:900;color:#9fd0ff;margin-top:7px}.m58AvailabilityWarnings{padding:10px;border:1px solid #7a5b2a;border-radius:12px;background:#211b10;color:#e6c98f;line-height:1.45}.m58AvailabilityEmpty,.m58Loading,.m58AvailabilityCount{padding:10px;color:#9fb2c2}.m58AvailabilityCount{font-weight:800}
 </style>
 <script id="myevent-v58-modules-js">
