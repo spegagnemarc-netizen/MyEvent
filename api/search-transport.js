@@ -1,7 +1,5 @@
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const {
@@ -140,6 +138,7 @@ module.exports = async function handler(req, res) {
           results.push({
             kind: 'train',
             provider: 'SNCF',
+
             id:
               'sncf:' +
               (j.id ||
@@ -194,117 +193,6 @@ module.exports = async function handler(req, res) {
     ) {
       warnings.push(
         'Recherche train indisponible : ajoutez SNCF_API_TOKEN dans Vercel.'
-      );
-    }
-
-    // =========================================================
-    // 🚌 BLABLACAR BUS
-    // =========================================================
-
-    if (
-      wanted === 'bus' ||
-      wanted === 'all'
-    ) {
-      const bookingUrl =
-        'https://www.blablacar.fr/bus';
-
-      results.push({
-        kind: 'bus',
-        provider: 'BlaBlaCar Bus',
-
-        id:
-          'blablacar:bus:' +
-          v58Slug(from) +
-          ':' +
-          v58Slug(to),
-
-        title:
-          'Bus ' +
-          from +
-          ' → ' +
-          to,
-
-        from,
-        to,
-
-        departure: '',
-        arrival: '',
-
-        duration_minutes: null,
-        price: null,
-        currency: 'EUR',
-
-        passengers:
-          Number(passengers) || 1,
-
-        booking_url: bookingUrl,
-
-        source_url:
-          'https://bus-api.blablacar.com/',
-
-        external_only: true
-      });
-    }
-
-    // =========================================================
-    // 🚗 BLABLACAR COVOITURAGE
-    // =========================================================
-
-    if (
-      wanted === 'carpool' ||
-      wanted === 'all'
-    ) {
-      const bookingUrl =
-        'https://www.blablacar.fr/carpool/routes/' +
-        v58Slug(from) +
-        '/' +
-        v58Slug(to);
-
-      results.push({
-        kind: 'carpool',
-        provider: 'BlaBlaCar',
-
-        id:
-          'blablacar:carpool:' +
-          v58Slug(from) +
-          ':' +
-          v58Slug(to),
-
-        title:
-          'Covoiturage ' +
-          from +
-          ' → ' +
-          to,
-
-        from,
-        to,
-
-        departure: '',
-        arrival: '',
-
-        duration_minutes: null,
-        price: null,
-        currency: 'EUR',
-
-        passengers:
-          Number(passengers) || 1,
-
-        booking_url: bookingUrl,
-
-        source_url:
-          'https://blog.fr.blablacar.be/about-us/partenaires',
-
-        external_only: true
-      });
-    }
-
-    if (
-      wanted === 'bus' ||
-      wanted === 'carpool' ||
-      wanted === 'all'
-    ) {
-      warnings.push(
-        'ℹ️ BlaBlaCar est disponible dans MyEvent. Les offres en temps réel nécessitent encore un accès partenaire/API BlaBlaCar ; MyEvent ouvre donc pour le moment la recherche officielle.'
       );
     }
 
@@ -383,10 +271,10 @@ module.exports = async function handler(req, res) {
 
           results.push({
             kind: 'plane',
-            provider: 'Amadeus',
+            provider: 'Avion',
 
             id:
-              'amadeus:' + f.id,
+              'plane:' + f.id,
 
             title:
               (seg0?.carrierCode || '') +
@@ -450,12 +338,170 @@ module.exports = async function handler(req, res) {
       wanted === 'plane'
     ) {
       warnings.push(
-        'Recherche avion indisponible : ajoutez AMADEUS_CLIENT_ID et AMADEUS_CLIENT_SECRET dans Vercel.'
+        'ℹ️ La recherche de vols sera bientôt disponible dans MyEvent.'
       );
     }
 
     // =========================================================
-    // 📭 AUCUN RÉSULTAT
+    // 🚌 BLABLACAR BUS
+    // =========================================================
+
+    if (
+      wanted === 'bus' ||
+      wanted === 'all'
+    ) {
+      results.push({
+        kind: 'bus',
+        provider: 'BlaBlaCar Bus',
+
+        id:
+          'blablacar:bus:' +
+          v58Slug(from) +
+          ':' +
+          v58Slug(to),
+
+        title:
+          'Bus ' +
+          from +
+          ' → ' +
+          to,
+
+        from,
+        to,
+
+        departure: '',
+        arrival: '',
+
+        duration_minutes: null,
+        price: null,
+        currency: 'EUR',
+
+        passengers:
+          Number(passengers) || 1,
+
+        booking_url:
+          'https://www.blablacar.fr/bus',
+
+        source_url:
+          'https://bus-api.blablacar.com/',
+
+        external_only: true
+      });
+    }
+
+    // =========================================================
+    // 🚗 BLABLACAR COVOITURAGE
+    // =========================================================
+
+    if (
+      wanted === 'carpool' ||
+      wanted === 'all'
+    ) {
+      results.push({
+        kind: 'carpool',
+        provider: 'BlaBlaCar',
+
+        id:
+          'blablacar:carpool:' +
+          v58Slug(from) +
+          ':' +
+          v58Slug(to),
+
+        title:
+          'Covoiturage ' +
+          from +
+          ' → ' +
+          to,
+
+        from,
+        to,
+
+        departure: '',
+        arrival: '',
+
+        duration_minutes: null,
+        price: null,
+        currency: 'EUR',
+
+        passengers:
+          Number(passengers) || 1,
+
+        booking_url:
+          'https://www.blablacar.fr/carpool/routes/' +
+          v58Slug(from) +
+          '/' +
+          v58Slug(to),
+
+        source_url:
+          'https://blog.fr.blablacar.be/about-us/partenaires',
+
+        external_only: true
+      });
+    }
+
+    if (
+      wanted === 'bus' ||
+      wanted === 'carpool' ||
+      wanted === 'all'
+    ) {
+      warnings.push(
+        'ℹ️ BlaBlaCar et BlaBlaCar Bus : recherche officielle à ouvrir. Les offres intégrées directement nécessitent un accès partenaire/API.'
+      );
+    }
+
+    // =========================================================
+    // 🚕 TAXI / VTC
+    // =========================================================
+
+    if (
+      wanted === 'taxi' ||
+      wanted === 'all'
+    ) {
+      results.push({
+        kind: 'taxi',
+        provider: 'Uber',
+
+        id:
+          'uber:taxi:' +
+          v58Slug(from) +
+          ':' +
+          v58Slug(to),
+
+        title:
+          'Taxi / VTC ' +
+          from +
+          ' → ' +
+          to,
+
+        from,
+        to,
+
+        departure: '',
+        arrival: '',
+
+        duration_minutes: null,
+        price: null,
+        currency: 'EUR',
+
+        passengers:
+          Number(passengers) || 1,
+
+        booking_url:
+          'https://m.uber.com/',
+
+        source_url:
+          'https://developer.uber.com/docs/riders/ride-requests/tutorials/api/introduction',
+
+        external_only: true
+      });
+
+      warnings.push(
+        'ℹ️ Taxi / VTC : MyEvent ouvre actuellement Uber. Les tarifs et disponibilités en temps réel seront intégrés avec un accès partenaire/API approprié.'
+      );
+    }
+
+    // =========================================================
+    // 📊 RÉPONSE
     // =========================================================
 
     if (
