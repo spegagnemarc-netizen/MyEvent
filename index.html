@@ -6085,6 +6085,118 @@ document.addEventListener('click',e=>{
 });
 </script>
 
+
+<style id="myevent-v53-21-reservation-details-css">
+.aiPlanReservationEdit.v53Details{gap:10px}
+.v53ResSection{border:1px solid #29485c;border-radius:12px;padding:10px;background:#08131e}
+.v53ResSectionTitle{font-weight:900;margin-bottom:8px;color:#dce8f0}
+.v53ResGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.v53ResGrid label{display:grid;gap:5px;font-size:13px;color:#b7c8d5;font-weight:700}
+.v53ResGrid input,.v53ResGrid select,.v53ResGrid textarea{width:100%;box-sizing:border-box;min-height:46px;padding:10px;border:1px solid #3b6683;border-radius:10px;background:#08131e;color:#fff;font:inherit}
+.v53ResGrid textarea{min-height:76px;resize:vertical}
+.v53ResFull{grid-column:1/-1}
+.v53ResStatusLine{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:8px 0}
+.v53ResStatusBadge{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid #315a74;border-radius:999px;font-weight:800;background:#0b1a27}
+.v53ResStatusBadge.confirmed{border-color:#39d98a;color:#72e0aa}.v53ResStatusBadge.cancelled{border-color:#a85d5d;color:#ff9c9c}.v53ResStatusBadge.sent{border-color:#8c72c7;color:#c8b7ff}.v53ResStatusBadge.refused{border-color:#b66a6a;color:#ffadad}.v53ResStatusBadge.pending{border-color:#567a9b;color:#9fc8ff}
+.v53ResSummary{margin-top:8px;color:#9fb2c2;font-size:13px;line-height:1.45}
+.v53ResSummary b{color:#dce8f0}
+@media(max-width:520px){.v53ResGrid{grid-template-columns:1fr}.v53ResFull{grid-column:auto}}
+</style>
+<script id="myevent-v53-21-reservation-details">
+/* V53.21 — Fiche réservation complète : prestataire, statut, référence, coût et paiement. */
+(function(){
+  const META_PREFIX='[[MYEVENT_RESERVATION_META]]';
+  const STATUS={pending:{label:'À confirmer',icon:'🟡'},sent:{label:'Demande envoyée',icon:'🔵'},confirmed:{label:'Confirmée',icon:'🟢'},refused:{label:'Refusée',icon:'🔴'},cancelled:{label:'Annulée',icon:'⚫'}};
+  function parseMeta(note){
+    const raw=String(note||'');
+    if(!raw.startsWith(META_PREFIX))return {note:raw,status:'pending'};
+    try{const m=JSON.parse(raw.slice(META_PREFIX.length));return {...m,note:String(m.note||''),status:STATUS[m.status]?m.status:'pending'};}catch(_){return {note:raw,status:'pending'};}
+  }
+  function packMeta(data){return META_PREFIX+JSON.stringify({note:String(data.note||''),status:STATUS[data.status]?data.status:'pending',provider:String(data.provider||''),phone:String(data.phone||''),website:String(data.website||''),reference:String(data.reference||''),total_cost:data.total_cost===''||data.total_cost==null?null:Number(data.total_cost),price_per_person:data.price_per_person===''||data.price_per_person==null?null:Number(data.price_per_person),payment_method:String(data.payment_method||'')} );}
+  function money(v){const n=Number(v);return Number.isFinite(n)&&n>0?n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'';}
+  function statusText(r){
+    if(!r)return STATUS.pending.icon+' '+STATUS.pending.label;
+    const m=parseMeta(r.note);
+    const key=r.status==='confirmed'?'confirmed':r.status==='cancelled'?'cancelled':m.status||'pending';
+    return (STATUS[key]||STATUS.pending).icon+' '+(STATUS[key]||STATUS.pending).label;
+  }
+  function statusClass(r){const m=parseMeta(r?.note);const key=r?.status==='confirmed'?'confirmed':r?.status==='cancelled'?'cancelled':m.status||'pending';return key;}
+  function metaSummary(r){
+    if(!r)return '';
+    const m=parseMeta(r.note), bits=[];
+    if(m.provider)bits.push('🏪 '+esc(m.provider));
+    if(m.reference)bits.push('🔖 '+esc(m.reference));
+    if(m.total_cost!=null&&Number(m.total_cost)>0)bits.push('💶 '+money(m.total_cost));
+    else if(m.price_per_person!=null&&Number(m.price_per_person)>0)bits.push('💶 '+money(m.price_per_person)+' / pers.');
+    if(m.payment_method)bits.push('💳 '+esc(m.payment_method));
+    if(m.phone)bits.push('📞 '+esc(m.phone));
+    return bits.length?'<div class="v53ResSummary">'+bits.join(' · ')+'</div>':'';
+  }
+  function formHtml(plan,item,step,existing){
+    const m=parseMeta(existing?.note), dt=aiReservationDateTimeValue(existing?.reserved_at) || (item.start_time&&event?.event_date?String(event.event_date).slice(0,10)+'T'+String(item.start_time).slice(0,5):'');
+    const people=Math.max(1,Number(existing?.party_size||aiOutingPlanData?.people||$('outingPeople')?.value||10)||10);
+    const selected=existing?.status==='confirmed'?'confirmed':existing?.status==='cancelled'?'cancelled':(m.status||'pending');
+    const opts=Object.entries(STATUS).map(([k,v])=>'<option value="'+k+'"'+(selected===k?' selected':'')+'>'+v.icon+' '+v.label+'</option>').join('');
+    return '<div class="aiPlanReservationEdit v53Details" id="aiResForm'+step+'">'+
+      '<div class="v53ResSection"><div class="v53ResSectionTitle">📅 Réservation</div><div class="v53ResGrid">'+
+      '<label>Date et heure<input type="datetime-local" id="aiResDate'+step+'" value="'+escAttr(dt)+'"></label>'+
+      '<label>Personnes<input type="number" min="1" step="1" id="aiResPeople'+step+'" value="'+people+'" inputmode="numeric"></label>'+
+      '<label class="v53ResFull">Statut<select id="aiResStatus'+step+'">'+opts+'</select></label>'+
+      '</div></div>'+
+      '<div class="v53ResSection"><div class="v53ResSectionTitle">🏪 Prestataire</div><div class="v53ResGrid">'+
+      '<label>Nom du prestataire<input id="aiResProvider'+step+'" value="'+escAttr(m.provider)+'" placeholder="Ex. La Cantina GG"></label>'+
+      '<label>Téléphone<input id="aiResPhone'+step+'" type="tel" value="'+escAttr(m.phone)+'" placeholder="Ex. 04 00 00 00 00"></label>'+
+      '<label class="v53ResFull">Site web<input id="aiResWebsite'+step+'" type="url" value="'+escAttr(m.website)+'" placeholder="https://..."></label>'+
+      '<label>Référence<input id="aiResReference'+step+'" value="'+escAttr(m.reference)+'" placeholder="N° réservation"></label>'+
+      '</div></div>'+
+      '<div class="v53ResSection"><div class="v53ResSectionTitle">💶 Coût & paiement</div><div class="v53ResGrid">'+
+      '<label>Prix total (€)<input id="aiResTotal'+step+'" type="number" min="0" step="0.01" value="'+(m.total_cost!=null?escAttr(m.total_cost):'')+'" placeholder="Ex. 250"></label>'+
+      '<label>Prix / personne (€)<input id="aiResPerPerson'+step+'" type="number" min="0" step="0.01" value="'+(m.price_per_person!=null?escAttr(m.price_per_person):'')+'" placeholder="Ex. 25"></label>'+
+      '<label class="v53ResFull">Mode de paiement<select id="aiResPayment'+step+'"><option value="">À définir</option><option value="Sur place"'+(m.payment_method==='Sur place'?' selected':'')+'>Sur place</option><option value="En ligne"'+(m.payment_method==='En ligne'?' selected':'')+'>En ligne</option><option value="Virement"'+(m.payment_method==='Virement'?' selected':'')+'>Virement</option><option value="Espèces"'+(m.payment_method==='Espèces'?' selected':'')+'>Espèces</option><option value="Carte"'+(m.payment_method==='Carte'?' selected':'')+'>Carte</option></select></label>'+
+      '</div></div>'+
+      '<div class="v53ResSection"><div class="v53ResSectionTitle">📝 Note</div><textarea id="aiResNote'+step+'" placeholder="Ex. table intérieure, anniversaire…">'+esc(m.note)+'</textarea></div>'+
+      '<div class="reservationActions"><button type="button" class="secondary" data-ai-res-save="'+step+'">💾 Enregistrer</button><button type="button" class="secondary" data-ai-res-cancel="'+step+'">Annuler</button></div></div>';
+  }
+  window.__myeventV53ParseMeta=parseMeta;
+  window.__myeventV53StatusText=statusText;
+  window.__myeventV53StatusClass=statusClass;
+  window.__myeventV53MetaSummary=metaSummary;
+  const oldOpen=openAiPlanReservationForm;
+  window.openAiPlanReservationForm=function(plan,items,step){
+    const item=items.find((x,i)=>i+1===step); if(!item)return;
+    const host=$('aiResHost'+step); if(!host)return;
+    const existing=aiPlanReservationsCache.find(x=>Number(x.step_order)===step)||null;
+    host.innerHTML=formHtml(plan,item,step,existing);
+    host.querySelector('[data-ai-res-cancel]')?.addEventListener('click',()=>{host.innerHTML='';});
+    host.querySelector('[data-ai-res-save]')?.addEventListener('click',()=>saveV53AiReservation(plan,item,step));
+  };
+  async function saveV53AiReservation(plan,item,step){
+    const dateTime=$('aiResDate'+step)?.value||'', people=Math.max(1,Number($('aiResPeople'+step)?.value||1)||1), status=$('aiResStatus'+step)?.value||'pending';
+    if(!dateTime){alert('Choisis une date et une heure.');return;}
+    const d=new Date(dateTime); if(Number.isNaN(d.getTime())){alert('La date ou l’heure est invalide.');return;}
+    const total=$('aiResTotal'+step)?.value||'', per=$('aiResPerPerson'+step)?.value||'';
+    const note=$('aiResNote'+step)?.value||'';
+    const meta={note,status,provider:$('aiResProvider'+step)?.value||'',phone:$('aiResPhone'+step)?.value||'',website:$('aiResWebsite'+step)?.value||'',reference:$('aiResReference'+step)?.value||'',total_cost:total,price_per_person:per,payment_method:$('aiResPayment'+step)?.value||''};
+    const btn=document.querySelector('[data-ai-res-save="'+step+'"]'); if(btn){btn.disabled=true;btn.textContent='⏳ Enregistrement…';}
+    try{
+      const payload={plan_id:plan.id,event_id:event.id,step_order:step,reserved_at:d.toISOString(),party_size:people,note:packMeta(meta),status:(status==='confirmed'?'confirmed':status==='cancelled'?'cancelled':'pending'),created_by:user?.id||null};
+      const r=await sb.from('event_outing_plan_reservations').upsert(payload,{onConflict:'plan_id,step_order'}).select('*').single(); if(r.error)throw new Error(r.error.message);
+      const ir=await sb.from('event_outing_plan_items').select('*').eq('plan_id',plan.id).order('step_order',{ascending:true}); if(ir.error)throw new Error(ir.error.message);
+      await renderAiPlanReservations(plan,ir.data||[]);
+    }catch(e){alert('Impossible d’enregistrer la réservation : '+(e.message||String(e)));if(btn){btn.disabled=false;btn.textContent='💾 Enregistrer';}}
+  }
+  const oldRender=renderAiPlanReservations;
+  renderAiPlanReservations=async function(plan,items,targetId){
+    await oldRender(plan,items,targetId);
+    const box=$(targetId||'aiPlanReservationPanelBox'); if(!box)return;
+    box.querySelectorAll('.aiPlanReservationRow').forEach(row=>{
+      const step=Number(row.dataset.aiResStep), r=aiPlanReservationsCache.find(x=>Number(x.step_order)===step); if(!r)return;
+      const main=row.querySelector('.aiPlanReservationMain'); if(!main)return;
+      const line=main.querySelector('.muted'); if(line){line.innerHTML=esc(aiPlanCandidateLabel(String(items[step-1]?.outing_type||'activity')))+(items[step-1]?.start_time?' · 🕐 '+esc(items[step-1].start_time):'')+' · <span class="v53ResStatusBadge '+statusClass(r)+'">'+esc(statusText(r))+'</span>'+metaSummary(r);}
+    });
+  };
+})();
+</script>
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
