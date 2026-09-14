@@ -895,6 +895,8 @@ body.discussionFullScreen{overflow:hidden!important}
 <button class="eventTab" data-tab="fund" role="tab">💰 Cagnotte</button>
 <button class="eventTab" data-tab="hall" role="tab">🏢 Salle</button>
 <button class="eventTab" data-tab="outings" role="tab">🍽️ Sorties</button>
+<button class="eventTab" data-tab="transport" role="tab">🚗 Transport</button>
+<button class="eventTab" data-tab="accommodation" role="tab">🏨 Hébergement</button>
 <button class="eventTab" data-tab="aioutings" role="tab">✨ Sortie IA</button>
 <button class="eventTab" data-tab="supplies" role="tab">🎒 Matériel</button>
 </div>
@@ -1122,6 +1124,70 @@ body.discussionFullScreen{overflow:hidden!important}
 <div id="outingSelectedBox" class="outingSelected hidden"></div>
 <div id="outingResults" class="outingResults"><div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div></div>
 <div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations sont maintenant disponibles directement depuis la sortie sélectionnée.</div>
+</div>
+</details>
+
+
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="transport" id="transportPanel">
+<summary>🚗 Transport</summary>
+<div class="collapsibleBody">
+  <div class="m58ModuleIntro"><b>Organise les trajets de l’événement</b><p class="muted">Ajoute un trajet manuellement ou prépare une recherche de disponibilités. Les trajets sélectionnés pourront ensuite être intégrés au planning et à la carte.</p></div>
+  <div class="m58ModuleActions"><button type="button" id="m58TransportSearchBtn">🔎 Rechercher des disponibilités</button><button type="button" class="secondary" id="m58TransportAddBtn">➕ Ajouter un trajet</button></div>
+  <div id="m58TransportSearchBox" class="m58SearchBox hidden">
+    <div class="m58SearchTitle">🔎 Recherche de transport</div>
+    <div class="fieldRow"><input id="m58TransportFrom" placeholder="📍 Départ (ville, gare, aéroport)"><input id="m58TransportTo" placeholder="📍 Destination"></div>
+    <div class="fieldRow"><input id="m58TransportDate" type="date"><input id="m58TransportPassengers" type="number" min="1" value="1" placeholder="Voyageurs"></div>
+    <select id="m58TransportMode"><option value="all">🚗 Tous les moyens</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 Bus</option><option value="carpool">👥 Covoiturage</option></select>
+    <div class="m58ModuleActions"><button type="button" id="m58TransportSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58TransportSearchCancel">Annuler</button></div>
+    <div id="m58TransportSearchResult" class="m58SearchResult"></div>
+  </div>
+  <div id="m58TransportForm" class="m58Form hidden">
+    <div class="m58FormTitle">➕ Ajouter un trajet</div>
+    <select id="m58TransportType"><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="train">🚆 Train</option><option value="plane">✈️ Avion</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select>
+    <input id="m58TransportManualFrom" placeholder="Départ">
+    <input id="m58TransportManualTo" placeholder="Destination">
+    <div class="fieldRow"><input id="m58TransportManualDeparture" type="datetime-local"><input id="m58TransportManualArrival" type="datetime-local"></div>
+    <input id="m58TransportManualPeople" placeholder="Participants / conducteur">
+    <input id="m58TransportManualCost" type="number" min="0" step="0.01" placeholder="Coût total (€)">
+    <input id="m58TransportManualBooking" placeholder="Réservation / référence / lien">
+    <textarea id="m58TransportManualNote" rows="2" placeholder="Note optionnelle"></textarea>
+    <div class="m58ModuleActions"><button type="button" id="m58TransportSaveBtn">💾 Enregistrer</button><button type="button" class="secondary" id="m58TransportCancelBtn">Annuler</button></div>
+    <p id="m58TransportMsg" class="muted"></p>
+  </div>
+  <div id="m58TransportList" class="m58ModuleList"><p class="muted">Chargement…</p></div>
+</div>
+</details>
+
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel">
+<summary>🏨 Hébergement</summary>
+<div class="collapsibleBody">
+  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Recherche des disponibilités ou ajoute un hébergement choisi. Les hébergements pourront être placés sur la carte et dans le planning.</p></div>
+  <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher des disponibilités</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button></div>
+  <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
+    <div class="m58SearchTitle">🔎 Recherche d’hébergement</div>
+    <input id="m58AccommodationDestination" placeholder="📍 Ville ou destination">
+    <div class="fieldRow"><input id="m58AccommodationCheckin" type="date"><input id="m58AccommodationCheckout" type="date"></div>
+    <div class="fieldRow"><input id="m58AccommodationGuests" type="number" min="1" value="2" placeholder="Voyageurs"><input id="m58AccommodationRooms" type="number" min="1" value="1" placeholder="Chambres"></div>
+    <select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select>
+    <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58AccommodationSearchCancel">Annuler</button></div>
+    <div id="m58AccommodationSearchResult" class="m58SearchResult"></div>
+  </div>
+  <div id="m58AccommodationForm" class="m58Form hidden">
+    <div class="m58FormTitle">➕ Ajouter un hébergement</div>
+    <select id="m58AccommodationManualType"><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option><option value="other">🛏️ Autre</option></select>
+    <input id="m58AccommodationManualName" placeholder="Nom de l’hébergement">
+    <input id="m58AccommodationManualAddress" placeholder="Adresse">
+    <div class="fieldRow"><input id="m58AccommodationManualCheckin" type="datetime-local"><input id="m58AccommodationManualCheckout" type="datetime-local"></div>
+    <input id="m58AccommodationManualPeople" placeholder="Participants">
+    <input id="m58AccommodationManualRooms" placeholder="Chambres / logements">
+    <div class="fieldRow"><input id="m58AccommodationManualCapacity" type="number" min="1" placeholder="Capacité / logement"><input id="m58AccommodationManualNight" type="number" min="0" step="0.01" placeholder="Prix / nuit (€)"></div>
+    <input id="m58AccommodationManualTotal" type="number" min="0" step="0.01" placeholder="Coût total (€)">
+    <input id="m58AccommodationManualBooking" placeholder="Réservation / référence / lien">
+    <textarea id="m58AccommodationManualNote" rows="2" placeholder="Note optionnelle"></textarea>
+    <div class="m58ModuleActions"><button type="button" id="m58AccommodationSaveBtn">💾 Enregistrer</button><button type="button" class="secondary" id="m58AccommodationCancelBtn">Annuler</button></div>
+    <p id="m58AccommodationMsg" class="muted"></p>
+  </div>
+  <div id="m58AccommodationList" class="m58ModuleList"><p class="muted">Chargement…</p></div>
 </div>
 </details>
 
@@ -6950,4 +7016,28 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
   wrap.appendChild(action);
   box.appendChild(wrap);
 }
+</script>
+
+
+<style id="myevent-v58-modules-css">
+.m58ModuleIntro{margin-bottom:12px}.m58ModuleIntro b{font-size:19px}.m58ModuleActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.m58ModuleActions button{flex:1;min-width:150px}.m58SearchBox,.m58Form{margin-top:12px;padding:13px;border:1px solid #315a74;border-radius:15px;background:#08131e;display:grid;gap:9px}.m58SearchBox.hidden,.m58Form.hidden{display:none}.m58SearchTitle,.m58FormTitle{font-size:17px;font-weight:900}.m58SearchResult{padding:10px;border:1px dashed #315a74;border-radius:12px;color:#9fb2c2;line-height:1.5}.m58ModuleList{display:grid;gap:9px;margin-top:14px}.m58ModuleCard{padding:11px;border:1px solid #29485c;border-radius:13px;background:#0b1a27}.m58ModuleCardTitle{font-weight:900;color:#e8f0f6}.m58ModuleCardMeta{font-size:13px;color:#9fb2c2;line-height:1.45;margin-top:4px}.m58ModuleCardActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.m58ModuleCardActions button{flex:1;min-width:120px}.m58AvailabilityHint{margin-top:10px;padding:10px;border:1px solid #29485c;border-radius:12px;background:#0b1a27;color:#9fb2c2;font-size:12px;line-height:1.45}@media(max-width:600px){.m58ModuleActions{flex-direction:column}.m58ModuleActions button{min-width:0}.m58ModuleCardActions{flex-direction:column}}
+</style>
+<script id="myevent-v58-modules-js">
+/* V58 — Modules dédiés Transport + Hébergement. */
+function v58OpenLocationPoint(lat,lon,label,icon='📍'){
+  lat=Number(lat);lon=Number(lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+  showEventTab('locations',true);setTimeout(()=>{if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,16);if(typeof locationMap!=='undefined'&&locationMap){if(window.locationModuleMarker)locationMap.removeLayer(window.locationModuleMarker);const marker=L.marker([lat,lon],{icon:typeof makeLocationIcon==='function'?makeLocationIcon(icon,'#278cff'):undefined}).addTo(locationMap);marker.bindPopup('<b>'+esc(label||'Point')+'</b>').openPopup();window.locationModuleMarker=marker;}$('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});},180);
+}
+async function v58GeocodeText(text){const q=String(text||'').trim();if(!q)return null;try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});const d=await r.json();if(d?.[0])return{lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name};}catch(_){ }return null;}
+function v58ModuleTab(name){showEventTab(name,true);document.querySelector('.tabPanel[data-panel="'+name+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});}
+function v58RenderTransportModule(items){const el=$('m58TransportList');if(!el)return;if(!items.length){el.innerHTML='<p class="muted">Aucun trajet enregistré pour cet événement.</p>';return;}const fmt=v=>{const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};el.innerHTML=items.map((t,i)=>'<div class="m58ModuleCard"><div class="m58ModuleCardTitle">'+esc(v58TransportLabel(t.type))+' · '+esc([t.from,t.to].filter(Boolean).join(' → ')||'Trajet')+'</div><div class="m58ModuleCardMeta">'+esc([t.departure?'🕐 '+fmt(t.departure):'',t.arrival?'→ '+fmt(t.arrival):'',t.people?'👥 '+t.people:'',Number(t.cost)>0?'💶 '+eur(Number(t.cost)):''].filter(Boolean).join(' · '))+'</div>'+(t.booking?'<div class="m58ModuleCardMeta">🎫 '+esc(t.booking)+'</div>':'')+'<div class="m58ModuleCardActions"><button type="button" class="secondary" data-m58-transport-map="'+i+'">📍 Voir sur la carte</button></div></div>').join('');el.querySelectorAll('[data-m58-transport-map]').forEach(b=>b.addEventListener('click',async()=>{const t=items[Number(b.dataset.m58TransportMap)];const geo=await v58GeocodeText(t.to||t.from);if(geo)v58OpenLocationPoint(geo.lat,geo.lon,(t.from||'')+' → '+(t.to||''),'🚗');else alert('Impossible de localiser cette destination.');}));}
+function v58RenderAccommodationModule(items){const el=$('m58AccommodationList');if(!el)return;if(!items.length){el.innerHTML='<p class="muted">Aucun hébergement enregistré pour cet événement.</p>';return;}const fmt=v=>{const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};el.innerHTML=items.map((a,i)=>'<div class="m58ModuleCard"><div class="m58ModuleCardTitle">'+esc(v58AccommodationLabel(a.type))+' · '+esc(a.name||'Hébergement')+'</div>'+(a.address?'<div class="m58ModuleCardMeta">📍 '+esc(a.address)+'</div>':'')+'<div class="m58ModuleCardMeta">'+esc([a.checkin?'🛬 '+fmt(a.checkin):'',a.checkout?'🛫 '+fmt(a.checkout):'',a.people?'👥 '+a.people:'',a.rooms?'🛏️ '+a.rooms:'',Number(a.total_cost)>0?'💰 '+eur(Number(a.total_cost)):''].filter(Boolean).join(' · '))+'</div>'+(a.booking?'<div class="m58ModuleCardMeta">🎫 '+esc(a.booking)+'</div>':'')+'<div class="m58ModuleCardActions"><button type="button" class="secondary" data-m58-accommodation-map="'+i+'">📍 Voir sur la carte</button></div></div>').join('');el.querySelectorAll('[data-m58-accommodation-map]').forEach(b=>b.addEventListener('click',async()=>{const a=items[Number(b.dataset.m58AccommodationMap)];const geo=await v58GeocodeText(a.address||a.name);if(geo)v58OpenLocationPoint(geo.lat,geo.lon,a.name||'Hébergement','🏨');else alert('Impossible de localiser cet hébergement.');}));}
+async function v58LoadModuleLists(){if(!event)return;const [ts,as]=await Promise.all([getEventTransports(event.id),getEventAccommodations(event.id)]);v58RenderTransportModule(ts);v58RenderAccommodationModule(as);}
+function v58SetupModuleButtons(){const show=id=>$(id)?.classList.remove('hidden'),hide=id=>$(id)?.classList.add('hidden');$('m58TransportSearchBtn')?.addEventListener('click',()=>{show('m58TransportSearchBox');hide('m58TransportForm')});$('m58TransportAddBtn')?.addEventListener('click',()=>{show('m58TransportForm');hide('m58TransportSearchBox');$('m58TransportManualFrom')?.focus()});$('m58TransportSearchCancel')?.addEventListener('click',()=>hide('m58TransportSearchBox'));$('m58AccommodationSearchBtn')?.addEventListener('click',()=>{show('m58AccommodationSearchBox');hide('m58AccommodationForm')});$('m58AccommodationAddBtn')?.addEventListener('click',()=>{show('m58AccommodationForm');hide('m58AccommodationSearchBox');$('m58AccommodationManualName')?.focus()});$('m58AccommodationSearchCancel')?.addEventListener('click',()=>hide('m58AccommodationSearchBox'));$('m58TransportSearchLaunch')?.addEventListener('click',()=>{const from=$('m58TransportFrom')?.value.trim(),to=$('m58TransportTo')?.value.trim(),date=$('m58TransportDate')?.value,people=$('m58TransportPassengers')?.value||1,mode=$('m58TransportMode')?.value||'all',out=$('m58TransportSearchResult');if(!from||!to||!date){out.innerHTML='⚠️ Indique le départ, la destination et la date.';return;}out.innerHTML='<b>Recherche préparée</b><br>'+esc(from)+' → '+esc(to)+' · '+esc(date)+' · '+esc(String(people))+' voyageur(s) · '+esc(mode)+'<div class="m58AvailabilityHint">ℹ️ Le formulaire est prêt pour les fournisseurs de disponibilités en temps réel. MyEvent n’affichera pas de faux horaires ou faux prix : les résultats réels seront branchés ici avec leur source de réservation.</div>'});$('m58AccommodationSearchLaunch')?.addEventListener('click',()=>{const dest=$('m58AccommodationDestination')?.value.trim(),ci=$('m58AccommodationCheckin')?.value,co=$('m58AccommodationCheckout')?.value,guests=$('m58AccommodationGuests')?.value||2,rooms=$('m58AccommodationRooms')?.value||1,type=$('m58AccommodationType')?.value||'all',out=$('m58AccommodationSearchResult');if(!dest||!ci||!co){out.innerHTML='⚠️ Indique la destination, l’arrivée et le départ.';return;}out.innerHTML='<b>Recherche préparée</b><br>'+esc(dest)+' · '+esc(ci)+' → '+esc(co)+' · '+esc(String(guests))+' voyageur(s) · '+esc(String(rooms))+' chambre(s) · '+esc(type)+'<div class="m58AvailabilityHint">ℹ️ Le formulaire est prêt pour les fournisseurs de disponibilités en temps réel. MyEvent n’affichera pas de faux hébergements, prix ou disponibilités : les résultats réels seront branchés ici avec leur source de réservation.</div>'});$('m58TransportCancelBtn')?.addEventListener('click',()=>hide('m58TransportForm'));$('m58AccommodationCancelBtn')?.addEventListener('click',()=>hide('m58AccommodationForm'));
+$('m58TransportSaveBtn')?.addEventListener('click',async()=>{if(!user||!event||event.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un transport.');return;}const from=$('m58TransportManualFrom')?.value.trim()||'',to=$('m58TransportManualTo')?.value.trim()||'',departure=$('m58TransportManualDeparture')?.value||'',arrival=$('m58TransportManualArrival')?.value||'';if(!from||!to||!departure){$('m58TransportMsg').textContent='Indique au minimum le départ, la destination et la date/heure de départ.';return;}const cost=Number($('m58TransportManualCost')?.value||0),payload={type:$('m58TransportType')?.value||'other',from,to,departure,arrival,people:$('m58TransportManualPeople')?.value.trim()||'',cost:Number.isFinite(cost)?cost:0,booking:$('m58TransportManualBooking')?.value.trim()||'',note:$('m58TransportManualNote')?.value.trim()||'',title:from+' → '+to};const r=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content:V58_TRANSPORT_MARKER+JSON.stringify(payload)}).select('id').single();if(r.error){$('m58TransportMsg').textContent='❌ '+(r.error.message||'Erreur');return;}rememberLocalCreated('messages',r.data?.id);$('m58TransportMsg').textContent='✅ Trajet enregistré.';hide('m58TransportForm');await v58LoadModuleLists();});
+$('m58AccommodationSaveBtn')?.addEventListener('click',async()=>{if(!user||!event||event.creator_id!==user.id){alert('Seul l’organisateur peut ajouter un hébergement.');return;}const name=$('m58AccommodationManualName')?.value.trim()||'',address=$('m58AccommodationManualAddress')?.value.trim()||'',checkin=$('m58AccommodationManualCheckin')?.value||'',checkout=$('m58AccommodationManualCheckout')?.value||'';if(!name||!checkin||!checkout){$('m58AccommodationMsg').textContent='Indique au minimum le nom et les dates d’arrivée/départ.';return;}if(new Date(checkout)<=new Date(checkin)){$('m58AccommodationMsg').textContent='❌ Le départ doit être après l’arrivée.';return;}const payload={type:$('m58AccommodationManualType')?.value||'other',name,address,checkin,checkout,people:$('m58AccommodationManualPeople')?.value.trim()||'',rooms:$('m58AccommodationManualRooms')?.value.trim()||'',capacity:Number($('m58AccommodationManualCapacity')?.value||0),price_per_night:Number($('m58AccommodationManualNight')?.value||0),total_cost:Number($('m58AccommodationManualTotal')?.value||0),booking:$('m58AccommodationManualBooking')?.value.trim()||'',note:$('m58AccommodationManualNote')?.value.trim()||''};const r=await sb.from('messages').insert({event_id:event.id,user_id:user.id,content:V58_ACCOMMODATION_MARKER+JSON.stringify(payload)}).select('id').single();if(r.error){$('m58AccommodationMsg').textContent='❌ '+(r.error.message||'Erreur');return;}rememberLocalCreated('messages',r.data?.id);$('m58AccommodationMsg').textContent='✅ Hébergement enregistré.';hide('m58AccommodationForm');await v58LoadModuleLists();});
+}
+document.addEventListener('click',e=>{if(e.target.closest('#eventTransportAddBtn')){e.preventDefault();e.stopImmediatePropagation();v58ModuleTab('transport');setTimeout(()=>$('m58TransportAddBtn')?.click(),120);return;}if(e.target.closest('#eventAccommodationAddBtn')){e.preventDefault();e.stopImmediatePropagation();v58ModuleTab('accommodation');setTimeout(()=>$('m58AccommodationAddBtn')?.click(),120);return;}if(e.target.closest('#eventLocalTravelAddBtn')){e.preventDefault();e.stopImmediatePropagation();v58ModuleTab('transport');setTimeout(()=>$('m58TransportAddBtn')?.click(),120);return;}},true);
+document.addEventListener('click',e=>{const tab=e.target.closest('.eventTab');if(!tab)return;if(tab.dataset.tab==='transport'||tab.dataset.tab==='accommodation')setTimeout(v58LoadModuleLists,80);});
+setTimeout(v58SetupModuleButtons,0);
 </script>
