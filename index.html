@@ -635,6 +635,9 @@ body.discussionFullScreen{overflow:hidden!important}
 <style id="myevent-v52-7-sortie-home">
 .inlineSelectedOuting{margin-top:12px;padding:13px;border:1px solid #3d8bfd;border-radius:15px;background:linear-gradient(145deg,#102a42,#0b1824);box-shadow:0 0 0 1px rgba(61,139,253,.16) inset}.inlineSelectedOutingTitle{font-size:16px;font-weight:850;margin-bottom:7px}.inlineSelectedOutingName{font-size:18px;font-weight:850}.inlineSelectedOutingMeta{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}.inlineSelectedOutingAddress{color:#b7c7d5;font-size:12px;line-height:1.4}.inlineSelectedOutingActions{display:flex;gap:7px;margin-top:10px}.inlineSelectedOutingActions>*{flex:1;min-width:0;text-align:center;text-decoration:none;display:grid;place-items:center}.inlineSelectedOutingReviews{margin-top:8px;padding:8px 10px;border:1px solid #28445b;border-radius:10px;color:#9eb2c4;font-size:11px;line-height:1.4}@media(max-width:600px){.inlineSelectedOutingActions{flex-wrap:wrap}.inlineSelectedOutingActions>*{min-width:120px}}
 </style>
+<style id="myevent-v57-3-action-home">
+.inlineEventAiAction{margin-top:12px;padding:13px 14px;border:1px solid #2c6b8f;border-radius:14px;background:#0b1824}.inlineEventAiActionTitle{font-weight:850;font-size:16px;color:#8fe7bb}.inlineEventAiActionMain{margin-top:7px;font-size:15px}.inlineEventAiActionChoice{margin-top:5px;font-weight:800;color:#91d0ff}.inlineEventAiActionText{margin-top:6px;color:#b7c8d7;font-size:13px;line-height:1.45}.inlineEventAiActionStatus{margin-top:9px;font-size:11px;color:#7f96aa}
+</style>
 <style id="myevent-v52-8-planning-home">
 .inlineEventPlanning{margin-top:12px;border:1px solid #315b78;border-radius:14px;background:#0b1824;padding:12px}.inlineEventPlanningTitle{font-size:18px;font-weight:850}.inlineEventPlanningStatus{margin-top:5px;color:#91d0ff;font-size:13px}.planningStep{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:start;margin-top:12px;padding:10px;border:1px solid #28445b;border-radius:12px;background:#08131e}.planningStepIcon{width:42px;height:42px;border-radius:12px;background:#10283b;display:grid;place-items:center;font-size:22px}.planningStepName{font-weight:800;font-size:15px}.planningStepMeta{margin-top:4px;color:#9eb2c4;font-size:12px;line-height:1.4}.planningActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.planningActions a,.planningActions button{min-height:40px}.planningAiCta{margin-top:10px;width:100%;min-height:44px!important}.planningEmpty{margin-top:12px;padding:12px;border:1px dashed #315b78;border-radius:12px;color:#9eb2c4;font-size:13px;line-height:1.45}.planningAiNote{margin-top:8px;color:#7f96aa;font-size:11px}@media(max-width:600px){.planningActions{grid-template-columns:1fr}}
 </style>
@@ -1759,6 +1762,29 @@ async function renderInlineSelectedEvent(){
       document.querySelector('.tabPanel[data-panel="'+tab+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
   }));
+
+  // V57.3 : une décision IA transformée en action doit aussi apparaître
+  // directement sur l'accueil de l'événement, et pas uniquement dans la discussion.
+  try{
+    const aq=await sb.from('messages')
+      .select('id,content,created_at')
+      .eq('event_id',event.id)
+      .like('content','[[MYEVENT_AI_ACTION]]%')
+      .order('created_at',{ascending:false})
+      .limit(1);
+    if(renderToken!==inlineEventRenderToken)return;
+    const actionMessage=Array.isArray(aq.data)&&aq.data[0]?aq.data[0]:null;
+    if(actionMessage?.content){
+      let payload=null;
+      try{payload=JSON.parse(actionMessage.content.slice('[[MYEVENT_AI_ACTION]]'.length));}catch(_){ }
+      if(payload){
+        const actionBox=document.createElement('div');
+        actionBox.className='inlineEventAiAction';
+        actionBox.innerHTML='<div class="inlineEventAiActionTitle">⚡ Décision transformée en action</div>'+          '<div class="inlineEventAiActionMain"><b>'+esc(payload.question||'Décision du groupe')+'</b></div>'+          '<div class="inlineEventAiActionChoice">✓ '+esc(payload.choice||'')+'</div>'+          (payload.action?'<div class="inlineEventAiActionText">'+esc(payload.action)+'</div>':'')+          '<div class="inlineEventAiActionStatus">Action validée et publiée dans cet événement</div>';
+        box.appendChild(actionBox);
+      }
+    }
+  }catch(_){ }
 
   // V55 : le planning affiché sur l'accueil de l'événement peut être
   // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
