@@ -1927,7 +1927,8 @@ async function renderInlineSelectedEvent(){
 
     const renderManual=()=>{
       if(!outing){
-        return '<div class="planningEmpty">Aucune sortie manuelle n’est sélectionnée. Choisis une sortie dans <b>🍽️ Sorties</b> ou sélectionne le planning IA.</div>';
+        return '<div class="planningEmpty">Aucun planning manuel n’est encore créé.</div>'+
+          '<div class="planningActions"><button type="button" class="secondary" data-planning-open-outings="1">🍽️ Ajouter une sortie</button></div>';
       }
       const t=String(outing.outing_type||'').toLowerCase();
       const typeLabel=t==='restaurant'?'🍽️ Restaurant':t==='nature'?'🌳 Nature':t==='culture'?'🏛️ Culture':'🎯 Activité';
@@ -4862,10 +4863,11 @@ let outingResultsData=[], outingFilter='all', outingSearch='', outingSelected=nu
 function isPlaceholderSelectedOuting(data){
   if(!data)return false;
   const name=String(data.name||'').trim().toLowerCase();
+  // Une sortie générique ne peut jamais être considérée comme une vraie
+  // sélection : elle ne doit ni alimenter le planning ni créer une réservation.
   const genericNames=new Set(['sortie','activité','activite','activity','outing']);
-  const hasLocation=String(data.address||'').trim() || data.lat!=null || data.lon!=null;
-  const hasDetails=data.price_per_person!=null || String(data.website||'').trim() || String(data.phone||'').trim();
-  return genericNames.has(name) && !hasLocation && !hasDetails;
+  if(genericNames.has(name))return true;
+  return false;
 }
 function validSelectedOuting(data){
   return data && !isPlaceholderSelectedOuting(data) ? data : null;
@@ -5311,6 +5313,7 @@ async function refreshReservationBoxes(){
   // V54.7 : aucune réservation ne doit apparaître sur un événement sans sortie réelle.
   const selected=validSelectedOuting(outingSelected);
   if(!selected){
+    outingSelected=null;
     currentReservation=null;
   }else{
     await loadEventReservation();
