@@ -1,88 +1,225 @@
-const Stripe = require("stripe");
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Méthode non autorisée"
+    });
   }
 
   try {
-    const {
-      amount,
-      currency = "eur",
-      event_id,
-      fund_entry_id,
-      user_id
-    } = req.body || {};
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-    if (!amount || Number(amount) <= 0) {
-      return res.status(400).json({
-        error: "Montant invalide"
+    if (!stripeKey) {
+      return res.status(500).json({
+        error: "STRIPE_SECRET_KEY n'est pas configurée dans Vercel."
       });
     }
 
-    if (!event_id || !fund_entry_id || !user_id) {
+    const body = req.body || {};
+
+    /*
+     * Accepte plusieurs formats :
+     * 66.67
+     * "66.67"
+     * "66,67"
+     * "66,67 €"
+     */
+    let rawAmount =
+      body.amount ??
+      body.amount_eur ??
+      body.amountEuros ??
+      body.amountCents;
+
+    if (rawAmount === undefined || rawAmount === null) {
       return res.status(400).json({
-        error: "Informations de paiement manquantes"
+        error: "Montant manquant."
       });
     }
 
-    const amountCents = Math.round(Number(amount) * 100);
+    let amountCents;
 
-    if (amountCents < 50) {
+    // Si le frontend envoie déjà des centimes
+    if (
+      body.amountCents !== undefined &&
+      body.amountCents !== null
+    ) {
+      amountCents = Math.round(Number(body.amountCents));
+    } else {
+      // Nettoyage d'un montant français
+      let value = String(rawAmount)
+        .trim()
+        .replace(/\s/g, "")
+        .replace("€", "")
+        .replace(",", ".");
+
+      value = Number(value);
+
+      if (!Number.isFinite(value)) {
+        return res.status(400).json({
+          error: "Montant invalide."
+        });
+      }
+
+      amountCents = Math.round(value * 100);
+    }
+
+    if (!Number.isInteger(amountCents) || amountCents < 50) {
       return res.status(400).json({
-        error: "Le montant minimum est de 0,50 €"
+        error: "Montant invalide. Le montant minimum est de 0,50 €."
       });
     }
+
+    const eventId = body.event_id || body.eventId || "";
+    const fundEntryId =
+      body.fund_entry_id ||
+      body.fundEntryId ||
+      "";
+
+    const userId =
+      body.user_id ||
+      body.userId ||
+      "";
 
     const origin =
       req.headers.origin ||
-      `https://${req.headers.host}`;
+      "https://my-event-eosin.vercel.app";
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+    const successUrl =
+      `${origin}/?stripe_payment=success` +
+      `&event_id=${encodeURIComponent(eventId)}` +
+      `&fund_entry_id=${encodeURIComponent(fundEntryId)}`;
 
-      payment_method_types: ["card"],
+    const cancelUrl =
+      `${origin}/?stripe_payment=cancelled` +
+      `&event_id=${encodeURIComponent(eventId)}` +
+      `&fund_entry_id=${encodeURIComponent(fundEntryId)}`;
 
-      line_items: [
-        {
-          price_data: {
-            currency: currency.toLowerCase(),
-            product_data: {
-              name: "Participation MyEvent"
-            },
-            unit_amount: amountCents
-          },
-          quantity: 1
-        }
-      ],
+    /*
+     * Création directe de la Checkout Session Stripe.
+     *
+     * On utilise l'API HTTP Stripe directement :
+     * cela évite complètement l'erreur
+     * "Cannot find module 'stripe'".
+     */
+    const params = new URLSearchParams();
 
-      metadata: {
-        event_id: String(event_id),
-        fund_entry_id: String(fund_entry_id),
-        user_id: String(user_id)
-      },
+    params.append(
+      "mode",
+      "payment"
+    );
 
-      success_url:
-        `${origin}/?stripe_payment=success&session_id={CHECKOUT_SESSION_ID}`,
+    params.append(
+      "payment_method_types[0]",
+      "card"
+    );
 
-      cancel_url:
-        `${origin}/?stripe_payment=cancelled`,
+    params.append(
+      "line_items[0][price_data][currency]",
+      "eur"
+    );
 
-      customer_creation: "if_required"
-    });
+    params.append(
+      "line_items[0][price_data][product_data][name]",
+      "Participation MyEvent"
+    );
+
+    params.append(
+      "line_items[0][price_data][product_data][description]",
+      "Participation à la cagnotte de l'événement"
+    );
+
+    params.append(
+      "line_items[0][price_data][unit_amount]",
+      String(amountCents)
+    );
+
+    params.append(
+      "line_items[0][quantity]",
+      "1"
+    );
+
+    params.append(
+      "success_url",
+      successUrl
+    );
+
+    params.append(
+      "cancel_url",
+      cancelUrl
+    );
+
+    params.append(
+      "customer_creation",
+      "if_required"
+    );
+
+    if (eventId) {
+      params.append(
+        "metadata[event_id]",
+        String(eventId)
+      );
+    }
+
+    if (fundEntryId) {
+      params.append(
+        "metadata[fund_entry_id]",
+        String(fundEntryId)
+      );
+    }
+
+    if (userId) {
+      params.append(
+        "metadata[user_id]",
+        String(userId)
+      );
+    }
+
+    const stripeResponse = await fetch(
+      "https://api.stripe.com/v1/checkout/sessions",
+      {
+        method: "POST",
+        headers: {
+          "Authorization":
+            `Bearer ${stripeKey}`,
+          "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+        body: params.toString()
+      }
+    );
+
+    const stripeData =
+      await stripeResponse.json();
+
+    if (!stripeResponse.ok) {
+      console.error(
+        "Stripe Checkout error:",
+        stripeData
+      );
+
+      return res.status(500).json({
+        error:
+          "Impossible de créer le paiement Stripe.",
+        details:
+          stripeData?.error?.message ||
+          "Erreur Stripe inconnue."
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      sessionId: session.id,
-      url: session.url
+      sessionId: stripeData.id,
+      url: stripeData.url
     });
 
   } catch (error) {
-    console.error("Stripe Checkout error:", error);
+    console.error(
+      "create-payment-session error:",
+      error
+    );
 
     return res.status(500).json({
-      error: "Impossible de créer le paiement Stripe",
+      error:
+        "Erreur lors de la création du paiement.",
       details:
         process.env.NODE_ENV === "development"
           ? error.message
