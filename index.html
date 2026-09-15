@@ -1040,9 +1040,11 @@ body.discussionFullScreen{overflow:hidden!important}
 </div>
 <div id="fundMyPaymentCard" class="fundMyPaymentCard" style="margin-top:12px">
   <div class="fundPaymentHead"><div><b>💳 Ma participation</b><p class="muted">Paie automatiquement ma participation à cet événement.</p></div><span id="fundMyPaymentStatus" class="fundStatus fundPending">🟠 En attente</span></div>
-  <div class="fundMyPaymentAmount"><span>Montant à payer</span><b id="fundMyPaymentAmount">—</b></div>
+  <div class="fundMyPaymentAmount"><span>Montant à payer</span><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;min-width:0"><input id="fundMyPaymentAmount" type="number" min="0.50" step="0.01" inputmode="decimal" placeholder="0,00" aria-label="Montant à payer" style="width:150px;max-width:45%;box-sizing:border-box;text-align:right;font-size:28px;font-weight:800"><span style="font-size:24px;font-weight:800">€</span></div></div>
+  <p id="fundMyPaymentRecommended" class="muted" style="margin:8px 0 0">Montant recommandé : —</p>
+  <p id="fundMyPaymentRemaining" class="muted" style="margin:4px 0 0">Reste à payer : —</p>
   <button type="button" id="fundMyPaymentBtn">💳 Payer ma participation</button>
-  <p id="fundMyPaymentMsg" class="muted">Le paiement sécurisé par carte sera traité par Stripe.</p>
+  <p id="fundMyPaymentMsg" class="muted">Tu peux choisir le montant de ta participation. Le paiement sécurisé par carte sera traité par Stripe.</p>
 </div>
 <div id="fundOrganizerBox" class="editEventBox hidden" style="margin-top:12px">
   <div style="margin-top:12px">
@@ -1888,7 +1890,7 @@ async function renderInlineSelectedEvent(){
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
     const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-    const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
+    const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -1939,7 +1941,7 @@ async function renderInlineSelectedEvent(){
         '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>';
     };
     const renderAi=()=>{
-      if(!aiPlan||!aiItems.length)return '<div class="planningEmpty">Aucun planning IA n’est encore sélectionné. Ouvre <b>✨ Sortie IA</b> pour organiser toute la sortie.</div>';
+      if(!aiPlan||!aiItems.length)return '<div class="planningEmpty">Aucun planning IA n’est encore créé.</div><div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Organiser une sortie avec l’IA</button></div>';
       return '<div class="inlineEventPlanningStatus">✨ Planning IA sélectionné</div>'+
         '<div class="muted" style="margin-bottom:10px">'+esc(aiPlan.title||'Sortie complète')+' · '+esc(String(aiPlan.people||1))+' pers.</div>'+
         aiItems.map((x,i)=>'<div class="planningStep"><div class="planningStepIcon">'+(i+1)+'</div><div><div class="planningStepName">'+esc(x.name||'Étape')+'</div><div class="planningStepMeta">'+aiPlanCandidateLabel(x.outing_type||x.type||'activity')+(x.start_time?' · 🕐 '+esc(x.start_time):'')+(x.address?' · 📍 '+esc(x.address):'')+'</div></div></div>').join('')+
@@ -1949,7 +1951,7 @@ async function renderInlineSelectedEvent(){
     planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
       '<div class="eventPlanningChooser" role="tablist" aria-label="Choix du planning de l’événement">'+
       '<button type="button" class="secondary eventPlanningChoice '+(choice==='manual'?'active':'')+'" data-event-planning-choice="manual">📋 Manuel</button>'+
-      '<button type="button" class="secondary eventPlanningChoice '+(choice==='ai'?'active':'')+'" data-event-planning-choice="ai" '+(!aiPlan||!aiItems.length?'disabled title="Aucun planning IA disponible"':'')+'>✨ IA</button>'+
+      '<button type="button" class="secondary eventPlanningChoice '+(choice==='ai'?'active':'')+'" data-event-planning-choice="ai">✨ IA</button>'+
       '</div>'+
       '<div id="eventPlanningSelectedContent">'+(choice==='ai'?renderAi():renderManual())+'</div>'+
       '<div id="homeAiReservationBox" style="display:'+(choice==='ai'?'block':'none')+'"></div>'+
@@ -1982,7 +1984,6 @@ async function renderInlineSelectedEvent(){
       });
     };
     const updateChoice=async(next)=>{
-      if(next==='ai'&&(!aiPlan||!aiItems.length))return;
       choice=next;
       try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
       planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
@@ -1992,6 +1993,13 @@ async function renderInlineSelectedEvent(){
       if(manualBox)manualBox.style.display=choice==='manual'?'block':'none';
       if(aiBox)aiBox.style.display=choice==='ai'?'block':'none';
       bindPlanningActions();
+
+      // Sans planning IA, le bouton IA sert à ouvrir directement le module de création.
+      if(next==='ai'&&(!aiPlan||!aiItems.length)){
+        try{showEventTab('aioutings',true);}catch(_){ }
+        setTimeout(()=>document.querySelector('.tabPanel[data-panel="aioutings"]')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+        return;
+      }
       const oldTimeline=box.querySelector('#eventPlanningTimeline');
       if(oldTimeline)oldTimeline.remove();
       try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
@@ -2388,14 +2396,18 @@ function fundSetFormOpen(open){ const box=$('fundOrganizerBox'); if(box) box.cla
 function fundContributionFormOpen(open){ $('fundContributionForm')?.classList.toggle('hidden',!open); if(!open){$('fundContributionAmount').value='';$('fundContributionNote').value='';} }
 async function startStripePayment(){
   if(!event||!user||!sb)return;
-  const btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg');
-  if(!btn)return;
+  const btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg'), amountInput=$('fundMyPaymentAmount');
+  if(!btn||!amountInput)return;
+  const amount=Math.round(Number(String(amountInput.value||'').replace(',','.'))*100)/100;
+  const remaining=Math.round(Number(amountInput.max||0)*100)/100;
+  if(!(amount>=0.50)){ if(msgBox)msgBox.textContent='Erreur : le montant minimum est de 0,50 €.'; amountInput.focus(); return; }
+  if(remaining>0 && amount>remaining+0.005){ if(msgBox)msgBox.textContent='Erreur : le montant ne peut pas dépasser '+eur(remaining)+'.'; amountInput.focus(); return; }
   btn.disabled=true; if(msgBox)msgBox.textContent='Préparation du paiement sécurisé…';
   try{
     const sessionRes=await sb.auth.getSession();
     const accessToken=sessionRes?.data?.session?.access_token;
     if(!accessToken) throw new Error('Session utilisateur introuvable.');
-    const r=await fetch('/api/create-payment-session',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},body:JSON.stringify({event_id:event.id,origin:location.origin})});
+    const r=await fetch('/api/create-payment-session',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},body:JSON.stringify({event_id:event.id,origin:location.origin,amount})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||'Impossible de créer le paiement.');
     if(data.already_paid){ if(msgBox)msgBox.textContent='Ta participation est déjà confirmée.'; await loadFund(); return; }
@@ -2408,23 +2420,37 @@ async function startStripePayment(){
 }
 
 function renderMyStripePayment(entries,target,memberCount){
-  const card=$('fundMyPaymentCard'), amountBox=$('fundMyPaymentAmount'), status=$('fundMyPaymentStatus'), btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg');
-  if(!card||!amountBox||!status||!btn)return;
+  const card=$('fundMyPaymentCard'), amountInput=$('fundMyPaymentAmount'), status=$('fundMyPaymentStatus'), btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg'), recommended=$('fundMyPaymentRecommended'), remainingBox=$('fundMyPaymentRemaining');
+  if(!card||!amountInput||!status||!btn)return;
   const expected=memberCount>0?Math.round((Number(target||0)/memberCount)*100)/100:0;
   const mine=(entries||[]).filter(x=>x.entry_type==='contribution'&&x.user_id===user.id);
   const confirmed=mine.filter(x=>(x.status||'pending')==='confirmed').reduce((a,x)=>a+Number(x.amount||0),0);
   const pending=mine.filter(x=>(x.status||'pending')==='pending').reduce((a,x)=>a+Number(x.amount||0),0);
   const due=Math.max(0,Math.round((expected-confirmed)*100)/100);
-  amountBox.textContent=expected>0?eur(due):'—';
-  if(expected<=0){ status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=true; if(msgBox)msgBox.textContent='Définis d’abord le budget de l’événement pour calculer ta participation.'; return; }
+  const recommendedAmount=expected;
+  if(recommended)recommended.textContent=expected>0?'Montant recommandé : '+eur(recommendedAmount):'Montant recommandé : —';
+  if(remainingBox)remainingBox.textContent=expected>0?'Reste à payer : '+eur(due):'Reste à payer : —';
+  amountInput.min='0.50';
+  amountInput.max=due>0?due.toFixed(2):'0';
+  amountInput.step='0.01';
+  if(expected>0 && !amountInput.value) amountInput.value=due.toFixed(2);
+  if(expected<=0){
+    amountInput.value=''; amountInput.disabled=true; status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=true;
+    if(msgBox)msgBox.textContent='Définis d’abord le budget de l’événement pour calculer ta participation.';
+    return;
+  }
   if(confirmed>=expected-0.005){
-    status.className='fundStatus fundConfirmed'; status.textContent='🟢 Payé'; btn.disabled=true; if(msgBox)msgBox.textContent='Ma participation est confirmée dans la cagnotte.'; return;
+    amountInput.value='0.00'; amountInput.disabled=true; status.className='fundStatus fundConfirmed'; status.textContent='🟢 Payé'; btn.disabled=true;
+    if(msgBox)msgBox.textContent='Ma participation est confirmée dans la cagnotte.'; return;
   }
   if(pending>0){
-    status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=true; if(msgBox)msgBox.textContent='Une participation est déjà en attente de confirmation. Si tu viens de payer par carte, la confirmation peut prendre quelques secondes.'; return;
+    amountInput.disabled=true; status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=true;
+    if(msgBox)msgBox.textContent='Une participation est déjà en attente de confirmation. Si tu viens de payer par carte, la confirmation peut prendre quelques secondes.'; return;
   }
-  status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=false; if(msgBox)msgBox.textContent='Paiement sécurisé par carte via Stripe. Le montant sera confirmé automatiquement après le paiement.';
+  amountInput.disabled=false; status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=!(due>=0.50);
+  if(msgBox)msgBox.textContent='Choisis le montant que tu souhaites verser (minimum 0,50 €), puis paie par carte.';
 }
+
 
 function fundExpenseFormOpen(open){ $('fundExpenseForm')?.classList.toggle('hidden',!open); if(!open){$('fundExpenseAmount').value='';$('fundExpenseLabel').value='';} }
 function fundPaymentFormOpen(open){ $('fundPaymentForm')?.classList.toggle('hidden',!open); if(!open) $('fundPaymentMsg').textContent=''; }
@@ -2546,7 +2572,7 @@ async function calculateSmartFund(opts={}){
       }
     }else{
       const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-      const outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
+      const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
       const price=Number(outing?.price_per_person);
       if(Number.isFinite(price)&&price>0){prices=[price];knownCount=1;planTitle=outing?.title||outing?.name||'Sortie manuelle';}
       else if(outing)missingCount=1;
@@ -4831,6 +4857,20 @@ document.addEventListener('visibilitychange',()=>{if(callActive){callStream?.get
 <script id="myevent-v52-4-sorties-js">
 let outingResultsData=[], outingFilter='all', outingSearch='', outingSelected=null;
 
+// V54.7 — Un nouvel événement ne doit jamais être considéré comme ayant
+// une sortie « Sortie / Activité » créée automatiquement sans informations réelles.
+function isPlaceholderSelectedOuting(data){
+  if(!data)return false;
+  const name=String(data.name||'').trim().toLowerCase();
+  const genericNames=new Set(['sortie','activité','activite','activity','outing']);
+  const hasLocation=String(data.address||'').trim() || data.lat!=null || data.lon!=null;
+  const hasDetails=data.price_per_person!=null || String(data.website||'').trim() || String(data.phone||'').trim();
+  return genericNames.has(name) && !hasLocation && !hasDetails;
+}
+function validSelectedOuting(data){
+  return data && !isPlaceholderSelectedOuting(data) ? data : null;
+}
+
 /* V53.24 — protection contre les courses async :
    une ancienne lecture Supabase ne peut plus recréer une sortie
    après une suppression ou une nouvelle action. */
@@ -4920,6 +4960,9 @@ async function loadSelectedOuting(){
   }
 
   if(version!==outingStateVersion)return;
+
+  // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
+  data=validSelectedOuting(data);
 
   if(!data){
     outingSelected=null;
@@ -5265,7 +5308,17 @@ async function openReservationForm(prefix){
   $(prefix+'ReservationSave')?.addEventListener('click',()=>saveEventReservation(outingSelected?.id,prefix));
 }
 async function refreshReservationBoxes(){
-  await loadEventReservation();
+  // V54.7 : aucune réservation ne doit apparaître sur un événement sans sortie réelle.
+  const selected=validSelectedOuting(outingSelected);
+  if(!selected){
+    currentReservation=null;
+  }else{
+    await loadEventReservation();
+    // Une ancienne réservation liée à une autre sortie ne doit pas être recyclée.
+    if(currentReservation?.outing_id && selected.id && String(currentReservation.outing_id)!==String(selected.id)){
+      currentReservation=null;
+    }
+  }
   const choiceKey=user&&event?'myevent_event_planning_choice_'+user.id+'_'+event.id:'';
   let planningChoice='manual';
   try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){ }
@@ -6588,6 +6641,8 @@ document.addEventListener('click',e=>{
     $('cancelExpenseBtn')?.addEventListener('click',()=>fundExpenseFormOpen(false));
     $('saveExpenseBtn')?.addEventListener('click',saveExpense);
     $('fundSmartCalculateBtn')?.addEventListener('click',calculateSmartFund);
+    $('fundMyPaymentBtn')?.addEventListener('click',startStripePayment);
+    $('fundMyPaymentAmount')?.addEventListener('input',()=>{ const input=$('fundMyPaymentAmount'), box=$('fundMyPaymentMsg'); const max=Number(input?.max||0), val=Number(String(input?.value||'').replace(',','.')); if(box && val>0 && max>0) box.textContent=val>max?'Le montant ne peut pas dépasser '+eur(max)+'.':'Montant sélectionné : '+eur(val)+'.'; });
     $('editFundPaymentBtn')?.addEventListener('click',openFundPaymentForm);
     $('cancelFundPaymentBtn')?.addEventListener('click',()=>fundPaymentFormOpen(false));
     $('saveFundPaymentBtn')?.addEventListener('click',saveFundPayment);
@@ -7107,6 +7162,7 @@ function v58TypeLabel(type,name){
 }
 async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiItems){
   if(!box||!eventObj)return;
+  outing=validSelectedOuting(outing);
   const wrap=document.createElement('div');
   wrap.className='inlineEventTimeline';
   wrap.id='eventPlanningTimeline';
