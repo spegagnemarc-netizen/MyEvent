@@ -2423,7 +2423,16 @@ async function startStripePayment(){
 function renderMyStripePayment(entries,target,memberCount){
   const card=$('fundMyPaymentCard'), amountInput=$('fundMyPaymentAmount'), status=$('fundMyPaymentStatus'), btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg'), recommended=$('fundMyPaymentRecommended'), remainingBox=$('fundMyPaymentRemaining');
   if(!card||!amountInput||!status||!btn)return;
-  const expected=memberCount>0?Math.round((Number(target||0)/memberCount)*100)/100:0;
+  // Si l'objectif manuel n'est pas encore enregistré, utiliser l'estimation
+  // de la cagnotte intelligente calculée depuis le planning.
+  let budgetForPayment=Number(target||0);
+  if(!(budgetForPayment>0)){
+    const smartText=String($('fundSmartEstimate')?.textContent||'');
+    const smartMatch=smartText.replace(/\s/g,'').replace('€','').replace(',','.').match(/[0-9]+(?:\.[0-9]+)?/);
+    const smartEstimate=smartMatch?Number(smartMatch[0]):0;
+    if(Number.isFinite(smartEstimate)&&smartEstimate>0) budgetForPayment=smartEstimate;
+  }
+  const expected=memberCount>0?Math.round((budgetForPayment/memberCount)*100)/100:0;
   const mine=(entries||[]).filter(x=>x.entry_type==='contribution'&&x.user_id===user.id);
   const confirmed=mine.filter(x=>(x.status||'pending')==='confirmed').reduce((a,x)=>a+Number(x.amount||0),0);
   const pending=mine.filter(x=>(x.status||'pending')==='pending').reduce((a,x)=>a+Number(x.amount||0),0);
@@ -2448,7 +2457,7 @@ function renderMyStripePayment(entries,target,memberCount){
     amountInput.disabled=true; status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=true;
     if(msgBox)msgBox.textContent='Une participation est déjà en attente de confirmation. Si tu viens de payer par carte, la confirmation peut prendre quelques secondes.'; return;
   }
-  amountInput.disabled=false; status.className='fundStatus fundPending'; status.textContent='🟠 En attente'; btn.disabled=!(due>=0.50);
+  amountInput.disabled=false; status.className='fundStatus fundPending'; status.textContent='🔵 À payer'; btn.disabled=!(due>=0.50);
   if(msgBox)msgBox.textContent='Choisis le montant que tu souhaites verser (minimum 0,50 €), puis paie par carte.';
 }
 
