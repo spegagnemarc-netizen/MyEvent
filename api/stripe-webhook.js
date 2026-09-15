@@ -1,9 +1,26 @@
 const Stripe = require("stripe");
+
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+
+    req.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+
+    req.on("end", () => {
+      resolve(Buffer.concat(chunks));
+    });
+
+    req.on("error", reject);
+  });
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -16,11 +33,27 @@ module.exports = async function handler(req, res) {
     return res.status(400).send("Signature Stripe manquante");
   }
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("STRIPE_WEBHOOK_SECRET manquant");
+    return res.status(500).send(
+      "STRIPE_WEBHOOK_SECRET n'est pas configuré"
+    );
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("Variables Supabase manquantes");
+    return res.status(500).send(
+      "Configuration Supabase manquante"
+    );
+  }
+
   try {
-    const rawBody =
-      typeof req.body === "string"
-        ? req.body
-        : JSON.stringify(req.body);
+    /*
+     * IMPORTANT :
+     * Stripe doit recevoir le corps brut de la requête
+     * pour pouvoir vérifier correctement la signature.
+     */
+    const rawBody = await getRawBody(req);
 
     const event = stripe.webhooks.constructEvent(
       rawBody,
@@ -28,64 +61,146 @@ module.exports = async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
+    console.log("Stripe event reçu :", event.type);
+
+    /*
+     * Paiement Checkout terminé avec succès.
+     */
     if (
       event.type === "checkout.session.completed" ||
       event.type === "checkout.session.async_payment_succeeded"
     ) {
       const session = event.data.object;
 
+      console.log(
+        "Stripe session :",
+        session.id
+      );
+
+      console.log(
+        "Payment status :",
+        session.payment_status
+      );
+
+      /*
+       * On ne confirme la participation
+       * que lorsque Stripe indique que le paiement
+       * est réellement payé.
+       */
       if (session.payment_status === "paid") {
         const fundEntryId =
           session.metadata?.fund_entry_id;
 
-        if (fundEntryId) {
-          const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/event_fund_entries?id=eq.${encodeURIComponent(fundEntryId)}`,
-            {
-              method: "PATCH",
+        const eventId =
+          session.metadata?.event_id;
 
-              headers: {
-                "Content-Type": "application/json",
-                apikey: SUPABASE_SERVICE_ROLE_KEY,
-                Authorization:
-                  `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                Prefer: "return=minimal"
-              },
+        const userId =
+          session.metadata?.user_id;
 
-              body: JSON.stringify({
-                status: "confirmed"
-              })
-            }
+        const amountCents =
+          session.metadata?.amount_cents;
+
+        console.log("Paiement confirmé :", {
+          sessionId: session.id,
+          eventId,
+          fundEntryId,
+          userId,
+          amountCents
+        });
+
+        /*
+         * Sécurité :
+         * le paiement doit être relié à une entrée
+         * de cagnotte MyEvent.
+         */
+        if (!fundEntryId) {
+          console.warn(
+            "Paiement Stripe sans fund_entry_id"
           );
 
-          if (!response.ok) {
-            const text = await response.text();
-
-            console.error(
-              "Erreur Supabase:",
-              text
-            );
-
-            return res.status(500).send(
-              "Erreur lors de la confirmation Supabase"
-            );
-          }
+          return res.status(200).json({
+            received: true,
+            warning: "fund_entry_id manquant"
+          });
         }
+
+        /*
+         * Mise à jour de l'entrée de cagnotte.
+         *
+         * pending → confirmed
+         */
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/event_fund_entries?id=eq.${encodeURIComponent(
+            fundEntryId
+          )}`,
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_SERVICE_ROLE_KEY,
+              Authorization:
+                `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              Prefer: "return=minimal"
+            },
+
+            body: JSON.stringify({
+              status: "confirmed"
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const text = await response.text();
+
+          console.error(
+            "Erreur Supabase :",
+            text
+          );
+
+          return res.status(500).send(
+            "Erreur lors de la confirmation Supabase"
+          );
+        }
+
+        console.log(
+          "Participation MyEvent confirmée :",
+          fundEntryId
+        );
+      } else {
+        console.log(
+          "Session reçue mais paiement non confirmé :",
+          session.payment_status
+        );
       }
     }
 
+    /*
+     * Stripe peut envoyer d'autres événements.
+     * On les accepte sans modifier MyEvent.
+     */
     return res.status(200).json({
       received: true
     });
 
   } catch (error) {
     console.error(
-      "Stripe webhook error:",
+      "Stripe webhook error :",
       error
     );
 
     return res.status(400).send(
       `Webhook Error: ${error.message}`
     );
+  }
+};
+
+/*
+ * Désactive le body parser automatique
+ * afin de récupérer le corps brut envoyé par Stripe.
+ */
+module.exports.config = {
+  api: {
+    bodyParser: false
   }
 };
