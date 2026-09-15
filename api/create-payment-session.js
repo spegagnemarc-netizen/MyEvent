@@ -17,34 +17,40 @@ module.exports = async function handler(req, res) {
     const body = req.body || {};
 
     /*
-     * Accepte plusieurs formats :
-     * 66.67
-     * "66.67"
-     * "66,67"
-     * "66,67 €"
+     * Le montant choisi par l'utilisateur peut être envoyé sous :
+     * amount       → montant en euros
+     * amount_eur   → montant en euros
+     * amountEuros  → montant en euros
+     * amountCents  → montant en centimes
      */
-    let rawAmount =
-      body.amount ??
-      body.amount_eur ??
-      body.amountEuros ??
-      body.amountCents;
-
-    if (rawAmount === undefined || rawAmount === null) {
-      return res.status(400).json({
-        error: "Montant manquant."
-      });
-    }
 
     let amountCents;
 
-    // Si le frontend envoie déjà des centimes
     if (
       body.amountCents !== undefined &&
       body.amountCents !== null
     ) {
       amountCents = Math.round(Number(body.amountCents));
     } else {
-      // Nettoyage d'un montant français
+      let rawAmount =
+        body.amount ??
+        body.amount_eur ??
+        body.amountEuros;
+
+      if (
+        rawAmount === undefined ||
+        rawAmount === null
+      ) {
+        return res.status(400).json({
+          error: "Montant manquant."
+        });
+      }
+
+      // Accepte par exemple :
+      // 66.67
+      // "66.67"
+      // "66,67"
+      // "66,67 €"
       let value = String(rawAmount)
         .trim()
         .replace(/\s/g, "")
@@ -62,13 +68,24 @@ module.exports = async function handler(req, res) {
       amountCents = Math.round(value * 100);
     }
 
-    if (!Number.isInteger(amountCents) || amountCents < 50) {
+    /*
+     * Minimum Stripe : 0,50 €
+     */
+    if (
+      !Number.isInteger(amountCents) ||
+      amountCents < 50
+    ) {
       return res.status(400).json({
-        error: "Montant invalide. Le montant minimum est de 0,50 €."
+        error:
+          "Montant invalide. Le montant minimum est de 0,50 €."
       });
     }
 
-    const eventId = body.event_id || body.eventId || "";
+    const eventId =
+      body.event_id ||
+      body.eventId ||
+      "";
+
     const fundEntryId =
       body.fund_entry_id ||
       body.fundEntryId ||
@@ -79,6 +96,9 @@ module.exports = async function handler(req, res) {
       body.userId ||
       "";
 
+    /*
+     * URL de retour
+     */
     const origin =
       req.headers.origin ||
       "https://my-event-eosin.vercel.app";
@@ -94,11 +114,7 @@ module.exports = async function handler(req, res) {
       `&fund_entry_id=${encodeURIComponent(fundEntryId)}`;
 
     /*
-     * Création directe de la Checkout Session Stripe.
-     *
-     * On utilise l'API HTTP Stripe directement :
-     * cela évite complètement l'erreur
-     * "Cannot find module 'stripe'".
+     * Création de la Checkout Session Stripe
      */
     const params = new URLSearchParams();
 
@@ -127,6 +143,11 @@ module.exports = async function handler(req, res) {
       "Participation à la cagnotte de l'événement"
     );
 
+    /*
+     * IMPORTANT :
+     * c'est le montant réellement choisi par l'utilisateur
+     * qui est envoyé à Stripe.
+     */
     params.append(
       "line_items[0][price_data][unit_amount]",
       String(amountCents)
@@ -152,6 +173,9 @@ module.exports = async function handler(req, res) {
       "if_required"
     );
 
+    /*
+     * Métadonnées MyEvent
+     */
     if (eventId) {
       params.append(
         "metadata[event_id]",
@@ -173,16 +197,28 @@ module.exports = async function handler(req, res) {
       );
     }
 
+    /*
+     * On conserve également le montant choisi
+     * dans les metadata Stripe.
+     */
+    params.append(
+      "metadata[amount_cents]",
+      String(amountCents)
+    );
+
     const stripeResponse = await fetch(
       "https://api.stripe.com/v1/checkout/sessions",
       {
         method: "POST",
+
         headers: {
           "Authorization":
             `Bearer ${stripeKey}`,
+
           "Content-Type":
             "application/x-www-form-urlencoded"
         },
+
         body: params.toString()
       }
     );
@@ -190,6 +226,9 @@ module.exports = async function handler(req, res) {
     const stripeData =
       await stripeResponse.json();
 
+    /*
+     * Erreur Stripe
+     */
     if (!stripeResponse.ok) {
       console.error(
         "Stripe Checkout error:",
@@ -199,19 +238,37 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({
         error:
           "Impossible de créer le paiement Stripe.",
+
         details:
           stripeData?.error?.message ||
           "Erreur Stripe inconnue."
       });
     }
 
+    /*
+     * Réponse envoyée au frontend
+     */
     return res.status(200).json({
       success: true,
-      sessionId: stripeData.id,
-      url: stripeData.url
+
+      sessionId:
+        stripeData.id,
+
+      url:
+        stripeData.url,
+
+      amount:
+        amountCents / 100,
+
+      amountCents:
+        amountCents,
+
+      currency:
+        "eur"
     });
 
   } catch (error) {
+
     console.error(
       "create-payment-session error:",
       error
@@ -220,6 +277,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       error:
         "Erreur lors de la création du paiement.",
+
       details:
         process.env.NODE_ENV === "development"
           ? error.message
