@@ -5196,30 +5196,15 @@ async function selectOuting(id){
     return;
   }
 
-  // V54.14 — après l'enregistrement, on relit TOUJOURS la sortie du bon événement.
-  // Certaines versions SQL de save_event_outing ne retournent pas de ligne (r.data=null)
-  // alors que l'enregistrement a bien été effectué. Le test `if(r.data)` empêchait alors
-  // l'affichage de la sélection et, surtout, la mise à jour du planning de l'accueil.
-  let savedOuting=null;
   if(r.data){
-    const returned=Array.isArray(r.data)?(r.data[0]||null):r.data;
-    if(returned && (!returned.event_id || String(returned.event_id)===String(event.id))){
-      savedOuting=validSelectedOuting(returned);
-    }
-  }
+    // La RPC de sauvegarde peut retourner une ligne inattendue sur une ancienne
+    // version SQL. La seule source d'autorité côté client est la ligne portant
+    // explicitement le event_id actuellement ouvert.
+    outingSelected=await getScopedEventOuting(event.id);
+    if(version!==outingStateVersion)return;
+    const box=$('outingSelectedBox');
 
-  let scopedOuting=await getScopedEventOuting(event.id);
-  if(version!==outingStateVersion)return;
-  outingSelected=scopedOuting||savedOuting;
-
-  if(!outingSelected){
-    msg('outingMsg','La sortie a été enregistrée mais n’a pas pu être relue pour cet événement.','err');
-    return;
-  }
-
-  const box=$('outingSelectedBox');
-
-  if(box&&outingSelected){
+    if(box&&outingSelected){
       box.classList.remove('hidden');
       box.innerHTML=
         '<div>⭐ <b>Sortie sélectionnée</b></div>'+
@@ -5263,9 +5248,26 @@ async function selectOuting(id){
     }
 
     renderOutingResults();
-    // Met immédiatement à jour l'accueil de l'événement et ses blocs planning/réservation.
-    try{ await renderInlineSelectedEvent(); }catch(_){ }
-    try{ await refreshReservationBoxes(); }catch(_){ }
+
+    // V54.14 — Le planning de l'accueil est rendu à partir d'un snapshot
+    // chargé par renderInlineSelectedEvent(). Après une nouvelle sélection,
+    // ce snapshot est forcément obsolète : on force donc un rendu complet
+    // depuis Supabase pour que la sortie apparaisse immédiatement dans le
+    // Planning, avec sa réservation éventuelle.
+    try{
+      await renderInlineSelectedEvent();
+      if(typeof refreshReservationBoxes==='function') await refreshReservationBoxes();
+    }catch(e){
+      console.error('V54.14 refresh planning after outing selection',e);
+    }
+  }else{
+    await loadSelectedOuting();
+    try{
+      await renderInlineSelectedEvent();
+      if(typeof refreshReservationBoxes==='function') await refreshReservationBoxes();
+    }catch(e){
+      console.error('V54.14 refresh planning after outing load',e);
+    }
   }
 
   msg('outingMsg','⭐ Sortie sélectionnée et enregistrée dans ton événement.','ok');
