@@ -2,7 +2,9 @@ const Stripe = require("stripe");
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Supabase : on retire les éventuels "/" à la fin de l'URL
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -11,7 +13,9 @@ function getRawBody(req) {
     const chunks = [];
 
     req.on("data", (chunk) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      chunks.push(
+        Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+      );
     });
 
     req.on("end", () => {
@@ -33,24 +37,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).send("Signature Stripe manquante");
   }
 
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    console.error("STRIPE_WEBHOOK_SECRET manquant");
-    return res.status(500).send(
-      "STRIPE_WEBHOOK_SECRET n'est pas configuré"
-    );
-  }
-
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    console.error("Variables Supabase manquantes");
-    return res.status(500).send(
-      "Configuration Supabase manquante"
-    );
-  }
-
   try {
     /*
-     * Stripe doit recevoir le corps brut
-     * pour vérifier correctement la signature.
+     * Récupération du corps brut envoyé par Stripe.
+     * Nécessaire pour vérifier correctement la signature.
      */
     const rawBody = await getRawBody(req);
 
@@ -82,10 +72,12 @@ module.exports = async function handler(req, res) {
       );
 
       /*
-       * On confirme automatiquement uniquement
-       * lorsque Stripe indique que le paiement est payé.
+       * On ne confirme la participation
+       * que lorsque Stripe indique que le paiement
+       * est réellement payé.
        */
       if (session.payment_status === "paid") {
+
         const fundEntryId =
           session.metadata?.fund_entry_id;
 
@@ -107,8 +99,9 @@ module.exports = async function handler(req, res) {
         });
 
         /*
-         * Le paiement doit être relié
-         * à une participation MyEvent.
+         * Sécurité :
+         * le paiement doit être relié à une entrée
+         * de cagnotte MyEvent.
          */
         if (!fundEntryId) {
           console.warn(
@@ -123,7 +116,9 @@ module.exports = async function handler(req, res) {
 
         /*
          * Paiement Stripe payé :
-         * confirmation automatique de la participation.
+         * la participation est automatiquement confirmée.
+         *
+         * pending → confirmed
          */
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/event_fund_entries?id=eq.${encodeURIComponent(
@@ -134,9 +129,12 @@ module.exports = async function handler(req, res) {
 
             headers: {
               "Content-Type": "application/json",
+
               apikey: SUPABASE_SERVICE_ROLE_KEY,
+
               Authorization:
                 `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+
               Prefer: "return=minimal"
             },
 
@@ -163,7 +161,9 @@ module.exports = async function handler(req, res) {
           "Participation MyEvent automatiquement confirmée :",
           fundEntryId
         );
+
       } else {
+
         console.log(
           "Session reçue mais paiement non confirmé :",
           session.payment_status
@@ -172,14 +172,15 @@ module.exports = async function handler(req, res) {
     }
 
     /*
-     * Les autres événements Stripe sont acceptés
-     * sans modifier MyEvent.
+     * Stripe peut envoyer d'autres événements.
+     * On les accepte sans modifier MyEvent.
      */
     return res.status(200).json({
       received: true
     });
 
   } catch (error) {
+
     console.error(
       "Stripe webhook error :",
       error
