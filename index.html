@@ -2032,6 +2032,9 @@ async function selectEvent(id, options={}){
   if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
   if(!r.data) throw new Error('Cet événement n’est plus accessible.');
 
+  // V54.11 : changement d'événement = module Sorties/Activités vierge.
+  resetOutingModuleState();
+
   if(callActive) await stopGroupCall();
   event=r.data;
   localStorage.setItem('myevent_active_'+user.id,event.id);
@@ -2044,6 +2047,9 @@ async function selectEvent(id, options={}){
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   await renderInlineSelectedEvent();
+  // V54.11 : aucune réservation d'une ancienne sortie ne doit être réutilisée.
+  currentReservation=null;
+
   // V53.10 : la réservation est chargée après le rendu final du planning.
   // Évite les courses entre plusieurs renderInlineSelectedEvent().
   await refreshReservationBoxes();
@@ -4935,6 +4941,44 @@ function validSelectedOuting(data){
   return data && !isPlaceholderSelectedOuting(data) ? data : null;
 }
 
+// V54.11 — Un nouvel événement doit ouvrir le module Sorties/Activités vierge.
+// Aucun choix, résultat ou réservation de l'événement précédent ne doit rester en mémoire.
+function resetOutingModuleState(){
+  outingStateVersion++;
+  outingSelected=null;
+  outingResultsData=[];
+  outingFilter='all';
+  outingSearch='';
+  currentReservation=null;
+
+  const selectedBox=$('outingSelectedBox');
+  if(selectedBox){
+    selectedBox.classList.add('hidden');
+    selectedBox.innerHTML='';
+  }
+
+  const results=$('outingResults');
+  if(results){
+    results.innerHTML='<div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div>';
+  }
+
+  const search=$('outingSearch');
+  if(search)search.value='';
+
+  const budget=$('outingMaxBudget');
+  if(budget)budget.value='';
+
+  const radius=$('outingRadius');
+  if(radius)radius.value='5';
+
+  const people=$('outingPeople');
+  if(people)people.value='10';
+
+  document.querySelectorAll('.outingFilter').forEach(b=>{
+    b.classList.toggle('active',b.dataset.outingFilter==='all');
+  });
+}
+
 /* V53.24 — protection contre les courses async :
    une ancienne lecture Supabase ne peut plus recréer une sortie
    après une suppression ou une nouvelle action. */
@@ -5026,7 +5070,14 @@ async function loadSelectedOuting(){
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
-  data=validSelectedOuting(data);
+  // Si une ancienne ligne générique existe malgré tout dans Supabase, on la supprime
+  // afin qu'elle ne puisse pas réapparaître au prochain chargement.
+  if(isPlaceholderSelectedOuting(data)){
+    try{ await sb.rpc('delete_event_outing',{p_event_id:event.id}); }catch(_){}
+    data=null;
+  }else{
+    data=validSelectedOuting(data);
+  }
 
   if(!data){
     outingSelected=null;
