@@ -1904,6 +1904,9 @@ async function renderInlineSelectedEvent(){
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
     let outing=await getScopedEventOuting(event.id);
+    if(!outing && outingSelected && String(outingSelected.event_id||event.id)===String(event.id)){
+      outing=validSelectedOuting(outingSelected);
+    }
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -4995,15 +4998,29 @@ function resetAiModuleState(){
   if(typeof aiPlanReservationsCache!=='undefined') aiPlanReservationsCache=[];
 }
 
+/* V54.18 — Lecture robuste + fallback local de la sortie sélectionnée.
+   L'isolation reste strictement basée sur event_id. */
+
 /* V54.13 — Lecture strictement isolée par event_id.
    On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
    si elle n'appartient pas explicitement à l'événement actuellement ouvert. */
 async function getScopedEventOuting(eventId){
   if(!eventId||!sb)return null;
+
+  // V54.18 — lecture robuste de la sortie de l'événement courant.
+  // Ne pas utiliser maybeSingle() ici : une ancienne ligne résiduelle dans
+  // event_outings peut faire échouer la requête entière si plusieurs lignes
+  // existent pour le même event_id. Le planning doit néanmoins récupérer
+  // la sortie valide de CET événement.
   try{
-    const direct=await sb.from('event_outings').select('*').eq('event_id',eventId).maybeSingle();
+    const direct=await sb.from('event_outings')
+      .select('*')
+      .eq('event_id',eventId)
+      .limit(1);
     if(!direct.error){
-      return validSelectedOuting(direct.data);
+      const rows=Array.isArray(direct.data)?direct.data:[];
+      const data=rows.find(row=>String(row?.event_id||'')===String(eventId))||null;
+      return validSelectedOuting(data);
     }
   }catch(_){ }
 
@@ -5011,8 +5028,11 @@ async function getScopedEventOuting(eventId){
   try{
     const rpc=await sb.rpc('get_event_outing',{p_event_id:eventId});
     if(rpc.error)return null;
-    const data=Array.isArray(rpc.data)?(rpc.data[0]||null):rpc.data;
-    // Si la RPC fournit event_id, il doit impérativement correspondre.
+    const rows=Array.isArray(rpc.data)?rpc.data:[];
+    const data=Array.isArray(rpc.data)
+      ? (rows.find(row=>!row?.event_id||String(row.event_id)===String(eventId))||null)
+      : rpc.data;
+    // Une RPC ne doit jamais pouvoir injecter la sortie d'un autre événement.
     if(data?.event_id && String(data.event_id)!==String(eventId))return null;
     return validSelectedOuting(data);
   }catch(_){ return null; }
