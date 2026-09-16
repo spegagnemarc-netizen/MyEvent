@@ -2399,6 +2399,7 @@ async function startStripePayment(){
   if(!event||!user||!sb)return;
   const btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg'), amountInput=$('fundMyPaymentAmount');
   if(!btn||!amountInput)return;
+  if(btn.disabled)return;
   const amount=Math.round(Number(String(amountInput.value||'').replace(',','.'))*100)/100;
   const remaining=Math.round(Number(amountInput.max||0)*100)/100;
   if(!(amount>=0.50)){ if(msgBox)msgBox.textContent='Erreur : le montant minimum est de 0,50 €.'; amountInput.focus(); return; }
@@ -6698,7 +6699,6 @@ document.addEventListener('click',e=>{
     $('editFundPaymentBtn')?.addEventListener('click',openFundPaymentForm);
     $('cancelFundPaymentBtn')?.addEventListener('click',()=>fundPaymentFormOpen(false));
     $('saveFundPaymentBtn')?.addEventListener('click',saveFundPayment);
-    $('fundMyPaymentBtn')?.addEventListener('click',startStripePayment);
     $('fundIban')?.addEventListener('input',e=>{ const pos=e.target.selectionStart; e.target.value=formatIban(e.target.value); e.target.selectionStart=e.target.selectionEnd=Math.min(e.target.value.length,pos+(e.target.value.length>pos?1:0)); });
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
