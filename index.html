@@ -4998,8 +4998,8 @@ function resetAiModuleState(){
   if(typeof aiPlanReservationsCache!=='undefined') aiPlanReservationsCache=[];
 }
 
-/* V54.18 — Lecture robuste + fallback local de la sortie sélectionnée.
-   L'isolation reste strictement basée sur event_id. */
+/* V54.19 — Lecture de toutes les lignes de l'événement + sélection de la
+   première sortie valide. L'isolation reste strictement basée sur event_id. */
 
 /* V54.13 — Lecture strictement isolée par event_id.
    On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
@@ -5007,20 +5007,20 @@ function resetAiModuleState(){
 async function getScopedEventOuting(eventId){
   if(!eventId||!sb)return null;
 
-  // V54.18 — lecture robuste de la sortie de l'événement courant.
-  // Ne pas utiliser maybeSingle() ici : une ancienne ligne résiduelle dans
-  // event_outings peut faire échouer la requête entière si plusieurs lignes
-  // existent pour le même event_id. Le planning doit néanmoins récupérer
-  // la sortie valide de CET événement.
+  // V54.19 — lire toutes les lignes de CET événement puis retenir la
+  // première vraie sortie. Ne pas utiliser limit(1) : une ancienne ligne
+  // générique/placeholder peut sinon masquer la sortie réellement choisie.
   try{
     const direct=await sb.from('event_outings')
       .select('*')
-      .eq('event_id',eventId)
-      .limit(1);
+      .eq('event_id',eventId);
     if(!direct.error){
       const rows=Array.isArray(direct.data)?direct.data:[];
-      const data=rows.find(row=>String(row?.event_id||'')===String(eventId))||null;
-      return validSelectedOuting(data);
+      const data=rows
+        .filter(row=>String(row?.event_id||'')===String(eventId))
+        .map(validSelectedOuting)
+        .find(Boolean)||null;
+      return data;
     }
   }catch(_){ }
 
