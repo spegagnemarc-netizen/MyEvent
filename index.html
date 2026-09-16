@@ -5196,15 +5196,30 @@ async function selectOuting(id){
     return;
   }
 
+  // V54.14 — après l'enregistrement, on relit TOUJOURS la sortie du bon événement.
+  // Certaines versions SQL de save_event_outing ne retournent pas de ligne (r.data=null)
+  // alors que l'enregistrement a bien été effectué. Le test `if(r.data)` empêchait alors
+  // l'affichage de la sélection et, surtout, la mise à jour du planning de l'accueil.
+  let savedOuting=null;
   if(r.data){
-    // La RPC de sauvegarde peut retourner une ligne inattendue sur une ancienne
-    // version SQL. La seule source d'autorité côté client est la ligne portant
-    // explicitement le event_id actuellement ouvert.
-    outingSelected=await getScopedEventOuting(event.id);
-    if(version!==outingStateVersion)return;
-    const box=$('outingSelectedBox');
+    const returned=Array.isArray(r.data)?(r.data[0]||null):r.data;
+    if(returned && (!returned.event_id || String(returned.event_id)===String(event.id))){
+      savedOuting=validSelectedOuting(returned);
+    }
+  }
 
-    if(box&&outingSelected){
+  let scopedOuting=await getScopedEventOuting(event.id);
+  if(version!==outingStateVersion)return;
+  outingSelected=scopedOuting||savedOuting;
+
+  if(!outingSelected){
+    msg('outingMsg','La sortie a été enregistrée mais n’a pas pu être relue pour cet événement.','err');
+    return;
+  }
+
+  const box=$('outingSelectedBox');
+
+  if(box&&outingSelected){
       box.classList.remove('hidden');
       box.innerHTML=
         '<div>⭐ <b>Sortie sélectionnée</b></div>'+
@@ -5248,8 +5263,9 @@ async function selectOuting(id){
     }
 
     renderOutingResults();
-  }else{
-    await loadSelectedOuting();
+    // Met immédiatement à jour l'accueil de l'événement et ses blocs planning/réservation.
+    try{ await renderInlineSelectedEvent(); }catch(_){ }
+    try{ await refreshReservationBoxes(); }catch(_){ }
   }
 
   msg('outingMsg','⭐ Sortie sélectionnée et enregistrée dans ton événement.','ok');
