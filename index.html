@@ -2399,7 +2399,6 @@ async function startStripePayment(){
   if(!event||!user||!sb)return;
   const btn=$('fundMyPaymentBtn'), msgBox=$('fundMyPaymentMsg'), amountInput=$('fundMyPaymentAmount');
   if(!btn||!amountInput)return;
-  if(btn.disabled)return;
   const amount=Math.round(Number(String(amountInput.value||'').replace(',','.'))*100)/100;
   const remaining=Math.round(Number(amountInput.max||0)*100)/100;
   if(!(amount>=0.50)){ if(msgBox)msgBox.textContent='Erreur : le montant minimum est de 0,50 €.'; amountInput.focus(); return; }
@@ -2702,7 +2701,12 @@ async function loadFund(){
   if(stripeSuccess){ $('fundMyPaymentMsg').textContent='✅ Paiement reçu. Stripe confirme la transaction ; la cagnotte se met à jour automatiquement.'; history.replaceState({},document.title,location.pathname+location.hash); }
   if(stripeCancel){ $('fundMyPaymentMsg').textContent='Paiement annulé. Aucun montant n’a été confirmé dans la cagnotte.'; history.replaceState({},document.title,location.pathname+location.hash); }
 
-  const pending=contributions.filter(x=>(x.status||'pending')==='pending');
+  // Paiements Stripe : jamais soumis à l'approbation du créateur.
+  // Les validations manuelles concernent uniquement les virements / participations manuelles.
+  const isStripeContribution=entry=>String(entry?.note||'').startsWith('Paiement Stripe');
+  const pending=contributions
+    .filter(x=>(x.status||'pending')==='pending')
+    .filter(x=>!isStripeContribution(x));
   const pendingBox=$('fundPendingBox'), pendingList=$('fundPendingEntries');
   if(pendingBox&&pendingList){
     pendingBox.classList.toggle('hidden',!(manager&&pending.length));
@@ -2805,12 +2809,60 @@ async function loadFund(){
 
 async function updateContributionStatus(id,status){
   if(!event||!user)return;
-  const settingsRes=await sb.from('event_fund_settings').select('manager_user_id').eq('event_id',event.id).maybeSingle();
+
+  // Sécurité : un paiement Stripe est confirmé automatiquement par Stripe/webhook.
+  // Il ne doit jamais être validé ou refusé manuellement par le créateur.
+  const entryRes=await sb.from('event_fund_entries')
+    .select('id,event_id,user_id,entry_type,note,status')
+    .eq('id',id)
+    .eq('event_id',event.id)
+    .eq('entry_type','contribution')
+    .maybeSingle();
+
+  if(entryRes.error){
+    alert('Erreur : '+entryRes.error.message);
+    return;
+  }
+
+  const entry=entryRes.data;
+  if(!entry){
+    alert('Participation introuvable.');
+    return;
+  }
+
+  if(String(entry.note||'').startsWith('Paiement Stripe')){
+    alert('Ce paiement Stripe est confirmé automatiquement. Aucune validation du responsable n’est nécessaire.');
+    return;
+  }
+
+  const settingsRes=await sb.from('event_fund_settings')
+    .select('manager_user_id')
+    .eq('event_id',event.id)
+    .maybeSingle();
   const settings=settingsRes.data||{};
-  if(!fundIsManager(settings)){alert('Seul le responsable de la cagnotte peut valider un paiement.');return;}
-  const payload={status,confirmed_by:status==='confirmed'?user.id:null,confirmed_at:status==='confirmed'?new Date().toISOString():null};
-  const r=await sb.from('event_fund_entries').update(payload).eq('id',id).eq('event_id',event.id).eq('entry_type','contribution');
-  if(r.error){alert('Erreur : '+r.error.message);return;}
+
+  if(!fundIsManager(settings)){
+    alert('Seul le responsable de la cagnotte peut valider un paiement manuel.');
+    return;
+  }
+
+  const payload={
+    status,
+    confirmed_by:status==='confirmed'?user.id:null,
+    confirmed_at:status==='confirmed'?new Date().toISOString():null
+  };
+
+  const r=await sb.from('event_fund_entries')
+    .update(payload)
+    .eq('id',id)
+    .eq('event_id',event.id)
+    .eq('entry_type','contribution');
+
+  if(r.error){
+    alert('Erreur : '+r.error.message);
+    return;
+  }
+
   await loadFund();
 }
 
