@@ -2093,12 +2093,20 @@ async function selectEvent(id, options={}){
   await initializeUnreadMarkers();
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
-  await renderInlineSelectedEvent();
-  // V54.11 : aucune réservation d'une ancienne sortie ne doit être réutilisée.
-  currentReservation=null;
 
-  // V53.10 : la réservation est chargée après le rendu final du planning.
-  // Évite les courses entre plusieurs renderInlineSelectedEvent().
+  // V54.26 — l'événement actif est la seule source de vérité pour Sortie + Réservation.
+  // À chaque ouverture/reconnexion, on recharge explicitement la sélection de CET événement
+  // avant de construire le Planning. Un nouvel événement arrive donc naturellement sans sélection.
+  if(typeof loadSelectedOuting==='function'){
+    try{ await loadSelectedOuting(); }catch(e){ console.error('loadSelectedOuting active event',e); }
+  }
+  currentReservation=null;
+  if(typeof loadEventReservation==='function'){
+    try{ await loadEventReservation(); }catch(e){ console.error('loadEventReservation active event',e); }
+  }
+
+  await renderInlineSelectedEvent();
+  // Relecture finale : elle reste strictement filtrée par event.id.
   await refreshReservationBoxes();
   global('Événement actif : '+event.name,'ok');
 
@@ -5812,6 +5820,9 @@ loadSelectedOuting=async function(){
 </style>
 
 
+<script id="myevent-v54-26-active-event-persistence">
+/* V54.26 — persistance stricte de la sélection et de la réservation sur l’événement actif. */
+</script>
 <script id="myevent-v54-25-reserver-direct">
 /* V54.25 — bouton Réserver Sorties branché directement */
 </script>
