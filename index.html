@@ -5099,7 +5099,7 @@ async function loadSelectedOuting(){
 
   const version=++outingStateVersion;
 
-  const data=await getScopedEventOuting(event.id);
+  let data=await getScopedEventOuting(event.id);
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
