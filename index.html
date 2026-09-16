@@ -1890,7 +1890,18 @@ async function renderInlineSelectedEvent(){
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
     const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-    const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
+    let outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
+
+    // V54.12 — aucune sortie générique ne doit pouvoir alimenter le
+    // planning d'accueil. Si une ancienne ligne « Sortie / Activité »
+    // existe encore en base, on la supprime immédiatement.
+    if(isPlaceholderSelectedOuting(outing)){
+      try{ await sb.rpc('delete_event_outing',{p_event_id:event.id}); }catch(_){}
+      outing=null;
+    }else{
+      outing=validSelectedOuting(outing);
+    }
+
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -2034,6 +2045,14 @@ async function selectEvent(id, options={}){
 
   // V54.11 : changement d'événement = module Sorties/Activités vierge.
   resetOutingModuleState();
+
+  // Le choix « Manuel/IA » reste indépendant, mais un ancien choix manuel
+  // ne doit jamais recréer une sortie inexistante.
+  try{
+    const planningKey='myevent_event_planning_choice_'+user.id+'_'+id;
+    const savedPlanning=localStorage.getItem(planningKey);
+    if(savedPlanning!=='ai') localStorage.removeItem(planningKey);
+  }catch(_){}
 
   if(callActive) await stopGroupCall();
   event=r.data;
