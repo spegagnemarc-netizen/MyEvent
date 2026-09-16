@@ -5787,15 +5787,55 @@ loadSelectedOuting=async function(){
 </style>
 
 
-<script id="myevent-v53-6-reservation-confirm">
+<script id="myevent-v54-24-reservation-confirm">
 /* V53.6 — Confirmation de réservation par l'organisateur */
 (function(){
   function isOrganizer(){ return !!(event && user && event.creator_id === user.id); }
   async function confirmEventReservation(){
     if(!event)return;
     if(!isOrganizer()){ alert('Seul l’organisateur peut confirmer la réservation.'); return; }
+    // V54.24 : relecture obligatoire juste avant confirmation pour éviter
+    // qu'un bloc Planning affiche une réservation devenue obsolète.
+    try{
+      const freshOuting=await getScopedEventOuting(event.id);
+      if(freshOuting)outingSelected=freshOuting;
+      await loadEventReservation();
+    }catch(e){ console.error('refresh avant confirmation',e); }
+    const selected=validSelectedOuting(outingSelected);
+    if(!selected){
+      await refreshReservationBoxes();
+      alert('Impossible de confirmer la réservation : aucune sortie sélectionnée pour cet événement.');
+      return;
+    }
+    if(!currentReservation){
+      await refreshReservationBoxes();
+      alert('Impossible de confirmer la réservation : aucune réservation à confirmer.');
+      return;
+    }
+    if(currentReservation.event_id && String(currentReservation.event_id)!==String(event.id)){
+      currentReservation=null;
+      await refreshReservationBoxes();
+      alert('Impossible de confirmer la réservation : la réservation appartient à un autre événement.');
+      return;
+    }
+    if(currentReservation.outing_id && selected.id && String(currentReservation.outing_id)!==String(selected.id)){
+      currentReservation=null;
+      await refreshReservationBoxes();
+      alert('Impossible de confirmer la réservation : la réservation ne correspond pas à la sortie sélectionnée.');
+      return;
+    }
+    if(currentReservation.status!=='pending'){
+      await refreshReservationBoxes();
+      alert('Cette réservation n’est plus à confirmer.');
+      return;
+    }
     const r=await sb.rpc('confirm_event_reservation',{p_event_id:event.id});
-    if(r.error){ alert('Impossible de confirmer la réservation : '+r.error.message); return; }
+    if(r.error){
+      console.error('confirm_event_reservation',r.error);
+      await refreshReservationBoxes();
+      alert('Impossible de confirmer la réservation : '+r.error.message);
+      return;
+    }
     currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
     await refreshReservationBoxes();
     msg('outingMsg','✅ Réservation confirmée.','ok');
