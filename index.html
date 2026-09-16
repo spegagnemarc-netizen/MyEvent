@@ -2404,17 +2404,57 @@ async function startStripePayment(){
   if(!(amount>=0.50)){ if(msgBox)msgBox.textContent='Erreur : le montant minimum est de 0,50 €.'; amountInput.focus(); return; }
   if(remaining>0 && amount>remaining+0.005){ if(msgBox)msgBox.textContent='Erreur : le montant ne peut pas dépasser '+eur(remaining)+'.'; amountInput.focus(); return; }
   btn.disabled=true; if(msgBox)msgBox.textContent='Préparation du paiement sécurisé…';
+  let fundEntryId=null;
   try{
     const sessionRes=await sb.auth.getSession();
     const accessToken=sessionRes?.data?.session?.access_token;
     if(!accessToken) throw new Error('Session utilisateur introuvable.');
-    const r=await fetch('/api/create-payment-session',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},body:JSON.stringify({event_id:event.id,origin:location.origin,amount})});
+
+    // Créer la participation en attente AVANT d’ouvrir Stripe.
+    // Le webhook utilisera cet ID pour confirmer exactement cette participation.
+    const entryRes=await sb.from('event_fund_entries').insert({
+      event_id:event.id,
+      user_id:user.id,
+      entry_type:'contribution',
+      amount,
+      label:'Participation',
+      note:'Paiement Stripe — en attente de confirmation',
+      status:'pending'
+    }).select('id').single();
+    if(entryRes.error) throw new Error('Impossible de créer la participation : '+entryRes.error.message);
+    fundEntryId=entryRes.data?.id||null;
+    if(!fundEntryId) throw new Error('Identifiant de participation introuvable.');
+
+    const r=await fetch('/api/create-payment-session',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+accessToken
+      },
+      body:JSON.stringify({
+        event_id:event.id,
+        fund_entry_id:fundEntryId,
+        user_id:user.id,
+        origin:location.origin,
+        amount
+      })
+    });
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||'Impossible de créer le paiement.');
-    if(data.already_paid){ if(msgBox)msgBox.textContent='Ta participation est déjà confirmée.'; await loadFund(); return; }
+    if(data.already_paid){
+      await sb.from('event_fund_entries').delete().eq('id',fundEntryId).eq('event_id',event.id).eq('user_id',user.id).eq('status','pending');
+      fundEntryId=null;
+      if(msgBox)msgBox.textContent='Ta participation est déjà confirmée.';
+      await loadFund();
+      return;
+    }
     if(!data.url)throw new Error('Stripe n’a pas fourni de lien de paiement.');
     window.location.href=data.url;
   }catch(e){
+    // Si la session Stripe n’a pas pu être créée, ne pas laisser une participation fantôme.
+    if(fundEntryId){
+      await sb.from('event_fund_entries').delete().eq('id',fundEntryId).eq('event_id',event.id).eq('user_id',user.id).eq('status','pending');
+    }
     if(msgBox)msgBox.textContent='Erreur : '+(e.message||String(e));
     btn.disabled=false;
   }
