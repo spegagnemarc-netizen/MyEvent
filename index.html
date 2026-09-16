@@ -1958,8 +1958,8 @@ async function renderInlineSelectedEvent(){
       const destination=outing.lat!=null&&outing.lon!=null?Number(outing.lat)+','+Number(outing.lon):query;
       const mapsDirections='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(destination);
       return '<div class="inlineEventPlanningStatus">📋 Planning manuel — sortie sélectionnée</div>'+
-        '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div></div></div>'+
-        '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Carte MyEvent</button></div>';
+        '<div class="planningStep"><div class="planningStepIcon">1</div><div><div class="planningStepName">'+esc(outing.name||'Sortie')+'</div><div class="planningStepMeta">'+typeLabel+(outing.address?' · 📍 '+esc(outing.address):'')+(outing.price_per_person!=null?' · 💶 '+eur(outing.price_per_person)+' / pers.':'')+'</div>'+(outing.lat!=null&&outing.lon!=null?'<div class="planningStepMeta">🧭 '+Number(outing.lat).toFixed(6)+' , '+Number(outing.lon).toFixed(6)+'</div>':'')+'</div></div>'+
+        '<div class="planningActions"><a class="secondary" href="'+reviewsSearch+'" target="_blank" rel="noopener">⭐ Voir les avis</a><a class="secondary" href="'+mapsDirections+'" target="_blank" rel="noopener">🗺️ Itinéraire</a><button type="button" class="secondary" data-planning-open-outings="1">✏️ Modifier</button><button type="button" class="secondary" data-home-outing-map="1">📍 Localisation</button></div>';
     };
     const renderAi=()=>{
       if(!aiPlan||!aiItems.length)return '<div class="planningEmpty">Aucun planning IA n’est encore créé.</div><div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Organiser une sortie avec l’IA</button></div>';
@@ -5009,7 +5009,7 @@ function resetAiModuleState(){
   if(typeof aiPlanReservationsCache!=='undefined') aiPlanReservationsCache=[];
 }
 
-/* V54.20 — Planning : la sélection fraîche prime sur les anciennes lignes. */
+/* V54.22 — La ligne retournée par save_event_outing est la source fraîche de la sélection. */
 
 /* V54.13 — Lecture strictement isolée par event_id.
    On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
@@ -5163,6 +5163,50 @@ function renderOutingResults(){
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
 }
 
+function renderSelectedOutingBox(data){
+  const box=$('outingSelectedBox');
+  if(!box||!data)return;
+  const lat=data.lat!=null&&Number.isFinite(Number(data.lat))?Number(data.lat):null;
+  const lon=data.lon!=null&&Number.isFinite(Number(data.lon))?Number(data.lon):null;
+  const coords=(lat!=null&&lon!=null)
+    ? '<div class="muted" style="margin-top:5px">🧭 Coordonnées : '+lat.toFixed(6)+' , '+lon.toFixed(6)+'</div>'
+    : '';
+  box.classList.remove('hidden');
+  box.innerHTML=
+    '<div>⭐ <b>Sortie sélectionnée</b></div>'+
+    '<div style="margin-top:5px"><b>'+esc(data.name)+'</b></div>'+
+    '<div class="outingMeta">'+
+      (data.outing_type?'<span class="outingChip">'+esc(data.outing_type)+'</span>':'')+
+      (data.price_per_person!=null?'<span class="outingChip">💶 '+eur(data.price_per_person)+' / pers.</span>':'')+
+    '</div>'+coords+
+    (data.address?'<div class="outingAddress">📍 '+esc(data.address)+'</div>':'')+
+    (data.phone?'<div class="muted" style="margin-top:4px">📞 '+esc(data.phone)+'</div>':'')+
+    '<div class="outingActionsRow">'+
+      (lat!=null&&lon!=null?'<button type="button" class="secondary" data-outing-selected-map="'+lat+'|'+lon+'" data-outing-selected-name="'+esc(data.name)+'">📍 Voir la localisation</button>':'')+
+      (data.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(data.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+
+      '<button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button>'+
+      '<button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button>'+
+    '</div><div id="outingReservationHost"></div>';
+}
+
+async function attachSelectedOutingActions(data){
+  const box=$('outingSelectedBox');
+  if(!box||!data)return;
+  $('outingUnselectBtn')?.addEventListener('click',async()=>{
+    if(!event)return;
+    outingStateVersion++;
+    outingSelected=null;
+    box.classList.add('hidden'); box.innerHTML=''; renderOutingResults();
+    const deleteVersion=outingStateVersion;
+    const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});
+    if(deleteVersion!==outingStateVersion)return;
+    if(d.error){msg('outingMsg','Erreur : '+d.error.message,'err');await loadSelectedOuting();return;}
+    outingSelected=null; box.classList.add('hidden'); box.innerHTML=''; renderOutingResults();
+    try{await renderInlineSelectedEvent(); if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes();}catch(_){ }
+    msg('outingMsg','Sortie retirée de l’événement.','ok');
+  });
+}
+
 async function loadSelectedOuting(){
   const box=$('outingSelectedBox'); if(!box||!event)return;
 
@@ -5190,19 +5234,8 @@ async function loadSelectedOuting(){
   }
 
   outingSelected=data;
-  box.classList.remove('hidden');
-  box.innerHTML=
-    '<div>⭐ <b>Sortie sélectionnée</b></div>'+
-    '<div style="margin-top:5px"><b>'+esc(data.name)+'</b></div>'+
-    '<div class="outingMeta">'+
-      (data.outing_type?'<span class="outingChip">'+esc(data.outing_type)+'</span>':'')+
-      (data.price_per_person!=null?'<span class="outingChip">💶 '+eur(data.price_per_person)+' / pers.</span>':'')+
-    '</div>'+
-    (data.address?'<div class="outingAddress">📍 '+esc(data.address)+'</div>':'')+
-    '<div class="outingActionsRow">'+
-      '<button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button>'+
-      '<button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button>'+
-    '</div><div id="outingReservationHost"></div>';
+  renderSelectedOutingBox(data);
+  await attachSelectedOutingActions(data);
 
   renderOutingResults();
 
@@ -5266,56 +5299,21 @@ async function selectOuting(id){
   }
 
   if(r.data){
-    // La RPC de sauvegarde peut retourner une ligne inattendue sur une ancienne
-    // version SQL. La seule source d'autorité côté client est la ligne portant
-    // explicitement le event_id actuellement ouvert.
-    outingSelected=await getScopedEventOuting(event.id);
+    // V54.22 — La RPC save_event_outing vient de confirmer l'enregistrement.
+    // On utilise d'abord la ligne qu'elle vient de retourner, au lieu de faire
+    // immédiatement une seconde lecture qui peut être bloquée/retardée par RLS.
+    // Cela garantit que la sélection fraîche alimente aussi le Planning.
+    let savedOuting=Array.isArray(r.data)?(r.data[0]||null):r.data;
+    if(savedOuting && savedOuting.event_id && String(savedOuting.event_id)!==String(event.id)) savedOuting=null;
+    outingSelected=validSelectedOuting(savedOuting);
+    if(!outingSelected) outingSelected=await getScopedEventOuting(event.id);
     if(version!==outingStateVersion)return;
     const box=$('outingSelectedBox');
 
     if(box&&outingSelected){
-      box.classList.remove('hidden');
-      box.innerHTML=
-        '<div>⭐ <b>Sortie sélectionnée</b></div>'+
-        '<div style="margin-top:5px"><b>'+esc(outingSelected.name)+'</b></div>'+
-        '<div class="outingMeta">'+
-          (outingSelected.outing_type?'<span class="outingChip">'+esc(outingSelected.outing_type)+'</span>':'')+
-          (outingSelected.price_per_person!=null?'<span class="outingChip">💶 '+eur(outingSelected.price_per_person)+' / pers.</span>':'')+
-        '</div>'+
-        (outingSelected.address?'<div class="outingAddress">📍 '+esc(outingSelected.address)+'</div>':'')+
-        '<div class="outingActionsRow">'+
-          '<button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button>'+
-          '<button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button>'+
-        '</div><div id="outingReservationHost"></div>';
-
-      $('outingUnselectBtn')?.addEventListener('click',async()=>{
-        if(!event)return;
-
-        outingStateVersion++;
-        outingSelected=null;
-        box.classList.add('hidden');
-        box.innerHTML='';
-        renderOutingResults();
-
-        const deleteVersion=outingStateVersion;
-        const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});
-
-        if(deleteVersion!==outingStateVersion)return;
-
-        if(d.error){
-          msg('outingMsg','Erreur : '+d.error.message,'err');
-          await loadSelectedOuting();
-          return;
-        }
-
-        outingSelected=null;
-        box.classList.add('hidden');
-        box.innerHTML='';
-        renderOutingResults();
-        msg('outingMsg','Sortie retirée de l’événement.','ok');
-      });
+      renderSelectedOutingBox(outingSelected);
+      await attachSelectedOutingActions(outingSelected);
     }
-
     renderOutingResults();
 
     // V54.14 — Le planning de l'accueil est rendu à partir d'un snapshot
@@ -5424,6 +5422,26 @@ async function searchOutings(){
       const s=e.target.closest('[data-outing-select]');
       if(s){
         selectOuting(s.dataset.outingSelect);
+        return;
+      }
+
+      const sm=e.target.closest('[data-outing-selected-map]');
+      if(sm){
+        const [lat,lon]=sm.dataset.outingSelectedMap.split('|').map(Number);
+        if(Number.isFinite(lat)&&Number.isFinite(lon)){
+          showEventTab('locations',true);
+          setTimeout(()=>{
+            if(typeof setLocationMapView==='function')setLocationMapView(lat,lon,17);
+            if(locationMap){
+              if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker);
+              locationOutingMarker=L.marker([lat,lon],{icon:makeLocationIcon('🍽️','#278cff')})
+                .addTo(locationMap)
+                .bindPopup('<b>🍽️ '+esc(sm.dataset.outingSelectedName||'Sortie sélectionnée')+'</b>')
+                .openPopup();
+            }
+            $('locationMap')?.scrollIntoView({behavior:'smooth',block:'center'});
+          },180);
+        }
         return;
       }
 
@@ -5710,8 +5728,11 @@ loadSelectedOuting=async function(){
   window.saveEventReservation=async function(outingId,prefix){
     if(!event){alert('Aucun événement sélectionné.');return;}
     if(!sb){alert('Connexion à Supabase indisponible. Recharge la page puis réessaie.');return;}
-    let selected=outingSelected;
-    if(!selected){try{await loadSelectedOuting();selected=outingSelected;}catch(e){console.error(e);}}
+    let selected=validSelectedOuting(outingSelected);
+    if(!selected){try{await loadSelectedOuting();selected=validSelectedOuting(outingSelected);}catch(e){console.error(e);}}
+    if(!selected){
+      try{selected=await getScopedEventOuting(event.id); if(selected)outingSelected=selected;}catch(e){console.error(e);}
+    }
     if(!selected){alert('Aucune sortie sélectionnée. Sélectionne d’abord une sortie.');return;}
     const d=draftEl(prefix); if(!d){alert('Formulaire introuvable.');return;}
     const date=d.dataset.date||''; const time=d.dataset.time||'';
