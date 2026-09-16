@@ -690,6 +690,7 @@ body.discussionFullScreen{overflow:hidden!important}
 @media(max-width:600px){.aiPlanGrid{grid-template-columns:1fr}.aiPlanFull{grid-column:auto}.aiPlanActions{grid-template-columns:1fr}}
 </style>
 
+<!-- V54.16 FIX: planning manuel après sélection sortie -->
 </head>
 <body>
 <div class="app">
@@ -1794,15 +1795,28 @@ async function loadEvents(){
     }catch(_){ }
   }));
 
-  document.querySelectorAll('.eventCard').forEach(card=>{
-    card.addEventListener('click',(ev)=>{
-      if(ev.target.closest('button') || ev.target.closest('.eventCardMenu')) return;
+  // V54.15 — ouverture événement robuste sur iPhone.
+  // Délégation sur #eventList : le gestionnaire reste actif même lorsque les cartes
+  // sont reconstruites, et l'erreur éventuelle de selectEvent() est affichée au lieu
+  // de donner l'impression que le clic ne fonctionne pas.
+  const eventListEl=$('eventList');
+  if(eventListEl){
+    eventListEl.onclick=async ev=>{
+      const card=ev.target.closest('.eventCard');
+      if(!card || !eventListEl.contains(card))return;
+      if(ev.target.closest('button') || ev.target.closest('.eventCardMenu'))return;
+      const id=card.dataset.eventId;
+      if(!id)return;
       document.querySelectorAll('.eventCardMenu').forEach(m=>m.classList.add('hidden'));
-      // Efface immédiatement les détails de l'ancien événement pour éviter tout décalage visuel.
       document.querySelectorAll('.eventCard .inlineEventDetails').forEach(d=>d.remove());
-      selectEvent(card.dataset.eventId);
-    });
-  });
+      try{
+        await selectEvent(id);
+      }catch(e){
+        console.error('V54.15 selectEvent',e);
+        global('Impossible d’ouvrir cet événement : '+(e?.message||String(e)),'err');
+      }
+    };
+  }
   document.querySelectorAll('.eventCardSettings').forEach(btn=>btn.addEventListener('click',ev=>{
     ev.stopPropagation();
     const card=btn.closest('.eventCard');
@@ -1813,10 +1827,10 @@ async function loadEvents(){
     btn.setAttribute('aria-expanded',hidden?'false':'true');
   }));
   document.querySelectorAll('.editEventListBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
-    ev.stopPropagation(); const card=btn.closest('.eventCard'); await selectEvent(card.dataset.eventId); openEventTool('editEventBox');
+    ev.stopPropagation(); const card=btn.closest('.eventCard'); try{await selectEvent(card.dataset.eventId); openEventTool('editEventBox');}catch(e){console.error(e);global('Impossible d’ouvrir cet événement : '+(e?.message||String(e)),'err');}
   }));
   document.querySelectorAll('.inviteEventListBtn').forEach(btn=>btn.addEventListener('click',async ev=>{
-    ev.stopPropagation(); const card=btn.closest('.eventCard'); await selectEvent(card.dataset.eventId); openEventTool('inviteCard');
+    ev.stopPropagation(); const card=btn.closest('.eventCard'); try{await selectEvent(card.dataset.eventId); openEventTool('inviteCard');}catch(e){console.error(e);global('Impossible d’ouvrir cet événement : '+(e?.message||String(e)),'err');}
   }));
   document.querySelectorAll('.deleteEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();deleteEvent(btn.dataset.id)}));
   document.querySelectorAll('.leaveEventBtn').forEach(btn=>btn.addEventListener('click',ev=>{ev.stopPropagation();leaveEvent(btn.dataset.id)}));
@@ -2015,8 +2029,13 @@ async function renderInlineSelectedEvent(){
     bindPlanningActions();
     if(choice==='ai'&&typeof renderAiPlanReservations==='function'&&aiPlan&&aiItems.length){
       renderAiPlanReservations(aiPlan,aiItems,'homeAiReservationBox');
+    }else if(choice==='manual'){
+      // V54.16 — Le contenu manuel vient d'être rendu avec le snapshot
+      // fraîchement lu depuis Supabase. Ne pas rappeler updateChoice(choice)
+      // ici : cet appel asynchrone pouvait réécrire le planning avec un état
+      // obsolète pendant qu'une nouvelle sélection venait d'être enregistrée.
+      bindPlanningActions();
     }
-    updateChoice(choice);
   }catch(_){ }
 
   card.appendChild(box);
@@ -7609,3 +7628,5 @@ document.addEventListener('click',e=>{if(e.target.closest('#eventTransportAddBtn
 document.addEventListener('click',e=>{const tab=e.target.closest('.eventTab');if(!tab)return;if(tab.dataset.tab==='transport'||tab.dataset.tab==='accommodation'||tab.dataset.tab==='localtravel')setTimeout(v58LoadModuleLists,80);});
 setTimeout(v58SetupModuleButtons,0);
 </script>
+
+<!-- MyEvent V54.15 — robust event-card opening fix -->
