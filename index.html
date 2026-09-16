@@ -5192,6 +5192,31 @@ function renderSelectedOutingBox(data){
 async function attachSelectedOutingActions(data){
   const box=$('outingSelectedBox');
   if(!box||!data)return;
+
+  // V54.25 — Le bouton « Réserver » de la sortie sélectionnée doit être
+  // branché directement sur le même formulaire que Salle/Planning.
+  // Le handler délégué global peut être court-circuité par d'autres handlers
+  // tactiles : on sécurise donc ici le bouton réellement affiché.
+  const reserveBtn=$('outingReservationBtn');
+  if(reserveBtn && reserveBtn.dataset.reservationBound!=='1'){
+    reserveBtn.dataset.reservationBound='1';
+    reserveBtn.addEventListener('click',async ev=>{
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      if(!event||!outingSelected)return;
+      reserveBtn.disabled=true;
+      try{
+        await refreshReservationBoxes();
+        await openReservationForm('outing');
+      }catch(err){
+        console.error('outingReservationBtn',err);
+        alert('Impossible d’ouvrir la réservation : '+(err?.message||err));
+      }finally{
+        reserveBtn.disabled=false;
+      }
+    },true);
+  }
+
   $('outingUnselectBtn')?.addEventListener('click',async()=>{
     if(!event)return;
     outingStateVersion++;
@@ -5787,6 +5812,9 @@ loadSelectedOuting=async function(){
 </style>
 
 
+<script id="myevent-v54-25-reserver-direct">
+/* V54.25 — bouton Réserver Sorties branché directement */
+</script>
 <script id="myevent-v54-24-reservation-confirm">
 /* V53.6 — Confirmation de réservation par l'organisateur */
 (function(){
