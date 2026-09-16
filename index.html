@@ -2034,15 +2034,14 @@ async function selectEvent(id, options={}){
 
   if(callActive) await stopGroupCall();
   event=r.data;
-  // V54.8 — Réinitialisation stricte de l'état IA lors d'un changement d'événement.
-  // Aucun état du planning IA de l'événement précédent ne doit pouvoir fuiter.
+
+  // V54.9 — changement d'événement : aucune donnée IA de l'ancien événement
+  // ne doit rester en mémoire ou pouvoir être réutilisée par le nouvel événement.
   aiOutingPlanData=null;
   window.__myeventAiCurrentPlan=null;
   window.__myeventAiReservationPlan=null;
   window.__myeventAiReservationItems=null;
-  aiPlanLoadToken++;
-  localStorage.removeItem('myevent_event_planning_choice_'+user.id+'_'+event.id);
-  localStorage.removeItem('myevent_ai_plan_'+user.id+'_'+event.id);
+
   localStorage.setItem('myevent_active_'+user.id,event.id);
   localStorage.setItem('myevent_last_event_'+user.id,event.id);
   // Les champs du formulaire « Créer un événement » restent indépendants
@@ -2369,15 +2368,6 @@ async function createEvent(){
     }).select().single();
     if(r.error) throw r.error;
     event=r.data;
-    // V54.8 — Un nouvel événement démarre toujours vierge côté IA/planning.
-    // On efface toute éventuelle trace locale résiduelle liée à son id.
-    aiOutingPlanData=null;
-    window.__myeventAiCurrentPlan=null;
-    window.__myeventAiReservationPlan=null;
-    window.__myeventAiReservationItems=null;
-    aiPlanLoadToken++;
-    localStorage.removeItem('myevent_event_planning_choice_'+user.id+'_'+event.id);
-    localStorage.removeItem('myevent_ai_plan_'+user.id+'_'+event.id);
     const m=await sb.from('event_members').upsert({event_id:event.id,user_id:user.id,role:'owner'},{onConflict:'event_id,user_id'});
     if(m.error) throw m.error;
     if(coverFile){
@@ -6068,12 +6058,6 @@ async function loadAiOutingPlan(){
   const box=$('aiPlanPanelBox');
   if(!box||!event)return;
 
-  // V54.8 — Toujours repartir de l'état IA de l'événement courant.
-  aiOutingPlanData=null;
-  window.__myeventAiCurrentPlan=null;
-  window.__myeventAiReservationPlan=null;
-  window.__myeventAiReservationItems=null;
-
   const loadToken=++aiPlanLoadToken;
   const eventId=event.id;
   const localKey=user ? 'myevent_ai_plan_'+user.id+'_'+eventId : '';
@@ -6105,6 +6089,13 @@ async function loadAiOutingPlan(){
 
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
+    // V54.9 — repartir d'un état IA vierge à chaque chargement du module.
+    // Cela empêche un ancien planning conservé en mémoire de réapparaître.
+    aiOutingPlanData=null;
+    window.__myeventAiCurrentPlan=null;
+    window.__myeventAiReservationPlan=null;
+    window.__myeventAiReservationItems=null;
+
     let p=null;
     let items=[];
     let localPlan=null;
@@ -6116,6 +6107,14 @@ async function loadAiOutingPlan(){
         const raw=localStorage.getItem(localKey);
         localPlan=raw?JSON.parse(raw):null;
       }catch(_){localPlan=null;}
+    }
+
+    if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
+      // Sécurité supplémentaire : le planning local doit appartenir exactement
+      // à l'événement actuellement sélectionné.
+      if(String(localPlan.event_id)!==String(eventId)){
+        localPlan=null;
+      }
     }
 
     if(localPlan?.event_id===eventId&&Array.isArray(localPlan.items)&&localPlan.items.length){
@@ -6158,9 +6157,23 @@ async function loadAiOutingPlan(){
       }catch(_){ }
     }
 
+    // V54.9 — aucune donnée valide pour cet event.id = nouvel événement vierge.
+    if(p && String(p.event_id)!==String(eventId)){
+      p=null;
+      items=[];
+      aiOutingPlanData=null;
+      window.__myeventAiCurrentPlan=null;
+      window.__myeventAiReservationPlan=null;
+      window.__myeventAiReservationItems=null;
+    }
+
     if(!p){
       if(lastError)throw new Error(lastError.message||'Lecture Supabase impossible.');
-      box.innerHTML='';
+      box.innerHTML='<div class="planningEmpty">Aucun planning IA n’est encore créé.</div>'+
+        '<div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Organiser une sortie avec l’IA</button></div>';
+      box.querySelector('[data-open-ai-planning]')?.addEventListener('click',()=>{
+        openAiOutingPlanner();
+      });
       return;
     }
 
