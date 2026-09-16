@@ -1903,7 +1903,7 @@ async function renderInlineSelectedEvent(){
   // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
-    const outing=await getScopedEventOuting(event.id);
+    let outing=await getScopedEventOuting(event.id);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -2001,6 +2001,20 @@ async function renderInlineSelectedEvent(){
       choice=next;
       try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
       planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
+
+      // V54.17 — Quand l'utilisateur revient sur « Manuel », ne pas utiliser
+      // le snapshot capturé lors du rendu initial. Une sortie peut avoir été
+      // ajoutée après ce rendu (depuis le module Sorties). On relit donc la
+      // sélection directement depuis Supabase avant de construire le contenu.
+      if(choice==='manual'){
+        try{
+          const freshOuting=await getScopedEventOuting(event.id);
+          outing=freshOuting;
+        }catch(_){
+          outing=null;
+        }
+      }
+
       if(content)content.innerHTML=choice==='ai'?renderAi():renderManual();
       const manualBox=planning.querySelector('#homeReservationBox');
       const aiBox=planning.querySelector('#homeAiReservationBox');
