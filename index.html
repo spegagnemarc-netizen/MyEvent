@@ -1890,18 +1890,7 @@ async function renderInlineSelectedEvent(){
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
     const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-    let outing=Array.isArray(rp.data)?(rp.data[0]||null):rp.data;
-
-    // V54.12 — aucune sortie générique ne doit pouvoir alimenter le
-    // planning d'accueil. Si une ancienne ligne « Sortie / Activité »
-    // existe encore en base, on la supprime immédiatement.
-    if(isPlaceholderSelectedOuting(outing)){
-      try{ await sb.rpc('delete_event_outing',{p_event_id:event.id}); }catch(_){}
-      outing=null;
-    }else{
-      outing=validSelectedOuting(outing);
-    }
-
+    const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -2043,17 +2032,6 @@ async function selectEvent(id, options={}){
   if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
   if(!r.data) throw new Error('Cet événement n’est plus accessible.');
 
-  // V54.11 : changement d'événement = module Sorties/Activités vierge.
-  resetOutingModuleState();
-
-  // Le choix « Manuel/IA » reste indépendant, mais un ancien choix manuel
-  // ne doit jamais recréer une sortie inexistante.
-  try{
-    const planningKey='myevent_event_planning_choice_'+user.id+'_'+id;
-    const savedPlanning=localStorage.getItem(planningKey);
-    if(savedPlanning!=='ai') localStorage.removeItem(planningKey);
-  }catch(_){}
-
   if(callActive) await stopGroupCall();
   event=r.data;
   localStorage.setItem('myevent_active_'+user.id,event.id);
@@ -2066,9 +2044,6 @@ async function selectEvent(id, options={}){
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
   await renderInlineSelectedEvent();
-  // V54.11 : aucune réservation d'une ancienne sortie ne doit être réutilisée.
-  currentReservation=null;
-
   // V53.10 : la réservation est chargée après le rendu final du planning.
   // Évite les courses entre plusieurs renderInlineSelectedEvent().
   await refreshReservationBoxes();
@@ -2385,19 +2360,6 @@ async function createEvent(){
     }).select().single();
     if(r.error) throw r.error;
     event=r.data;
-
-    // V54.10 — un événement nouvellement créé doit toujours démarrer vierge.
-    // Nettoyage défensif : aucun ancien planning IA ne doit pouvoir être associé
-    // au nouvel event_id avant sa première utilisation de l'IA.
-    try{
-      await sb.from('event_outing_plan_items').delete().eq('event_id',event.id);
-      await sb.from('event_outing_plans').delete().eq('event_id',event.id);
-    }catch(_){ }
-    try{
-      localStorage.removeItem('myevent_ai_plan_'+user.id+'_'+event.id);
-      localStorage.removeItem('myevent_event_planning_choice_'+user.id+'_'+event.id);
-    }catch(_){ }
-
     const m=await sb.from('event_members').upsert({event_id:event.id,user_id:user.id,role:'owner'},{onConflict:'event_id,user_id'});
     if(m.error) throw m.error;
     if(coverFile){
@@ -4960,44 +4922,6 @@ function validSelectedOuting(data){
   return data && !isPlaceholderSelectedOuting(data) ? data : null;
 }
 
-// V54.11 — Un nouvel événement doit ouvrir le module Sorties/Activités vierge.
-// Aucun choix, résultat ou réservation de l'événement précédent ne doit rester en mémoire.
-function resetOutingModuleState(){
-  outingStateVersion++;
-  outingSelected=null;
-  outingResultsData=[];
-  outingFilter='all';
-  outingSearch='';
-  currentReservation=null;
-
-  const selectedBox=$('outingSelectedBox');
-  if(selectedBox){
-    selectedBox.classList.add('hidden');
-    selectedBox.innerHTML='';
-  }
-
-  const results=$('outingResults');
-  if(results){
-    results.innerHTML='<div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div>';
-  }
-
-  const search=$('outingSearch');
-  if(search)search.value='';
-
-  const budget=$('outingMaxBudget');
-  if(budget)budget.value='';
-
-  const radius=$('outingRadius');
-  if(radius)radius.value='5';
-
-  const people=$('outingPeople');
-  if(people)people.value='10';
-
-  document.querySelectorAll('.outingFilter').forEach(b=>{
-    b.classList.toggle('active',b.dataset.outingFilter==='all');
-  });
-}
-
 /* V53.24 — protection contre les courses async :
    une ancienne lecture Supabase ne peut plus recréer une sortie
    après une suppression ou une nouvelle action. */
@@ -5089,14 +5013,7 @@ async function loadSelectedOuting(){
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
-  // Si une ancienne ligne générique existe malgré tout dans Supabase, on la supprime
-  // afin qu'elle ne puisse pas réapparaître au prochain chargement.
-  if(isPlaceholderSelectedOuting(data)){
-    try{ await sb.rpc('delete_event_outing',{p_event_id:event.id}); }catch(_){}
-    data=null;
-  }else{
-    data=validSelectedOuting(data);
-  }
+  data=validSelectedOuting(data);
 
   if(!data){
     outingSelected=null;
@@ -5283,7 +5200,16 @@ async function searchOutings(){
   const bind=()=>{
     $('outingSearchBtn')?.addEventListener('click',searchOutings);
 
-    $('outingResetBtn')?.addEventListener('click',()=>{
+    $('outingResetBtn')?.addEventListener('click',async()=>{
+      // V54.13 — « Réinitialiser » remet réellement le module Sorties à zéro :
+      // filtres vierges + aucune sortie sélectionnée + aucune réservation affichée.
+      outingStateVersion++;
+      outingSearchVersion++;
+      const resetVersion=outingStateVersion;
+      const hadSelection=!!outingSelected;
+      outingSelected=null;
+      currentReservation=null;
+
       outingSearch='';
       outingFilter='all';
       if($('outingSearch'))$('outingSearch').value='';
@@ -5291,7 +5217,40 @@ async function searchOutings(){
       document.querySelectorAll('.outingFilter').forEach(b=>
         b.classList.toggle('active',b.dataset.outingFilter==='all')
       );
+
+      const box=$('outingSelectedBox');
+      if(box){box.classList.add('hidden');box.innerHTML='';}
+      const host=$('outingReservationHost');
+      if(host)host.innerHTML='';
+      const home=$('homeReservationBox');
+      if(home)home.innerHTML='';
+
+      // Remet aussi le choix de planning manuel à son état vierge.
+      try{
+        if(user&&event)localStorage.removeItem('myevent_event_planning_choice_'+user.id+'_'+event.id);
+      }catch(_){}
+
+      // Si une sortie était réellement enregistrée, on la retire de l'événement.
+      if(hadSelection&&event){
+        try{
+          const d=await sb.rpc('delete_event_outing',{p_event_id:event.id});
+          if(resetVersion!==outingStateVersion)return;
+          if(d.error){
+            msg('outingMsg','Erreur de réinitialisation : '+d.error.message,'err');
+            return;
+          }
+        }catch(e){
+          if(resetVersion!==outingStateVersion)return;
+          msg('outingMsg','Erreur de réinitialisation : '+(e.message||String(e)),'err');
+          return;
+        }
+      }
+
+      if(resetVersion!==outingStateVersion)return;
       renderOutingResults();
+      if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes();
+      if(typeof renderInlineSelectedEvent==='function'&&event)await renderInlineSelectedEvent();
+      msg('outingMsg','Sorties réinitialisées : aucune activité sélectionnée.','ok');
     });
 
     $('outingSearch')?.addEventListener('input',e=>{
@@ -6142,23 +6101,6 @@ async function loadAiOutingPlan(){
   try{
     let plans=[];
     let lastError=null;
-
-    // V54.10 — un planning IA n'est affiché que s'il a été explicitement
-    // sélectionné/généré pour cet événement. Un nouvel événement reste vierge.
-    let savedPlanningChoice=null;
-    try{
-      savedPlanningChoice=localStorage.getItem('myevent_event_planning_choice_'+user.id+'_'+eventId);
-    }catch(_){ }
-
-    if(savedPlanningChoice!=='ai'){
-      aiOutingPlanData=null;
-      window.__myeventAiCurrentPlan=null;
-      window.__myeventAiReservationPlan=null;
-      window.__myeventAiReservationItems=null;
-      box.innerHTML='<div class="planningEmpty">Aucun planning IA n’est encore créé.</div>'+
-        '<div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Organiser une sortie avec l’IA</button></div>';
-      return;
-    }
 
     // Lecture Supabase avec plusieurs tentatives.
     for(let attempt=0;attempt<8;attempt++){
