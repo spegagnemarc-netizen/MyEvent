@@ -2,7 +2,7 @@ const Stripe = require("stripe");
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -49,9 +49,8 @@ module.exports = async function handler(req, res) {
 
   try {
     /*
-     * IMPORTANT :
-     * Stripe doit recevoir le corps brut de la requête
-     * pour pouvoir vérifier correctement la signature.
+     * Stripe doit recevoir le corps brut
+     * pour vérifier correctement la signature.
      */
     const rawBody = await getRawBody(req);
 
@@ -83,9 +82,8 @@ module.exports = async function handler(req, res) {
       );
 
       /*
-       * On ne confirme la participation
-       * que lorsque Stripe indique que le paiement
-       * est réellement payé.
+       * On confirme automatiquement uniquement
+       * lorsque Stripe indique que le paiement est payé.
        */
       if (session.payment_status === "paid") {
         const fundEntryId =
@@ -109,9 +107,8 @@ module.exports = async function handler(req, res) {
         });
 
         /*
-         * Sécurité :
-         * le paiement doit être relié à une entrée
-         * de cagnotte MyEvent.
+         * Le paiement doit être relié
+         * à une participation MyEvent.
          */
         if (!fundEntryId) {
           console.warn(
@@ -125,9 +122,8 @@ module.exports = async function handler(req, res) {
         }
 
         /*
-         * Mise à jour de l'entrée de cagnotte.
-         *
-         * pending → confirmed
+         * Paiement Stripe payé :
+         * confirmation automatique de la participation.
          */
         const response = await fetch(
           `${SUPABASE_URL}/rest/v1/event_fund_entries?id=eq.${encodeURIComponent(
@@ -164,7 +160,7 @@ module.exports = async function handler(req, res) {
         }
 
         console.log(
-          "Participation MyEvent confirmée :",
+          "Participation MyEvent automatiquement confirmée :",
           fundEntryId
         );
       } else {
@@ -176,8 +172,8 @@ module.exports = async function handler(req, res) {
     }
 
     /*
-     * Stripe peut envoyer d'autres événements.
-     * On les accepte sans modifier MyEvent.
+     * Les autres événements Stripe sont acceptés
+     * sans modifier MyEvent.
      */
     return res.status(200).json({
       received: true
