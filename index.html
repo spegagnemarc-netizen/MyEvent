@@ -1889,8 +1889,7 @@ async function renderInlineSelectedEvent(){
   // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
-    const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-    const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
+    const outing=await getScopedEventOuting(event.id);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -2650,8 +2649,7 @@ async function calculateSmartFund(opts={}){
         });
       }
     }else{
-      const rp=await sb.rpc('get_event_outing',{p_event_id:event.id});
-      const outing=validSelectedOuting(Array.isArray(rp.data)?(rp.data[0]||null):rp.data);
+      const outing=await getScopedEventOuting(event.id);
       const price=Number(outing?.price_per_person);
       if(Number.isFinite(price)&&price>0){prices=[price];knownCount=1;planTitle=outing?.title||outing?.name||'Sortie manuelle';}
       else if(outing)missingCount=1;
@@ -4964,8 +4962,32 @@ function resetAiModuleState(){
   if(typeof aiPlanReservationsCache!=='undefined') aiPlanReservationsCache=[];
 }
 
+/* V54.13 — Lecture strictement isolée par event_id.
+   On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
+   si elle n'appartient pas explicitement à l'événement actuellement ouvert. */
+async function getScopedEventOuting(eventId){
+  if(!eventId||!sb)return null;
+  try{
+    const direct=await sb.from('event_outings').select('*').eq('event_id',eventId).maybeSingle();
+    if(!direct.error){
+      return validSelectedOuting(direct.data);
+    }
+  }catch(_){ }
+
+  // Secours uniquement si la lecture directe échoue (RLS / schéma ancien).
+  try{
+    const rpc=await sb.rpc('get_event_outing',{p_event_id:eventId});
+    if(rpc.error)return null;
+    const data=Array.isArray(rpc.data)?(rpc.data[0]||null):rpc.data;
+    // Si la RPC fournit event_id, il doit impérativement correspondre.
+    if(data?.event_id && String(data.event_id)!==String(eventId))return null;
+    return validSelectedOuting(data);
+  }catch(_){ return null; }
+}
+
 function resetOutingModuleState(){
   outingStateVersion++;
+  outingSearchVersion++;
   outingSelected=null;
   outingResultsData=[];
   outingFilter='all';
@@ -5077,24 +5099,14 @@ async function loadSelectedOuting(){
 
   const version=++outingStateVersion;
 
-  let r=await sb.rpc('get_event_outing',{p_event_id:event.id});
-  if(version!==outingStateVersion)return;
-
-  let data=Array.isArray(r.data)?(r.data[0]||null):r.data;
-
-  if(r.error){
-    const fallback=await sb.from('event_outings').select('*').eq('event_id',event.id).maybeSingle();
-    if(version!==outingStateVersion)return;
-    if(!fallback.error)data=fallback.data;
-  }
-
+  const data=await getScopedEventOuting(event.id);
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
   // Si une ancienne ligne générique existe malgré tout dans Supabase, on la supprime
   // afin qu'elle ne puisse pas réapparaître au prochain chargement.
   if(isPlaceholderSelectedOuting(data)){
-    try{ await sb.rpc('delete_event_outing',{p_event_id:event.id}); }catch(_){}
+    try{ await sb.from('event_outings').delete().eq('event_id',event.id); }catch(_){}
     data=null;
   }else{
     data=validSelectedOuting(data);
@@ -5185,7 +5197,11 @@ async function selectOuting(id){
   }
 
   if(r.data){
-    outingSelected=Array.isArray(r.data)?(r.data[0]||null):r.data;
+    // La RPC de sauvegarde peut retourner une ligne inattendue sur une ancienne
+    // version SQL. La seule source d'autorité côté client est la ligne portant
+    // explicitement le event_id actuellement ouvert.
+    outingSelected=await getScopedEventOuting(event.id);
+    if(version!==outingStateVersion)return;
     const box=$('outingSelectedBox');
 
     if(box&&outingSelected){
@@ -5385,6 +5401,9 @@ async function loadEventReservation(){
     return null;
   }
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
+  // V54.13 : une réservation retournée pour un autre événement ne peut jamais
+  // être réutilisée par l'événement courant.
+  if(currentReservation?.event_id && String(currentReservation.event_id)!==String(event.id))currentReservation=null;
   // V53.13 FIX : une réservation annulée ne doit plus rester affichée
   // dans le bloc de la sortie ni être considérée comme une réservation active.
   if(currentReservation?.status==='cancelled')currentReservation=null;
