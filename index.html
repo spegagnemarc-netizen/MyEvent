@@ -1903,10 +1903,14 @@ async function renderInlineSelectedEvent(){
   // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
   // Le choix est indépendant de la sortie sélectionnée et mémorisé par événement.
   try{
-    let outing=await getScopedEventOuting(event.id);
-    if(!outing && outingSelected && String(outingSelected.event_id||event.id)===String(event.id)){
+    // V54.20 — après une sélection, outingSelected est la valeur fraîchement
+    // choisie par l'utilisateur. Elle doit primer sur une éventuelle ancienne
+    // ligne encore présente dans event_outings.
+    let outing=null;
+    if(outingSelected && String(outingSelected.event_id||event.id)===String(event.id)){
       outing=validSelectedOuting(outingSelected);
     }
+    if(!outing) outing=await getScopedEventOuting(event.id);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -2067,11 +2071,18 @@ async function selectEvent(id, options={}){
   if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
   if(!r.data) throw new Error('Cet événement n’est plus accessible.');
 
-  // V54.11 : changement d'événement = module Sorties/Activités vierge.
-  resetOutingModuleState();
-  resetAiModuleState();
+  // V54.21 — Ne pas effacer l'état de la sortie lorsque l'utilisateur
+  // rouvre le MÊME événement depuis sa carte. Le retour à la carte d'accueil
+  // passait auparavant par selectEvent(id), puis resetOutingModuleState(),
+  // ce qui supprimait outingSelected avant le rendu du planning.
+  // Un vrai changement d'événement conserve au contraire l'isolation stricte.
+  const sameEvent=String(event?.id||'')===String(id);
+  if(!sameEvent){
+    resetOutingModuleState();
+    resetAiModuleState();
+  }
 
-  if(callActive) await stopGroupCall();
+  if(callActive && !sameEvent) await stopGroupCall();
   event=r.data;
   localStorage.setItem('myevent_active_'+user.id,event.id);
   localStorage.setItem('myevent_last_event_'+user.id,event.id);
@@ -4998,8 +5009,7 @@ function resetAiModuleState(){
   if(typeof aiPlanReservationsCache!=='undefined') aiPlanReservationsCache=[];
 }
 
-/* V54.19 — Lecture de toutes les lignes de l'événement + sélection de la
-   première sortie valide. L'isolation reste strictement basée sur event_id. */
+/* V54.20 — Planning : la sélection fraîche prime sur les anciennes lignes. */
 
 /* V54.13 — Lecture strictement isolée par event_id.
    On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
@@ -5007,20 +5017,26 @@ function resetAiModuleState(){
 async function getScopedEventOuting(eventId){
   if(!eventId||!sb)return null;
 
-  // V54.19 — lire toutes les lignes de CET événement puis retenir la
-  // première vraie sortie. Ne pas utiliser limit(1) : une ancienne ligne
-  // générique/placeholder peut sinon masquer la sortie réellement choisie.
+  // V54.20 — lire toutes les lignes de CET événement et retenir la plus
+  // récente vraie sortie. Ne pas utiliser limit(1) : une ancienne ligne peut
+  // sinon masquer la sortie réellement choisie.
   try{
     const direct=await sb.from('event_outings')
       .select('*')
       .eq('event_id',eventId);
     if(!direct.error){
       const rows=Array.isArray(direct.data)?direct.data:[];
-      const data=rows
+      const validRows=rows
         .filter(row=>String(row?.event_id||'')===String(eventId))
-        .map(validSelectedOuting)
-        .find(Boolean)||null;
-      return data;
+        .filter(row=>validSelectedOuting(row));
+      // Prendre la ligne la plus récente si plusieurs sélections historiques
+      // existent pour le même événement.
+      validRows.sort((a,b)=>{
+        const da=new Date(a?.updated_at||a?.created_at||0).getTime();
+        const db=new Date(b?.updated_at||b?.created_at||0).getTime();
+        return db-da;
+      });
+      return validRows[0]||null;
     }
   }catch(_){ }
 
