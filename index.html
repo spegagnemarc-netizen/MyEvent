@@ -1963,10 +1963,10 @@ async function renderInlineSelectedEvent(){
     };
     const renderAi=()=>{
       if(!aiPlan||!aiItems.length)return '<div class="planningEmpty">Aucun planning IA n’est encore créé.</div><div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Organiser une sortie avec l’IA</button></div>';
-      return '<div class="inlineEventPlanningStatus">✨ Planning IA sélectionné</div>'+
+      return '<div class="inlineEventPlanningStatus">✨ Proposition IA sélectionnée</div>'+
         '<div class="muted" style="margin-bottom:10px">'+esc(aiPlan.title||'Sortie complète')+' · '+esc(String(aiPlan.people||1))+' pers.</div>'+
         aiItems.map((x,i)=>'<div class="planningStep"><div class="planningStepIcon">'+(i+1)+'</div><div><div class="planningStepName">'+esc(x.name||'Étape')+'</div><div class="planningStepMeta">'+aiPlanCandidateLabel(x.outing_type||x.type||'activity')+(x.start_time?' · 🕐 '+esc(x.start_time):'')+(x.address?' · 📍 '+esc(x.address):'')+'</div></div></div>').join('')+
-        '<div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Ouvrir le planning IA</button></div>';
+        '<div class="planningActions"><button type="button" class="secondary" data-open-ai-planning="1">✨ Modifier la proposition</button><button type="button" class="secondary" data-ai-plan-remove="1">✕ Retirer la proposition</button></div>';
     };
 
     planning.innerHTML='<div class="inlineEventPlanningTitle">🎉 Planning de l’événement</div>'+
@@ -1978,6 +1978,7 @@ async function renderInlineSelectedEvent(){
       '<div id="homeAiReservationBox" style="display:'+(choice==='ai'?'block':'none')+'"></div>'+
       '<div id="homeReservationBox" style="display:'+(choice==='manual'?'block':'none')+'"></div>';
     box.appendChild(planning);
+    planning.querySelector('[data-ai-plan-remove]')?.addEventListener('click',removeAiOutingPlan);
 
     // V58.1 — Timeline centrale du planning de l’événement.
     try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
@@ -6099,7 +6100,7 @@ async function saveAiPlanEdits(){
     closeAiPlanEditor();
     const box=$('aiPlanPanelBox');
     if(box){
-      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+'<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
+      box.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div><div class="muted">'+esc(current.plan.title||'Sortie complète')+' · '+esc(String(current.plan.people||1))+' pers.</div>'+clean.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name)+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+'<div class="planningActions" style="margin-top:9px"><button type="button" class="secondary" data-ai-plan-edit="1">✏️ Modifier la proposition</button><button type="button" class="secondary" data-ai-plan-remove="1">✕ Retirer la proposition</button></div></div>';
       box.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
     }
     if(typeof renderAiPlanReservations==='function')await renderAiPlanReservations(current.plan,clean);
@@ -6345,6 +6346,7 @@ async function saveAiOutingPlan(index){
         items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
+      savedBox.querySelector('[data-ai-plan-remove]')?.addEventListener('click',removeAiOutingPlan);
     }
     if(typeof renderAiPlanReservations==='function') await renderAiPlanReservations(pr.data,items);
     await refreshReservationBoxes();
@@ -6358,6 +6360,38 @@ async function saveAiOutingPlan(index){
   }
 }
 let aiPlanLoadToken=0;
+
+// V54.28 — même logique que la sortie manuelle : le planning IA peut être proposé puis retiré.
+async function removeAiOutingPlan(){
+  if(!event||!user||!sb)return;
+  if(!confirm('Retirer la proposition du planning IA de cet événement ?'))return;
+  try{
+    const eventId=event.id;
+    const planId=window.__myeventAiCurrentPlan?.plan?.id||window.__myeventAiReservationPlan?.id||null;
+    if(planId){
+      try{ await sb.from('event_outing_plan_reservations').delete().eq('plan_id',planId); }catch(_){}
+      try{ await sb.from('event_outing_plan_items').delete().eq('plan_id',planId); }catch(_){}
+    }
+    const dr=await sb.from('event_outing_plans').delete().eq('event_id',eventId);
+    if(dr.error)throw dr.error;
+    try{
+      localStorage.removeItem('myevent_ai_plan_'+user.id+'_'+eventId);
+      localStorage.removeItem('myevent_event_planning_choice_'+user.id+'_'+eventId);
+    }catch(_){}
+    aiOutingPlanData=null;
+    aiPlanReservationsCache=[];
+    window.__myeventAiCurrentPlan=null;
+    window.__myeventAiReservationPlan=null;
+    window.__myeventAiReservationItems=null;
+    await renderInlineSelectedEvent();
+    if(typeof loadAiOutingPlan==='function')await loadAiOutingPlan();
+    if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes();
+    alert('✅ Proposition du planning IA retirée.');
+  }catch(e){
+    alert('Impossible de retirer la proposition IA : '+(e.message||String(e)));
+  }
+}
+window.__myeventRemoveAiOutingPlan=removeAiOutingPlan;
 
 async function loadAiOutingPlan(){
   const box=$('aiPlanPanelBox');
@@ -6527,7 +6561,7 @@ async function loadAiOutingPlan(){
     if(loadToken!==aiPlanLoadToken||event?.id!==eventId)return;
 
     box.innerHTML='<div class="aiPlanSaved">'+
-      '<div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
+      '<div class="aiPlanSavedTitle">✨ Proposition IA sélectionnée</div>'+
       '<div class="muted">'+esc(p.title||'Sortie complète')+' · '+esc(String(p.people||1))+' pers.</div>'+
       items.map((x,i)=>
         '<div class="aiPlanSavedStep"><b>'+
