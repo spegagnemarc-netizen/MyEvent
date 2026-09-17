@@ -1357,22 +1357,50 @@ let notificationPollTimer=null;
 // du conteneur principal sur iPhone et garantit 100% de la hauteur/largeur.
 let discussionPortalPlaceholder=null;
 let discussionPortalHome=null;
+let discussionPortalShell=null;
+
+function ensureDiscussionPortalShell(){
+  if(discussionPortalShell) return discussionPortalShell;
+  const panel=document.getElementById('discussionPanel');
+  if(!panel) return null;
+  discussionPortalPlaceholder=document.createComment('MyEvent discussion portal');
+  discussionPortalHome=panel.parentNode;
+  if(discussionPortalHome) discussionPortalHome.insertBefore(discussionPortalPlaceholder,panel);
+
+  const shell=document.createElement('div');
+  shell.id='discussionPortalShell';
+  shell.setAttribute('role','dialog');
+  shell.setAttribute('aria-label','Discussion');
+  shell.className='discussionPortalShell';
+  document.body.appendChild(shell);
+  discussionPortalShell=shell;
+  return shell;
+}
+
 function syncDiscussionFullscreenPortal(shouldOpen){
   const panel=document.getElementById('discussionPanel');
-  if(!panel)return;
-  if(!discussionPortalPlaceholder){
-    discussionPortalPlaceholder=document.createComment('MyEvent discussion portal');
-    discussionPortalHome=panel.parentNode;
-    if(discussionPortalHome) discussionPortalHome.insertBefore(discussionPortalPlaceholder,panel);
-  }
+  const shell=ensureDiscussionPortalShell();
+  if(!panel||!shell)return;
+
   if(shouldOpen){
-    if(panel.parentNode!==document.body) document.body.appendChild(panel);
-    panel.classList.add('active');
-  }else{
-    panel.classList.remove('active');
-    if(discussionPortalPlaceholder.parentNode && panel.parentNode!==discussionPortalPlaceholder.parentNode){
-      discussionPortalPlaceholder.parentNode.insertBefore(panel,discussionPortalPlaceholder.nextSibling);
+    // Ne pas utiliser <details> comme conteneur plein écran : ses règles de
+    // mise en page peuvent rester contraintes par le layout iOS. On porte
+    // uniquement son contenu dans un vrai overlay fixed au niveau du body.
+    if(panel.parentNode!==shell){
+      shell.appendChild(panel.querySelector(':scope > summary'));
+      shell.appendChild(panel.querySelector(':scope > .collapsibleBody'));
     }
+    panel.classList.add('active');
+    panel.open=true;
+    shell.classList.add('open');
+  }else{
+    shell.classList.remove('open');
+    panel.classList.remove('active');
+    panel.open=false;
+    const summary=panel.querySelector(':scope > summary');
+    const content=panel.querySelector(':scope > .collapsibleBody');
+    if(summary) panel.appendChild(summary);
+    if(content) panel.appendChild(content);
   }
 }
 
@@ -1438,12 +1466,13 @@ document.addEventListener('click',e=>{
     showEventTab(btn.dataset.tab);
     return;
   }
-  const summary=e.target.closest('.tabPanel > summary');
+  const summary=e.target.closest('.tabPanel > summary, #discussionPortalShell > summary');
   if(summary){
-    const panel=summary.parentElement;
-    const tab=panel?.dataset.panel;
+    const panel=summary.closest('.tabPanel') || document.getElementById('discussionPanel');
+    const tab=panel?.dataset.panel || 'discussion';
     if(tab){
       e.preventDefault();
+      e.stopPropagation();
       showEventTab(tab, false);
     }
   }
@@ -3703,6 +3732,7 @@ async function sendVoice(){
   if(btn)btn.disabled=true;
   const recText=$('voiceRecordingText');
   if(recText)recText.textContent='Envoi du vocal…';
+  let voiceStage='storage';
   try{
     const type=voiceBlob.type||'audio/webm';
     const ext=type.includes('mp4')?'m4a':'webm';
@@ -3716,6 +3746,7 @@ async function sendVoice(){
       a.preload='metadata'; a.src=url; a.onloadedmetadata=done; a.onerror=()=>{URL.revokeObjectURL(url);resolve(null)};
     });
     await ensureEventMembershipForChat();
+    voiceStage='voice_messages';
     const ins=await sb.from('voice_messages').insert({event_id:event.id,user_id:user.id,storage_path:path,duration_ms:durationMs}).select('id').single();
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
@@ -3727,7 +3758,11 @@ async function sendVoice(){
     resetVoiceRecordingUi();
     const em=String(e?.message||e||'');
     if(/row-level security|violates row-level security/i.test(em)){
-      alert("Erreur vocal : la table voice_messages bloque l'enregistrement par sa politique RLS. Le micro fonctionne ; il faut autoriser l'INSERT pour les membres de l'événement dans Supabase.");
+      if(voiceStage==='storage'){
+        alert("Erreur vocal : le stockage « event-voices » bloque l’envoi par sa politique RLS. Le micro fonctionne ; il faut autoriser l’INSERT/UPLOAD pour les membres de l’événement dans Supabase.");
+      }else{
+        alert("Erreur vocal : la table voice_messages bloque l’enregistrement par sa politique RLS. Le micro fonctionne ; il faut autoriser l’INSERT pour les membres de l’événement dans Supabase.");
+      }
     }else{
       alert('Erreur vocal : '+em);
     }
@@ -6908,7 +6943,81 @@ document.addEventListener('click',e=>{
   };
 })();
 </script>
-<!-- V54.36 — discussion: permission/membership/fullscreen hardening -->
+<style id="myevent-v54-37-discussion-shell">
+/* V54.37 — vrai overlay plein écran : le shell, pas le <details>, porte l'UI. */
+#discussionPortalShell{
+  display:none!important;
+}
+#discussionPortalShell.open{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-width:100vw!important;
+  min-height:100dvh!important;
+  max-width:100vw!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+  z-index:2147483647!important;
+  background:#07121c!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+#discussionPortalShell > #discussionPanel{
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-sizing:border-box!important;
+  display:contents!important;
+}
+#discussionPortalShell > summary{
+  flex:0 0 auto!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding-top:max(10px,env(safe-area-inset-top))!important;
+  padding-bottom:10px!important;
+  margin:0!important;
+  border-radius:0!important;
+  background:#07121c!important;
+}
+#discussionPortalShell > .collapsibleBody{
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  border-radius:0!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+#discussionPortalShell #messages{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+#discussionPortalShell .chatComposer,
+#discussionPortalShell #voicePreview,
+#discussionPortalShell .voiceComposer{
+  flex:0 0 auto!important;
+}
+body.discussionFullScreen{overflow:hidden!important;}
+</style>
+<!-- V54.37 — discussion: vrai shell fullscreen + diagnostic RLS vocal -->
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
