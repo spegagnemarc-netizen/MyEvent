@@ -538,21 +538,6 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 
 /* V46 — salon Discussion plein écran, comme le salon Appel de groupe */
 body.discussionFullScreen{overflow:hidden!important}
-/* V54.35 — Discussion : plein écran fiable sur iPhone, sans laisser voir le contenu derrière. */
-/* V54.36 — Le portail JS place #discussionPanel directement sous body. */
-body.discussionFullScreen #discussionPanel.active{position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:0!important;width:100vw!important;height:100dvh!important;min-width:100vw!important;max-width:100vw!important;min-height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:0!important;border-radius:0!important;z-index:2147483000!important;box-sizing:border-box!important;overflow:hidden!important;background:#07121c!important;}
-
-body.discussionFullScreen #discussionPanel.active{
-  position:fixed!important;
-  inset:0!important;
-  width:100%!important;
-  min-width:100%!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  max-height:none!important;
-  overflow:hidden!important;
-  z-index:10000!important;
-}
 #discussionPanel.active{
   position:fixed!important;
   inset:0!important;
@@ -707,7 +692,56 @@ body.discussionFullScreen #discussionPanel.active{
 </style>
 
 <!-- V54.16 FIX: planning manuel après sélection sortie -->
-<meta name="myevent-version" content="V54.27"><!-- V54.27 --></head>
+<meta name="myevent-version" content="V54.27"><!-- V54.27 -->
+<style id="myevent-v54-34-discussion-header">
+/* V54.34 — en-tête Discussion : flèche centrée + personnalisation compacte */
+#discussionPanel > summary{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(132px,1fr) minmax(132px,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+}
+#discussionPanel > summary > span:first-child{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+#discussionPanel > summary::after{
+  content:'⌄'!important;
+  width:100%!important;
+  height:42px!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  place-items:center!important;
+  margin:0!important;
+  border:1px solid #315b78!important;
+  border-radius:12px!important;
+  background:#0b1824!important;
+  color:#9eb2c4!important;
+  font-size:24px!important;
+  line-height:1!important;
+  transform:none!important;
+}
+#discussionPanel[open] > summary::after{transform:rotate(180deg)!important}
+#discussionPanel > summary .chatCustomizeBtn{
+  width:100%!important;
+  height:42px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  padding:6px 8px!important;
+  font-size:13px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+@media(max-width:430px){
+  #discussionPanel > summary{grid-template-columns:minmax(0,1fr) minmax(120px,1fr) minmax(120px,1fr)!important;gap:7px!important}
+  #discussionPanel > summary .chatCustomizeBtn{font-size:12px!important;padding:6px 7px!important}
+}
+</style>
+</head>
 <body>
 <div class="app">
 <h1>My<span style="color:#278cff">Event</span></h1>
@@ -1352,90 +1386,6 @@ let realtimeChannel=null;
 let notificationPollTimer=null;
 
 
-// V54.36 — Discussion en vrai plein écran : le panneau est temporairement
-// déplacé directement sous <body>. Cela évite les contraintes de mise en page
-// du conteneur principal sur iPhone et garantit 100% de la hauteur/largeur.
-let discussionPortalPlaceholder=null;
-let discussionPortalHome=null;
-let discussionPortalShell=null;
-
-function ensureDiscussionPortalShell(){
-  if(discussionPortalShell) return discussionPortalShell;
-  const panel=document.getElementById('discussionPanel');
-  if(!panel) return null;
-  discussionPortalPlaceholder=document.createComment('MyEvent discussion portal');
-  discussionPortalHome=panel.parentNode;
-  if(discussionPortalHome) discussionPortalHome.insertBefore(discussionPortalPlaceholder,panel);
-
-  const shell=document.createElement('div');
-  shell.id='discussionPortalShell';
-  shell.setAttribute('role','dialog');
-  shell.setAttribute('aria-label','Discussion');
-  shell.className='discussionPortalShell';
-  document.body.appendChild(shell);
-  discussionPortalShell=shell;
-  return shell;
-}
-
-// V54.39 — la flèche de réduction doit rester visible dans le vrai plein écran.
-// Le <summary> n'est plus enfant du <details> quand Discussion est portée par le portal,
-// donc son chevron CSS natif n'est plus fiable. On ajoute un bouton explicite.
-function ensureDiscussionCollapseButton(summary){
-  if(!summary) return null;
-  let btn=summary.querySelector('#discussionPortalCollapseBtn');
-  if(!btn){
-    btn=document.createElement('button');
-    btn.type='button';
-    btn.id='discussionPortalCollapseBtn';
-    btn.className='discussionPortalCollapseBtn secondary';
-    btn.setAttribute('aria-label','Réduire la Discussion');
-    btn.setAttribute('title','Réduire la Discussion');
-    btn.textContent='⌄';
-    summary.appendChild(btn);
-  }
-  return btn;
-}
-
-function stopActiveVoiceBeforeDiscussionClose(){
-  if(mediaRecorder && mediaRecorder.state==='recording'){
-    try{mediaRecorder.stop()}catch{}
-  }
-}
-
-function syncDiscussionFullscreenPortal(shouldOpen){
-  const panel=document.getElementById('discussionPanel');
-  const shell=ensureDiscussionPortalShell();
-  if(!panel||!shell)return;
-
-  if(shouldOpen){
-    // Ne pas utiliser <details> comme conteneur plein écran : ses règles de
-    // mise en page peuvent rester contraintes par le layout iOS. On porte
-    // uniquement son contenu dans un vrai overlay fixed au niveau du body.
-    if(panel.parentNode!==shell){
-      const summary=panel.querySelector(':scope > summary');
-      shell.appendChild(summary);
-      shell.appendChild(panel.querySelector(':scope > .collapsibleBody'));
-      ensureDiscussionCollapseButton(summary);
-    }else{
-      ensureDiscussionCollapseButton(shell.querySelector(':scope > summary'));
-    }
-    panel.classList.add('active');
-    panel.open=true;
-    shell.classList.add('open');
-  }else{
-    // V54.39 — fermeture idempotente : remettre les deux enfants exactement
-    // dans leur <details> d'origine avant de quitter Discussion.
-    stopActiveVoiceBeforeDiscussionClose();
-    shell.classList.remove('open');
-    const summary=shell.querySelector(':scope > summary');
-    const content=shell.querySelector(':scope > .collapsibleBody');
-    if(summary && summary.parentNode===shell) panel.appendChild(summary);
-    if(content && content.parentNode===shell) panel.appendChild(content);
-    panel.classList.remove('active');
-    panel.open=false;
-  }
-}
-
 function showEventTab(name, forceState=null){
   const target=document.querySelector('.tabPanel[data-panel="'+name+'"]');
   if(!target)return;
@@ -1465,9 +1415,7 @@ function showEventTab(name, forceState=null){
     panel.open=active;
   });
 
-  const discussionOpen=name==='discussion' && shouldOpen;
-  document.body.classList.toggle('discussionFullScreen', discussionOpen);
-  syncDiscussionFullscreenPortal(discussionOpen);
+  document.body.classList.toggle('discussionFullScreen', name==='discussion' && shouldOpen);
   if(shouldOpen){
     // Une vue ouverte volontairement doit pouvoir être restaurée si l'utilisateur
     // quitte puis revient sur la page sans se déconnecter.
@@ -1492,29 +1440,18 @@ function showEventTab(name, forceState=null){
   }
 }
 
-
-// V54.39 — fermeture explicite par la flèche du portal.
-document.addEventListener('click',e=>{
-  const btn=e.target.closest('#discussionPortalCollapseBtn');
-  if(!btn)return;
-  e.preventDefault();
-  e.stopPropagation();
-  showEventTab('discussion',false);
-});
-
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.eventTab');
   if(btn){
     showEventTab(btn.dataset.tab);
     return;
   }
-  const summary=e.target.closest('.tabPanel > summary, #discussionPortalShell > summary');
+  const summary=e.target.closest('.tabPanel > summary');
   if(summary){
-    const panel=summary.closest('.tabPanel') || document.getElementById('discussionPanel');
-    const tab=panel?.dataset.panel || 'discussion';
+    const panel=summary.parentElement;
+    const tab=panel?.dataset.panel;
     if(tab){
       e.preventDefault();
-      e.stopPropagation();
       showEventTab(tab, false);
     }
   }
@@ -1545,40 +1482,9 @@ function setBusy(id,busy,label){
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationSearchCenterMarker=null, locationSearchCircle=null, locationSearchCenter=null, locationHallMarker=null, locationOutingMarker=null;
 let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
-// V54.34 — centre de recherche utilisé comme source de vérité pour les recherches d'activités.
+// V54.33 — centre de recherche indépendant du lieu réel de l'événement.
 // Le point rouge reste fixe ; le point 🎯 peut être déplacé pour concentrer les résultats.
 const locationSearchCentersByEvent=new Map();
-function getStoredActivitySearchCenter(eventId){
-  if(!eventId)return null;
-  const key='myevent_activity_search_center_'+String(eventId);
-  try{
-    const v=JSON.parse(localStorage.getItem(key)||'null');
-    if(v&&Number.isFinite(+v.lat)&&Number.isFinite(+v.lon))return {lat:+v.lat,lon:+v.lon};
-  }catch(_){}
-  const mem=locationSearchCentersByEvent.get(String(eventId));
-  return mem&&Number.isFinite(+mem.lat)&&Number.isFinite(+mem.lon)?{lat:+mem.lat,lon:+mem.lon}:null;
-}
-function saveActivitySearchCenter(eventId,lat,lon){
-  if(!eventId||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
-  const v={lat:+lat,lon:+lon};
-  locationSearchCentersByEvent.set(String(eventId),v);
-  try{localStorage.setItem('myevent_activity_search_center_'+String(eventId),JSON.stringify(v));}catch(_){}
-}
-async function getActivitySearchCenter(){
-  if(!event)return null;
-  const saved=getStoredActivitySearchCenter(event.id);
-  if(saved)return saved;
-  if(locationSearchCenter&&Number.isFinite(+locationSearchCenter.lat)&&Number.isFinite(+locationSearchCenter.lon)){
-    saveActivitySearchCenter(event.id,locationSearchCenter.lat,locationSearchCenter.lon);
-    return {lat:+locationSearchCenter.lat,lon:+locationSearchCenter.lon};
-  }
-  const geo=await geocodeEventLocation();
-  if(geo){
-    saveActivitySearchCenter(event.id,geo.lat,geo.lon);
-    return {lat:+geo.lat,lon:+geo.lon};
-  }
-  return null;
-}
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
   if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationSearchCenterMarker)locationMap.removeLayer(locationSearchCenterMarker); if(locationSearchCircle)locationMap.removeLayer(locationSearchCircle); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); if(locationHallMarker)locationMap.removeLayer(locationHallMarker); if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
@@ -1607,7 +1513,6 @@ function renderLocationSearchCenter(lat,lon,{fit=false,load=true}={}){
   if(!locationMap||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
   lat=+lat;lon=+lon;
   locationSearchCenter={lat,lon};
-  if(event?.id)saveActivitySearchCenter(event.id,lat,lon);
   if(locationSearchCenterMarker)locationMap.removeLayer(locationSearchCenterMarker);
   if(locationSearchCircle)locationMap.removeLayer(locationSearchCircle);
   locationSearchCenterMarker=L.marker([lat,lon],{draggable:true,icon:makeLocationIcon('🎯','#278cff')}).addTo(locationMap);
@@ -1615,7 +1520,7 @@ function renderLocationSearchCenter(lat,lon,{fit=false,load=true}={}){
   locationSearchCenterMarker.on('dragend',async()=>{
     const ll=locationSearchCenterMarker.getLatLng();
     locationSearchCenter={lat:ll.lat,lon:ll.lng};
-    if(event?.id)saveActivitySearchCenter(event.id,ll.lat,ll.lng);
+    if(event?.id)locationSearchCentersByEvent.set(String(event.id),{lat:ll.lat,lon:ll.lng});
     const hint=$('locationSearchCenterHint');
     if(hint)hint.textContent='🎯 Secteur déplacé · actualisation des activités…';
     await loadNearbyPlaces(ll.lat,ll.lng);
@@ -1727,7 +1632,7 @@ async function loadEventLocations(){
     if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);
     locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu'));
     $('locationEventAddress').textContent=geo.address||event.location||'Lieu';
-    const saved=getStoredActivitySearchCenter(event.id);
+    const saved=locationSearchCentersByEvent.get(String(event.id));
     const center=saved&&Number.isFinite(+saved.lat)&&Number.isFinite(+saved.lon)?saved:geo;
     renderLocationSearchCenter(center.lat,center.lon,{fit:false,load:true});
   }
@@ -1758,7 +1663,7 @@ document.addEventListener('click',e=>{
     if(locationEventCoords){
       setLocationMapView(locationEventCoords.lat,locationEventCoords.lon,15);
       renderLocationSearchCenter(locationEventCoords.lat,locationEventCoords.lon,{fit:false,load:true});
-      if(event?.id)saveActivitySearchCenter(event.id,locationEventCoords.lat,locationEventCoords.lon);
+      if(event?.id)locationSearchCentersByEvent.set(String(event.id),{lat:locationEventCoords.lat,lon:locationEventCoords.lon});
     }else $('locationMsg').textContent='Le lieu de l’événement n’a pas encore pu être localisé.';
   }
   if(e.target.closest('#locMeBtn')){const msgEl=$('locationMsg');if(!navigator.geolocation){if(msgEl)msgEl.textContent='La géolocalisation n’est pas disponible dans ce navigateur.';return;}if(msgEl)msgEl.textContent='📍 Demande d’autorisation de localisation…';navigator.geolocation.getCurrentPosition(async pos=>{const {latitude,longitude}=pos.coords;setLocationMapView(latitude,longitude,16);if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();const avatar=pr?.data?.avatar||'';if(locationMap)locationUserMarker=L.marker([latitude,longitude],{icon:makeAvatarLocationIcon(avatar,'#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();if(msgEl)msgEl.textContent='📍 Ta position est affichée sur la carte. Pour la partager, choisis ensuite une option ci-dessous.';},err=>{if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
@@ -3364,18 +3269,14 @@ async function loadMessages(){
     (pr.error?[]:(pr.data||[])).forEach(p=>pollMessageMap.set(p.id,{...p,options:options.filter(o=>o.poll_id===p.id),votes:votes.filter(v=>v.poll_id===p.id)}));
   }
   const vr=await sb.from('voice_messages').select('id,user_id,storage_path,duration_ms,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
-  if(vr.error){
-    console.error('voice_messages SELECT:',vr.error);
-  }
   const voices=vr.error?[]:(vr.data||[]);
   const ids=[...new Set([...rows.map(m=>m.user_id),...voices.map(m=>m.user_id)].filter(Boolean))];
   let profiles=[];
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   const voiceUrls=await Promise.all(voices.map(async m=>{
-    const local=voiceLocalUrls.get(String(m.id))||'';
     const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
-    return {...m,url:x.data?.signedUrl||local||'',storageError:x.error?.message||''};
+    return {...m,url:x.data?.signedUrl||''};
   }));
   const all=[
     ...rows.map(m=>({kind:'message',created_at:m.created_at,data:m})),
@@ -3441,10 +3342,8 @@ async function loadMessages(){
       return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatAttachmentMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+preview+'</div></div>';
     }
     if(item.kind==='voice'){
+      if(!m.url)return '';
       const duration=m.duration_ms?formatVoiceDuration(m.duration_ms):'0:00';
-      if(!m.url){
-        return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'"><div class="messageBody voiceMessage"><div class="voiceLabel">🎙️ Vocal</div><div class="muted">Vocal enregistré, mais lecture indisponible. Vérifie la politique SELECT du bucket « event-voices ».</div></div></div>';
-      }
       return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
         avatarHtml(av,'messageAvatar')+
         '<div class="messageBody voiceMessage"><div class="voiceWhatsAppRow">'+
@@ -3586,7 +3485,6 @@ async function deleteVoice(id,path){
     if(d.error)throw d.error;
     const st=await sb.storage.from('event-voices').remove([path]);
     if(st.error)throw st.error;
-    const local=voiceLocalUrls.get(String(id)); if(local){try{URL.revokeObjectURL(local)}catch{} voiceLocalUrls.delete(String(id));}
     await loadMessages();
   }catch(e){alert('Erreur suppression vocal : '+(e.message||String(e)))}
 }
@@ -3595,9 +3493,6 @@ let mediaRecorder=null;
 let voiceChunks=[];
 let voiceStream=null;
 let voiceBlob=null;
-// V54.38 — URL locales conservées pour afficher immédiatement le vocal
-// après l'envoi, même si la génération de l'URL Storage prend un instant.
-const voiceLocalUrls=new Map();
 
 function pickVoiceMime(){
   if(!window.MediaRecorder)return '';
@@ -3739,16 +3634,6 @@ async function toggleVoiceRecording(){
   }
   clearVoicePreview();
   try{
-    // Le navigateur/iOS mémorise l'autorisation au niveau du site. On ne redemande
-    // pas inutilement une permission si elle est déjà accordée.
-    if(navigator.permissions?.query){
-      try{
-        const perm=await navigator.permissions.query({name:'microphone'});
-        if(perm.state==='denied')throw new Error('Accès au micro refusé dans les réglages du navigateur.');
-      }catch(e){
-        if(e?.message==='Accès au micro refusé dans les réglages du navigateur.')throw e;
-      }
-    }
     voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
     const mime=pickVoiceMime();
     mediaRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
@@ -3784,7 +3669,6 @@ async function sendVoice(){
   if(btn)btn.disabled=true;
   const recText=$('voiceRecordingText');
   if(recText)recText.textContent='Envoi du vocal…';
-  let voiceStage='storage';
   try{
     const type=voiceBlob.type||'audio/webm';
     const ext=type.includes('mp4')?'m4a':'webm';
@@ -3797,31 +3681,13 @@ async function sendVoice(){
       const done=()=>{const d=Number.isFinite(a.duration)?Math.round(a.duration*1000):null;URL.revokeObjectURL(url);resolve(d)};
       a.preload='metadata'; a.src=url; a.onloadedmetadata=done; a.onerror=()=>{URL.revokeObjectURL(url);resolve(null)};
     });
-    await ensureEventMembershipForChat();
-    voiceStage='voice_messages';
     const ins=await sb.from('voice_messages').insert({event_id:event.id,user_id:user.id,storage_path:path,duration_ms:durationMs}).select('id').single();
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
-    if(ins.data?.id && voiceBlob){
-      try{voiceLocalUrls.set(String(ins.data.id),URL.createObjectURL(voiceBlob));}catch{}
-    }
     clearVoicePreview();
     resetVoiceRecordingUi();
     await loadMessages();
-  }catch(e){
-    if(btn)btn.disabled=false;
-    resetVoiceRecordingUi();
-    const em=String(e?.message||e||'');
-    if(/row-level security|violates row-level security/i.test(em)){
-      if(voiceStage==='storage'){
-        alert("Erreur vocal : le stockage « event-voices » bloque l’envoi par sa politique RLS. Le micro fonctionne ; il faut autoriser l’INSERT/UPLOAD pour les membres de l’événement dans Supabase.");
-      }else{
-        alert("Erreur vocal : la table voice_messages bloque l’enregistrement par sa politique RLS. Le micro fonctionne ; il faut autoriser l’INSERT pour les membres de l’événement dans Supabase.");
-      }
-    }else{
-      alert('Erreur vocal : '+em);
-    }
-  }
+  }catch(e){if(btn)btn.disabled=false;resetVoiceRecordingUi();alert('Erreur vocal : '+(e.message||String(e)));}
 }
 
 
@@ -3929,21 +3795,12 @@ async function sendVoice(){
   fileInput?.addEventListener('change',()=>handleFiles(fileInput));
 })();
 
-async function ensureEventMembershipForChat(){
-  // V54.36 — ne jamais tenter un INSERT/UPSERT dans event_members depuis la
-  // discussion : si la table est protégée par RLS, cette tentative peut échouer
-  // et masquer ensuite la vraie erreur de voice_messages. Les adhésions sont
-  // créées lors de la création/rejoindre l'événement.
-  return true;
-}
-
 async function sendMessage(){
   if(!event){alert('Aucun événement actif. Recharge la page.');return}
   const c=$('message').value.trim();
   if(!c)return;
   setBusy('sendBtn',true,'…');
   try{
-    await ensureEventMembershipForChat();
     const r=await sb.from('messages').insert({
       event_id:event.id,user_id:user.id,content:c
     }).select('id').single();
@@ -5678,15 +5535,15 @@ async function searchOutings(){
   if(!event)return;
 
   const el=$('outingResults');
-  if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du centre de recherche 🎯…</div>';
+  if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du lieu de l’événement…</div>';
 
   const searchVersion=++outingSearchVersion;
-  const geo=await getActivitySearchCenter();
+  const geo=await geocodeEventLocation();
 
   if(searchVersion!==outingSearchVersion)return;
 
   if(!geo){
-    if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.</div>';
+    if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour rechercher des sorties.</div>';
     return;
   }
 
@@ -6486,10 +6343,10 @@ async function generateAiOutingPlan(){
   const prompt=String($('aiPlanPrompt')?.value||'').trim();
   btn.disabled=true;
   $('aiPlanResults').innerHTML='';
-  $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour du centre 🎯…';
+  $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour de l’événement…';
   try{
-    const geo=await getActivitySearchCenter();
-    if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.');
+    const geo=await geocodeEventLocation();
+    if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour que MyEvent puisse chercher les sorties.');
     const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
@@ -6998,156 +6855,6 @@ document.addEventListener('click',e=>{
   };
 })();
 </script>
-
-<style id="myevent-v54-39-discussion-collapse">
-/* V54.39 — flèche explicite pour réduire le Discussion fullscreen. */
-#discussionPortalShell > summary::after{display:none!important}
-#discussionPortalShell > summary{position:relative!important}
-#discussionPortalShell > summary #discussionPortalCollapseBtn{
-  margin-left:auto!important;
-  flex:0 0 46px!important;
-  width:46px!important;
-  height:46px!important;
-  min-width:46px!important;
-  min-height:46px!important;
-  padding:0!important;
-  border:1px solid #28445b!important;
-  border-radius:12px!important;
-  background:#0b1824!important;
-  color:#dce8f2!important;
-  font-size:27px!important;
-  line-height:1!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  cursor:pointer!important;
-  touch-action:manipulation!important;
-}
-#discussionPortalShell > summary #discussionPortalCollapseBtn:active{transform:scale(.96)}
-</style>
-
-<style id="myevent-v54-37-discussion-shell">
-/* V54.37 — vrai overlay plein écran : le shell, pas le <details>, porte l'UI. */
-#discussionPortalShell{
-  display:none!important;
-}
-#discussionPortalShell.open{
-  position:fixed!important;
-  inset:0!important;
-  width:100vw!important;
-  height:100dvh!important;
-  min-width:100vw!important;
-  min-height:100dvh!important;
-  max-width:100vw!important;
-  max-height:100dvh!important;
-  margin:0!important;
-  padding:0!important;
-  box-sizing:border-box!important;
-  z-index:2147483647!important;
-  background:#07121c!important;
-  display:flex!important;
-  flex-direction:column!important;
-  overflow:hidden!important;
-}
-#discussionPortalShell > #discussionPanel{
-  position:static!important;
-  inset:auto!important;
-  width:100%!important;
-  height:100%!important;
-  min-width:0!important;
-  min-height:0!important;
-  max-width:none!important;
-  max-height:none!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  box-sizing:border-box!important;
-  display:contents!important;
-}
-#discussionPortalShell > summary{
-  flex:0 0 auto!important;
-  width:100%!important;
-  box-sizing:border-box!important;
-  padding-top:max(10px,env(safe-area-inset-top))!important;
-  padding-bottom:10px!important;
-  margin:0!important;
-  border-radius:0!important;
-  background:#07121c!important;
-}
-#discussionPortalShell > .collapsibleBody{
-  flex:1 1 auto!important;
-  width:100%!important;
-  min-height:0!important;
-  height:auto!important;
-  margin:0!important;
-  border-radius:0!important;
-  box-sizing:border-box!important;
-  display:flex!important;
-  flex-direction:column!important;
-  overflow:hidden!important;
-}
-#discussionPortalShell #messages{
-  flex:1 1 auto!important;
-  min-height:0!important;
-  overflow-y:auto!important;
-  -webkit-overflow-scrolling:touch!important;
-}
-#discussionPortalShell .chatComposer,
-#discussionPortalShell #voicePreview,
-#discussionPortalShell .voiceComposer{
-  flex:0 0 auto!important;
-}
-body.discussionFullScreen{overflow:hidden!important;}
-</style>
-<!-- V54.37 — discussion: vrai shell fullscreen + diagnostic RLS vocal -->
-
-<style id="myevent-v54-40-discussion-header">
-/* V54.40 — En-tête Discussion : titre à gauche, flèche centrée, personnalisation à droite. */
-#discussionPortalShell > summary{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 104px 104px!important;
-  align-items:center!important;
-  justify-content:initial!important;
-  gap:8px!important;
-}
-#discussionPortalShell > summary > span:first-child{
-  grid-column:1!important;
-  min-width:0!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-}
-#discussionPortalShell > summary #discussionPortalCollapseBtn{
-  grid-column:2!important;
-  grid-row:1!important;
-  margin:0!important;
-  width:104px!important;
-  min-width:104px!important;
-  max-width:104px!important;
-  height:46px!important;
-  min-height:46px!important;
-  max-height:46px!important;
-  justify-self:center!important;
-}
-#discussionPortalShell > summary .chatCustomizeBtn{
-  grid-column:3!important;
-  grid-row:1!important;
-  justify-self:end!important;
-  width:104px!important;
-  min-width:104px!important;
-  max-width:104px!important;
-  box-sizing:border-box!important;
-  margin:0!important;
-  padding:8px 6px!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-}
-@media(max-width:430px){
-  #discussionPortalShell > summary{grid-template-columns:minmax(0,1fr) 104px 104px!important;gap:6px!important;}
-  #discussionPortalShell > summary .chatCustomizeBtn{font-size:12px!important;}
-}
-</style>
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
@@ -8267,8 +7974,3 @@ setTimeout(v58SetupModuleButtons,0);
 </script>
 
 <!-- MyEvent V54.15 — robust event-card opening fix -->
-
-<style id="myevent-v54-38-vocal-fix">
-/* V54.38 — le shell fermé ne doit jamais intercepter les clics. */
-#discussionPortalShell:not(.open){display:none!important;pointer-events:none!important;}
-</style>
