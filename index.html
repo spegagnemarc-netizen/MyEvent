@@ -3047,7 +3047,18 @@ async function loadFund(){
   let memberProfiles=[];
   if(memberIds.length){ const pr=await sb.from('profiles').select('id,display_name,username').in('id',memberIds); if(!pr.error) memberProfiles=pr.data||[]; }
   const memberMap=new Map(memberProfiles.map(p=>[p.id,p]));
-  const expectedPerPerson=memberCount?target/memberCount:0;
+  // V54.42 : si l'objectif manuel vaut 0, utiliser le budget intelligent
+  // calculé depuis le planning, comme pour le montant recommandé du paiement.
+  // Ainsi un paiement intégral de la part recommandée est bien affiché
+  // « Confirmé » et non « Partiellement confirmé ».
+  let trackingBudget=Number(target||0);
+  if(!(trackingBudget>0)){
+    const smartText=String($('fundSmartEstimate')?.textContent||'');
+    const smartMatch=smartText.replace(/\s/g,'').replace('€','').match(/[0-9]+(?:[.,][0-9]+)?/);
+    const smartEstimate=smartMatch?Number(String(smartMatch[0]).replace(',','.')):0;
+    if(Number.isFinite(smartEstimate)&&smartEstimate>0) trackingBudget=smartEstimate;
+  }
+  const expectedPerPerson=memberCount?Math.round((trackingBudget/memberCount)*100)/100:0;
   const byUser=new Map();
   contributions.forEach(x=>{
     if(!x.user_id)return;
