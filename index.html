@@ -538,6 +538,18 @@ details.tabPanel.uniformToggle > .collapsibleBody{
 
 /* V46 — salon Discussion plein écran, comme le salon Appel de groupe */
 body.discussionFullScreen{overflow:hidden!important}
+/* V54.35 — Discussion : plein écran fiable sur iPhone, sans laisser voir le contenu derrière. */
+body.discussionFullScreen #discussionPanel.active{
+  position:fixed!important;
+  inset:0!important;
+  width:100%!important;
+  min-width:100%!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  z-index:10000!important;
+}
 #discussionPanel.active{
   position:fixed!important;
   inset:0!important;
@@ -1367,6 +1379,9 @@ function showEventTab(name, forceState=null){
   });
 
   document.body.classList.toggle('discussionFullScreen', name==='discussion' && shouldOpen);
+  if(name==='discussion' && shouldOpen){
+    requestAnimationFrame(()=>{ document.getElementById('discussionPanel')?.classList.add('active'); });
+  }
   if(shouldOpen){
     // Une vue ouverte volontairement doit pouvoir être restaurée si l'utilisateur
     // quitte puis revient sur la page sans se déconnecter.
@@ -3617,6 +3632,16 @@ async function toggleVoiceRecording(){
   }
   clearVoicePreview();
   try{
+    // Le navigateur/iOS mémorise l'autorisation au niveau du site. On ne redemande
+    // pas inutilement une permission si elle est déjà accordée.
+    if(navigator.permissions?.query){
+      try{
+        const perm=await navigator.permissions.query({name:'microphone'});
+        if(perm.state==='denied')throw new Error('Accès au micro refusé dans les réglages du navigateur.');
+      }catch(e){
+        if(e?.message==='Accès au micro refusé dans les réglages du navigateur.')throw e;
+      }
+    }
     voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
     const mime=pickVoiceMime();
     mediaRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
@@ -3664,6 +3689,7 @@ async function sendVoice(){
       const done=()=>{const d=Number.isFinite(a.duration)?Math.round(a.duration*1000):null;URL.revokeObjectURL(url);resolve(d)};
       a.preload='metadata'; a.src=url; a.onloadedmetadata=done; a.onerror=()=>{URL.revokeObjectURL(url);resolve(null)};
     });
+    await ensureEventMembershipForChat();
     const ins=await sb.from('voice_messages').insert({event_id:event.id,user_id:user.id,storage_path:path,duration_ms:durationMs}).select('id').single();
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
@@ -3778,12 +3804,24 @@ async function sendVoice(){
   fileInput?.addEventListener('change',()=>handleFiles(fileInput));
 })();
 
+async function ensureEventMembershipForChat(){
+  if(!sb||!user||!event)return;
+  try{
+    const q=await sb.from('event_members').select('user_id,role').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+    if(!q.error && q.data)return;
+    const role=event.creator_id===user.id?'owner':'member';
+    const ins=await sb.from('event_members').upsert({event_id:event.id,user_id:user.id,role},{onConflict:'event_id,user_id'});
+    if(ins.error)console.warn('Membership discussion:',ins.error.message);
+  }catch(e){console.warn('Membership discussion:',e.message||e)}
+}
+
 async function sendMessage(){
   if(!event){alert('Aucun événement actif. Recharge la page.');return}
   const c=$('message').value.trim();
   if(!c)return;
   setBusy('sendBtn',true,'…');
   try{
+    await ensureEventMembershipForChat();
     const r=await sb.from('messages').insert({
       event_id:event.id,user_id:user.id,content:c
     }).select('id').single();
@@ -6838,6 +6876,7 @@ document.addEventListener('click',e=>{
   };
 })();
 </script>
+<!-- V54.35 — discussion: permission/membership/fullscreen hardening -->
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
