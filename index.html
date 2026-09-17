@@ -1433,9 +1433,40 @@ function setBusy(id,busy,label){
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationSearchCenterMarker=null, locationSearchCircle=null, locationSearchCenter=null, locationHallMarker=null, locationOutingMarker=null;
 let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
-// V54.33 — centre de recherche indépendant du lieu réel de l'événement.
+// V54.34 — centre de recherche utilisé comme source de vérité pour les recherches d'activités.
 // Le point rouge reste fixe ; le point 🎯 peut être déplacé pour concentrer les résultats.
 const locationSearchCentersByEvent=new Map();
+function getStoredActivitySearchCenter(eventId){
+  if(!eventId)return null;
+  const key='myevent_activity_search_center_'+String(eventId);
+  try{
+    const v=JSON.parse(localStorage.getItem(key)||'null');
+    if(v&&Number.isFinite(+v.lat)&&Number.isFinite(+v.lon))return {lat:+v.lat,lon:+v.lon};
+  }catch(_){}
+  const mem=locationSearchCentersByEvent.get(String(eventId));
+  return mem&&Number.isFinite(+mem.lat)&&Number.isFinite(+mem.lon)?{lat:+mem.lat,lon:+mem.lon}:null;
+}
+function saveActivitySearchCenter(eventId,lat,lon){
+  if(!eventId||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
+  const v={lat:+lat,lon:+lon};
+  locationSearchCentersByEvent.set(String(eventId),v);
+  try{localStorage.setItem('myevent_activity_search_center_'+String(eventId),JSON.stringify(v));}catch(_){}
+}
+async function getActivitySearchCenter(){
+  if(!event)return null;
+  const saved=getStoredActivitySearchCenter(event.id);
+  if(saved)return saved;
+  if(locationSearchCenter&&Number.isFinite(+locationSearchCenter.lat)&&Number.isFinite(+locationSearchCenter.lon)){
+    saveActivitySearchCenter(event.id,locationSearchCenter.lat,locationSearchCenter.lon);
+    return {lat:+locationSearchCenter.lat,lon:+locationSearchCenter.lon};
+  }
+  const geo=await geocodeEventLocation();
+  if(geo){
+    saveActivitySearchCenter(event.id,geo.lat,geo.lon);
+    return {lat:+geo.lat,lon:+geo.lon};
+  }
+  return null;
+}
 const locationIcons={restaurant:'🍽️',cafe:'☕',bar:'🍹',fast_food:'🍔',pub:'🍺',cinema:'🎬',theatre:'🎭',museum:'🏛️',attraction:'🎯',park:'🌳',playground:'🛝',sports_centre:'🏟️',bowling_alley:'🎳',fitness_centre:'🏋️',beach:'🏖️',gallery:'🖼️',viewpoint:'👀',arts_centre:'🎨',water_park:'💦'};
 function clearLocationMarkers(){
   if(locationMap){ if(locationEventMarker)locationMap.removeLayer(locationEventMarker); if(locationSearchCenterMarker)locationMap.removeLayer(locationSearchCenterMarker); if(locationSearchCircle)locationMap.removeLayer(locationSearchCircle); if(locationUserMarker)locationMap.removeLayer(locationUserMarker); if(locationHallMarker)locationMap.removeLayer(locationHallMarker); if(locationOutingMarker)locationMap.removeLayer(locationOutingMarker); locationMemberMarkers.forEach(m=>locationMap.removeLayer(m)); locationPlaceMarkers.forEach(m=>locationMap.removeLayer(m)); }
@@ -1464,6 +1495,7 @@ function renderLocationSearchCenter(lat,lon,{fit=false,load=true}={}){
   if(!locationMap||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
   lat=+lat;lon=+lon;
   locationSearchCenter={lat,lon};
+  if(event?.id)saveActivitySearchCenter(event.id,lat,lon);
   if(locationSearchCenterMarker)locationMap.removeLayer(locationSearchCenterMarker);
   if(locationSearchCircle)locationMap.removeLayer(locationSearchCircle);
   locationSearchCenterMarker=L.marker([lat,lon],{draggable:true,icon:makeLocationIcon('🎯','#278cff')}).addTo(locationMap);
@@ -1471,7 +1503,7 @@ function renderLocationSearchCenter(lat,lon,{fit=false,load=true}={}){
   locationSearchCenterMarker.on('dragend',async()=>{
     const ll=locationSearchCenterMarker.getLatLng();
     locationSearchCenter={lat:ll.lat,lon:ll.lng};
-    if(event?.id)locationSearchCentersByEvent.set(String(event.id),{lat:ll.lat,lon:ll.lng});
+    if(event?.id)saveActivitySearchCenter(event.id,ll.lat,ll.lng);
     const hint=$('locationSearchCenterHint');
     if(hint)hint.textContent='🎯 Secteur déplacé · actualisation des activités…';
     await loadNearbyPlaces(ll.lat,ll.lng);
@@ -1583,7 +1615,7 @@ async function loadEventLocations(){
     if(locationEventMarker&&locationMap)locationMap.removeLayer(locationEventMarker);
     locationEventMarker=L.marker([geo.lat,geo.lon],{icon:makeLocationIcon('📍','#ff5b67')}).addTo(locationMap).bindPopup('<b>📍 Lieu de l’événement</b><br>'+esc(event.location||geo.address||'Lieu'));
     $('locationEventAddress').textContent=geo.address||event.location||'Lieu';
-    const saved=locationSearchCentersByEvent.get(String(event.id));
+    const saved=getStoredActivitySearchCenter(event.id);
     const center=saved&&Number.isFinite(+saved.lat)&&Number.isFinite(+saved.lon)?saved:geo;
     renderLocationSearchCenter(center.lat,center.lon,{fit:false,load:true});
   }
@@ -1614,7 +1646,7 @@ document.addEventListener('click',e=>{
     if(locationEventCoords){
       setLocationMapView(locationEventCoords.lat,locationEventCoords.lon,15);
       renderLocationSearchCenter(locationEventCoords.lat,locationEventCoords.lon,{fit:false,load:true});
-      if(event?.id)locationSearchCentersByEvent.set(String(event.id),{lat:locationEventCoords.lat,lon:locationEventCoords.lon});
+      if(event?.id)saveActivitySearchCenter(event.id,locationEventCoords.lat,locationEventCoords.lon);
     }else $('locationMsg').textContent='Le lieu de l’événement n’a pas encore pu être localisé.';
   }
   if(e.target.closest('#locMeBtn')){const msgEl=$('locationMsg');if(!navigator.geolocation){if(msgEl)msgEl.textContent='La géolocalisation n’est pas disponible dans ce navigateur.';return;}if(msgEl)msgEl.textContent='📍 Demande d’autorisation de localisation…';navigator.geolocation.getCurrentPosition(async pos=>{const {latitude,longitude}=pos.coords;setLocationMapView(latitude,longitude,16);if(locationUserMarker&&locationMap)locationMap.removeLayer(locationUserMarker);const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();const avatar=pr?.data?.avatar||'';if(locationMap)locationUserMarker=L.marker([latitude,longitude],{icon:makeAvatarLocationIcon(avatar,'#278cff')}).addTo(locationMap).bindPopup('📍 Ma position').openPopup();if(msgEl)msgEl.textContent='📍 Ta position est affichée sur la carte. Pour la partager, choisis ensuite une option ci-dessous.';},err=>{if(msgEl)msgEl.textContent=err&&err.code===1?'⚠️ Autorisation refusée. Sur iPhone : Réglages → Confidentialité et sécurité → Service de localisation → Safari → Lorsque l’app est active.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
@@ -5486,15 +5518,15 @@ async function searchOutings(){
   if(!event)return;
 
   const el=$('outingResults');
-  if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du lieu de l’événement…</div>';
+  if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du centre de recherche 🎯…</div>';
 
   const searchVersion=++outingSearchVersion;
-  const geo=await geocodeEventLocation();
+  const geo=await getActivitySearchCenter();
 
   if(searchVersion!==outingSearchVersion)return;
 
   if(!geo){
-    if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour rechercher des sorties.</div>';
+    if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.</div>';
     return;
   }
 
@@ -6294,10 +6326,10 @@ async function generateAiOutingPlan(){
   const prompt=String($('aiPlanPrompt')?.value||'').trim();
   btn.disabled=true;
   $('aiPlanResults').innerHTML='';
-  $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour de l’événement…';
+  $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour du centre 🎯…';
   try{
-    const geo=await geocodeEventLocation();
-    if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour que MyEvent puisse chercher les sorties.');
+    const geo=await getActivitySearchCenter();
+    if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.');
     const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
