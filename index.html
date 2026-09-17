@@ -691,7 +691,7 @@ body.discussionFullScreen{overflow:hidden!important}
 </style>
 
 <!-- V54.16 FIX: planning manuel après sélection sortie -->
-</head>
+<meta name="myevent-version" content="V54.27"><!-- V54.27 --></head>
 <body>
 <div class="app">
 <h1>My<span style="color:#278cff">Event</span></h1>
@@ -2446,6 +2446,7 @@ async function createEvent(){
     // Ainsi aucun planning/sortie/réservation de l'événement précédent ne peut
     // être rendu pendant la transition vers le nouvel événement.
     const newEvent=event;
+    try{ clearLocalOutingSnapshot(newEvent.id); clearLocalReservationSnapshot(newEvent.id); }catch(_){}
     event=null;
     resetOutingModuleState();
     resetAiModuleState();
@@ -5022,6 +5023,15 @@ function resetAiModuleState(){
 /* V54.13 — Lecture strictement isolée par event_id.
    On ne fait plus confiance à une éventuelle ligne renvoyée par une RPC
    si elle n'appartient pas explicitement à l'événement actuellement ouvert. */
+function outingLocalKey(eventId){ return user&&eventId ? 'myevent_selected_outing_'+user.id+'_'+eventId : ''; }
+function reservationLocalKey(eventId){ return user&&eventId ? 'myevent_event_reservation_'+user.id+'_'+eventId : ''; }
+function saveLocalOutingSnapshot(data){ try{ const k=outingLocalKey(event?.id); if(k&&data) localStorage.setItem(k,JSON.stringify(data)); }catch(_){} }
+function loadLocalOutingSnapshot(eventId){ try{ const k=outingLocalKey(eventId); const raw=k?localStorage.getItem(k):null; if(!raw)return null; const data=JSON.parse(raw); if(!data || String(data.event_id||eventId)!==String(eventId))return null; return validSelectedOuting(data); }catch(_){ return null; } }
+function clearLocalOutingSnapshot(eventId){ try{ const k=outingLocalKey(eventId); if(k)localStorage.removeItem(k); }catch(_){} }
+function saveLocalReservationSnapshot(data){ try{ const k=reservationLocalKey(event?.id); if(k&&data) localStorage.setItem(k,JSON.stringify(data)); }catch(_){} }
+function loadLocalReservationSnapshot(eventId){ try{ const k=reservationLocalKey(eventId); const raw=k?localStorage.getItem(k):null; if(!raw)return null; const data=JSON.parse(raw); if(!data || (data.event_id && String(data.event_id)!==String(eventId)))return null; if(data.status==='cancelled')return null; return data; }catch(_){ return null; } }
+function clearLocalReservationSnapshot(eventId){ try{ const k=reservationLocalKey(eventId); if(k)localStorage.removeItem(k); }catch(_){} }
+
 async function getScopedEventOuting(eventId){
   if(!eventId||!sb)return null;
 
@@ -5059,7 +5069,10 @@ async function getScopedEventOuting(eventId){
     // Une RPC ne doit jamais pouvoir injecter la sortie d'un autre événement.
     if(data?.event_id && String(data.event_id)!==String(eventId))return null;
     return validSelectedOuting(data);
-  }catch(_){ return null; }
+  }catch(_){ }
+
+  // V54.27 — secours local strictement lié à l'événement actif.
+  return loadLocalOutingSnapshot(eventId);
 }
 
 function resetOutingModuleState(){
@@ -5259,6 +5272,9 @@ async function loadSelectedOuting(){
   }
 
   if(!data){
+    data=loadLocalOutingSnapshot(event.id);
+  }
+  if(!data){
     outingSelected=null;
     box.classList.add('hidden');
     box.innerHTML='';
@@ -5294,6 +5310,8 @@ async function loadSelectedOuting(){
     }
 
     outingSelected=null;
+    clearLocalOutingSnapshot(event.id);
+    clearLocalReservationSnapshot(event.id);
     box.classList.add('hidden');
     box.innerHTML='';
     renderOutingResults();
@@ -5340,6 +5358,7 @@ async function selectOuting(id){
     if(savedOuting && savedOuting.event_id && String(savedOuting.event_id)!==String(event.id)) savedOuting=null;
     outingSelected=validSelectedOuting(savedOuting);
     if(!outingSelected) outingSelected=await getScopedEventOuting(event.id);
+    if(outingSelected) saveLocalOutingSnapshot(outingSelected);
     if(version!==outingStateVersion)return;
     const box=$('outingSelectedBox');
 
@@ -5545,6 +5564,7 @@ async function loadEventReservation(){
   // V53.13 FIX : une réservation annulée ne doit plus rester affichée
   // dans le bloc de la sortie ni être considérée comme une réservation active.
   if(currentReservation?.status==='cancelled')currentReservation=null;
+  if(!currentReservation) currentReservation=loadLocalReservationSnapshot(event.id);
   return currentReservation;
 }
 async function saveEventReservation(outingId,prefix){
@@ -5633,6 +5653,7 @@ async function cancelEventReservation(){
   const r=await sb.rpc('cancel_event_reservation',{p_event_id:event.id});
   if(r.error){alert('Impossible d’annuler : '+r.error.message);return;}
   currentReservation=null;
+  clearLocalReservationSnapshot(event.id);
   const host=$('outingReservationHost');
   if(host)host.innerHTML=reservationBoxHtml('outing');
   const home=$('homeReservationBox');
@@ -5784,6 +5805,7 @@ loadSelectedOuting=async function(){
       }
       currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
       if(!currentReservation){alert('La réservation n’a pas été retournée par Supabase.');return;}
+      saveLocalReservationSnapshot(currentReservation);
       document.getElementById(prefix+'ReservationForm')?.remove();
       await refreshReservationBoxes();
       msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
