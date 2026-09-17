@@ -1377,6 +1377,31 @@ function ensureDiscussionPortalShell(){
   return shell;
 }
 
+// V54.39 — la flèche de réduction doit rester visible dans le vrai plein écran.
+// Le <summary> n'est plus enfant du <details> quand Discussion est portée par le portal,
+// donc son chevron CSS natif n'est plus fiable. On ajoute un bouton explicite.
+function ensureDiscussionCollapseButton(summary){
+  if(!summary) return null;
+  let btn=summary.querySelector('#discussionPortalCollapseBtn');
+  if(!btn){
+    btn=document.createElement('button');
+    btn.type='button';
+    btn.id='discussionPortalCollapseBtn';
+    btn.className='discussionPortalCollapseBtn secondary';
+    btn.setAttribute('aria-label','Réduire la Discussion');
+    btn.setAttribute('title','Réduire la Discussion');
+    btn.textContent='⌄';
+    summary.appendChild(btn);
+  }
+  return btn;
+}
+
+function stopActiveVoiceBeforeDiscussionClose(){
+  if(mediaRecorder && mediaRecorder.state==='recording'){
+    try{mediaRecorder.stop()}catch{}
+  }
+}
+
 function syncDiscussionFullscreenPortal(shouldOpen){
   const panel=document.getElementById('discussionPanel');
   const shell=ensureDiscussionPortalShell();
@@ -1387,20 +1412,27 @@ function syncDiscussionFullscreenPortal(shouldOpen){
     // mise en page peuvent rester contraintes par le layout iOS. On porte
     // uniquement son contenu dans un vrai overlay fixed au niveau du body.
     if(panel.parentNode!==shell){
-      shell.appendChild(panel.querySelector(':scope > summary'));
+      const summary=panel.querySelector(':scope > summary');
+      shell.appendChild(summary);
       shell.appendChild(panel.querySelector(':scope > .collapsibleBody'));
+      ensureDiscussionCollapseButton(summary);
+    }else{
+      ensureDiscussionCollapseButton(shell.querySelector(':scope > summary'));
     }
     panel.classList.add('active');
     panel.open=true;
     shell.classList.add('open');
   }else{
+    // V54.39 — fermeture idempotente : remettre les deux enfants exactement
+    // dans leur <details> d'origine avant de quitter Discussion.
+    stopActiveVoiceBeforeDiscussionClose();
     shell.classList.remove('open');
+    const summary=shell.querySelector(':scope > summary');
+    const content=shell.querySelector(':scope > .collapsibleBody');
+    if(summary && summary.parentNode===shell) panel.appendChild(summary);
+    if(content && content.parentNode===shell) panel.appendChild(content);
     panel.classList.remove('active');
     panel.open=false;
-    const summary=panel.querySelector(':scope > summary');
-    const content=panel.querySelector(':scope > .collapsibleBody');
-    if(summary) panel.appendChild(summary);
-    if(content) panel.appendChild(content);
   }
 }
 
@@ -1459,6 +1491,16 @@ function showEventTab(name, forceState=null){
     }
   }
 }
+
+
+// V54.39 — fermeture explicite par la flèche du portal.
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('#discussionPortalCollapseBtn');
+  if(!btn)return;
+  e.preventDefault();
+  e.stopPropagation();
+  showEventTab('discussion',false);
+});
 
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.eventTab');
@@ -3322,14 +3364,18 @@ async function loadMessages(){
     (pr.error?[]:(pr.data||[])).forEach(p=>pollMessageMap.set(p.id,{...p,options:options.filter(o=>o.poll_id===p.id),votes:votes.filter(v=>v.poll_id===p.id)}));
   }
   const vr=await sb.from('voice_messages').select('id,user_id,storage_path,duration_ms,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  if(vr.error){
+    console.error('voice_messages SELECT:',vr.error);
+  }
   const voices=vr.error?[]:(vr.data||[]);
   const ids=[...new Set([...rows.map(m=>m.user_id),...voices.map(m=>m.user_id)].filter(Boolean))];
   let profiles=[];
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   const voiceUrls=await Promise.all(voices.map(async m=>{
+    const local=voiceLocalUrls.get(String(m.id))||'';
     const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
-    return {...m,url:x.data?.signedUrl||''};
+    return {...m,url:x.data?.signedUrl||local||'',storageError:x.error?.message||''};
   }));
   const all=[
     ...rows.map(m=>({kind:'message',created_at:m.created_at,data:m})),
@@ -3395,8 +3441,10 @@ async function loadMessages(){
       return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatAttachmentMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+preview+'</div></div>';
     }
     if(item.kind==='voice'){
-      if(!m.url)return '';
       const duration=m.duration_ms?formatVoiceDuration(m.duration_ms):'0:00';
+      if(!m.url){
+        return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'"><div class="messageBody voiceMessage"><div class="voiceLabel">🎙️ Vocal</div><div class="muted">Vocal enregistré, mais lecture indisponible. Vérifie la politique SELECT du bucket « event-voices ».</div></div></div>';
+      }
       return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
         avatarHtml(av,'messageAvatar')+
         '<div class="messageBody voiceMessage"><div class="voiceWhatsAppRow">'+
@@ -3538,6 +3586,7 @@ async function deleteVoice(id,path){
     if(d.error)throw d.error;
     const st=await sb.storage.from('event-voices').remove([path]);
     if(st.error)throw st.error;
+    const local=voiceLocalUrls.get(String(id)); if(local){try{URL.revokeObjectURL(local)}catch{} voiceLocalUrls.delete(String(id));}
     await loadMessages();
   }catch(e){alert('Erreur suppression vocal : '+(e.message||String(e)))}
 }
@@ -3546,6 +3595,9 @@ let mediaRecorder=null;
 let voiceChunks=[];
 let voiceStream=null;
 let voiceBlob=null;
+// V54.38 — URL locales conservées pour afficher immédiatement le vocal
+// après l'envoi, même si la génération de l'URL Storage prend un instant.
+const voiceLocalUrls=new Map();
 
 function pickVoiceMime(){
   if(!window.MediaRecorder)return '';
@@ -3750,6 +3802,9 @@ async function sendVoice(){
     const ins=await sb.from('voice_messages').insert({event_id:event.id,user_id:user.id,storage_path:path,duration_ms:durationMs}).select('id').single();
     if(ins.error){await sb.storage.from('event-voices').remove([path]);throw ins.error;}
     rememberLocalCreated('voice',ins.data?.id);
+    if(ins.data?.id && voiceBlob){
+      try{voiceLocalUrls.set(String(ins.data.id),URL.createObjectURL(voiceBlob));}catch{}
+    }
     clearVoicePreview();
     resetVoiceRecordingUi();
     await loadMessages();
@@ -6943,6 +6998,34 @@ document.addEventListener('click',e=>{
   };
 })();
 </script>
+
+<style id="myevent-v54-39-discussion-collapse">
+/* V54.39 — flèche explicite pour réduire le Discussion fullscreen. */
+#discussionPortalShell > summary::after{display:none!important}
+#discussionPortalShell > summary{position:relative!important}
+#discussionPortalShell > summary #discussionPortalCollapseBtn{
+  margin-left:auto!important;
+  flex:0 0 46px!important;
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  min-height:46px!important;
+  padding:0!important;
+  border:1px solid #28445b!important;
+  border-radius:12px!important;
+  background:#0b1824!important;
+  color:#dce8f2!important;
+  font-size:27px!important;
+  line-height:1!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  cursor:pointer!important;
+  touch-action:manipulation!important;
+}
+#discussionPortalShell > summary #discussionPortalCollapseBtn:active{transform:scale(.96)}
+</style>
+
 <style id="myevent-v54-37-discussion-shell">
 /* V54.37 — vrai overlay plein écran : le shell, pas le <details>, porte l'UI. */
 #discussionPortalShell{
@@ -8137,3 +8220,8 @@ setTimeout(v58SetupModuleButtons,0);
 </script>
 
 <!-- MyEvent V54.15 — robust event-card opening fix -->
+
+<style id="myevent-v54-38-vocal-fix">
+/* V54.38 — le shell fermé ne doit jamais intercepter les clics. */
+#discussionPortalShell:not(.open){display:none!important;pointer-events:none!important;}
+</style>
