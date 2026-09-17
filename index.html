@@ -707,7 +707,25 @@ body.discussionFullScreen #discussionPanel.active{
 </style>
 
 <!-- V54.16 FIX: planning manuel après sélection sortie -->
-<meta name="myevent-version" content="V54.27"><!-- V54.27 --></head>
+<meta name="myevent-version" content="V54.27"><!-- V54.27 -->
+<style id="myevent-v54-45-social-home-css">
+/* V54.45 — Accueil social MyEvent */
+.socialHome{margin:14px 0 22px}
+.socialNav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;position:sticky;top:0;z-index:20;background:inherit}
+.socialNav::-webkit-scrollbar{display:none}
+.socialNav button{white-space:nowrap;border-radius:999px;padding:10px 14px;border:1px solid #dfe6ef;background:#fff;color:#334155;font-weight:700;box-shadow:none}
+.socialNav button.active{background:#278cff;color:#fff;border-color:#278cff}
+.socialHero{border-radius:22px;padding:18px;background:linear-gradient(135deg,#edf6ff,#ffffff 58%,#f5f0ff);border:1px solid #dcecff;margin-bottom:14px}
+.socialHero h2{margin:0 0 6px;font-size:23px}.socialHero p{margin:0 0 14px}
+.socialHeroActions{display:flex;gap:8px;flex-wrap:wrap}.socialHeroActions button{margin:0}
+.socialComposer{display:flex;gap:10px;align-items:center;margin-bottom:14px}.socialMiniAvatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#eef5ff;font-size:22px;flex:none;border:1px solid #dce8f8}
+.socialComposerInput{flex:1;border:1px solid #dfe6ef;border-radius:999px;padding:12px 15px;background:#fff;color:#64748b;cursor:pointer;text-align:left}
+.socialFeed{display:flex;flex-direction:column;gap:12px}
+.socialPost{background:#fff;border:1px solid #e5eaf0;border-radius:18px;padding:14px;box-shadow:0 3px 14px rgba(20,35,60,.05)}
+.socialPostHead{display:flex;align-items:center;gap:10px}.socialPostAvatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#f1f5f9;font-size:21px;flex:none}.socialPostMeta{min-width:0;flex:1}.socialPostMeta b{display:block}.socialPostMeta span{font-size:12px;color:#7a8798}.socialPostText{margin:12px 0 10px;line-height:1.45}.socialEventCard{border:1px solid #dfe8f3;border-radius:15px;padding:12px;background:#f8fbff}.socialEventTitle{font-weight:800;font-size:16px}.socialEventMeta{font-size:13px;color:#64748b;margin-top:4px}.socialEventActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.socialEventActions button{margin:0;padding:8px 11px;font-size:13px}.socialActions{display:flex;gap:4px;border-top:1px solid #eef1f5;padding-top:8px;margin-top:10px}.socialActions button{background:transparent;border:0;box-shadow:none;color:#64748b;padding:7px 9px;margin:0;flex:1}.socialActions button:hover{background:#f5f7fa}.socialActions button.active{color:#278cff;font-weight:800}.socialCommentBox{display:none;margin-top:8px;gap:7px}.socialCommentBox.open{display:flex}.socialCommentBox input{margin:0;flex:1}.socialCommentBox button{margin:0}.socialPeople{display:none}.socialPeople.open{display:block}.socialPerson{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #eef1f5}.socialPerson:last-child{border-bottom:0}.socialPerson .grow{flex:1}.socialPerson button{margin:0;padding:8px 11px}.socialSearch{display:flex;gap:8px;margin-bottom:12px}.socialSearch input{margin:0;flex:1}.socialComposerPanel{display:none;background:#fff;border:1px solid #dfe6ef;border-radius:18px;padding:14px;margin-bottom:14px}.socialComposerPanel.open{display:block}.socialComposerPanel textarea{min-height:90px}.socialComposerPanel .row{display:flex;gap:8px;flex-wrap:wrap}.socialComposerPanel button{margin:0}.socialEmpty{text-align:center;padding:28px 15px;color:#7a8798;background:#fff;border:1px dashed #d8e0ea;border-radius:18px}
+@media(max-width:600px){.socialHero h2{font-size:21px}.socialNav{margin-left:-2px;margin-right:-2px}.socialActions button{font-size:12px;padding:7px 4px}.socialHeroActions button{flex:1}}
+</style>
+</head>
 <body>
 <div class="app">
 <h1>My<span style="color:#278cff">Event</span></h1>
@@ -733,6 +751,90 @@ body.discussionFullScreen #discussionPanel.active{
 </section>
 
 <section id="main" class="hidden">
+
+<!-- MyEvent V54.45 — Accueil social / fil d'actualité -->
+<section id="socialHome" class="socialHome">
+  <div class="socialNav" id="socialNav">
+    <button type="button" class="active" data-social-tab="feed">🏠 Accueil</button>
+    <button type="button" data-social-tab="discover">🔎 Explorer</button>
+    <button type="button" data-social-tab="friends">👥 Amis</button>
+    <button type="button" data-social-tab="messages">💬 Messages</button>
+  </div>
+
+  <div class="socialHero">
+    <h2>Bienvenue sur My<span style="color:#278cff">Event</span> 👋</h2>
+    <p>Découvre des événements, partage tes expériences et rencontre des personnes qui aiment les mêmes sorties que toi.</p>
+    <div class="socialHeroActions">
+      <button type="button" id="socialCreateEventBtn">➕ Créer un événement</button>
+      <button type="button" class="secondary" id="socialExploreBtn">🔎 Trouver un événement</button>
+      <button type="button" class="secondary" id="socialSoloBtn">🤝 Je cherche des participants</button>
+    </div>
+  </div>
+
+  <div id="socialFeedView">
+    <div class="socialComposer">
+      <div class="socialMiniAvatar" id="socialMyAvatar">👤</div>
+      <button type="button" class="socialComposerInput" id="socialOpenComposer">Partager une expérience, une photo ou une idée de sortie…</button>
+    </div>
+    <div class="socialComposerPanel" id="socialComposerPanel">
+      <textarea id="socialPostText" placeholder="Qu'est-ce que tu veux partager avec la communauté MyEvent ?"></textarea>
+      <div class="row">
+        <button type="button" id="socialPublishBtn">🚀 Publier</button>
+        <button type="button" class="secondary" id="socialCancelPostBtn">Annuler</button>
+      </div>
+      <p class="muted" id="socialPostMsg"></p>
+    </div>
+
+    <div class="socialFeed" id="socialFeed">
+      <article class="socialPost" data-search="ski réallon sortie montagne expérience">
+        <div class="socialPostHead"><div class="socialPostAvatar">🎿</div><div class="socialPostMeta"><b>Julie</b><span>Il y a 2 h · 📍 Réallon</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
+        <div class="socialPostText">Super journée de ski ! Je prépare une nouvelle sortie et je cherche quelques personnes motivées pour partager la journée. ⛷️</div>
+        <div class="socialEventCard"><div class="socialEventTitle">🎿 Sortie ski à Réallon</div><div class="socialEventMeta">📅 Samedi · 👥 3 participants · 2 places disponibles</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
+        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
+        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
+      </article>
+
+      <article class="socialPost" data-search="restaurant marseille amis repas événement">
+        <div class="socialPostHead"><div class="socialPostAvatar">🍽️</div><div class="socialPostMeta"><b>Thomas</b><span>Hier · 📍 Marseille</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
+        <div class="socialPostText">On a testé ce restaurant avec le groupe MyEvent. Très bonne ambiance et super moment entre participants !</div>
+        <div class="socialEventCard"><div class="socialEventTitle">🍴 Soirée restaurant + activité</div><div class="socialEventMeta">📅 Vendredi 20h · 👥 8 personnes</div><div class="socialEventActions"><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
+        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
+        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
+      </article>
+
+      <article class="socialPost" data-search="seul rencontre participants randonnée gap événement public">
+        <div class="socialPostHead"><div class="socialPostAvatar">🥾</div><div class="socialPostMeta"><b>Marc</b><span>Cette semaine · 📍 Gap</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
+        <div class="socialPostText">Tu es seul pour une sortie ? Ici, chacun peut proposer une activité et rencontrer d'autres personnes intéressées. 🤝</div>
+        <div class="socialEventCard"><div class="socialEventTitle">🤝 Sortie randonnée — participants recherchés</div><div class="socialEventMeta">📍 Gap · 📅 Dimanche · 👥 4 places</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button></div></div>
+        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
+        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
+      </article>
+    </div>
+  </div>
+
+  <div id="socialDiscoverView" class="socialPeople">
+    <div class="socialSearch"><input id="socialSearchInput" placeholder="🔎 Rechercher une ville, une activité…"><button type="button" id="socialSearchBtn">Rechercher</button></div>
+    <div class="socialFeed" id="socialDiscoverList">
+      <div class="socialEventCard"><div class="socialEventTitle">🎿 Ski & montagne</div><div class="socialEventMeta">Des sorties proposées par la communauté autour de toi.</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">Voir les sorties</button></div></div>
+      <div class="socialEventCard"><div class="socialEventTitle">🍴 Restaurants & sorties</div><div class="socialEventMeta">Trouve des groupes qui souhaitent partager une activité.</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">Découvrir</button></div></div>
+      <div class="socialEventCard"><div class="socialEventTitle">🎉 Événements publics</div><div class="socialEventMeta">Des événements ouverts aux nouvelles rencontres.</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">Explorer</button></div></div>
+    </div>
+  </div>
+
+  <div id="socialFriendsView" class="socialPeople">
+    <div class="socialSearch"><input placeholder="🔎 Rechercher un ami…"><button type="button">Rechercher</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">🍴 Restaurants · 🎵 Sorties</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">🥾</div><div class="grow"><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+  </div>
+
+  <div id="socialMessagesView" class="socialPeople">
+    <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">« On se retrouve pour la sortie ski ? »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">« J'ai trouvé une activité pour vendredi. »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
+    <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
+  </div>
+</section>
+
 <div class="card">
 <div class="profileQuickAccess">
   <div id="profileAvatar" class="profileAvatar profileAvatarTrigger" title="Maintiens appuyé pour ouvrir ton profil">?</div>
@@ -8366,3 +8468,34 @@ setTimeout(v58SetupModuleButtons,0);
 /* V54.38 — le shell fermé ne doit jamais intercepter les clics. */
 #discussionPortalShell:not(.open){display:none!important;pointer-events:none!important;}
 </style>
+
+
+<script id="myevent-v54-45-social-home-js">
+(function(){
+  function $s(id){return document.getElementById(id)}
+  const nav=$s('socialNav'); if(!nav)return;
+  const views={feed:$s('socialFeedView'),discover:$s('socialDiscoverView'),friends:$s('socialFriendsView'),messages:$s('socialMessagesView')};
+  function tab(name){Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';nav.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
+  nav.addEventListener('click',e=>{const b=e.target.closest('[data-social-tab]');if(b)tab(b.dataset.socialTab)});
+  $s('socialCreateEventBtn')?.addEventListener('click',()=>{$s('createEventInlineBtn')?.click();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
+  $s('socialExploreBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>window.scrollTo({top:$s('socialHome').offsetTop,behavior:'smooth'}),20)});
+  $s('socialSoloBtn')?.addEventListener('click',()=>{tab('feed');$s('socialOpenComposer')?.click();$s('socialPostText').value='🤝 Je cherche des participants pour une sortie !\n\n📍 Lieu :\n📅 Date :\n🎯 Activité :\n👥 Places disponibles :';$s('socialPostText').focus()});
+  $s('socialOpenComposer')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.add('open');$s('socialPostText').focus()});
+  $s('socialCancelPostBtn')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent=''});
+  $s('socialPublishBtn')?.addEventListener('click',()=>{const text=($s('socialPostText').value||'').trim();if(!text){$s('socialPostMsg').textContent='Écris quelque chose avant de publier.';return;}const name=$s('who')?.textContent||'Moi';const post=document.createElement('article');post.className='socialPost';post.dataset.search=text.toLowerCase();post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">👤</div><div class="socialPostMeta"><b></b><span>À l’instant · 🌍 MyEvent</span></div></div><div class="socialPostText"></div><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';post.querySelector('.socialPostMeta b').textContent=name;post.querySelector('.socialPostText').textContent=text;$s('socialFeed').prepend(post);$s('socialPostText').value='';$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent='Publié.'});
+  document.addEventListener('click',e=>{
+    const like=e.target.closest('.socialLikeBtn');if(like){let n=parseInt(like.querySelector('span').textContent||'0',10);const active=like.classList.toggle('active');n+=active?1:-1;like.querySelector('span').textContent=n;like.firstChild.textContent=active?'♥ J’aime ':'♡ J’aime ';return}
+    const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
+    const interest=e.target.closest('.socialInterestBtn');if(interest){interest.textContent='✅ Intérêt enregistré';interest.classList.add('active');return}
+    const follow=e.target.closest('.socialFollowBtn');if(follow){follow.textContent=follow.textContent.includes('Ajouter')?'✓ Demande envoyée':'✓ Ami';follow.classList.add('active');return}
+    const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
+    const send=e.target.closest('.socialCommentBox button');if(send){const box=send.closest('.socialCommentBox'),input=box.querySelector('input');if(input.value.trim()){send.textContent='✓ Envoyé';input.value='';setTimeout(()=>send.textContent='Envoyer',900)}return}
+    const msg=e.target.closest('.socialMessageBtn');if(msg){msg.textContent='✓ Messagerie';return}
+    const view=e.target.closest('.socialViewEventBtn');if(view){document.getElementById('eventsCard')?.scrollIntoView({behavior:'smooth'});return}
+  });
+  $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
+  tab('feed');
+  try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?')$s('socialMyAvatar').textContent=av}catch(e){}
+})();
+</script>
+
