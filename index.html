@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
+<!-- V54.31 — suppression du double rendu à l’ouverture d’un événement -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MyEvent</title>
@@ -1801,11 +1802,15 @@ async function loadEvents(){
   // sont reconstruites, et l'erreur éventuelle de selectEvent() est affichée au lieu
   // de donner l'impression que le clic ne fonctionne pas.
   const eventListEl=$('eventList');
+  let eventCardClickLockUntil=0;
   if(eventListEl){
     eventListEl.onclick=async ev=>{
+      const now=Date.now();
+      if(now<eventCardClickLockUntil)return;
+      eventCardClickLockUntil=now+450;
       const card=ev.target.closest('.eventCard');
       if(!card || !eventListEl.contains(card))return;
-      if(ev.target.closest('.eventCardMenu'))return;
+      if(ev.target.closest('.eventCardMenu') || ev.target.closest('.eventCardSettings'))return;
       const id=card.dataset.eventId;
       if(!id)return;
       document.querySelectorAll('.eventCardMenu').forEach(m=>m.classList.add('hidden'));
@@ -1842,13 +1847,9 @@ async function loadEvents(){
       }
     };
   }
-  document.querySelectorAll('.eventCardCollapse').forEach(btn=>btn.addEventListener('click',ev=>{
-    // V54.30 — le bouton n'est qu'un indicateur ; le clic est géré par la carte entière.
-    ev.stopPropagation();
-    const card=btn.closest('.eventCard');
-    if(!card)return;
-    card.click();
-  }));
+  // V54.32 — suppression du second gestionnaire de clic du bouton ▾/›.
+  // Le clic remonte maintenant une seule fois vers eventListEl, qui gère à lui seul
+  // l'ouverture/réduction. Cela évite un double toggle sur iPhone.
   document.querySelectorAll('.eventCardSettings').forEach(btn=>btn.addEventListener('click',ev=>{
     ev.stopPropagation();
     const card=btn.closest('.eventCard');
@@ -2141,9 +2142,11 @@ async function selectEvent(id, options={}){
     try{ await loadEventReservation(); }catch(e){ console.error('loadEventReservation active event',e); }
   }
 
-  await renderInlineSelectedEvent();
-  // Relecture finale : elle reste strictement filtrée par event.id.
-  await refreshReservationBoxes();
+  // V54.32 — Un seul gestionnaire de clic + verrou anti-double-tap.
+  // V54.31 — Un seul rendu de l'événement à l'ouverture.
+  // Le double render ici provoquait le flash : ouverture → fermeture → réouverture.
+  // renderInlineSelectedEvent() sera exécuté une seule fois après le chargement
+  // complet ci-dessous, qui reste la source de vérité du DOM.
   global('Événement actif : '+event.name,'ok');
 
   // Changer d'événement doit toujours ramener à l'accueil de cet événement.
