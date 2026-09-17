@@ -758,14 +758,18 @@ body.discussionFullScreen #discussionPanel.active{
 <section id="socialHome" class="socialHome">
   <div class="socialTop">
     <div class="socialProfileHead">
-      <div class="socialProfileAvatar" id="socialHeaderAvatar">👤</div>
-      <div class="socialProfileText"><b id="socialHeaderName">Bonjour</b><span>Prêt pour de nouveaux événements ?</span></div>
+      <div id="profileAvatar" class="profileAvatar profileAvatarTrigger socialProfileAvatar" title="Maintiens appuyé pour ouvrir ton profil">?</div>
+      <div class="socialProfileText"><b>Bonjour <span id="who">Utilisateur</span></b><span>Prêt pour de nouveaux événements ?</span></div>
     </div>
     <div class="socialTopTools">
       <button type="button" class="socialToolBtn" id="socialHeaderSearchBtn" title="Rechercher">⌕</button>
+      <button type="button" class="socialToolBtn" id="socialHeaderMessagesBtnTop" title="Messages privés">💬</button>
+      <button type="button" class="socialToolBtn" id="socialHeaderNotificationsBtnTop" title="Notifications">🔔</button>
     </div>
   </div>
 
+
+  <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
   <div class="socialMyEventsBox">
     <div class="socialMyEventsActions">
       <button type="button" id="socialHeaderEventsBtn" title="Mes événements">📋<span>Mes événements</span></button>
@@ -867,16 +871,12 @@ body.discussionFullScreen #discussionPanel.active{
   </div>
 </section>
 
-<div class="card">
-<div class="profileQuickAccess">
-  <div id="profileAvatar" class="profileAvatar profileAvatarTrigger" title="Maintiens appuyé pour ouvrir ton profil">?</div>
-  <div style="flex:1;min-width:0">
-    <b id="who">Utilisateur</b>
-    <div class="muted profileHint">Maintiens ta photo de profil pour modifier ton profil</div>
+<div class="card socialProfileStatusCard">
+  <div class="profileQuickAccess">
+    <div class="muted profileHint">Ton profil est affiché en haut de l'accueil. Maintiens ta photo pour le modifier.</div>
+    <button class="secondary" id="logoutBtn">Déconnexion</button>
   </div>
-  <button class="secondary" id="logoutBtn">Déconnexion</button>
-</div>
-<div id="globalmsg" class="notice muted">Prêt.</div>
+  <div id="globalmsg" class="notice muted">Prêt.</div>
 </div>
 
 <div class="card profileSettingsCard" id="profileSettingsCard">
@@ -7293,6 +7293,22 @@ body.discussionFullScreen{overflow:hidden!important;}
   #discussionPortalShell > summary .chatCustomizeBtn{font-size:12px!important;}
 }
 </style>
+
+<style>
+.socialProfileStatusCard{display:none!important}
+.socialTop .socialProfileAvatar{width:58px!important;height:58px!important;flex:0 0 58px!important;border:1px solid rgba(255,255,255,.16);box-shadow:0 4px 18px rgba(0,0,0,.28)}
+.socialTop .socialProfileAvatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.socialTopTools{display:flex;align-items:center;gap:7px}
+.socialTopTools .socialToolBtn{width:42px;height:42px;border-radius:50%}
+</style>
+
+<script>
+(function(){
+  const a=(id)=>document.getElementById(id);
+  a('socialHeaderMessagesBtnTop')?.addEventListener('click',()=>a('socialHeaderMessagesBtn')?.click());
+  a('socialHeaderNotificationsBtnTop')?.addEventListener('click',()=>a('socialHeaderNotificationsBtn')?.click());
+})();
+</script>
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
