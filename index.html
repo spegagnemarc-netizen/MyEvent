@@ -7101,6 +7101,53 @@ document.addEventListener('click',e=>{
 body.discussionFullScreen{overflow:hidden!important;}
 </style>
 <!-- V54.37 — discussion: vrai shell fullscreen + diagnostic RLS vocal -->
+
+<style id="myevent-v54-40-discussion-header">
+/* V54.40 — En-tête Discussion : titre à gauche, flèche centrée, personnalisation à droite. */
+#discussionPortalShell > summary{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 104px 104px!important;
+  align-items:center!important;
+  justify-content:initial!important;
+  gap:8px!important;
+}
+#discussionPortalShell > summary > span:first-child{
+  grid-column:1!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+#discussionPortalShell > summary #discussionPortalCollapseBtn{
+  grid-column:2!important;
+  grid-row:1!important;
+  margin:0!important;
+  width:104px!important;
+  min-width:104px!important;
+  max-width:104px!important;
+  height:46px!important;
+  min-height:46px!important;
+  max-height:46px!important;
+  justify-self:center!important;
+}
+#discussionPortalShell > summary .chatCustomizeBtn{
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:end!important;
+  width:104px!important;
+  min-width:104px!important;
+  max-width:104px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:8px 6px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+@media(max-width:430px){
+  #discussionPortalShell > summary{grid-template-columns:minmax(0,1fr) 104px 104px!important;gap:6px!important;}
+  #discussionPortalShell > summary .chatCustomizeBtn{font-size:12px!important;}
+}
+</style>
 </body>
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
