@@ -1222,7 +1222,7 @@ body.discussionFullScreen #discussionPanel.active{
 <summary>🧭 Déplacements locaux</summary>
 <div class="collapsibleBody">
   <div class="m58ModuleIntro"><b>Organise les déplacements entre les étapes</b><p class="muted">Ajoute un trajet à pied, à vélo, en voiture, en covoiturage, en bus, en taxi/VTC ou en transfert. MyEvent peut calculer automatiquement la distance et la durée, afficher le trajet sur la carte et l’intégrer à la timeline.</p></div>
-  <div class="m58ModuleActions"><button type="button" id="m58LocalTravelAddBtn">➕ Ajouter un déplacement</button></div>
+  <div class="m58ModuleActions"><button type="button" id="m58LocalTravelAddBtn">➕ Ajouter un déplacement</button><button type="button" class="secondary" id="m58LocalTravelAutoBtn">✨ Calculer entre les étapes</button></div>
   <div id="m58LocalTravelForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un déplacement</div>
     <select id="m58LocalTravelType"><option value="walk">🚶 À pied</option><option value="bike">🚲 Vélo</option><option value="car">🚗 Voiture</option><option value="carpool">👥 Covoiturage</option><option value="bus">🚌 Bus</option><option value="taxi">🚕 Taxi / VTC</option><option value="transfer">🚐 Transfert</option><option value="other">🧭 Autre</option></select>
@@ -7775,6 +7775,7 @@ async function renderEventTransport(box,eventObj){
 </style>
 <script id="myevent-v58-4-local-travel-js">
 /* V58.4 — Déplacements locaux entre les étapes du planning. */
+/* V54.43 — calcul automatique des déplacements entre les étapes + correction du chargement des listes. */
 const V58_LOCAL_TRAVEL_MARKER='[[MYEVENT_LOCAL_TRAVEL]]';
 function v58LocalTravelModeLabel(mode){
   const map={walk:'🚶 À pied',bike:'🚲 Vélo',car:'🚗 Voiture',carpool:'👥 Covoiturage',bus:'🚌 Bus',taxi:'🚕 Taxi / VTC',transfer:'🚐 Transfert',other:'🧭 Autre'};
@@ -8221,8 +8222,57 @@ el.querySelectorAll('[data-m58-transport-map]').forEach(b=>b.addEventListener('c
 function v58RenderAccommodationModule(items){const el=$('m58AccommodationList');if(!el)return;if(!items.length){el.innerHTML='<p class="muted">Aucun hébergement enregistré pour cet événement.</p>';return;}const fmt=v=>{const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});};el.innerHTML=items.map((a,i)=>'<div class="m58ModuleCard"><div class="m58ModuleCardTitle">'+esc(v58AccommodationLabel(a.type))+' · '+esc(a.name||'Hébergement')+'</div>'+(a.address?'<div class="m58ModuleCardMeta">📍 '+esc(a.address)+'</div>':'')+'<div class="m58ModuleCardMeta">'+esc([a.checkin?'🛬 '+fmt(a.checkin):'',a.checkout?'🛫 '+fmt(a.checkout):'',a.people?'👥 '+a.people:'',a.rooms?'🛏️ '+a.rooms:'',Number(a.total_cost)>0?'💰 '+eur(Number(a.total_cost)):''].filter(Boolean).join(' · '))+'</div>'+(a.booking?'<div class="m58ModuleCardMeta">🎫 '+esc(a.booking)+'</div>':'')+'<div class="m58ModuleCardActions"><button type="button" class="secondary" data-m58-accommodation-map="'+i+'">📍 Voir sur la carte</button></div></div>').join('');el.querySelectorAll('[data-m58-accommodation-map]').forEach(b=>b.addEventListener('click',async()=>{const a=items[Number(b.dataset.m58AccommodationMap)];const geo=await v58GeocodeText(a.address||a.name);if(geo)v58OpenLocationPoint(geo.lat,geo.lon,a.name||'Hébergement','🏨');else alert('Impossible de localiser cet hébergement.');}));}
 function v58LocalTravelDate(value){if(!value)return '';const d=new Date(value);return Number.isNaN(d.getTime())?String(value):d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 async function v58CalculateLocalRoute(from,to,mode){const a=await v58GeocodeText(from),b=await v58GeocodeText(to);if(!a||!b)throw new Error('Impossible de localiser le départ ou la destination.');const profile=mode==='walk'?'foot':mode==='bike'?'bike':'car';const u='https://router.project-osrm.org/route/v1/'+profile+'/'+a.lon+','+a.lat+';'+b.lon+','+b.lat+'?overview=false&alternatives=false&steps=false';const r=await fetch(u);const d=await r.json();if(!r.ok||d.code!=='Ok'||!d.routes?.[0])throw new Error('Impossible de calculer cet itinéraire.');return{distance_km:Math.round((Number(d.routes[0].distance)/1000)*10)/10,duration_minutes:Math.max(1,Math.round(Number(d.routes[0].duration)/60)),from:a,to:b};}
+async function v58AutoCreateLocalTravelsBetweenPlanningSteps(eventObj,choice,outing,aiPlan,aiItems){
+  if(!eventObj||!user)return {created:0,skipped:0,message:'Événement introuvable.'};
+  if(eventObj.creator_id!==user.id)return {created:0,skipped:0,message:'Seul l’organisateur peut calculer les déplacements automatiquement.'};
+  const sourceSteps=[];
+  if(choice==='ai'&&Array.isArray(aiItems)){
+    aiItems.forEach((x,i)=>{
+      if(x?.name&&x?.address)sourceSteps.push({name:String(x.name),address:String(x.address),time:String(x.start_time||''),duration:Number(x.duration_minutes||0),order:i});
+    });
+  }else if(outing?.name&&outing?.address){
+    sourceSteps.push({name:String(outing.name),address:String(outing.address),time:String(outing.start_time||outing.time||''),duration:Number(outing.duration_minutes||0),order:0});
+  }
+  if(sourceSteps.length<2)return {created:0,skipped:0,message:'Il faut au moins 2 activités avec une adresse pour calculer les déplacements entre les étapes.'};
+  const existing=await getEventLocalTravels(eventObj.id);
+  const existingKeys=new Set(existing.map(t=>String((t.from||'')+'|'+(t.to||'')).toLowerCase()));
+  let created=0,skipped=0;
+  const baseRaw=eventObj.event_date||eventObj.date||new Date().toISOString();
+  const baseMatch=String(baseRaw).match(/^(\d{4}-\d{2}-\d{2})/);
+  const baseDate=baseMatch?baseMatch[1]:new Date(baseRaw).toISOString().slice(0,10);
+  const toDateTime=(v)=>{
+    const raw=String(v||'').trim();
+    if(!raw)return null;
+    if(/^\d{4}-\d{2}-\d{2}T/.test(raw))return new Date(raw);
+    const hm=raw.match(/^(\d{1,2}):(\d{2})/);
+    if(!hm)return null;
+    return new Date(baseDate+'T'+hm[1].padStart(2,'0')+':'+hm[2]+':00');
+  };
+  for(let i=0;i<sourceSteps.length-1;i++){
+    const a=sourceSteps[i],b=sourceSteps[i+1];
+    const key=(a.address+'|'+b.address).toLowerCase();
+    if(existingKeys.has(key)){skipped++;continue;}
+    try{
+      const route=await v58CalculateLocalRoute(a.address,b.address,'car');
+      const nextStart=toDateTime(b.time);
+      const prevStart=toDateTime(a.time);
+      const prevEnd=prevStart&&a.duration>0?new Date(prevStart.getTime()+a.duration*60000):prevStart;
+      let departure=nextStart?new Date(nextStart.getTime()-route.duration_minutes*60000):(prevEnd||new Date());
+      let arrival=nextStart||new Date(departure.getTime()+route.duration_minutes*60000);
+      let note='Calcul automatique entre les étapes du planning';
+      if(prevEnd&&departure<prevEnd){
+        note+=' · ⚠️ Temps de trajet potentiellement insuffisant entre les deux étapes.';
+      }
+      const payload={from:a.address,to:b.address,mode:'car',distance_km:route.distance_km,duration_minutes:route.duration_minutes,departure:departure.toISOString(),arrival:arrival.toISOString(),people:'',people_count:Number(aiPlan?.people||1),cost:0,note,title:a.name+' → '+b.name};
+      const r=await sb.from('messages').insert({event_id:eventObj.id,user_id:user.id,content:V58_LOCAL_TRAVEL_MARKER+JSON.stringify(payload)}).select('id').single();
+      if(r.error)throw r.error;
+      rememberLocalCreated('messages',r.data?.id);existingKeys.add(key);created++;
+    }catch(_){skipped++;}
+  }
+  return {created,skipped,message:created?'Déplacements calculés entre les étapes du planning.':'Aucun nouveau déplacement n’a pu être créé.'};
+}
 function v58RenderLocalTravelModule(items){const el=$('m58LocalTravelList');if(!el)return;if(!items.length){el.innerHTML='<p class="muted">Aucun déplacement local enregistré pour cet événement.</p>';return;}el.innerHTML=items.map((t,i)=>'<div class="m58ModuleCard"><div class="m58ModuleCardTitle">'+esc(v58LocalTravelModeLabel(t.mode))+' · '+esc([t.from,t.to].filter(Boolean).join(' → ')||'Déplacement local')+'</div><div class="m58ModuleCardMeta">'+esc([t.departure?'🕐 '+v58LocalTravelDate(t.departure):'',t.arrival?'→ '+v58LocalTravelDate(t.arrival):'',Number(t.distance_km)>0?'📏 '+String(t.distance_km).replace('.',',')+' km':'',Number(t.duration_minutes)>0?'⏱️ '+Number(t.duration_minutes)+' min':'',t.people?'👥 '+t.people:'',Number(t.cost)>0?'💶 '+eur(Number(t.cost)): ''].filter(Boolean).join(' · '))+'</div>'+(t.note?'<div class="m58ModuleCardMeta">📝 '+esc(t.note)+'</div>':'')+'<div class="m58ModuleCardActions"><button type="button" class="secondary" data-m58-local-edit="'+i+'">✏️ Modifier</button><button type="button" class="secondary" data-m58-local-delete="'+i+'">🗑️ Supprimer</button><button type="button" class="secondary" data-m58-local-map="'+i+'">📍 Carte</button></div></div>').join('');el.querySelectorAll('[data-m58-local-edit]').forEach(b=>b.addEventListener('click',()=>{const t=items[Number(b.dataset.m58LocalEdit)];v58ModuleTab('localtravel');setTimeout(()=>{const f=$('m58LocalTravelForm');f?.classList.remove('hidden');if(f)f.dataset.editId=t._message_id||'';$('m58LocalTravelType').value=t.mode||'other';$('m58LocalTravelFrom').value=t.from||'';$('m58LocalTravelTo').value=t.to||'';$('m58LocalTravelDistance').value=Number(t.distance_km||0)||'';$('m58LocalTravelDuration').value=Number(t.duration_minutes||0)||'';$('m58LocalTravelDeparture').value=t.departure?String(t.departure).slice(0,16):'';$('m58LocalTravelArrival').value=t.arrival?String(t.arrival).slice(0,16):'';$('m58LocalTravelPeople').value=t.people||'';$('m58LocalTravelCost').value=Number(t.cost||0)||'';$('m58LocalTravelNote').value=t.note||'';$('m58LocalTravelSaveBtn').textContent='💾 Enregistrer les modifications';},120);}));el.querySelectorAll('[data-m58-local-delete]').forEach(b=>b.addEventListener('click',async()=>{const t=items[Number(b.dataset.m58LocalDelete)];if(!t?._message_id)return;if(!user||!event||event.creator_id!==user.id){alert('Seul l’organisateur peut supprimer un déplacement local.');return;}if(!confirm('Supprimer ce déplacement du planning ?'))return;const r=await sb.from('messages').delete().eq('id',t._message_id);if(r.error){alert('Impossible de supprimer le déplacement : '+r.error.message);return;}await v58LoadModuleLists();}));el.querySelectorAll('[data-m58-local-map]').forEach(b=>b.addEventListener('click',async()=>{const t=items[Number(b.dataset.m58LocalMap)];const geo=await v58GeocodeText(t.to||t.from);if(geo)v58OpenLocationPoint(geo.lat,geo.lon,(t.from||'')+' → '+(t.to||''),'🧭');else alert('Impossible de localiser cette destination.');}));}
-async function v58LoadModuleLists(){if(!event)return;const [ts,as]=await Promise.all([getEventTransports(event.id),getEventAccommodations(event.id),getEventLocalTravels(event.id)]);v58RenderTransportModule(ts);v58RenderAccommodationModule(as);v58RenderLocalTravelModule(ls);}
+async function v58LoadModuleLists(){if(!event)return;const [ts,as,ls]=await Promise.all([getEventTransports(event.id),getEventAccommodations(event.id),getEventLocalTravels(event.id)]);v58RenderTransportModule(ts);v58RenderAccommodationModule(as);v58RenderLocalTravelModule(ls);}
 function v58SncfOfferUrl(r){
   if(!r)return '';
   const d=r.departure?new Date(r.departure):null;
@@ -8272,6 +8322,7 @@ async function v58SaveSearchResult(r,kind,btn){
 function v58SetupModuleButtons(){
   const show=id=>$(id)?.classList.remove('hidden'),hide=id=>$(id)?.classList.add('hidden');
   $('m58LocalTravelAddBtn')?.addEventListener('click',()=>{show('m58LocalTravelForm');$('m58LocalTravelFrom')?.focus();const f=$('m58LocalTravelForm');if(f)f.dataset.editId='';$('m58LocalTravelSaveBtn').textContent='💾 Enregistrer';});
+  $('m58LocalTravelAutoBtn')?.addEventListener('click',async()=>{if(!event){alert('Sélectionne un événement.');return;}const btn=$('m58LocalTravelAutoBtn');btn.disabled=true;btn.textContent='⏳ Calcul…';try{const choice=localStorage.getItem('myevent_event_planning_choice_'+user.id+'_'+event.id)||'manual';let currentOuting=null,currentAiItems=[];try{currentOuting=await getScopedEventOuting(event.id);}catch(_){}try{const raw=localStorage.getItem('myevent_ai_plan_'+user.id+'_'+event.id);const parsed=raw?JSON.parse(raw):null;currentAiItems=Array.isArray(parsed?.items)?parsed.items:[];}catch(_){}const r=await v58AutoCreateLocalTravelsBetweenPlanningSteps(event,choice,currentOuting,null,currentAiItems);alert('✨ '+r.message+(r.created?'\n'+r.created+' déplacement(s) créé(s).':''));await v58LoadModuleLists();if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent();}catch(e){alert('Impossible de calculer les déplacements : '+(e.message||String(e)));}finally{btn.disabled=false;btn.textContent='✨ Calculer entre les étapes';}});
   $('m58LocalTravelCancelBtn')?.addEventListener('click',()=>{hide('m58LocalTravelForm');const f=$('m58LocalTravelForm');if(f)f.dataset.editId='';});
   $('m58LocalTravelRouteBtn')?.addEventListener('click',async()=>{const from=$('m58LocalTravelFrom')?.value.trim(),to=$('m58LocalTravelTo')?.value.trim(),mode=$('m58LocalTravelType')?.value||'other',msg=$('m58LocalTravelMsg');if(!from||!to){msg.textContent='Indique le départ et la destination.';return;}msg.textContent='📏 Calcul de l’itinéraire…';try{const x=await v58CalculateLocalRoute(from,to,mode);$('m58LocalTravelDistance').value=x.distance_km;$('m58LocalTravelDuration').value=x.duration_minutes;msg.textContent='✅ '+String(x.distance_km).replace('.',',')+' km · '+x.duration_minutes+' min';}catch(e){msg.textContent='❌ '+(e.message||String(e));}});
   $('m58TransportSearchBtn')?.addEventListener('click',()=>{show('m58TransportSearchBox');hide('m58TransportForm');$('m58TransportFrom')?.focus()});
