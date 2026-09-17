@@ -707,23 +707,25 @@ body.discussionFullScreen #discussionPanel.active{
 </style>
 
 <!-- V54.16 FIX: planning manuel après sélection sortie -->
-<meta name="myevent-version" content="V54.27"><!-- V54.27 -->
-<style id="myevent-v54-45-social-home-css">
-/* V54.45 — Accueil social MyEvent */
-.socialHome{margin:14px 0 22px}
-.socialNav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;position:sticky;top:0;z-index:20;background:inherit}
-.socialNav::-webkit-scrollbar{display:none}
-.socialNav button{white-space:nowrap;border-radius:999px;padding:10px 14px;border:1px solid #dfe6ef;background:#fff;color:#334155;font-weight:700;box-shadow:none}
-.socialNav button.active{background:#278cff;color:#fff;border-color:#278cff}
-.socialHero{border-radius:22px;padding:18px;background:linear-gradient(135deg,#edf6ff,#ffffff 58%,#f5f0ff);border:1px solid #dcecff;margin-bottom:14px}
-.socialHero h2{margin:0 0 6px;font-size:23px}.socialHero p{margin:0 0 14px}
-.socialHeroActions{display:flex;gap:8px;flex-wrap:wrap}.socialHeroActions button{margin:0}
-.socialComposer{display:flex;gap:10px;align-items:center;margin-bottom:14px}.socialMiniAvatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#eef5ff;font-size:22px;flex:none;border:1px solid #dce8f8}
-.socialComposerInput{flex:1;border:1px solid #dfe6ef;border-radius:999px;padding:12px 15px;background:#fff;color:#64748b;cursor:pointer;text-align:left}
-.socialFeed{display:flex;flex-direction:column;gap:12px}
-.socialPost{background:#fff;border:1px solid #e5eaf0;border-radius:18px;padding:14px;box-shadow:0 3px 14px rgba(20,35,60,.05)}
-.socialPostHead{display:flex;align-items:center;gap:10px}.socialPostAvatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#f1f5f9;font-size:21px;flex:none}.socialPostMeta{min-width:0;flex:1}.socialPostMeta b{display:block}.socialPostMeta span{font-size:12px;color:#7a8798}.socialPostText{margin:12px 0 10px;line-height:1.45}.socialEventCard{border:1px solid #dfe8f3;border-radius:15px;padding:12px;background:#f8fbff}.socialEventTitle{font-weight:800;font-size:16px}.socialEventMeta{font-size:13px;color:#64748b;margin-top:4px}.socialEventActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.socialEventActions button{margin:0;padding:8px 11px;font-size:13px}.socialActions{display:flex;gap:4px;border-top:1px solid #eef1f5;padding-top:8px;margin-top:10px}.socialActions button{background:transparent;border:0;box-shadow:none;color:#64748b;padding:7px 9px;margin:0;flex:1}.socialActions button:hover{background:#f5f7fa}.socialActions button.active{color:#278cff;font-weight:800}.socialCommentBox{display:none;margin-top:8px;gap:7px}.socialCommentBox.open{display:flex}.socialCommentBox input{margin:0;flex:1}.socialCommentBox button{margin:0}.socialPeople{display:none}.socialPeople.open{display:block}.socialPerson{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #eef1f5}.socialPerson:last-child{border-bottom:0}.socialPerson .grow{flex:1}.socialPerson button{margin:0;padding:8px 11px}.socialSearch{display:flex;gap:8px;margin-bottom:12px}.socialSearch input{margin:0;flex:1}.socialComposerPanel{display:none;background:#fff;border:1px solid #dfe6ef;border-radius:18px;padding:14px;margin-bottom:14px}.socialComposerPanel.open{display:block}.socialComposerPanel textarea{min-height:90px}.socialComposerPanel .row{display:flex;gap:8px;flex-wrap:wrap}.socialComposerPanel button{margin:0}.socialEmpty{text-align:center;padding:28px 15px;color:#7a8798;background:#fff;border:1px dashed #d8e0ea;border-radius:18px}
-@media(max-width:600px){.socialHero h2{font-size:21px}.socialNav{margin-left:-2px;margin-right:-2px}.socialActions button{font-size:12px;padding:7px 4px}.socialHeroActions button{flex:1}}
+<meta name="myevent-version" content="V54.46"><!-- V54.46 -->
+<style id="myevent-v54-46-social-home-css">
+/* V54.46 — Accueil social sombre inspiré de la maquette validée */
+.socialHome{margin:0 -20px 24px;padding:0 16px 110px;background:radial-gradient(circle at 50% -10%,rgba(255,102,45,.10),transparent 34%),#07090b;color:#fff;min-height:calc(100vh - 20px)}
+.socialTop{padding:18px 4px 10px;display:flex;align-items:center;gap:10px}
+.socialProfileHead{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.socialProfileAvatar{width:58px;height:58px;border-radius:50%;background:#111820;border:2px solid #313b45;display:grid;place-items:center;overflow:hidden;flex:none;font-size:25px;box-shadow:0 0 0 3px rgba(255,106,52,.05)}
+.socialProfileAvatar img{width:100%;height:100%;object-fit:cover}.socialProfileText{min-width:0}.socialProfileText b{display:block;font-size:21px;line-height:1.05}.socialProfileText span{display:block;color:#9da5ad;font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.socialTopTools{display:flex;align-items:center;gap:6px;flex:none}.socialToolBtn{width:42px;height:42px;border-radius:50%;padding:0!important;margin:0!important;background:#10151a!important;border:1px solid #293139!important;color:#fff!important;box-shadow:none!important;position:relative}.socialBadge{position:absolute;right:-2px;top:-3px;min-width:18px;height:18px;border-radius:999px;background:#ff6334;color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;border:2px solid #07090b}
+.socialMyEventsBox{border:1px solid #ff6a34;border-radius:22px;padding:7px 8px 6px;margin:4px 0 12px;background:linear-gradient(180deg,rgba(255,106,52,.08),rgba(255,106,52,.015));box-shadow:0 0 22px rgba(255,106,52,.07)}
+.socialMyEventsTitle{display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;font-weight:850;font-size:12px;margin-top:2px}.socialMyEventsTitle:after{content:'›';color:#ff6a34;font-size:20px;line-height:10px}
+.socialMyEventsActions{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.socialMyEventsActions button{min-width:0;height:48px;padding:4px!important;margin:0!important;background:transparent!important;border:0!important;color:#e8edf1!important;box-shadow:none!important;font-size:20px!important;position:relative}.socialMyEventsActions button span{display:block;font-size:9px;color:#a9b1b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.socialMyEventsActions button:hover{background:rgba(255,255,255,.04)!important}.socialMyEventsActions .eventShortcutBadge{position:absolute;top:1px;right:12px;background:#ff6334;color:#fff;border-radius:99px;min-width:16px;height:16px;font-size:9px;display:grid;place-items:center}
+.socialStories{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:3px 0 10px}.socialStories::-webkit-scrollbar{display:none}.socialStory{flex:0 0 74px;text-align:center;color:#d9dfe4;font-size:10px;font-weight:700}.socialStoryBubble{width:68px;height:68px;margin:0 auto 5px;border-radius:22px;background:linear-gradient(145deg,#151c23,#0d1217);border:2px solid #5b6874;display:grid;place-items:center;font-size:28px;box-shadow:inset 0 0 18px rgba(255,255,255,.04)}.socialStory.create .socialStoryBubble{border-color:#ff6a34;color:#ff6a34;font-size:34px}.socialStory.me .socialStoryBubble{border-color:#ff8c61}
+.socialFilters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px 0 16px}.socialFilters::-webkit-scrollbar{display:none}.socialFilter{white-space:nowrap;border:1px solid #2b3239!important;background:#11161b!important;color:#b8c0c7!important;border-radius:999px!important;padding:10px 15px!important;margin:0!important;box-shadow:none!important;font-size:13px!important}.socialFilter.active{background:#ff6a34!important;border-color:#ff6a34!important;color:#fff!important;box-shadow:0 5px 18px rgba(255,106,52,.24)!important}
+.socialSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:3px 4px 10px}.socialSectionHead h3{margin:0;font-size:20px}.socialSectionHead button{background:transparent!important;border:0!important;color:#ff7546!important;box-shadow:none!important;padding:4px!important;margin:0!important;font-weight:800}
+.socialFeed{display:flex;flex-direction:column;gap:14px}.socialPost{background:#15181b!important;border:1px solid #2a3035!important;border-radius:24px!important;padding:0!important;overflow:hidden!important;box-shadow:0 10px 28px rgba(0,0,0,.24)!important}.socialPostHead{display:flex;align-items:center;gap:10px;padding:14px 14px 7px}.socialPostAvatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#22282e;font-size:21px;flex:none;border:1px solid #394149}.socialPostMeta b{color:#fff}.socialPostMeta span{color:#8e98a2!important}.socialPostText{margin:8px 14px 12px!important;color:#e3e8ec;line-height:1.45}.socialEventCard{margin:0 12px 12px!important;border:1px solid #313940!important;border-radius:18px!important;padding:0!important;background:#101316!important;overflow:hidden}.socialEventCover{height:160px;background:linear-gradient(135deg,#23384b,#0d1720);position:relative;background-size:cover;background-position:center}.socialEventCover:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.7))}.socialEventBadges{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:7px}.socialBadgeChip{background:rgba(13,19,24,.84);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:850}.socialBadgeChip.hot{background:#ff6a34;border-color:#ff6a34}.socialEventInfo{padding:13px 13px 12px}.socialEventTitle{font-weight:850;font-size:18px;color:#fff}.socialEventMeta{font-size:13px;color:#aeb7bf;margin-top:6px}.socialEventBottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px}.socialAvatars{display:flex;align-items:center}.socialAvatarDot{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#283038;border:2px solid #101316;margin-right:-6px;font-size:13px}.socialEventBottom .socialInterestBtn,.socialEventBottom button{margin:0!important}.socialInterestBtn{background:#ff6a34!important;border-color:#ff6a34!important;color:#fff!important;border-radius:14px!important;box-shadow:0 5px 18px rgba(255,106,52,.18)!important;font-weight:850!important}.socialActions{display:flex!important;gap:2px;border-top:1px solid #2a3035!important;padding:5px 9px!important;margin:0!important}.socialActions button{background:transparent!important;border:0!important;box-shadow:none!important;color:#929ba4!important;padding:8px 5px!important;margin:0!important;flex:1}.socialActions button.active{color:#ff7040!important}
+.socialPeople{background:#15181b!important;border:1px solid #2a3035!important;border-radius:20px!important;padding:4px 14px}.socialPerson{border-bottom:1px solid #293037!important}.socialPerson .muted{color:#909aa4!important}.socialSearch input{background:#11161b!important;border-color:#2a3239!important;color:#fff!important}.socialComposer{margin:0 0 13px}.socialMiniAvatar{background:#151b20!important;border-color:#313940!important;color:#fff}.socialComposerInput{background:#11161b!important;border-color:#2a3239!important;color:#9ca5ad!important}.socialComposerPanel{background:#11161b!important;border-color:#2a3239!important}.socialComposerPanel textarea{background:#0c1014!important;border-color:#2a3239!important;color:#fff!important}
+.socialBottomNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100vw);height:78px;z-index:80;background:rgba(9,11,13,.96);backdrop-filter:blur(16px);border-top:1px solid #272d32;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding-bottom:max(8px,env(safe-area-inset-bottom))}.socialBottomNav button{background:transparent!important;border:0!important;box-shadow:none!important;color:#8f979f!important;padding:7px 2px!important;margin:0!important;border-radius:0!important;font-size:11px!important}.socialBottomNav button.active{color:#ff7040!important}.socialBottomNav .bottomIcon{display:block;font-size:22px;line-height:28px}.socialBottomNav .createBottom{width:58px;height:58px;border-radius:50%!important;background:#ff6a34!important;color:#fff!important;margin:-15px auto 0!important;font-size:31px!important;box-shadow:0 8px 25px rgba(255,106,52,.35)!important}.socialBottomNav .createBottom .bottomLabel{display:none}
+@media(max-width:600px){.socialHome{margin-left:-20px;margin-right:-20px;padding-left:14px;padding-right:14px}.socialProfileText b{font-size:19px}.socialTopTools{gap:3px}.socialToolBtn{width:39px;height:39px}.socialEventCover{height:145px}.socialBottomNav{height:74px}.socialMyEventsActions button{font-size:19px!important}.socialMyEventsActions button span{font-size:8px}}
 </style>
 </head>
 <body>
@@ -752,24 +754,46 @@ body.discussionFullScreen #discussionPanel.active{
 
 <section id="main" class="hidden">
 
-<!-- MyEvent V54.45 — Accueil social / fil d'actualité -->
+<!-- MyEvent V54.46 — Accueil social / fil d'actualité -->
 <section id="socialHome" class="socialHome">
-  <div class="socialNav" id="socialNav">
-    <button type="button" class="active" data-social-tab="feed">🏠 Accueil</button>
-    <button type="button" data-social-tab="discover">🔎 Explorer</button>
-    <button type="button" data-social-tab="friends">👥 Amis</button>
-    <button type="button" data-social-tab="messages">💬 Messages</button>
-  </div>
-
-  <div class="socialHero">
-    <h2>Bienvenue sur My<span style="color:#278cff">Event</span> 👋</h2>
-    <p>Découvre des événements, partage tes expériences et rencontre des personnes qui aiment les mêmes sorties que toi.</p>
-    <div class="socialHeroActions">
-      <button type="button" id="socialCreateEventBtn">➕ Créer un événement</button>
-      <button type="button" class="secondary" id="socialExploreBtn">🔎 Trouver un événement</button>
-      <button type="button" class="secondary" id="socialSoloBtn">🤝 Je cherche des participants</button>
+  <div class="socialTop">
+    <div class="socialProfileHead">
+      <div class="socialProfileAvatar" id="socialHeaderAvatar">👤</div>
+      <div class="socialProfileText"><b id="socialHeaderName">Bonjour</b><span>Prêt pour de nouveaux événements ?</span></div>
+    </div>
+    <div class="socialTopTools">
+      <button type="button" class="socialToolBtn" id="socialHeaderSearchBtn" title="Rechercher">⌕</button>
     </div>
   </div>
+
+  <div class="socialMyEventsBox">
+    <div class="socialMyEventsActions">
+      <button type="button" id="socialHeaderEventsBtn" title="Mes événements">📋<span>Mes événements</span></button>
+      <button type="button" id="socialHeaderCallBtn" title="Appel de groupe">📞<span>Appel de groupe</span></button>
+      <button type="button" id="socialHeaderMessagesBtn" title="Messages privés">💬<span>Messages</span><i class="eventShortcutBadge">3</i></button>
+      <button type="button" id="socialHeaderNotificationsBtn" title="Notifications">🔔<span>Notifications</span><i class="eventShortcutBadge">5</i></button>
+    </div>
+    <div class="socialMyEventsTitle">Mes événements</div>
+  </div>
+
+  <div class="socialStories" aria-label="Raccourcis">
+    <div class="socialStory create" id="socialCreateStory"><div class="socialStoryBubble">＋</div><div>Créer</div></div>
+    <div class="socialStory me"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
+    <div class="socialStory"><div class="socialStoryBubble">👥</div><div>Amis</div></div>
+    <div class="socialStory"><div class="socialStoryBubble">📍</div><div>À proximité</div></div>
+    <div class="socialStory"><div class="socialStoryBubble">🔥</div><div>Populaire</div></div>
+    <div class="socialStory"><div class="socialStoryBubble">🎉</div><div>Week-end</div></div>
+  </div>
+
+  <div class="socialFilters" aria-label="Filtres">
+    <button type="button" class="socialFilter active">Pour vous</button>
+    <button type="button" class="socialFilter">Aujourd'hui</button>
+    <button type="button" class="socialFilter">Ce week-end</button>
+    <button type="button" class="socialFilter">Gratuit</button>
+    <button type="button" class="socialFilter">À proximité</button>
+  </div>
+
+  <div class="socialSectionHead"><h3>🔥 Événements pour vous</h3><button type="button" id="socialExploreBtn">Voir tout ›</button></div>
 
   <div id="socialFeedView">
     <div class="socialComposer">
@@ -789,7 +813,7 @@ body.discussionFullScreen #discussionPanel.active{
       <article class="socialPost" data-search="ski réallon sortie montagne expérience">
         <div class="socialPostHead"><div class="socialPostAvatar">🎿</div><div class="socialPostMeta"><b>Julie</b><span>Il y a 2 h · 📍 Réallon</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
         <div class="socialPostText">Super journée de ski ! Je prépare une nouvelle sortie et je cherche quelques personnes motivées pour partager la journée. ⛷️</div>
-        <div class="socialEventCard"><div class="socialEventTitle">🎿 Sortie ski à Réallon</div><div class="socialEventMeta">📅 Samedi · 👥 3 participants · 2 places disponibles</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
+        <div class="socialEventCard"><div class="socialEventCover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35)),url(https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1200&q=80)"><div class="socialEventBadges"><span class="socialBadgeChip">🎿 SPORT</span><span class="socialBadgeChip hot">2 PLACES</span></div></div><div class="socialEventInfo"><div class="socialEventTitle">🎿 Sortie ski à Réallon</div><div class="socialEventMeta">📅 Samedi · 👥 3 participants · 2 places disponibles</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
         <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
         <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
       </article>
@@ -832,6 +856,14 @@ body.discussionFullScreen #discussionPanel.active{
     <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">« On se retrouve pour la sortie ski ? »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
     <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">« J'ai trouvé une activité pour vendredi. »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
     <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
+  </div>
+
+  <div class="socialBottomNav" id="socialBottomNav">
+    <button type="button" class="active" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
+    <button type="button" data-bottom-tab="discover"><span class="bottomIcon">⌕</span><span class="bottomLabel">Explorer</span></button>
+    <button type="button" class="createBottom" id="socialBottomCreate" title="Créer">＋</button>
+    <button type="button" data-bottom-tab="friends"><span class="bottomIcon">♧</span><span class="bottomLabel">Amis</span></button>
+    <button type="button" data-bottom-tab="profile"><span class="bottomIcon">♙</span><span class="bottomLabel">Profil</span></button>
   </div>
 </section>
 
@@ -8477,6 +8509,17 @@ setTimeout(v58SetupModuleButtons,0);
   const views={feed:$s('socialFeedView'),discover:$s('socialDiscoverView'),friends:$s('socialFriendsView'),messages:$s('socialMessagesView')};
   function tab(name){Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';nav.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-social-tab]');if(b)tab(b.dataset.socialTab)});
+  // V54.46 — raccourcis du cadre Mes événements
+  const headerEvents=$s('socialHeaderEventsBtn');
+  headerEvents?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
+  $s('socialHeaderCallBtn')?.addEventListener('click',()=>{const el=$s('groupCallCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{if(typeof callActive!=='undefined' && !callActive)$s('startCallBtn')?.click()},250);}});
+  $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>{const el=$s('notificationCenter');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}});
+  $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>{const el=$s('discussionContent');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}});
+  $s('socialHeaderSearchBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>{$s('socialSearchInput')?.focus();},50);});
+  $s('socialCreateStory')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
+  $s('socialBottomCreate')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
+  $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='profile'){$s('profileAvatar')?.click();return}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
+  document.querySelectorAll('.socialFilter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.socialFilter').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));
   $s('socialCreateEventBtn')?.addEventListener('click',()=>{$s('createEventInlineBtn')?.click();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
   $s('socialExploreBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>window.scrollTo({top:$s('socialHome').offsetTop,behavior:'smooth'}),20)});
   $s('socialSoloBtn')?.addEventListener('click',()=>{tab('feed');$s('socialOpenComposer')?.click();$s('socialPostText').value='🤝 Je cherche des participants pour une sortie !\n\n📍 Lieu :\n📅 Date :\n🎯 Activité :\n👥 Places disponibles :';$s('socialPostText').focus()});
@@ -8495,7 +8538,8 @@ setTimeout(v58SetupModuleButtons,0);
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
   tab('feed');
-  try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?')$s('socialMyAvatar').textContent=av}catch(e){}
+  setInterval(()=>{try{const n=$s('who')?.textContent?.trim();if(n&&n!=='Utilisateur')$s('socialHeaderName').textContent='Bonjour '+n;const a=$s('profileAvatar');const h=$s('socialHeaderAvatar');if(a&&h&&a.querySelector('img'))h.innerHTML=a.innerHTML;else if(a&&h&&a.textContent.trim()&&a.textContent.trim()!=='?')h.textContent=a.textContent.trim()}catch(e){}},1500);
+  try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?'){ $s('socialMyAvatar').textContent=av; $s('socialHeaderAvatar').textContent=av;} const n=$s('who')?.textContent?.trim(); if(n&&n!=='Utilisateur') $s('socialHeaderName').textContent='Bonjour '+n;}catch(e){}
 })();
 </script>
 
