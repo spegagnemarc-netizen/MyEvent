@@ -708,6 +708,7 @@ body.discussionFullScreen{overflow:hidden!important}
   white-space:nowrap!important;
 }
 #discussionPanel > summary::after{
+  grid-column:2!important;
   content:'⌄'!important;
   width:100%!important;
   height:42px!important;
@@ -725,6 +726,7 @@ body.discussionFullScreen{overflow:hidden!important}
 }
 #discussionPanel[open] > summary::after{transform:rotate(180deg)!important}
 #discussionPanel > summary .chatCustomizeBtn{
+  grid-column:3!important;
   width:100%!important;
   height:42px!important;
   min-width:0!important;
