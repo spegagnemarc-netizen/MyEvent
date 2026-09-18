@@ -11925,3 +11925,93 @@ setTimeout(v58SetupModuleButtons,0);
 
 </body>
 </html>
+
+<style id="myevent-v54-81-map-persistence-css">
+/* V54.81 — l'affichage choisi reste sélectionné après fermeture/reconnexion. */
+#myeventNearbyPanel #nearbyMapTypeChoices [data-map-type].active{
+  border-color:#7b8791!important;
+  background:#1a2127!important;
+}
+</style>
+
+<script id="myevent-v54-81-map-persistence-final">
+(function(){
+  const KEY='myevent_nearby_map_type_v1';
+  let applying=false;
+
+  function readType(){
+    try{return localStorage.getItem(KEY)||'default'}catch(e){return 'default'}
+  }
+  function saveType(type){
+    try{localStorage.setItem(KEY,type||'default')}catch(e){}
+  }
+  function syncButtons(type){
+    document.querySelectorAll('#myeventNearbyPanel [data-map-type]').forEach(b=>{
+      b.classList.toggle('active',(b.dataset.mapType||'default')===type);
+    });
+  }
+  function apply(type){
+    if(applying)return;
+    const map=window.myeventNearbyLeafletMap;
+    if(!map || !window.L || typeof window.myeventSetNearbyMapType!=='function')return false;
+    applying=true;
+    try{
+      window.myeventSetNearbyMapType(type);
+      syncButtons(type);
+      return true;
+    }catch(e){return false}
+    finally{setTimeout(()=>{applying=false},120)}
+  }
+  function applyWhenReady(type){
+    syncButtons(type);
+    let tries=0;
+    const timer=setInterval(()=>{
+      tries++;
+      if(apply(type)||tries>=50)clearInterval(timer);
+    },120);
+  }
+
+  function init(){
+    const saved=readType();
+    syncButtons(saved);
+
+    document.querySelectorAll('#myeventNearbyPanel [data-map-type]').forEach(btn=>{
+      btn.addEventListener('click',function(){
+        const type=btn.dataset.mapType||'default';
+        saveType(type);
+        syncButtons(type);
+        applyWhenReady(type);
+      },true);
+    });
+
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      new MutationObserver(()=>{
+        if(panel.classList.contains('open')){
+          const type=readType();
+          syncButtons(type);
+          setTimeout(()=>applyWhenReady(type),100);
+        }
+      }).observe(panel,{attributes:true,attributeFilter:['class']});
+    }
+
+    /* Le script de la carte peut recréer les tuiles après un changement de
+       position. On remet alors uniquement le choix mémorisé. */
+    let last=readType();
+    setInterval(()=>{
+      const current=readType();
+      if(current!==last){last=current;syncButtons(current)}
+      const p=document.getElementById('myeventNearbyPanel');
+      if(p && p.classList.contains('open')){
+        const map=window.myeventNearbyLeafletMap;
+        if(map && !map.__myeventSavedMapType){
+          applyWhenReady(current);
+          map.__myeventSavedMapType=current;
+        }
+      }
+    },1000);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
