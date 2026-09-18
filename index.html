@@ -11505,5 +11505,140 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-77-label-visibility">
+.myeventNearbyMap .leaflet-marker-pane{z-index:650!important}
+.myeventNearbyMap .myeventCityMarker,
+.myeventNearbyMap .myeventInterestMarker{
+  z-index:1000!important;
+  overflow:visible!important;
+}
+.myeventNearbyMap .myeventCityLabel,
+.myeventNearbyMap .myeventInterestLabel{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  width:max-content!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.myeventNearbyMap .myeventCityLabel .name{
+  display:inline-block!important;
+  background:rgba(255,106,52,.94)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.75)!important;
+  font-size:12px!important;
+  padding:4px 8px!important;
+}
+.myeventNearbyMap .myeventInterestLabel .name{
+  display:inline-block!important;
+  background:rgba(255,106,52,.94)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  font-size:10px!important;
+  padding:4px 7px!important;
+}
+.myeventNearbyMap .myeventInterestLabel.purple .name{
+  background:rgba(139,92,246,.95)!important;
+}
+</style>
+
+
+<script id="myevent-v54-77-fallback-labels">
+(function(){
+  const GAP={lat:44.5594,lon:6.0786};
+
+  function map(){return window.myeventNearbyLeafletMap||null}
+  function pos(){
+    try{
+      const p=JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null');
+      return p&&+p.lat&&+p.lon?{lat:+p.lat,lon:+p.lon}:null;
+    }catch(e){return null}
+  }
+  function distance(a,b,c,d){
+    const R=6371,rad=Math.PI/180;
+    const x=(c-a)*rad,y=(d-b)*rad;
+    const h=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function esc(v){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function cityIcon(name){
+    return L.divIcon({
+      className:'myeventCityMarker',
+      html:'<div class="myeventCityLabel"><span class="dot"></span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[180,30],iconAnchor:[5,15]
+    });
+  }
+  function poiIcon(name,emoji,purple){
+    return L.divIcon({
+      className:'myeventInterestMarker',
+      html:'<div class="myeventInterestLabel '+(purple?'purple':'')+'"><span class="pin">'+emoji+'</span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[210,40],iconAnchor:[14,20]
+    });
+  }
+
+  function addFallback(){
+    const m=map(),p=pos();
+    if(!m||!p||!window.L)return;
+    // Fallback uniquement pour la zone de Gap : les données sont utilisées
+    // lorsque le service cartographique externe ne répond pas.
+    if(distance(p.lat,p.lon,GAP.lat,GAP.lon)>35)return;
+
+    let cities=window.myeventNearbyCityLayer;
+    let pois=window.myeventNearbyInterestLayer;
+    if(!cities)cities=L.layerGroup().addTo(m);
+    if(!pois)pois=L.layerGroup().addTo(m);
+    window.myeventNearbyCityLayer=cities;
+    window.myeventNearbyInterestLayer=pois;
+
+    if(cities.getLayers().length===0){
+      const cityData=[
+        ['Gap',44.55944,6.07861],
+        ['Romette',44.589,6.106],
+        ['Pelleautier',44.516,6.018],
+        ['Tallard',44.463,6.055],
+        ['Rambaud',44.575,6.136]
+      ];
+      cityData.forEach(x=>L.marker([x[1],x[2]],{
+        icon:cityIcon(x[0]),interactive:false,zIndexOffset:1000
+      }).addTo(cities));
+    }
+
+    if(pois.getLayers().length===0){
+      const poiData=[
+        ['Place Jean Marcellin','📍',44.55907,6.07967,false,'activity'],
+        ['Golf de Gap-Bayard','⛳',44.62127,6.08386,false,'sport'],
+        ['Auberge de Pelleautier','🍽️',44.515906,6.018496,false,'restaurant'],
+        ['Le Mas d’Estello','🍽️',44.44615,6.03175,true,'restaurant']
+      ];
+      poiData.forEach(x=>{
+        const mk=L.marker([x[2],x[3]],{
+          icon:poiIcon(x[0],x[1],x[4]),zIndexOffset:1200
+        });
+        mk.__nearbyType=x[5];
+        mk.bindPopup('<b>'+esc(x[0])+'</b>');
+        mk.addTo(pois);
+      });
+    }
+  }
+
+  function run(){
+    let n=0;
+    const t=setInterval(()=>{
+      n++;
+      if(map()){
+        // Laisser d'abord la recherche API essayer de remplir les couches.
+        setTimeout(addFallback,1800);
+        setTimeout(addFallback,5000);
+        clearInterval(t);
+      }
+      if(n>100)clearInterval(t);
+    },100);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script>
+
 </body>
 </html>
