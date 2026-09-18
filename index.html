@@ -1034,14 +1034,7 @@ body:has(#socialHome) .app > h1{display:none!important}
     </div>
   </div>
 
-  <div class="myeventHomeUtilityRow">
-    <button type="button" id="socialGpsWeatherCard" class="myeventGpsWeatherCard" title="Météo de ma position GPS">
-      <span class="myeventGpsWeatherIcon" id="socialGpsWeatherIcon">🌤️</span>
-      <span class="myeventGpsWeatherTemp" id="socialGpsWeatherTemp">--°</span>
-      <span class="myeventGpsWeatherLabel">Ma météo</span>
-    </button>
-    <button type="button" id="socialNearbyShareBtn" class="myeventNearbyMiniBtn" title="Partager ma position">📍 À proximité</button>
-  </div>
+
 
   <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
   <div class="socialMyEventsBox">
@@ -1056,11 +1049,14 @@ body:has(#socialHome) .app > h1{display:none!important}
 
   <div class="socialStories" aria-label="Raccourcis">
     <div class="socialStory create" id="socialCreateStory"><div class="socialStoryBubble">＋</div><div>Créer</div></div>
-    <div class="socialStory me"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
-    <div class="socialStory"><div class="socialStoryBubble">👥</div><div>Amis</div></div>
-    <div class="socialStory"><div class="socialStoryBubble">📍</div><div>À proximité</div></div>
+    <div class="socialStory" id="socialMyStoryShortcut"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
+    <div class="socialStory" id="socialFriendsShortcut"><div class="socialStoryBubble">👥</div><div>Amis</div></div>
+    <div class="socialStory" id="socialNearbyShortcut"><div class="socialStoryBubble">📍</div><div>À proximité</div></div>
     <div class="socialStory"><div class="socialStoryBubble">🔥</div><div>Populaire</div></div>
-    <div class="socialStory"><div class="socialStoryBubble">🎉</div><div>Week-end</div></div>
+    <button type="button" class="socialStory socialWeatherTile" id="socialGpsWeatherCard" title="Météo de ma position GPS">
+      <div class="socialStoryBubble"><span id="socialGpsWeatherIcon">🌤️</span></div>
+      <div><span id="socialGpsWeatherTemp">--°</span> <small>Ma météo</small></div>
+    </button>
   </div>
 
   <div class="socialFilters" aria-label="Filtres">
@@ -1209,6 +1205,11 @@ body:has(#socialHome) .app > h1{display:none!important}
     <div class="myeventNearbyInfo" id="myeventNearbyInfo">
       Ton choix est mémorisé sur cet appareil. Tu n'auras pas à le refaire à chaque connexion.
     </div>
+    <div id="myeventNearbyMapWrap" class="myeventNearbyMapWrap">
+      <div class="myeventNearbyMapEmpty" id="myeventNearbyMapEmpty">📍 Active le partage ou actualise ta position pour afficher la carte.</div>
+      <iframe id="myeventNearbyMap" title="Carte de mes amis à proximité" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+    <div class="myeventNearbyFriendsHint" id="myeventNearbyFriendsHint">👥 Les amis qui auront choisi de partager leur position apparaîtront ici sur la carte.</div>
     <button type="button" id="myeventNearbyLocateBtn" class="secondary">📍 Actualiser ma position</button>
   </div>
 </div>
@@ -9530,5 +9531,64 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-62-css">
+#socialHome .socialStories{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important;padding:4px 0 8px!important;align-items:start!important}
+#socialHome .socialStory{width:100%!important;min-width:0!important;height:auto!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;background:transparent!important;border:0!important;padding:0!important;color:#d9dfe4!important}
+#socialHome .socialStoryBubble{width:100%!important;aspect-ratio:1/1!important;height:auto!important;max-width:none!important;margin:0 auto 5px!important;border-radius:18px!important;box-sizing:border-box!important;display:grid!important;place-items:center!important}
+#socialHome .socialStory.create .socialStoryBubble{border:2px solid #ff6a34!important}
+#socialHome .socialWeatherTile{cursor:pointer!important;font:inherit!important}
+#socialHome .socialWeatherTile .socialStoryBubble{background:linear-gradient(145deg,#151c23,#0d1217)!important;border:2px solid #5b6874!important}
+#socialHome .socialWeatherTile #socialGpsWeatherIcon{font-size:24px!important;line-height:1}
+#socialHome .socialWeatherTile>div:last-child{font-size:10px!important;font-weight:800!important;white-space:nowrap!important}
+#socialHome .socialWeatherTile small{font-size:8px!important;color:#9da7af!important;font-weight:700!important}
+.myeventNearbyMapWrap{height:235px;border-radius:18px;overflow:hidden;background:#0b0f13;border:1px solid #2b333a;position:relative}
+#myeventNearbyMap{width:100%;height:100%;border:0;display:none}
+.myeventNearbyMapEmpty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:#8e9aa4;font-size:12px}
+.myeventNearbyFriendsHint{font-size:11px;line-height:1.35;color:#9da7af;margin:9px 2px}
+</style>
+
+<script id="myevent-v54-62-nearby-map">
+(function(){
+ const $=id=>document.getElementById(id);
+ const shareKey='myevent_social_location_share_v1';
+ function enabled(){return localStorage.getItem(shareKey)==='1'}
+ function showMap(lat,lon){
+   const f=$('myeventNearbyMap'), empty=$('myeventNearbyMapEmpty'); if(!f)return;
+   const d=.035, bbox=(lon-d)+','+(lat-d)+','+(lon+d)+','+(lat+d);
+   f.src='https://www.openstreetmap.org/export/embed.html?bbox='+encodeURIComponent(bbox)+'&layer=mapnik&marker='+encodeURIComponent(lat+','+lon);
+   f.style.display='block'; if(empty)empty.style.display='none';
+ }
+ function locate(){
+   if(!navigator.geolocation)return;
+   navigator.geolocation.getCurrentPosition(pos=>showMap(pos.coords.latitude,pos.coords.longitude),()=>{} ,{enableHighAccuracy:true,timeout:15000,maximumAge:300000});
+ }
+ function open(){
+   const p=$('myeventNearbyPanel'); if(!p)return;
+   p.classList.add('open'); p.setAttribute('aria-hidden','false');
+   if(enabled()) locate();
+ }
+ function bind(id,fn){const e=$(id);if(e)e.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();fn()})}
+ function init(){
+   // Le carré À proximité de la ligne ouvre la carte + réglage de partage.
+   bind('socialNearbyShortcut',open);
+   bind('socialMyStoryShortcut',()=>{const x=$('socialCreateStory'); if(x)x.click()});
+   bind('socialFriendsShortcut',()=>{const x=document.querySelector('[data-bottom-tab="friends"]'); if(x)x.click()});
+   bind('socialGpsWeatherCard',()=>{
+     if(navigator.geolocation){
+       navigator.geolocation.getCurrentPosition(pos=>{
+         // Réutilise le moteur météo déjà présent dans V54.61.
+         if(typeof loadGpsWeather==='function') loadGpsWeather(pos);
+       },()=>alert('Autorise la localisation pour afficher la météo de ta position.'));
+     }
+   });
+   bind('myeventNearbyLocateBtn',locate);
+   const toggle=$('myeventNearbyShareToggle');
+   if(toggle)toggle.addEventListener('change',()=>{if(enabled())locate()});
+   if(enabled()) locate();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
