@@ -10048,5 +10048,153 @@ setTimeout(v58SetupModuleButtons,0);
 }
 </style>
 
+
+<style id="myevent-v54-67-ui">
+/* Pages Photo + À proximité : boutons secondaires discrets, sans orange. */
+#myeventNearbyPanel .myeventNearbySheet button:not(.myeventPanelCloseBtn),
+#myeventPersonalWeatherPanel button:not(.myeventPanelCloseBtn),
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  background:#11161b!important;
+  border:1px solid #3a444d!important;
+  color:#e8edf1!important;
+  box-shadow:none!important;
+}
+#myeventNearbyPanel .myeventNearbyChoice button,
+#myeventNearbyPanel .myeventNearbyChoice .myeventSwitch input:checked+span{
+  /* Le switch conserve uniquement l'accent d'état. */
+}
+#myeventNearbyPanel .myeventNearbyMapTools button{
+  background:rgba(17,22,27,.88)!important;
+  color:#eef2f5!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button.active{
+  background:rgba(17,22,27,.96)!important;
+  color:#fff!important;
+  border-color:#68747e!important;
+}
+
+/* Caméra/photo : toutes les commandes passent en gris/noir discret.
+   Le déclencheur central reste visuellement distinct. */
+#myeventCameraModal button,
+#myeventCameraModal .camera-btn,
+#myeventCameraModal .cameraAction,
+#myeventCameraModal .cameraActionBtn{
+  background:#11161b!important;
+  border:1px solid #3a444d!important;
+  color:#eef2f5!important;
+  box-shadow:none!important;
+}
+#myeventCameraModal button:hover,
+#myeventCameraModal button:active{
+  background:#181f25!important;
+}
+#myeventCameraModal button[aria-label*="fermer" i],
+#myeventCameraModal button[title*="fermer" i]{
+  background:#11161b!important;
+}
+
+/* Le bouton photo central reste simple et sombre. */
+#myeventCameraModal input[type="button"],
+#myeventCameraModal input[type="submit"]{
+  background:#11161b!important;
+  border-color:#3a444d!important;
+  color:#fff!important;
+}
+
+/* À proximité : carte réellement plein écran, UI en surimpression. */
+#myeventNearbyPanel .myeventNearbySheet{
+  position:relative!important;
+  background:#071016!important;
+}
+#myeventNearbyPanel .myeventNearbyMap{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:100%!important;
+  z-index:1!important;
+}
+#myeventNearbyPanel .myeventNearbyHead{
+  position:relative!important;
+  z-index:10!important;
+  background:linear-gradient(to bottom,rgba(5,9,12,.94),rgba(5,9,12,.72),transparent)!important;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 26px!important;
+}
+#myeventNearbyPanel .myeventNearbyChoice{
+  position:absolute!important;
+  top:calc(88px + env(safe-area-inset-top))!important;
+  left:12px!important;
+  right:12px!important;
+  z-index:10!important;
+  background:rgba(8,13,17,.88)!important;
+  backdrop-filter:blur(10px)!important;
+  margin:0!important;
+}
+#myeventNearbyPanel .myeventNearbyInfo{
+  position:absolute!important;
+  top:calc(160px + env(safe-area-inset-top))!important;
+  left:14px!important;
+  right:14px!important;
+  z-index:10!important;
+  margin:0!important;
+  color:#eef2f5!important;
+  text-shadow:0 1px 3px #000;
+}
+#myeventNearbyPanel .myeventNearbyMapTools{
+  position:absolute!important;
+  top:calc(205px + env(safe-area-inset-top))!important;
+  left:12px!important;
+  right:12px!important;
+  z-index:11!important;
+}
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  position:absolute!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:calc(14px + env(safe-area-inset-bottom))!important;
+  z-index:12!important;
+  width:calc(100% - 24px)!important;
+  margin:0!important;
+  background:rgba(17,22,27,.94)!important;
+  backdrop-filter:blur(8px)!important;
+}
+
+/* Le bouton fermer de la carte reste neutre. */
+#myeventNearbyPanel .myeventPanelCloseBtn,
+#myeventPersonalWeatherPanel .myeventPanelCloseBtn{
+  background:#11161b!important;
+  border:1px solid #56616b!important;
+  color:#fff!important;
+  box-shadow:0 2px 10px rgba(0,0,0,.3)!important;
+}
+</style>
+
+
+<script id="myevent-v54-67-button-neutral">
+(function(){
+  function neutralize(root){
+    if(!root)return;
+    root.querySelectorAll('button').forEach(function(b){
+      const txt=(b.textContent||'').trim().toLowerCase();
+      // Keep only the main shutter visually distinct; all utility buttons are neutral.
+      if(!/^(📷|photo|prendre|capturer)$/i.test(txt)){
+        b.style.background='#11161b';
+        b.style.borderColor='#3a444d';
+        b.style.color='#eef2f5';
+        b.style.boxShadow='none';
+      }
+    });
+  }
+  function init(){
+    neutralize(document.getElementById('myeventCameraModal'));
+    neutralize(document.getElementById('myeventNearbyPanel'));
+    neutralize(document.getElementById('myeventPersonalWeatherPanel'));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
