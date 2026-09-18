@@ -818,6 +818,121 @@ body:has(#socialHome) .app > h1{display:none!important}
   #socialHome .socialFilter{font-size:9px!important}
 }
 </style>
+
+<style id="myevent-v54-53-mix-cards">
+/* V54.53 — Accueil social : mélange de cartes compactes */
+#socialHome .socialFeed{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  align-items:start!important;
+}
+/* 1er contenu : grande carte, comme la maquette */
+#socialHome .socialFeed > .socialPost:first-child{
+  grid-column:1/-1!important;
+  border-radius:20px!important;
+}
+#socialHome .socialFeed > .socialPost:first-child .socialEventCover{
+  height:145px!important;
+}
+/* 2e + 3e : demi-cartes côte à côte */
+#socialHome .socialFeed > .socialPost:nth-child(2),
+#socialHome .socialFeed > .socialPost:nth-child(3){
+  grid-column:auto!important;
+  border-radius:16px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialPostHead,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialPostHead{
+  padding:7px 8px 3px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialPostText,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialPostText{
+  font-size:10px!important;
+  line-height:1.22!important;
+  margin:4px 8px 6px!important;
+  -webkit-line-clamp:2!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventCard,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventCard{
+  margin:0 6px 6px!important;
+  border-radius:13px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventCover,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventCover{
+  height:76px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventInfo,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventInfo{
+  padding:7px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventTitle,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventTitle{
+  font-size:12px!important;
+  line-height:1.1!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventMeta,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventMeta{
+  font-size:9px!important;
+  line-height:1.15!important;
+  margin-top:3px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventActions,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventActions{
+  margin-top:5px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(2) .socialEventActions button,
+#socialHome .socialFeed > .socialPost:nth-child(3) .socialEventActions button{
+  font-size:9px!important;
+  padding:6px 7px!important;
+  border-radius:11px!important;
+}
+/* À partir des prochaines publications : alternance demi / pleine compacte */
+#socialHome .socialFeed > .socialPost:nth-child(4){
+  grid-column:1/-1!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(4) .socialEventCover{
+  height:105px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(5),
+#socialHome .socialFeed > .socialPost:nth-child(6){
+  grid-column:auto!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(7){
+  grid-column:1/-1!important;
+}
+/* Toutes les cartes pleines après la première restent plus basses que la carte principale */
+#socialHome .socialFeed > .socialPost:nth-child(n+4){
+  border-radius:17px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(n+4) .socialPostHead{
+  padding:8px 9px 4px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(n+4) .socialPostText{
+  font-size:10px!important;
+  line-height:1.25!important;
+  margin:5px 9px 7px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(n+4) .socialEventCard{
+  margin:0 7px 7px!important;
+  border-radius:14px!important;
+}
+#socialHome .socialFeed > .socialPost:nth-child(n+4) .socialEventCover{
+  height:88px!important;
+}
+/* La rangée de recherche/découverte garde elle aussi des demi-cartes */
+#socialHome #socialDiscoverList{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+#socialHome #socialDiscoverList .socialEventCard{
+  margin:0!important;
+  min-width:0!important;
+}
+#socialHome #socialDiscoverList .socialEventCard:nth-child(3){
+  grid-column:1/-1!important;
+}
+</style>
 </head>
 <body>
 <div class="app">
