@@ -1123,7 +1123,7 @@ body:has(#socialHome) .app > h1{display:none!important}
       <div class="socialPerson"><div class="socialPostAvatar">🥾</div><div class="grow"><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
     </div>
     <div class="socialFriendRequests">
-      <h4>👥 Demandes d’amis</h4>
+      <div class="socialFriendRequestsHead"><h4>👥 Demandes d’amis</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div>
       <div class="socialFriendRequestsCarousel" aria-label="Demandes d’amis, faire défiler horizontalement">
         <div class="socialFriendRequestCard">
           <div class="socialPostAvatar">👩</div><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne<br>Souhaite rejoindre tes amis.</div>
@@ -1199,7 +1199,7 @@ body:has(#socialHome) .app > h1{display:none!important}
 </div>
 
 <div class="card profileSettingsCard" id="profileSettingsCard">
-<h2>👤 Mon profil</h2>
+<div class="myeventProfileHeader"><h2>👤 Mon profil</h2><button type="button" id="closeProfileBtn" class="myeventCloseBtn" title="Réduire le profil">⌄ Réduire</button></div>
 <div class="profileEditor">
 <div style="flex:1;min-width:0">
 <div style="flex:1;min-width:0">
@@ -9204,128 +9204,138 @@ setTimeout(v58SetupModuleButtons,0);
 </script>
 
 
-<script id="myevent-v54-59-navigation-fix">
+
+<script id="myevent-v54-60-navigation-fix">
 (function(){
-  function el(id){ return document.getElementById(id); }
+  const $=id=>document.getElementById(id);
 
-  function forceTab(name){
-    const views = {
-      feed: el('socialFeedView'),
-      discover: el('socialDiscoverView'),
-      friends: el('socialFriendsView'),
-      messages: el('socialMessagesView'),
-      notifications: el('socialGlobalNotificationsView')
-    };
-
-    Object.keys(views).forEach(function(k){
-      if(views[k]) views[k].style.display = (k === name) ? 'block' : 'none';
-    });
-
-    document.querySelectorAll('[data-social-tab]').forEach(function(b){
-      b.classList.toggle('active', b.dataset.socialTab === name);
-    });
-
-    document.querySelectorAll('[data-bottom-tab]').forEach(function(b){
-      b.classList.toggle('active', b.dataset.bottomTab === name);
-    });
-
-    const target = views[name];
-    if(target){
-      setTimeout(function(){
-        target.scrollIntoView({behavior:'smooth', block:'start'});
-      }, 20);
-    }
+  function bind(id,fn){
+    const old=$(id); if(!old)return;
+    const fresh=old.cloneNode(true);
+    old.replaceWith(fresh);
+    fresh.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();fn(e,fresh);});
   }
 
-  function replaceWithHandler(id, handler){
-    const old = el(id);
-    if(!old) return;
-    const fresh = old.cloneNode(true);
-    old.parentNode.replaceChild(fresh, old);
-    fresh.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      handler(fresh);
-    });
+  function showProfile(){
+    const c=$('profileSettingsCard'); if(!c)return;
+    c.classList.add('profileSettingsVisible','profileSettingsOpen');
+    c.style.display='block';
+    setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),20);
+  }
+  function hideProfile(){
+    const c=$('profileSettingsCard'); if(!c)return;
+    c.classList.remove('profileSettingsVisible','profileSettingsOpen');
+    c.style.display='none';
   }
 
-  function openProfile(){
-    const card = el('profileSettingsCard');
-    if(!card) return;
-    card.classList.add('profileSettingsVisible');
-    card.classList.add('profileSettingsOpen');
-    card.style.display = 'block';
-    setTimeout(function(){
-      card.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 20);
+  function openOverlay(kind){
+    const oid=kind==='messages'?'myeventGlobalMessagesOverlay':'myeventGlobalNotificationsOverlay';
+    const sid=kind==='messages'?'socialMessagesView':'socialGlobalNotificationsView';
+    const bid=kind==='messages'?'myeventGlobalMessagesBody':'myeventGlobalNotificationsBody';
+    const o=$(oid), source=$(sid), body=$(bid);
+    if(!o||!source||!body)return;
+    body.innerHTML=source.innerHTML;
+    o.classList.add('open');
+    o.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+  function closeOverlay(id){
+    const o=$(id); if(!o)return;
+    o.classList.remove('open');
+    o.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+  function openEventModule(id){
+    const x=$(id); if(!x)return;
+    if(x.tagName==='DETAILS')x.open=true;
+    x.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   function init(){
-    // Haut de l'accueil : les deux boutons ont maintenant des destinations distinctes.
-    replaceWithHandler('socialHeaderMessagesBtnTop', function(){
-      forceTab('messages');
-    });
+    // PETITS BOUTONS EN HAUT À DROITE = social/global
+    bind('socialHeaderMessagesBtnTop',()=>openOverlay('messages'));
+    bind('socialHeaderNotificationsBtnTop',()=>openOverlay('notifications'));
 
-    replaceWithHandler('socialHeaderNotificationsBtnTop', function(){
-      forceTab('notifications');
-    });
+    // BOUTONS DANS "MES ÉVÉNEMENTS" = messages/notifications DE L'ÉVÉNEMENT
+    bind('socialHeaderMessagesBtn',()=>openEventModule('discussionContent'));
+    bind('socialHeaderNotificationsBtn',()=>openEventModule('notificationCenter'));
 
-    // Raccourcis du cadre "Mes événements".
-    replaceWithHandler('socialHeaderMessagesBtn', function(){
-      forceTab('messages');
-    });
-
-    replaceWithHandler('socialHeaderNotificationsBtn', function(){
-      forceTab('notifications');
-    });
-
-    // Bouton Profil de la barre du bas.
-    const nav = el('socialBottomNav');
-    const profileBtn = nav ? nav.querySelector('[data-bottom-tab="profile"]') : null;
-    if(profileBtn){
-      const fresh = profileBtn.cloneNode(true);
-      profileBtn.parentNode.replaceChild(fresh, profileBtn);
-      fresh.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        nav.querySelectorAll('[data-bottom-tab]').forEach(function(x){
-          x.classList.toggle('active', x === fresh);
-        });
-        openProfile();
+    // PROFIL : ouvrir / réduire / enregistrer puis réduire
+    bind('closeProfileBtn',hideProfile);
+    bind('saveProfileBtn',()=>setTimeout(hideProfile,250));
+    const nav=$('socialBottomNav');
+    const p=nav?.querySelector('[data-bottom-tab="profile"]');
+    if(p){
+      const fresh=p.cloneNode(true); p.replaceWith(fresh);
+      fresh.addEventListener('click',e=>{
+        e.preventDefault();e.stopPropagation();
+        nav.querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===fresh));
+        showProfile();
       });
     }
+    bind('profileAvatar',showProfile);
 
-    // Photo/avatar en haut : clic simple ouvre également le profil.
-    replaceWithHandler('profileAvatar', function(){
-      openProfile();
+    // FERMETURE DES PANNEAUX GLOBAUX
+    bind('closeGlobalMessagesBtn',()=>closeOverlay('myeventGlobalMessagesOverlay'));
+    bind('closeGlobalNotificationsBtn',()=>closeOverlay('myeventGlobalNotificationsOverlay'));
+    ['myeventGlobalMessagesOverlay','myeventGlobalNotificationsOverlay'].forEach(id=>{
+      const o=$(id); if(o)o.addEventListener('click',e=>{if(e.target===o)closeOverlay(id);});
     });
 
-    // Raccourci "Amis" éventuel dans les stories.
-    document.querySelectorAll('.socialStories .socialStory').forEach(function(item){
-      const label = item.textContent.trim();
-      if(label.indexOf('Amis') !== -1){
-        item.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopPropagation();
-          forceTab('friends');
-        });
-      }
+    // INVITER DES CONTACTS : feuille de partage iPhone/Android quand disponible.
+    bind('invitePhoneContactsBtn',async()=>{
+      const data={
+        title:'Rejoins-moi sur MyEvent',
+        text:'Viens rejoindre mes amis sur MyEvent pour organiser et partager nos événements.',
+        url:location.href
+      };
+      try{
+        if(navigator.share) await navigator.share(data);
+        else alert('Utilise le bouton Partager de ton téléphone pour inviter tes contacts.');
+      }catch(e){}
     });
-
-    // Expose la navigation pour les autres boutons du prototype.
-    window.myEventForceTab = forceTab;
-
-    // État initial.
-    forceTab('feed');
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  }else{
-    init();
-  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
 })();
 </script>
+
+
+
+<style id="myevent-v54-60-css">
+.myeventProfileHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.myeventProfileHeader h2{margin:0}
+.myeventCloseBtn{background:#11161b!important;border:1px solid #343d45!important;color:#fff!important;border-radius:12px!important;padding:8px 11px!important;font-size:12px!important;box-shadow:none!important}
+#socialHome .socialStories{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important;overflow:visible!important}
+#socialHome .socialStory{width:100%!important;min-width:0!important;flex:0 0 auto!important;display:flex!important;flex-direction:column!important;align-items:center!important}
+#socialHome .socialStoryBubble,#socialHome .socialStory.me .socialStoryBubble{width:100%!important;max-width:68px!important;aspect-ratio:1/1!important;height:auto!important;box-sizing:border-box!important}
+#socialHome .socialStory>div:last-child{font-size:9px!important;white-space:nowrap!important}
+.socialFriendRequestsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.socialFriendRequestsHead h4{margin:0!important}
+.socialContactInviteBtn{font-size:11px!important;padding:7px 9px!important;white-space:nowrap}
+.myeventGlobalOverlay{position:fixed;inset:0;z-index:120;background:rgba(5,7,9,.82);backdrop-filter:blur(10px);display:none;align-items:flex-start;justify-content:center;padding:18px 12px calc(95px + env(safe-area-inset-bottom));overflow:auto}
+.myeventGlobalOverlay.open{display:flex}
+.myeventGlobalPanel{width:min(430px,100%);background:#11161b;border:1px solid #303940;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}
+.myeventGlobalPanelHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #2a3137}
+.myeventGlobalPanelHead h3{margin:0;font-size:19px}
+.myeventGlobalPanelClose{background:#0b0f13!important;border:1px solid #343d45!important;color:#fff!important;border-radius:12px!important;padding:7px 10px!important;box-shadow:none!important}
+.myeventGlobalPanelBody{padding:12px}
+</style>
+
+
+<div id="myeventGlobalMessagesOverlay" class="myeventGlobalOverlay" aria-hidden="true">
+  <div class="myeventGlobalPanel">
+    <div class="myeventGlobalPanelHead"><h3>💬 Messages privés</h3><button type="button" class="myeventGlobalPanelClose" id="closeGlobalMessagesBtn">✕ Fermer</button></div>
+    <div class="myeventGlobalPanelBody" id="myeventGlobalMessagesBody"></div>
+  </div>
+</div>
+<div id="myeventGlobalNotificationsOverlay" class="myeventGlobalOverlay" aria-hidden="true">
+  <div class="myeventGlobalPanel">
+    <div class="myeventGlobalPanelHead"><h3>🔔 Notifications</h3><button type="button" class="myeventGlobalPanelClose" id="closeGlobalNotificationsBtn">✕ Fermer</button></div>
+    <div class="myeventGlobalPanelBody" id="myeventGlobalNotificationsBody"></div>
+  </div>
+</div>
 
 </body>
 </html>
