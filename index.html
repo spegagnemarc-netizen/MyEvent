@@ -992,6 +992,69 @@ body:has(#socialHome) .app > h1{display:none!important}
 .socialFriendRequestActions .secondary{border-color:#ff6a34!important;color:#fff!important;background:#11161b!important}
 @media(max-width:430px){.socialFriendRequestCard{flex-basis:calc(50% - 5px)!important}}
 </style>
+
+<style id="myevent-v54-82-camera-pro">
+.cameraProSheet{width:100%;max-width:520px;height:100dvh;min-height:100dvh;padding:0 14px calc(12px + env(safe-area-inset-bottom));border:0;border-radius:0;background:#050607;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.cameraProSheet:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.06),transparent 42%);pointer-events:none}
+.cameraProTop{height:72px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:3;padding-top:env(safe-area-inset-top)}
+.cameraProTopRight{display:flex;gap:8px}.cameraProIcon{width:42px;height:42px;border-radius:50%!important;background:rgba(0,0,0,.48)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important;display:grid;place-items:center;padding:0!important;font-size:20px!important}.cameraProTitle{text-align:center;color:#fff;line-height:1}.cameraProTitle span{display:block;font-size:13px;font-weight:900;letter-spacing:2px}.cameraProTitle small{display:block;margin-top:6px;color:#aeb5bb;font-size:10px}
+.cameraProPreview{flex:1;min-height:0;height:auto!important;border:0!important;border-radius:22px!important;background:#090a0b;box-shadow:0 8px 35px rgba(0,0,0,.45);overflow:hidden}.cameraProPreview video,.cameraProPreview img{object-fit:cover}.cameraFaceGuide{position:absolute;width:min(67vw,270px);height:min(82vw,340px);border:1.5px solid rgba(255,255,255,.7);border-radius:48% 48% 45% 45%;box-shadow:0 0 0 9999px rgba(0,0,0,.08);pointer-events:none;opacity:.72}.cameraFocusDot{position:absolute;width:20px;height:20px;border:1px solid rgba(255,255,255,.85);border-radius:50%;left:50%;top:45%;transform:translate(-50%,-50%);opacity:.45;pointer-events:none}.cameraGridOverlay{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);pointer-events:none;opacity:0;transition:.2s}.cameraGridOverlay.on{opacity:.35}.cameraGridOverlay i{border-right:1px solid #fff;border-bottom:1px solid #fff}.cameraGridOverlay i:nth-child(3n){border-right:0}.cameraGridOverlay i:nth-last-child(-n+3){border-bottom:0}
+.cameraProZoom{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:7px;padding:5px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);z-index:2}.cameraZoomBtn{border:0!important;background:transparent!important;color:#fff!important;padding:7px 10px!important;border-radius:999px!important;font-size:12px!important;font-weight:800}.cameraZoomBtn.active{background:#fff!important;color:#111!important}
+.cameraProModes{display:flex;justify-content:center;gap:28px;padding:14px 0 8px;position:relative;z-index:3}.cameraModeBtn{background:transparent!important;border:0!important;color:#8e969d!important;font-size:12px!important;font-weight:900!important;padding:5px 2px!important}.cameraModeBtn.active{color:#fff!important;position:relative}.cameraModeBtn.active:after{content:"";position:absolute;left:50%;bottom:-5px;transform:translateX(-50%);width:22px;height:2px;border-radius:2px;background:#fff}
+.cameraProBottom{display:grid;grid-template-columns:1fr 90px 1fr;align-items:center;padding:4px 18px 10px;position:relative;z-index:3}.cameraProRoundAction{background:transparent!important;border:0!important;color:#fff!important;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px!important}.cameraProRoundAction span{width:42px;height:42px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.42);border-radius:50%;display:grid;place-items:center;font-size:22px}.cameraProRoundAction small{font-size:9px;color:#aeb5bb}.cameraProShutter{width:78px!important;height:78px!important;background:transparent!important;border:4px solid #fff!important;box-shadow:none!important}.cameraProShutter:after{display:none!important}.cameraProShutter span{display:block;width:62px;height:62px;border-radius:50%;background:#fff;transition:.15s}.cameraProShutter:active span{transform:scale(.88)}
+.cameraProTools{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:8px 0 2px;border-top:1px solid rgba(255,255,255,.08);position:relative;z-index:3}.cameraProTools button{min-width:0!important;background:transparent!important;border:0!important;color:#fff!important;padding:5px 2px!important;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:15px!important}.cameraProTools b{font-size:9px}.cameraProTools small{font-size:8px;color:#8f979e}.cameraProCaptured{margin:8px 0 0!important;position:relative;z-index:4}.cameraProCaptured button{border-radius:13px!important;padding:10px!important}.cameraProHint{margin:5px 0 0!important;font-size:9px!important}
+.cameraProSheet.selfieActive .cameraFaceGuide{opacity:.9;border-color:#fff}.cameraProSheet.captured .cameraFaceGuide,.cameraProSheet.captured .cameraFocusDot,.cameraProSheet.captured .cameraProZoom{display:none}
+@media(min-width:600px){.cameraProSheet{max-width:520px;border-left:1px solid #202428;border-right:1px solid #202428}}
+</style>
+
+
+<style id="myevent-v54-83-selfie-pro-ui">
+/* V54.83 — Interface selfie pro : inspiration appareil photo moderne */
+#myeventCameraModal .cameraProSheet{max-width:520px!important;padding:0!important;background:#050505!important;color:#fff!important}
+#myeventCameraModal .cameraProTop{height:66px;padding:env(safe-area-inset-top) 14px 0;box-sizing:content-box}
+#myeventCameraModal .cameraProTitle{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
+#myeventCameraModal .cameraProTitle span{font-size:14px;letter-spacing:1.4px}
+#myeventCameraModal .cameraProTitle small{font-size:10px;margin-top:4px}
+#myeventCameraModal .cameraProIcon{width:40px;height:40px;background:rgba(20,20,20,.78)!important;border:1px solid rgba(255,255,255,.16)!important;backdrop-filter:blur(10px);font-size:18px!important}
+#myeventCameraModal .cameraProPreview{position:relative;flex:1;min-height:0;height:auto!important;margin:0!important;border-radius:0!important;box-shadow:none!important;background:#111!important}
+#myeventCameraModal .cameraProPreview video,#myeventCameraModal .cameraProPreview img{width:100%;height:100%;object-fit:cover}
+#myeventCameraModal .cameraFaceGuide{width:min(68vw,285px);height:min(78vw,350px);border:1px solid rgba(255,255,255,.48);box-shadow:0 0 0 9999px rgba(0,0,0,.06);opacity:.55}
+#myeventCameraModal .cameraProZoom{bottom:18px;background:rgba(15,15,15,.7);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(16px);padding:4px}
+#myeventCameraModal .cameraZoomBtn{min-width:42px;font-size:12px!important;padding:8px 9px!important}
+#myeventCameraModal .cameraZoomBtn.active{background:#fff!important;color:#111!important}
+#myeventCameraModal .cameraSideTools{position:absolute;top:18px;z-index:8;display:flex;flex-direction:column;gap:8px}
+#myeventCameraModal .cameraSideTools.left{left:12px}
+#myeventCameraModal .cameraSideTools.right{right:12px}
+#myeventCameraModal .cameraSideTool{width:52px;min-height:52px;padding:6px 4px!important;border-radius:16px!important;background:rgba(15,15,15,.58)!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:19px!important;font-weight:500!important}
+#myeventCameraModal .cameraSideTool small{font-size:8px;color:#fff;font-weight:700;line-height:1.05}
+#myeventCameraModal .cameraSideTool.active{border-color:rgba(255,193,55,.9)!important;box-shadow:0 0 0 1px rgba(255,193,55,.18) inset}
+#myeventCameraModal .cameraAiPrompt{position:absolute;left:50%;bottom:72px;transform:translateX(-50%);z-index:8;width:min(78%,390px);padding:10px 14px;border-radius:18px;background:rgba(8,8,8,.72);border:1px solid rgba(255,193,55,.62);backdrop-filter:blur(15px);display:flex;align-items:center;gap:10px;color:#fff;box-sizing:border-box;cursor:pointer}
+#myeventCameraModal .cameraAiPrompt .aiSpark{font-size:23px;color:#ffd45a}
+#myeventCameraModal .cameraAiPrompt b{display:block;font-size:13px}
+#myeventCameraModal .cameraAiPrompt span{display:block;font-size:9px;color:#bfc2c5;margin-top:2px}
+#myeventCameraModal .cameraAiPrompt em{font-style:normal;margin-left:auto;font-size:22px;color:#ffd45a}
+#myeventCameraModal .cameraProModes{order:3;padding:9px 0 5px;gap:28px;background:#050505}
+#myeventCameraModal .cameraProBottom{order:4;padding:7px 24px 8px;grid-template-columns:1fr 104px 1fr;background:#050505}
+#myeventCameraModal .cameraProShutter{width:84px!important;height:84px!important;border:3px solid #fff!important;background:transparent!important}
+#myeventCameraModal .cameraProShutter span{width:68px;height:68px;background:#fff!important}
+#myeventCameraModal .cameraProRoundAction span{width:46px;height:46px;background:#171717;border-color:rgba(255,255,255,.2)}
+#myeventCameraModal .cameraProTools{order:5;display:flex;justify-content:center;gap:7px;padding:7px 10px calc(9px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.08);background:#050505}
+#myeventCameraModal .cameraProTools button{display:none!important}
+#myeventCameraModal .cameraProTools:after{content:'SLOW MOTION    VIDÉO    PHOTO    PORTRAIT    PLUS';white-space:pre;color:#8e9297;font-size:11px;font-weight:800;letter-spacing:.2px}
+#myeventCameraModal .cameraProTools:before{content:'';display:none}
+#myeventCameraModal .cameraCaptured{position:absolute!important;left:12px;right:12px;bottom:118px;z-index:20;display:none;gap:8px}
+#myeventCameraModal .cameraCaptured.open{display:flex!important}
+#myeventCameraModal .cameraCaptured button{flex:1;background:rgba(12,12,12,.88)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important}
+#myeventCameraModal .cameraHint{display:none!important}
+@media(max-width:430px){
+ #myeventCameraModal .cameraSideTools{top:12px}.cameraSideTools.left{left:8px!important}.cameraSideTools.right{right:8px!important}
+ #myeventCameraModal .cameraSideTool{width:48px;min-height:48px;border-radius:14px!important}
+ #myeventCameraModal .cameraAiPrompt{bottom:67px;width:84%;padding:9px 12px}
+ #myeventCameraModal .cameraProModes{gap:20px}
+ #myeventCameraModal .cameraProBottom{padding-left:18px;padding-right:18px}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1163,32 +1226,74 @@ body:has(#socialHome) .app > h1{display:none!important}
   </div>
 
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
-  <div class="cameraSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
-    <div class="cameraHeader"><b>📸 Caméra MyEvent</b><button type="button" class="cameraClose" id="cameraCloseBtn">✕</button></div>
-    <div class="cameraPreview">
-      <video id="myeventCameraVideo" autoplay playsinline muted></video>
-      <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prends une photo ou un selfie</strong><span>Comme sur Snap, mais pour partager tes moments MyEvent.</span></div>
-      <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
-    </div>
-    <div class="cameraControls">
-      <button type="button" class="cameraAction" id="cameraGalleryBtn">🖼️ Galerie</button>
-      <button type="button" class="cameraShutter" id="cameraShutterBtn" aria-label="Prendre une photo">Photo</button>
-      <button type="button" class="cameraAction" id="cameraFlipBtn">🔄 Caméra</button>
-    </div>
-    <div class="cameraOptions">
-      <button type="button" id="cameraIaBtn">✨ IA photo</button>
-      <button type="button" id="cameraVideoBtn">🎬 Vidéo</button>
-      <button type="button" id="cameraEventBtn">🎉 Créer un événement</button>
-    </div>
-    <input id="cameraFileInput" type="file" accept="image/*" capture="user" style="display:none">
-    <div class="cameraCaptured" id="cameraCapturedActions">
-      <button type="button" id="cameraPublishBtn">🚀 Publier dans le fil</button>
-      <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
-    </div>
-    <div class="cameraHint" id="cameraHint">La photo reste dans ton navigateur tant que tu ne la publies pas.</div>
-  </div>
-</div>
+    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra selfie MyEvent">
+      <div class="cameraProTop">
+        <button type="button" class="cameraProIcon" id="cameraCloseBtn" aria-label="Fermer">✕</button>
+        <div class="cameraProTitle"><span id="cameraModeTitle">SELFIE</span><small id="cameraQualityLabel">Auto</small></div>
+        <div class="cameraProTopRight">
+          <button type="button" class="cameraProIcon" id="cameraFlashBtn" aria-label="Flash">⚡</button>
+          <button type="button" class="cameraProIcon" id="cameraGridBtn" aria-label="Grille">▦</button>
+        </div>
+      </div>
 
+      <div class="cameraPreview cameraProPreview">
+        <video id="myeventCameraVideo" autoplay playsinline muted></video>
+        <div class="cameraGridOverlay" id="cameraGridOverlay" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="cameraSideTools left" aria-label="Réglages photo">
+          <button type="button" class="cameraSideTool" id="cameraTimerSide">◷<small>Minuteur</small></button>
+          <button type="button" class="cameraSideTool" id="cameraRatioSide">▣<small>Ratio</small></button>
+          <button type="button" class="cameraSideTool" id="cameraGridSide">▦<small>Grille</small></button>
+          <button type="button" class="cameraSideTool" id="cameraLevelSide">−<small>Niveau</small></button>
+        </div>
+        <div class="cameraSideTools right" aria-label="Retouches et IA">
+          <button type="button" class="cameraSideTool active" id="cameraAiSide">✨<small>IA</small></button>
+          <button type="button" class="cameraSideTool" id="cameraBeautySide">☺<small>Beauté</small></button>
+          <button type="button" class="cameraSideTool" id="cameraRetouchSide">✦<small>Retouches</small></button>
+          <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Filtres</small></button>
+        </div>
+        <div class="cameraAiPrompt" id="cameraAiPrompt">
+          <div class="aiSpark">✨</div><div><b>Améliorer cette photo ?</b><span>Plus de netteté, meilleur éclairage, retouches naturelles</span></div><em>›</em>
+        </div>
+        <div class="cameraFaceGuide" aria-hidden="true"></div>
+        <div class="cameraFocusDot" id="cameraFocusDot" aria-hidden="true"></div>
+        <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prépare ton selfie</strong><span>Place ton visage dans le cadre.</span></div>
+        <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
+        <div class="cameraProZoom" id="cameraZoomRow">
+          <button type="button" class="cameraZoomBtn" data-zoom="0.5">0,5×</button>
+          <button type="button" class="cameraZoomBtn active" data-zoom="1">1×</button>
+          <button type="button" class="cameraZoomBtn" data-zoom="2">2×</button>
+          <button type="button" class="cameraZoomBtn" data-zoom="3">3×</button>
+        </div>
+      </div>
+
+      <div class="cameraProModes" aria-label="Modes caméra">
+        <button type="button" class="cameraModeBtn" id="cameraVideoBtn">VIDÉO</button>
+        <button type="button" class="cameraModeBtn active">PHOTO</button>
+        <button type="button" class="cameraModeBtn" id="cameraSelfieBtn">SELFIE</button>
+      </div>
+
+      <div class="cameraProBottom">
+        <button type="button" class="cameraProRoundAction" id="cameraGalleryBtn" aria-label="Galerie"><span>▣</span><small>Galerie</small></button>
+        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span></span></button>
+        <button type="button" class="cameraProRoundAction" id="cameraFlipBtn" aria-label="Changer de caméra"><span>↻</span><small>Caméra</small></button>
+      </div>
+
+      <div class="cameraProTools">
+        <button type="button" id="cameraIaBtn">✨ <b>IA</b><small>Améliorer</small></button>
+        <button type="button" id="cameraRetouchBtn">✦ <b>Retouche</b><small>Après photo</small></button>
+        <button type="button" id="cameraTimerBtn">◷ <b>Minuteur</b><small>3 s</small></button>
+        <button type="button" id="cameraQualityBtn">HD <b>Qualité</b><small>Auto</small></button>
+        <button type="button" id="cameraEventBtn">🎉 <b>Événement</b><small>Créer</small></button>
+      </div>
+
+      <input id="cameraFileInput" type="file" accept="image/*" capture="user" style="display:none">
+      <div class="cameraCaptured cameraProCaptured" id="cameraCapturedActions">
+        <button type="button" id="cameraPublishBtn">🚀 Publier</button>
+        <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
+      </div>
+      <div class="cameraHint cameraProHint" id="cameraHint">Selfie MyEvent · photo non publiée tant que tu ne valides pas.</div>
+    </div>
+  </div>
 
 <div id="myeventNearbyPanel" class="myeventNearbyPanel" aria-hidden="true">
   <div class="myeventNearbySheet">
@@ -9093,6 +9198,32 @@ setTimeout(v58SetupModuleButtons,0);
     const view=e.target.closest('.socialViewEventBtn');if(view){document.getElementById('eventsCard')?.scrollIntoView({behavior:'smooth'});return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
+  // V54.82 — interface selfie pro : zoom visuel, grille, qualité et minuteur UI.
+  (function(){
+    const sheet=$s('myeventCameraModal')?.querySelector('.cameraProSheet');
+    const video=$s('myeventCameraVideo');
+    document.querySelectorAll('.cameraZoomBtn').forEach(btn=>btn.addEventListener('click',()=>{
+      document.querySelectorAll('.cameraZoomBtn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+      const z=Number(btn.dataset.zoom||1); if(video) video.style.transform=`scale(${z})`;
+    }));
+    $s('cameraGridBtn')?.addEventListener('click',()=> $s('cameraGridOverlay')?.classList.toggle('on'));
+    const triggerCamera=(id)=>$s(id)?.click();
+    $s('cameraTimerSide')?.addEventListener('click',e=>{triggerCamera('cameraTimerBtn');e.currentTarget.classList.toggle('active')});
+    $s('cameraRatioSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
+    $s('cameraGridSide')?.addEventListener('click',()=>{triggerCamera('cameraGridBtn');});
+    $s('cameraLevelSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
+    $s('cameraAiSide')?.addEventListener('click',()=>triggerCamera('cameraIaBtn'));
+    $s('cameraBeautySide')?.addEventListener('click',()=>alert('☺ Beauté : réglage naturel du visage disponible après la capture.'));
+    $s('cameraRetouchSide')?.addEventListener('click',()=>triggerCamera('cameraRetouchBtn'));
+    $s('cameraFilterSide')?.addEventListener('click',()=>alert('◉ Filtres : les filtres photo seront proposés après la capture.'));
+    $s('cameraAiPrompt')?.addEventListener('click',()=>triggerCamera('cameraIaBtn'));
+
+    $s('cameraFlashBtn')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active'); e.currentTarget.textContent=e.currentTarget.classList.contains('active')?'⚡':'⚡';});
+    $s('cameraSelfieBtn')?.addEventListener('click',()=>{ if(sheet){sheet.classList.add('selfieActive');} });
+    $s('cameraRetouchBtn')?.addEventListener('click',()=>{ if(!$s('myeventCapturedImage')?.src){$s('cameraShutterBtn')?.click();return;} alert('✦ Retouche : peau, lumière, cadrage et corrections seront disponibles ici.'); });
+    $s('cameraTimerBtn')?.addEventListener('click',e=>{ const active=e.currentTarget.dataset.timer==='3'; e.currentTarget.dataset.timer=active?'0':'3'; e.currentTarget.innerHTML=active?'◷ <b>Minuteur</b><small>Désactivé</small>':'◷ <b>Minuteur</b><small>3 s</small>'; });
+    $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
+  })();
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
