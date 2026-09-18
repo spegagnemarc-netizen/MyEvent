@@ -1194,8 +1194,44 @@ body:has(#socialHome) .app > h1{display:none!important}
   <div class="myeventNearbySheet">
     <div class="myeventNearbyHead">
       <div><b>📍 À proximité</b><span>Amis, loisirs et événements autour de toi</span></div>
-      <button type="button" id="closeNearbyPanelBtn" class="myeventPanelCloseBtn">✕</button>
+      <div class="myeventNearbyHeaderActions">
+        <button type="button" id="openNearbySettingsBtn" class="myeventNearbySettingsBtn" title="Réglages de la carte">⚙️</button>
+        <button type="button" id="closeNearbyPanelBtn" class="myeventPanelCloseBtn">✕</button>
+      </div>
     </div>
+
+    <div id="myeventNearbySettings" class="myeventNearbySettings" aria-hidden="true">
+      <div class="myeventNearbySettingsCard">
+        <div class="myeventNearbySettingsTitle">
+          <div><b>⚙️ Réglages de la carte</b><span>Personnalise ce que tu vois autour de toi.</span></div>
+          <button type="button" id="closeNearbySettingsBtn" class="myeventPanelCloseBtn">✕</button>
+        </div>
+
+        <label class="myeventSettingRow">
+          <span><b>🎯 Afficher les loisirs autour de moi</b><small>Restaurants, sport, activités et lieux à proximité.</small></span>
+          <span class="myeventSwitch"><input type="checkbox" id="nearbyShowLeisureToggle" checked><span></span></span>
+        </label>
+
+        <label class="myeventSettingRow">
+          <span><b>📍 Partager ma position</b><small>Permet à tes amis autorisés de te voir sur la carte.</small></span>
+          <span class="myeventSwitch"><input type="checkbox" id="nearbySharePositionToggle"><span></span></span>
+        </label>
+
+        <button type="button" id="openNearbyMapTypeBtn" class="myeventSettingButton">
+          🗺️ <span><b>Modifier le mode d’affichage</b><small>Par défaut · Satellite · Relief</small></span>
+          <span>›</span>
+        </button>
+
+        <div id="nearbyMapTypeChoices" class="myeventMapTypeChoices" aria-hidden="true">
+          <button type="button" data-map-type="default">🌍 <b>Par défaut</b></button>
+          <button type="button" data-map-type="satellite">🛰️ <b>Satellite</b></button>
+          <button type="button" data-map-type="terrain">⛰️ <b>Relief</b></button>
+        </div>
+
+        <div class="myeventNearbySettingsNote">Ton choix est mémorisé sur cet appareil.</div>
+      </div>
+    </div>
+
     <div class="myeventNearbyMapTools" id="myeventNearbyMapTools">
       <button type="button" class="active" data-nearby-filter="all">✨ Tout</button>
       <button type="button" data-nearby-filter="friends">👥 Amis</button>
@@ -10193,6 +10229,130 @@ setTimeout(v58SetupModuleButtons,0);
     neutralize(document.getElementById('myeventPersonalWeatherPanel'));
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<style id="myevent-v54-68-settings-css">
+.myeventNearbyHeaderActions{display:flex;align-items:center;gap:7px;flex:none}
+.myeventNearbySettingsBtn{width:40px;height:40px;border-radius:50%!important;background:rgba(17,22,27,.92)!important;border:1px solid #56616b!important;color:#fff!important;padding:0!important;box-shadow:0 2px 10px rgba(0,0,0,.3)!important}
+#myeventNearbyPanel .myeventNearbySettings{display:none;position:absolute;inset:0;z-index:100;background:rgba(4,8,11,.42);backdrop-filter:blur(5px);align-items:flex-start;justify-content:flex-end;padding:calc(74px + env(safe-area-inset-top)) 12px 12px}
+#myeventNearbyPanel .myeventNearbySettings.open{display:flex}
+.myeventNearbySettingsCard{width:min(390px,100%);background:#11161b;border:1px solid #39434c;border-radius:20px;padding:14px;box-shadow:0 16px 45px rgba(0,0,0,.5)}
+.myeventNearbySettingsTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.myeventNearbySettingsTitle b{display:block;font-size:17px}
+.myeventNearbySettingsTitle span{display:block;color:#9ca6ae;font-size:10px;margin-top:3px}
+.myeventSettingRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-top:1px solid #293139}
+.myeventSettingRow b{display:block;font-size:12px}
+.myeventSettingRow small{display:block;color:#8f9aa3;font-size:9px;line-height:1.35;margin-top:3px;max-width:270px}
+.myeventSettingButton{width:100%;display:flex!important;align-items:center;gap:10px;text-align:left;background:#0b0f13!important;border:1px solid #343e46!important;color:#f2f4f6!important;border-radius:14px!important;padding:12px!important;margin-top:5px;box-shadow:none!important}
+.myeventSettingButton span:nth-child(2){flex:1}
+.myeventSettingButton small{display:block;color:#8f9aa3;font-size:9px;font-weight:400;margin-top:3px}
+.myeventMapTypeChoices{display:none;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.myeventMapTypeChoices.open{display:grid}
+.myeventMapTypeChoices button{background:#0b0f13!important;border:1px solid #343e46!important;color:#eef2f5!important;border-radius:12px!important;padding:10px 4px!important;font-size:10px!important}
+.myeventMapTypeChoices button.active{border-color:#7b8791!important;background:#1a2127!important}
+.myeventNearbySettingsNote{font-size:9px;color:#7f8b94;margin-top:10px;text-align:center}
+</style>
+
+
+<script id="myevent-v54-68-settings-js">
+(function(){
+  const $=id=>document.getElementById(id);
+  const LEISURE='myevent_nearby_show_leisure_v1';
+  const SHARE='myevent_social_location_share_v1';
+  const MAP='myevent_nearby_map_type_v1';
+
+  function setToggle(id,key,def){
+    const x=$(id); if(!x)return;
+    const saved=localStorage.getItem(key);
+    x.checked=saved===null?def:saved==='1';
+  }
+  function saveToggle(id,key){
+    const x=$(id); if(x)localStorage.setItem(key,x.checked?'1':'0');
+  }
+  function openSettings(){
+    const x=$('myeventNearbySettings'); if(!x)return;
+    setToggle('nearbyShowLeisureToggle',LEISURE,true);
+    setToggle('nearbySharePositionToggle',SHARE,false);
+    x.classList.add('open');x.setAttribute('aria-hidden','false');
+  }
+  function closeSettings(){
+    const x=$('myeventNearbySettings'); if(!x)return;
+    x.classList.remove('open');x.setAttribute('aria-hidden','true');
+  }
+  function init(){
+    $('openNearbySettingsBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openSettings()});
+    $('closeNearbySettingsBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeSettings()});
+    $('myeventNearbySettings')?.addEventListener('click',e=>{if(e.target===$('myeventNearbySettings'))closeSettings()});
+
+    const leisure=$('nearbyShowLeisureToggle');
+    leisure?.addEventListener('change',()=>{
+      saveToggle('nearbyShowLeisureToggle',LEISURE);
+      // Le chargement réel des loisirs est piloté par la carte; rechargement au prochain affichage.
+      if(window.myeventReloadNearbyLeisure)window.myeventReloadNearbyLeisure();
+    });
+
+    const share=$('nearbySharePositionToggle');
+    share?.addEventListener('change',()=>{
+      saveToggle('nearbySharePositionToggle',SHARE);
+      const legacy=$('myeventNearbyShareToggle');
+      if(legacy)legacy.checked=share.checked;
+      if(share.checked && navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(pos=>{
+          try{localStorage.setItem('myevent_social_last_position_v1',JSON.stringify({lat:pos.coords.latitude,lon:pos.coords.longitude,updatedAt:Date.now()}))}catch(e){}
+          if(window.myeventShowNearbyPosition)window.myeventShowNearbyPosition(pos);
+        },()=>{});
+      }
+    });
+
+    $('openNearbyMapTypeBtn')?.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      const x=$('nearbyMapTypeChoices'); if(x)x.classList.toggle('open');
+    });
+
+    document.querySelectorAll('[data-map-type]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.preventDefault();e.stopPropagation();
+        const type=b.dataset.mapType;
+        localStorage.setItem(MAP,type);
+        document.querySelectorAll('[data-map-type]').forEach(x=>x.classList.toggle('active',x.dataset.mapType===type));
+        if(window.myeventSetNearbyMapType)window.myeventSetNearbyMapType(type);
+        const choices=$('nearbyMapTypeChoices'); if(choices)choices.classList.remove('open');
+      });
+    });
+
+    const savedMap=localStorage.getItem(MAP)||'default';
+    document.querySelectorAll('[data-map-type]').forEach(x=>x.classList.toggle('active',x.dataset.mapType===savedMap));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<script id="myevent-v54-68-settings-bridge">
+(function(){
+  window.myeventReloadNearbyLeisure=function(){
+    // Trigger a map refresh through the existing position refresh button.
+    const p=window.myeventNearbyCurrentPosition;
+    if(p && window.myeventLoadNearbyLeisure)window.myeventLoadNearbyLeisure(p.lat,p.lon);
+  };
+  window.myeventSetNearbyMapType=function(type){
+    // Existing Leaflet map: switch tile layer while preserving the same map.
+    const m=window.myeventNearbyLeafletMap;
+    if(!m || !window.L)return;
+    if(window.myeventNearbyBaseLayer)m.removeLayer(window.myeventNearbyBaseLayer);
+    let url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attr='&copy; OpenStreetMap';
+    if(type==='satellite'){
+      url='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attr='Tiles &copy; Esri';
+    }else if(type==='terrain'){
+      url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      attr='&copy; OpenTopoMap';
+    }
+    window.myeventNearbyBaseLayer=L.tileLayer(url,{maxZoom:19,attribution:attr}).addTo(m);
+  };
 })();
 </script>
 
