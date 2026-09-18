@@ -614,6 +614,48 @@ body.discussionFullScreen #discussionPanel.active{
 }
 
 .planningMapCta{width:100%;margin-top:8px;padding:12px 14px;border:1px solid #294d67;border-radius:14px;background:#0d1a26;color:#f4f8fb;font-weight:800;font-size:15px;cursor:pointer}.planningMapCta:active{transform:scale(.99)}
+
+/* V54.54 — Recherche d’amis en demi-cartes défilables horizontalement */
+.socialFriendsView .socialFriendCarousel{
+  display:flex!important;
+  gap:12px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scroll-snap-type:x mandatory!important;
+  -webkit-overflow-scrolling:touch!important;
+  padding:4px 2px 12px!important;
+  margin:0!important;
+}
+.socialFriendsView .socialFriendCarousel::-webkit-scrollbar{display:none!important}
+.socialFriendsView .socialFriendCarousel .socialPerson{
+  flex:0 0 calc(50% - 6px)!important;
+  min-width:0!important;
+  min-height:150px!important;
+  box-sizing:border-box!important;
+  border:1px solid #2a3035!important;
+  border-radius:18px!important;
+  padding:14px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  scroll-snap-align:start!important;
+  background:#11161b!important;
+}
+.socialFriendsView .socialFriendCarousel .socialPostAvatar{
+  width:48px!important;height:48px!important;min-width:48px!important;
+}
+.socialFriendsView .socialFriendCarousel .grow{width:100%!important}
+.socialFriendsView .socialFriendCarousel .socialFollowBtn{
+  margin-top:auto!important;
+  width:100%!important;
+  min-height:44px!important;
+  padding:8px 10px!important;
+}
+@media(max-width:430px){
+  .socialFriendsView .socialFriendCarousel .socialPerson{flex-basis:calc(50% - 6px)!important}
+}
 </style>
 <!-- MyEvent V47 — vitesse vocaux par clic, multiplicateur à côté de la durée -->
 <!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
@@ -1058,9 +1100,11 @@ body:has(#socialHome) .app > h1{display:none!important}
 
   <div id="socialFriendsView" class="socialPeople">
     <div class="socialSearch"><input placeholder="🔎 Rechercher un ami…"><button type="button">Rechercher</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">🍴 Restaurants · 🎵 Sorties</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">🥾</div><div class="grow"><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+    <div class="socialFriendCarousel" aria-label="Suggestions d’amis, faire défiler horizontalement">
+      <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+      <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">🍴 Restaurants · 🎵 Sorties</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+      <div class="socialPerson"><div class="socialPostAvatar">🥾</div><div class="grow"><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
+    </div>
   </div>
 
   <div id="socialMessagesView" class="socialPeople">
