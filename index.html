@@ -11293,5 +11293,217 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-76-map-final-css">
+/* Les 6 filtres doivent tous être visibles sur iPhone sans démarrer
+   au milieu de la rangée. */
+#myeventNearbyPanel .myeventNearbyMapTools{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:5px!important;
+  overflow-x:auto!important;
+  padding:0 2px!important;
+  scroll-snap-type:none!important;
+  scrollbar-width:none!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools::-webkit-scrollbar{display:none!important}
+#myeventNearbyPanel .myeventNearbyMapTools button{
+  flex:0 0 auto!important;
+  min-width:0!important;
+  padding:7px 9px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  border-radius:999px!important;
+}
+@media (max-width:430px){
+  #myeventNearbyPanel .myeventNearbyMapTools{
+    gap:4px!important;
+  }
+  #myeventNearbyPanel .myeventNearbyMapTools button{
+    padding:7px 7px!important;
+    font-size:9.5px!important;
+  }
+}
+.myeventCityLabel .name{font-size:11px!important}
+.myeventInterestLabel .name{font-size:9px!important;max-width:135px!important}
+</style>
+
+
+<script id="myevent-v54-76-real-map-content">
+(function(){
+  const CITY_KEY='myeventNearbyCities76';
+  const POI_KEY='myeventNearbyPois76';
+  let cityLayer=null,poiLayer=null,lastKey='';
+  const endpoints=[
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter'
+  ];
+
+  function map(){return window.myeventNearbyLeafletMap||null}
+  function pos(){
+    try{
+      const p=JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null');
+      return p&&+p.lat&&+p.lon?{lat:+p.lat,lon:+p.lon}:null;
+    }catch(e){return null}
+  }
+  function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function dist(a,b,c,d){
+    const R=6371,rad=Math.PI/180;
+    const x=(c-a)*rad,y=(d-b)*rad;
+    const h=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function cityIcon(name){
+    return L.divIcon({
+      className:'myeventCityMarker',
+      html:'<div class="myeventCityLabel"><span class="dot"></span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[170,28],iconAnchor:[5,14]
+    });
+  }
+  function poiIcon(name,emoji,purple){
+    return L.divIcon({
+      className:'myeventInterestMarker',
+      html:'<div class="myeventInterestLabel '+(purple?'purple':'')+'"><span class="pin">'+emoji+'</span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[175,36],iconAnchor:[14,18]
+    });
+  }
+  async function request(q){
+    for(const url of endpoints){
+      try{
+        const r=await fetch(url+'?data='+encodeURIComponent(q),{mode:'cors'});
+        if(r.ok)return await r.json();
+      }catch(e){}
+    }
+    return {elements:[]};
+  }
+  async function load(lat,lon){
+    const m=map(); if(!m||!window.L)return;
+    const key=lat.toFixed(3)+','+lon.toFixed(3);
+    if(lastKey===key&&cityLayer&&poiLayer)return;
+    lastKey=key;
+    if(!cityLayer)cityLayer=L.layerGroup().addTo(m);
+    if(!poiLayer)poiLayer=L.layerGroup().addTo(m);
+    cityLayer.clearLayers();poiLayer.clearLayers();
+
+    const cityQ='[out:json][timeout:15];nwr(around:70000,'+lat+','+lon+')[place~"city|town"];out center tags 120;';
+    const poiQ='[out:json][timeout:15];(nwr(around:10000,'+lat+','+lon+')[tourism~"attraction|viewpoint|museum|theme_park|zoo|aquarium"];nwr(around:10000,'+lat+','+lon+')[leisure~"park|golf_course|sports_centre|stadium|pitch"];nwr(around:10000,'+lat+','+lon+')[amenity~"restaurant|cafe|cinema"];);out center tags 120;';
+
+    const [cities,pois]=await Promise.all([request(cityQ),request(poiQ)]);
+
+    const cityItems=[];
+    (cities.elements||[]).forEach(x=>{
+      const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+      const name=x.tags?.name;
+      if(name&&p[0]&&p[1])cityItems.push({name,p,d:dist(lat,lon,+p[0],+p[1])});
+    });
+    cityItems.sort((a,b)=>a.d-b.d);
+    const seenCity=new Set();
+    cityItems.slice(0,14).forEach(x=>{
+      if(seenCity.has(x.name))return;
+      seenCity.add(x.name);
+      L.marker(x.p,{icon:cityIcon(x.name),interactive:false,zIndexOffset:-100}).addTo(cityLayer);
+    });
+
+    const poiItems=[];
+    (pois.elements||[]).forEach(x=>{
+      const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+      const t=x.tags||{},name=t.name;
+      if(!name||!p[0]||!p[1])return;
+      let emoji='🎯',type='activity',purple=false;
+      if(t.amenity==='restaurant')emoji='🍽️',type='restaurant';
+      else if(t.amenity==='cafe')emoji='☕',type='restaurant';
+      else if(t.amenity==='cinema')emoji='🎬',type='activity';
+      else if(t.leisure==='golf_course')emoji='⛳',type='sport';
+      else if(['sports_centre','stadium','pitch'].includes(t.leisure))emoji='⚽',type='sport';
+      else if(t.leisure==='park')emoji='🌳',type='activity';
+      else if(t.tourism==='viewpoint')emoji='👀',purple=true;
+      else if(t.tourism==='museum')emoji='🏛️',purple=true;
+      else if(t.tourism)emoji='🎯',purple=true;
+      poiItems.push({name,p,type,emoji,purple,d:dist(lat,lon,+p[0],+p[1])});
+    });
+    poiItems.sort((a,b)=>a.d-b.d);
+    const seenPoi=new Set();
+    poiItems.slice(0,45).forEach(x=>{
+      if(seenPoi.has(x.name))return;
+      seenPoi.add(x.name);
+      const mk=L.marker(x.p,{icon:poiIcon(x.name,x.emoji,x.purple)});
+      mk.__nearbyType=x.type;
+      mk.bindPopup('<b>'+esc(x.name)+'</b><br>📍 Point intéressant à proximité');
+      mk.addTo(poiLayer);
+    });
+    window.myeventNearbyCityLayer=cityLayer;
+    window.myeventNearbyInterestLayer=poiLayer;
+    window.myeventNearbyRealPoiItems=poiItems;
+    applyFilter(localStorage.getItem('myevent_nearby_filter_v2')||'all');
+  }
+
+  function applyFilter(kind){
+    if(!poiLayer)return;
+    poiLayer.eachLayer(m=>{
+      const t=m.__nearbyType||'activity';
+      const visible=kind==='all'||(kind==='sport'&&t==='sport')||
+        (kind==='restaurant'&&t==='restaurant')||
+        (kind==='activity'&&t==='activity');
+      if(visible)m.addTo(poiLayer);else poiLayer.removeLayer(m);
+    });
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.nearbyFilter===kind);
+    });
+  }
+
+  function resetFilterScroll(){
+    const el=document.getElementById('myeventNearbyMapTools');
+    if(!el)return;
+    el.scrollLeft=0;
+    requestAnimationFrame(()=>el.scrollLeft=0);
+    setTimeout(()=>el.scrollLeft=0,80);
+    setTimeout(()=>el.scrollLeft=0,300);
+  }
+
+  function init(){
+    let tries=0;
+    const timer=setInterval(()=>{
+      tries++;
+      const m=map();
+      if(m){
+        clearInterval(timer);
+        const p=pos();
+        if(p)load(p.lat,p.lon);
+        m.on('moveend',()=>{
+          const c=m.getCenter();
+          const p=pos();
+          if(p&&dist(p.lat,p.lon,c.lat,c.lng)>1.5){
+            // Ne pas déplacer les marqueurs à chaque mouvement : on recharge
+            // seulement si l'utilisateur s'éloigne vraiment de sa zone.
+          }
+        });
+      }
+      if(tries>120)clearInterval(timer);
+    },100);
+
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        localStorage.setItem('myevent_nearby_filter_v2',b.dataset.nearbyFilter||'all');
+        applyFilter(b.dataset.nearbyFilter||'all');
+      },true);
+    });
+
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      new MutationObserver(()=>{
+        if(panel.classList.contains('open')){
+          resetFilterScroll();
+          const p=pos();
+          if(p)load(p.lat,p.lon);
+        }
+      }).observe(panel,{attributes:true,attributeFilter:['class']});
+    }
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
