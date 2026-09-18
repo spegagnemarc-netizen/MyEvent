@@ -1034,6 +1034,14 @@ body:has(#socialHome) .app > h1{display:none!important}
     </div>
   </div>
 
+  <div class="myeventHomeUtilityRow">
+    <button type="button" id="socialGpsWeatherCard" class="myeventGpsWeatherCard" title="Météo de ma position GPS">
+      <span class="myeventGpsWeatherIcon" id="socialGpsWeatherIcon">🌤️</span>
+      <span class="myeventGpsWeatherTemp" id="socialGpsWeatherTemp">--°</span>
+      <span class="myeventGpsWeatherLabel">Ma météo</span>
+    </button>
+    <button type="button" id="socialNearbyShareBtn" class="myeventNearbyMiniBtn" title="Partager ma position">📍 À proximité</button>
+  </div>
 
   <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
   <div class="socialMyEventsBox">
@@ -1178,6 +1186,30 @@ body:has(#socialHome) .app > h1{display:none!important}
       <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
     </div>
     <div class="cameraHint" id="cameraHint">La photo reste dans ton navigateur tant que tu ne la publies pas.</div>
+  </div>
+</div>
+
+
+<div id="myeventNearbyPanel" class="myeventNearbyPanel" aria-hidden="true">
+  <div class="myeventNearbySheet">
+    <div class="myeventNearbyHead">
+      <div><b>📍 À proximité</b><span>Choisis une fois si tu veux partager ta position.</span></div>
+      <button type="button" id="closeNearbyPanelBtn" class="myeventPanelCloseBtn">✕</button>
+    </div>
+    <div class="myeventNearbyChoice">
+      <div>
+        <b>Partager ma position</b>
+        <span id="myeventNearbyStatus">Désactivé</span>
+      </div>
+      <label class="myeventSwitch">
+        <input type="checkbox" id="myeventNearbyShareToggle">
+        <span></span>
+      </label>
+    </div>
+    <div class="myeventNearbyInfo" id="myeventNearbyInfo">
+      Ton choix est mémorisé sur cet appareil. Tu n'auras pas à le refaire à chaque connexion.
+    </div>
+    <button type="button" id="myeventNearbyLocateBtn" class="secondary">📍 Actualiser ma position</button>
   </div>
 </div>
 
@@ -9257,8 +9289,13 @@ setTimeout(v58SetupModuleButtons,0);
     bind('socialHeaderNotificationsBtnTop',()=>openOverlay('notifications'));
 
     // BOUTONS DANS "MES ÉVÉNEMENTS" = messages/notifications DE L'ÉVÉNEMENT
-    bind('socialHeaderMessagesBtn',()=>openEventModule('discussionContent'));
-    bind('socialHeaderNotificationsBtn',()=>openEventModule('notificationCenter'));
+    bind('socialHeaderMessagesBtn',()=>{
+      if(typeof showEventTab==='function') showEventTab('discussion',true);
+      const p=$('discussionPanel'); if(p){p.classList.add('active');p.open=true;p.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+    bind('socialHeaderNotificationsBtn',()=>{
+      const p=$('notificationCenter'); if(p){p.open=true;p.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
 
     // PROFIL : ouvrir / réduire / enregistrer puis réduire
     bind('closeProfileBtn',hideProfile);
@@ -9336,6 +9373,162 @@ setTimeout(v58SetupModuleButtons,0);
     <div class="myeventGlobalPanelBody" id="myeventGlobalNotificationsBody"></div>
   </div>
 </div>
+
+
+<style id="myevent-v54-61-css">
+.myeventHomeUtilityRow{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin:1px 2px 6px}
+.myeventGpsWeatherCard{width:82px;height:62px;flex:0 0 82px;padding:5px 4px!important;border:1px solid #343d45!important;border-radius:15px!important;background:#11161b!important;color:#fff!important;display:grid!important;grid-template-columns:25px 1fr;grid-template-rows:1fr 14px;align-items:center;box-shadow:none!important}
+.myeventGpsWeatherIcon{font-size:21px;grid-row:1/3}
+.myeventGpsWeatherTemp{font-size:15px;font-weight:900;line-height:1}
+.myeventGpsWeatherLabel{font-size:8px;color:#9da7af;white-space:nowrap}
+.myeventNearbyMiniBtn{height:62px!important;border-radius:15px!important;background:#11161b!important;border:1px solid #343d45!important;color:#fff!important;font-size:10px!important;padding:5px 10px!important}
+#socialHome .socialStories .socialStory.me,
+#socialHome .socialStories .socialStory.me .socialStoryBubble{width:100%!important;max-width:none!important}
+#socialHome .socialStories .socialStory{width:100%!important;min-width:0!important}
+#socialHome .socialStories .socialStoryBubble{width:100%!important;max-width:none!important;min-width:0!important;aspect-ratio:1/1!important;height:auto!important;box-sizing:border-box!important}
+#socialHome .socialStories .socialStory.me .socialStoryBubble{width:100%!important;max-width:none!important}
+.myeventNearbyPanel{position:fixed;inset:0;z-index:125;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.62);backdrop-filter:blur(5px)}
+.myeventNearbyPanel.open{display:flex}
+.myeventNearbySheet{width:min(430px,100%);background:#11161b;border:1px solid #343d45;border-bottom:0;border-radius:24px 24px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -15px 45px rgba(0,0,0,.45)}
+.myeventNearbyHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.myeventNearbyHead b{display:block;font-size:19px}
+.myeventNearbyHead span{display:block;color:#9da7af;font-size:11px;margin-top:3px}
+.myeventPanelCloseBtn{width:36px;height:36px;border-radius:50%!important;padding:0!important;background:#0b0f13!important;border:1px solid #343d45!important;color:#fff!important}
+.myeventNearbyChoice{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px;background:#0b0f13;border:1px solid #2b333a;border-radius:15px}
+.myeventNearbyChoice b{display:block;font-size:14px}
+.myeventNearbyChoice span{display:block;color:#9da7af;font-size:11px;margin-top:3px}
+.myeventSwitch{position:relative;width:52px;height:31px;display:block;flex:none}
+.myeventSwitch input{opacity:0;width:0;height:0}
+.myeventSwitch span{position:absolute;inset:0;border-radius:999px;background:#303840;transition:.2s}
+.myeventSwitch span:before{content:'';position:absolute;width:25px;height:25px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}
+.myeventSwitch input:checked+span{background:#ff6a34}
+.myeventSwitch input:checked+span:before{transform:translateX(21px)}
+.myeventNearbyInfo{font-size:11px;line-height:1.4;color:#8e9aa4;margin:10px 2px}
+#myeventNearbyLocateBtn{width:100%;margin-top:4px}
+@media(max-width:380px){
+  .myeventGpsWeatherCard{width:76px;flex-basis:76px}
+  .myeventNearbyMiniBtn{padding:5px 7px!important;font-size:9px!important}
+}
+</style>
+
+
+<script id="myevent-v54-61-gps-weather">
+(function(){
+  const $=id=>document.getElementById(id);
+  const SHARE_KEY='myevent_social_location_share_v1';
+  const LAST_POS_KEY='myevent_social_last_position_v1';
+
+  const weatherIcon={
+    0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',
+    56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',
+    71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',
+    85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'
+  };
+
+  function isShareEnabled(){return localStorage.getItem(SHARE_KEY)==='1'}
+  function setShareEnabled(v){
+    localStorage.setItem(SHARE_KEY,v?'1':'0');
+    updateShareUI();
+  }
+  function updateShareUI(){
+    const t=$('myeventNearbyShareToggle'), st=$('myeventNearbyStatus');
+    const on=isShareEnabled();
+    if(t)t.checked=on;
+    if(st)st.textContent=on?'Activé — position autorisée sur cet appareil':'Désactivé';
+  }
+
+  function savePosition(pos){
+    try{
+      localStorage.setItem(LAST_POS_KEY,JSON.stringify({
+        lat:pos.coords.latitude,lon:pos.coords.longitude,
+        accuracy:pos.coords.accuracy||null,updatedAt:Date.now()
+      }));
+    }catch(e){}
+  }
+
+  async function loadGpsWeather(pos){
+    const icon=$('socialGpsWeatherIcon'), temp=$('socialGpsWeatherTemp');
+    if(icon)icon.textContent='⏳';
+    if(temp)temp.textContent='--°';
+    try{
+      const lat=pos.coords.latitude,lon=pos.coords.longitude;
+      savePosition(pos);
+      const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current=temperature_2m,weather_code&timezone=auto');
+      if(!r.ok)throw new Error('Météo indisponible');
+      const d=await r.json();
+      if(icon)icon.textContent=weatherIcon[d.current?.weather_code]||'🌤️';
+      if(temp)temp.textContent=Math.round(Number(d.current?.temperature_2m))+'°';
+    }catch(e){
+      if(icon)icon.textContent='🌤️';
+      if(temp)temp.textContent='--°';
+    }
+  }
+
+  function getPosition(showError){
+    if(!navigator.geolocation){
+      if(showError)alert('La géolocalisation n’est pas disponible sur cet appareil.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        savePosition(pos);
+        loadGpsWeather(pos);
+        if($('myeventNearbyInfo') && isShareEnabled())
+          $('myeventNearbyInfo').textContent='📍 Position actualisée. Ton choix de partage est mémorisé sur cet appareil.';
+      },
+      err=>{
+        if(showError){
+          const msg=err?.code===1
+            ?'Autorisation de localisation refusée. Autorise la localisation pour MyEvent dans les réglages du navigateur.'
+            :'Impossible d’obtenir ta position pour le moment.';
+          if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='⚠️ '+msg;
+        }
+      },
+      {enableHighAccuracy:true,timeout:15000,maximumAge:300000}
+    );
+  }
+
+  function openNearby(){
+    const p=$('myeventNearbyPanel'); if(!p)return;
+    updateShareUI();
+    p.classList.add('open'); p.setAttribute('aria-hidden','false');
+  }
+  function closeNearby(){
+    const p=$('myeventNearbyPanel'); if(!p)return;
+    p.classList.remove('open'); p.setAttribute('aria-hidden','true');
+  }
+
+  function init(){
+    updateShareUI();
+
+    $('socialGpsWeatherCard')?.addEventListener('click',()=>getPosition(true));
+    $('socialNearbyShareBtn')?.addEventListener('click',openNearby);
+    $('closeNearbyPanelBtn')?.addEventListener('click',closeNearby);
+    $('myeventNearbyPanel')?.addEventListener('click',e=>{
+      if(e.target===$('myeventNearbyPanel'))closeNearby();
+    });
+
+    $('myeventNearbyShareToggle')?.addEventListener('change',e=>{
+      const on=e.target.checked;
+      setShareEnabled(on);
+      if(on){
+        if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='📍 Partage activé. MyEvent pourra utiliser ta position sur cet appareil. Autorise la localisation si le navigateur la demande.';
+        getPosition(false);
+      }else{
+        if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='Partage désactivé. Ton choix est mémorisé et restera désactivé aux prochaines connexions.';
+      }
+    });
+
+    $('myeventNearbyLocateBtn')?.addEventListener('click',()=>getPosition(true));
+
+    // Si l'utilisateur avait déjà choisi de partager, on ne redemande pas le choix.
+    if(isShareEnabled())getPosition(false);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
 
 </body>
 </html>
