@@ -9929,5 +9929,124 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-66-force-closed">
+#myeventNearbyPanel{display:none!important}
+#myeventNearbyPanel.open{display:flex!important}
+</style>
+
+
+<script id="myevent-v54-66-proximity-lifecycle">
+(function(){
+  function p(){return document.getElementById('myeventNearbyPanel')}
+  function close(){
+    const x=p(); if(!x)return;
+    x.classList.remove('open');
+    x.setAttribute('aria-hidden','true');
+    x.style.display='none';
+    document.body.style.overflow='';
+  }
+  function open(){
+    const x=p(); if(!x)return;
+    x.style.display='flex';
+    x.classList.add('open');
+    x.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    setTimeout(function(){
+      if(window.L){
+        const map=x.querySelector('#myeventNearbyMap');
+        if(map && map._leaflet_id && window.dispatchEvent)window.dispatchEvent(new Event('resize'));
+      }
+    },100);
+  }
+
+  function init(){
+    // Toujours démarrer sur l'accueil, jamais sur la carte.
+    close();
+
+    const closeBtn=document.getElementById('closeNearbyPanelBtn');
+    if(closeBtn){
+      closeBtn.addEventListener('click',function(e){
+        e.preventDefault();e.stopImmediatePropagation();close();
+      },true);
+    }
+
+    const panel=p();
+    if(panel){
+      panel.addEventListener('click',function(e){
+        if(e.target===panel){e.preventDefault();e.stopPropagation();close();}
+      },true);
+    }
+
+    // Remplace les anciennes ouvertures de la case À proximité par une seule
+    // ouverture contrôlée du plein écran.
+    document.querySelectorAll('#socialHome .socialStory').forEach(function(x){
+      const label=x.textContent.replace(/\s+/g,' ').trim();
+      if(label==='À proximité'){
+        const clone=x.cloneNode(true);
+        x.replaceWith(clone);
+        clone.addEventListener('click',function(e){
+          e.preventDefault();e.stopImmediatePropagation();open();
+        },true);
+      }
+    });
+
+    // Le bouton météo de la sixième case reste indépendant.
+    const weather=document.querySelector('#socialHome .socialStory.weatherShortcut');
+    if(weather){
+      const clone=weather.cloneNode(true);
+      weather.replaceWith(clone);
+      clone.addEventListener('click',function(e){
+        e.preventDefault();e.stopImmediatePropagation();
+        const w=document.getElementById('myeventPersonalWeatherPanel');
+        if(w){
+          w.classList.add('open');
+          w.setAttribute('aria-hidden','false');
+        }
+      },true);
+    }
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+
+  // Safari/iOS peut restaurer une page avec son état visuel précédent.
+  window.addEventListener('pageshow',function(){close()});
+})();
+</script>
+
+
+<style id="myevent-v54-66-six-grid">
+#socialHome .socialStories{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:7px!important;
+  width:100%!important;
+  overflow:visible!important;
+}
+#socialHome .socialStories .socialStory{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  flex:none!important;
+  margin:0!important;
+}
+#socialHome .socialStories .socialStoryBubble{
+  display:flex!important;
+  width:100%!important;
+  aspect-ratio:1/1!important;
+  height:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0 auto 5px!important;
+  box-sizing:border-box!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#socialHome .socialStories .socialStory.me{
+  width:100%!important;
+}
+</style>
+
 </body>
 </html>
