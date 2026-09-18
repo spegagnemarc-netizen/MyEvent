@@ -8815,3 +8815,84 @@ setTimeout(v58SetupModuleButtons,0);
   setTimeout(normalizeSocialFilters,300);
 })();
 </script>
+<style id="myevent-v54-51-six-squares">
+/* V54.51 — Accueil compact : 6 carrés visibles sur une seule ligne */
+#socialHome .socialTop{padding:8px 4px 6px!important;gap:8px!important}
+#socialHome .socialProfileAvatar{width:50px!important;height:50px!important}
+#socialHome .socialProfileText b{font-size:18px!important;line-height:1.05!important}
+#socialHome .socialProfileText span{font-size:11px!important;margin-top:3px!important}
+#socialHome .socialTopTools{gap:5px!important}
+#socialHome .socialToolBtn{width:36px!important;height:36px!important;font-size:15px!important}
+
+/* Six carrés : aucun défilement horizontal */
+#socialHome .socialStories{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:5px!important;
+  overflow:visible!important;
+  width:100%!important;
+  padding:2px 0 8px!important;
+  box-sizing:border-box!important;
+}
+#socialHome .socialStory{
+  width:auto!important;
+  min-width:0!important;
+  flex:none!important;
+  font-size:8.5px!important;
+  line-height:1.15!important;
+  white-space:normal!important;
+}
+#socialHome .socialStoryBubble{
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  margin:0 auto 4px!important;
+  border-radius:18px!important;
+  font-size:24px!important;
+  box-sizing:border-box!important;
+}
+#socialHome .socialStory.create .socialStoryBubble{font-size:28px!important}
+
+/* 5 filtres compacts : tous visibles, seul le sélectionné est orange */
+#socialHome .socialFilters{gap:5px!important;padding:5px 0 12px!important}
+#socialHome button.socialFilter,
+#socialHome button.socialFilter:not(.active){font-size:10px!important;padding:8px 1px!important;border-radius:999px!important}
+
+/* Réduire légèrement l'espace entre les zones supérieures */
+#socialHome .socialMyEventsBox{margin:3px 0 8px!important;padding:5px 7px 5px!important;border-radius:20px!important}
+#socialHome .socialMyEventsActions button{height:44px!important;font-size:18px!important}
+#socialHome .socialMyEventsActions button span{font-size:8.5px!important}
+#socialHome .socialMyEventsTitle{font-size:11px!important;margin-top:1px!important}
+
+@media(max-width:380px){
+  #socialHome .socialProfileAvatar{width:46px!important;height:46px!important}
+  #socialHome .socialProfileText b{font-size:16px!important}
+  #socialHome .socialProfileText span{font-size:10px!important}
+  #socialHome .socialToolBtn{width:33px!important;height:33px!important}
+  #socialHome .socialStoryBubble{border-radius:15px!important;font-size:21px!important}
+  #socialHome .socialStory.create .socialStoryBubble{font-size:24px!important}
+  #socialHome .socialStory{font-size:7.5px!important}
+  #socialHome button.socialFilter{font-size:9px!important;padding:7px 1px!important}
+}
+</style>
+<script id="myevent-v54-51-six-squares-js">
+(function(){
+  function forceSixVisible(){
+    const root=document.getElementById('socialHome');
+    if(!root) return;
+    const stories=root.querySelector('.socialStories');
+    if(stories){
+      stories.style.gridTemplateColumns='repeat(6,minmax(0,1fr))';
+      stories.style.overflow='visible';
+    }
+    const filters=[...root.querySelectorAll('.socialFilter')];
+    if(filters.length){
+      const active=filters.find(b=>b.classList.contains('active'))||filters[0];
+      filters.forEach(b=>b.classList.toggle('active',b===active));
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',forceSixVisible,{once:true});
+  else forceSixVisible();
+  setTimeout(forceSixVisible,200);
+})();
+</script>
