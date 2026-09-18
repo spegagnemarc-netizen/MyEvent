@@ -707,7 +707,7 @@ body.discussionFullScreen #discussionPanel.active{
 </style>
 
 <!-- V54.16 FIX: planning manuel après sélection sortie -->
-<meta name="myevent-version" content="V54.46"><!-- V54.46 -->
+<meta name="myevent-version" content="V54.48"><!-- V54.46 -->
 <style id="myevent-v54-46-social-home-css">
 /* V54.46 — Accueil social sombre inspiré de la maquette validée */
 .socialHome{margin:0 -20px 24px;padding:0 16px 110px;background:radial-gradient(circle at 50% -10%,rgba(255,102,45,.10),transparent 34%),#07090b;color:#fff;min-height:calc(100vh - 20px)}
@@ -726,6 +726,24 @@ body.discussionFullScreen #discussionPanel.active{
 .socialPeople{background:#15181b!important;border:1px solid #2a3035!important;border-radius:20px!important;padding:4px 14px}.socialPerson{border-bottom:1px solid #293037!important}.socialPerson .muted{color:#909aa4!important}.socialSearch input{background:#11161b!important;border-color:#2a3239!important;color:#fff!important}.socialComposer{margin:0 0 13px}.socialMiniAvatar{background:#151b20!important;border-color:#313940!important;color:#fff}.socialComposerInput{background:#11161b!important;border-color:#2a3239!important;color:#9ca5ad!important}.socialComposerPanel{background:#11161b!important;border-color:#2a3239!important}.socialComposerPanel textarea{background:#0c1014!important;border-color:#2a3239!important;color:#fff!important}
 .socialBottomNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100vw);height:78px;z-index:80;background:rgba(9,11,13,.96);backdrop-filter:blur(16px);border-top:1px solid #272d32;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding-bottom:max(8px,env(safe-area-inset-bottom))}.socialBottomNav button{background:transparent!important;border:0!important;box-shadow:none!important;color:#8f979f!important;padding:7px 2px!important;margin:0!important;border-radius:0!important;font-size:11px!important}.socialBottomNav button.active{color:#ff7040!important}.socialBottomNav .bottomIcon{display:block;font-size:22px;line-height:28px}.socialBottomNav .createBottom{width:58px;height:58px;border-radius:50%!important;background:#ff6a34!important;color:#fff!important;margin:-15px auto 0!important;font-size:31px!important;box-shadow:0 8px 25px rgba(255,106,52,.35)!important}.socialBottomNav .createBottom .bottomLabel{display:none}
 @media(max-width:600px){.socialHome{margin-left:-20px;margin-right:-20px;padding-left:14px;padding-right:14px}.socialProfileText b{font-size:19px}.socialTopTools{gap:3px}.socialToolBtn{width:39px;height:39px}.socialEventCover{height:145px}.socialBottomNav{height:74px}.socialMyEventsActions button{font-size:19px!important}.socialMyEventsActions button span{font-size:8px}}
+
+/* V54.48 — Accueil 100% orange + caméra centrale MyEvent */
+#socialHome button:not(.secondary), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
+#socialHome button.secondary, #socialHome .socialFilter { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
+#socialHome .socialFilter.active { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
+#socialHome .socialActions button { background:transparent!important; border-color:transparent!important; color:#aeb7bf!important; box-shadow:none!important; }
+#socialHome .socialActions button.active { color:#ff7040!important; }
+#socialHome .socialFollowBtn.active, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
+#socialHome .socialBottomNav button { background:transparent!important; border:0!important; color:#8f979f!important; box-shadow:none!important; }
+#socialHome .socialBottomNav button.active { color:#ff7040!important; }
+#socialHome .socialBottomNav .createBottom { background:#ff6a34!important; color:#fff!important; border:0!important; }
+#socialHome .socialSectionHead button { background:transparent!important; border:0!important; color:#ff7546!important; box-shadow:none!important; }
+
+.cameraModal{position:fixed;inset:0;z-index:300;background:rgba(3,5,7,.97);display:none;align-items:flex-end;justify-content:center}
+.cameraModal.open{display:flex}
+.cameraSheet{width:min(430px,100vw);min-height:72vh;background:linear-gradient(180deg,#0b0d10,#101316);border:1px solid #30363b;border-bottom:0;border-radius:28px 28px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));box-sizing:border-box;box-shadow:0 -20px 60px rgba(0,0,0,.55)}
+.cameraHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.cameraHeader b{font-size:20px}.cameraClose{width:42px;height:42px;border-radius:50%;padding:0!important;background:#15191d!important;border:1px solid #ff6a34!important;color:#fff!important;box-shadow:none!important}
+.cameraPreview{position:relative;height:min(58vh,520px);border-radius:24px;overflow:hidden;background:#050607;border:1px solid #30363b;display:grid;place-items:center}.cameraPreview video,.cameraPreview img{width:100%;height:100%;object-fit:cover}.cameraPlaceholder{text-align:center;color:#9ca5ad;padding:30px}.cameraPlaceholder strong{display:block;color:#fff;font-size:20px;margin-bottom:7px}.cameraControls{display:grid;grid-template-columns:1fr 82px 1fr;align-items:center;gap:12px;margin-top:14px}.cameraAction{height:48px;border-radius:15px!important;background:#11161b!important;border:1px solid #ff6a34!important;color:#fff!important;font-weight:800}.cameraShutter{width:72px;height:72px;border-radius:50%!important;padding:0!important;margin:auto;background:#ff6a34!important;border:6px solid #fff!important;color:#fff!important;font-size:0!important;box-shadow:0 8px 28px rgba(255,106,52,.35)!important}.cameraShutter:after{content:'';display:block;width:48px;height:48px;border-radius:50%;background:#ff6a34;margin:auto}.cameraOptions{display:flex;gap:8px;overflow:auto;margin-top:12px}.cameraOptions button{white-space:nowrap;border-radius:999px!important;padding:9px 13px!important;background:#11161b!important;border:1px solid #ff6a34!important;color:#fff!important}.cameraCaptured{margin-top:12px;display:none;gap:8px;flex-wrap:wrap}.cameraCaptured.open{display:flex}.cameraCaptured button{flex:1;min-width:130px;background:#ff6a34!important;border:1px solid #ff6a34!important;color:#fff!important}.cameraHint{font-size:12px;color:#89939d;text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
@@ -862,7 +880,34 @@ body.discussionFullScreen #discussionPanel.active{
     <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
   </div>
 
-  <div class="socialBottomNav" id="socialBottomNav">
+  <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
+  <div class="cameraSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
+    <div class="cameraHeader"><b>📸 Caméra MyEvent</b><button type="button" class="cameraClose" id="cameraCloseBtn">✕</button></div>
+    <div class="cameraPreview">
+      <video id="myeventCameraVideo" autoplay playsinline muted></video>
+      <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prends une photo ou un selfie</strong><span>Comme sur Snap, mais pour partager tes moments MyEvent.</span></div>
+      <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
+    </div>
+    <div class="cameraControls">
+      <button type="button" class="cameraAction" id="cameraGalleryBtn">🖼️ Galerie</button>
+      <button type="button" class="cameraShutter" id="cameraShutterBtn" aria-label="Prendre une photo">Photo</button>
+      <button type="button" class="cameraAction" id="cameraFlipBtn">🔄 Caméra</button>
+    </div>
+    <div class="cameraOptions">
+      <button type="button" id="cameraIaBtn">✨ IA photo</button>
+      <button type="button" id="cameraVideoBtn">🎬 Vidéo</button>
+      <button type="button" id="cameraEventBtn">🎉 Créer un événement</button>
+    </div>
+    <input id="cameraFileInput" type="file" accept="image/*" capture="user" style="display:none">
+    <div class="cameraCaptured" id="cameraCapturedActions">
+      <button type="button" id="cameraPublishBtn">🚀 Publier dans le fil</button>
+      <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
+    </div>
+    <div class="cameraHint" id="cameraHint">La photo reste dans ton navigateur tant que tu ne la publies pas.</div>
+  </div>
+</div>
+
+<div class="socialBottomNav" id="socialBottomNav">
     <button type="button" class="active" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
     <button type="button" data-bottom-tab="discover"><span class="bottomIcon">⌕</span><span class="bottomLabel">Explorer</span></button>
     <button type="button" class="createBottom" id="socialBottomCreate" title="Créer">＋</button>
@@ -8533,7 +8578,7 @@ setTimeout(v58SetupModuleButtons,0);
   $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>{const el=$s('discussionContent');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}});
   $s('socialHeaderSearchBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>{$s('socialSearchInput')?.focus();},50);});
   $s('socialCreateStory')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
-  $s('socialBottomCreate')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
+  $s('socialBottomCreate')?.addEventListener('click',()=>openMyEventCamera());
   $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='profile'){$s('profileAvatar')?.click();return}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
   document.querySelectorAll('.socialFilter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.socialFilter').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));
   $s('socialCreateEventBtn')?.addEventListener('click',()=>{$s('createEventInlineBtn')?.click();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})});
@@ -8553,6 +8598,28 @@ setTimeout(v58SetupModuleButtons,0);
     const view=e.target.closest('.socialViewEventBtn');if(view){document.getElementById('eventsCard')?.scrollIntoView({behavior:'smooth'});return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
+  // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
+  let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
+  const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
+  function stopMyEventCamera(){try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;}
+  async function startMyEventCamera(){
+    if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie avec l’appareil photo de ton iPhone.</span>';return;}
+    try{stopMyEventCamera();myeventCameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});cameraVideo.srcObject=myeventCameraStream;cameraVideo.style.display='block';cameraPlaceholder.style.display='none';cameraImg.style.display='none';}
+    catch(e){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}
+  }
+  function openMyEventCamera(){cameraModal.classList.add('open');cameraModal.setAttribute('aria-hidden','false');cameraImg.style.display='none';cameraVideo.style.display='block';cameraPlaceholder.style.display='grid';$s('cameraCapturedActions')?.classList.remove('open');startMyEventCamera();}
+  function closeMyEventCamera(){stopMyEventCamera();cameraModal.classList.remove('open');cameraModal.setAttribute('aria-hidden','true');}
+  $s('cameraCloseBtn')?.addEventListener('click',closeMyEventCamera);
+  cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
+  $s('cameraShutterBtn')?.addEventListener('click',()=>{if(!cameraVideo.videoWidth){cameraFile?.click();return;}const c=document.createElement('canvas');c.width=cameraVideo.videoWidth;c.height=cameraVideo.videoHeight;c.getContext('2d').drawImage(cameraVideo,0,0);myeventCapturedDataUrl=c.toDataURL('image/jpeg',.9);cameraImg.src=myeventCapturedDataUrl;cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';$s('cameraCapturedActions')?.classList.add('open');});
+  $s('cameraGalleryBtn')?.addEventListener('click',()=>cameraFile?.click());
+  cameraFile?.addEventListener('change',()=>{const f=cameraFile.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{myeventCapturedDataUrl=r.result;cameraImg.src=r.result;cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';$s('cameraCapturedActions')?.classList.add('open')};r.readAsDataURL(f)});
+  $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
+  $s('cameraIaBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl){cameraFile?.click();return;}alert('✨ IA photo : module IA à connecter. La photo est prête pour le traitement.');});
+  $s('cameraVideoBtn')?.addEventListener('click',()=>{alert('🎬 Le mode vidéo sera activé dans la prochaine étape.');});
+  $s('cameraEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('socialCreateEventBtn')?.click()});
+  $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
+  $s('cameraAttachEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('eventsCard')?.scrollIntoView({behavior:'smooth',block:'start'})});
   tab('feed');
   setInterval(()=>{try{const n=$s('who')?.textContent?.trim();if(n&&n!=='Utilisateur')$s('socialHeaderName').textContent='Bonjour '+n;const a=$s('profileAvatar');const h=$s('socialHeaderAvatar');if(a&&h&&a.querySelector('img'))h.innerHTML=a.innerHTML;else if(a&&h&&a.textContent.trim()&&a.textContent.trim()!=='?')h.textContent=a.textContent.trim()}catch(e){}},1500);
   try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?'){ $s('socialMyAvatar').textContent=av; $s('socialHeaderAvatar').textContent=av;} const n=$s('who')?.textContent?.trim(); if(n&&n!=='Utilisateur') $s('socialHeaderName').textContent='Bonjour '+n;}catch(e){}
