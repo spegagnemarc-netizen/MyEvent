@@ -1147,6 +1147,13 @@ body:has(#socialHome) .app > h1{display:none!important}
     <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
   </div>
 
+  <div id="socialGlobalNotificationsView" class="socialPeople" style="display:none">
+    <div class="socialSectionHead"><h3>🔔 Notifications</h3><button type="button" id="socialBackToFeedBtn">Accueil ›</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">👥</div><div class="grow"><b>Demandes d’amis</b><div class="muted">Tu as de nouvelles demandes d’amis.</div></div><button type="button" class="socialMessageBtn" id="socialGlobalFriendsBtn">Voir</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">🎉</div><div class="grow"><b>Invitations</b><div class="muted">Retrouve ici les invitations à rejoindre des événements.</div></div><button type="button" class="socialMessageBtn" id="socialGlobalEventsBtn">Voir</button></div>
+    <div class="socialPerson"><div class="socialPostAvatar">❤️</div><div class="grow"><b>Activité</b><div class="muted">Réactions, commentaires et nouvelles activités sur ton fil.</div></div><button type="button" class="socialMessageBtn">Voir</button></div>
+  </div>
+
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
   <div class="cameraSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
     <div class="cameraHeader"><b>📸 Caméra MyEvent</b><button type="button" class="cameraClose" id="cameraCloseBtn">✕</button></div>
@@ -1226,6 +1233,22 @@ body:has(#socialHome) .app > h1{display:none!important}
 </div>
 </div>
 </div>
+</div>
+<div class="myeventAppearanceCard" id="myeventAppearanceCard">
+  <div class="myeventAppearanceTitle">🎨 Apparence de l’accueil</div>
+  <div class="myeventAppearanceSub">Personnalise le fond et la couleur des boutons. Le bleu des écrans d’événement reste inchangé.</div>
+  <div class="myeventAppearanceRow" aria-label="Fond">
+    <button type="button" class="myeventAppearanceChoice" data-home-bg="dark">🌙 Fond noir</button>
+    <button type="button" class="myeventAppearanceChoice" data-home-bg="light">☀️ Fond blanc</button>
+  </div>
+  <div class="myeventAppearanceSub">Couleur des boutons</div>
+  <div class="myeventAppearanceRow" aria-label="Couleur des boutons">
+    <button type="button" class="myeventAccent" style="background:#ff6a34" data-accent="#ff6a34" aria-label="Orange"></button>
+    <button type="button" class="myeventAccent" style="background:#278cff" data-accent="#278cff" aria-label="Bleu"></button>
+    <button type="button" class="myeventAccent" style="background:#22b573" data-accent="#22b573" aria-label="Vert"></button>
+    <button type="button" class="myeventAccent" style="background:#8b5cf6" data-accent="#8b5cf6" aria-label="Violet"></button>
+    <button type="button" class="myeventAccent" style="background:#ec4899" data-accent="#ec4899" aria-label="Rose"></button>
+  </div>
 </div>
 <button id="saveProfileBtn">Enregistrer mon profil</button>
 <p id="profileMsg" class="muted"></p>
@@ -8959,15 +8982,15 @@ setTimeout(v58SetupModuleButtons,0);
 (function(){
   function $s(id){return document.getElementById(id)}
   const nav=$s('socialNav'); if(!nav)return;
-  const views={feed:$s('socialFeedView'),discover:$s('socialDiscoverView'),friends:$s('socialFriendsView'),messages:$s('socialMessagesView')};
+  const views={feed:$s('socialFeedView'),discover:$s('socialDiscoverView'),friends:$s('socialFriendsView'),messages:$s('socialMessagesView'),notifications:$s('socialGlobalNotificationsView')};
   function tab(name){Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';nav.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-social-tab]');if(b)tab(b.dataset.socialTab)});
   // V54.46 — raccourcis du cadre Mes événements
   const headerEvents=$s('socialHeaderEventsBtn');
   headerEvents?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
   $s('socialHeaderCallBtn')?.addEventListener('click',()=>{const el=$s('groupCallCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{if(typeof callActive!=='undefined' && !callActive)$s('startCallBtn')?.click()},250);}});
-  $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>{const el=$s('notificationCenter');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});}});
-  $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>{const el=$s('discussionContent');if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}});
+  $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>tab('notifications'));
+  $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>tab('messages'));
   $s('socialHeaderSearchBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>{$s('socialSearchInput')?.focus();},50);});
   $s('socialCreateStory')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
   $s('socialBottomCreate')?.addEventListener('click',()=>openMyEventCamera());
@@ -9014,6 +9037,22 @@ setTimeout(v58SetupModuleButtons,0);
   $s('cameraEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('socialCreateEventBtn')?.click()});
   $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
   $s('cameraAttachEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('eventsCard')?.scrollIntoView({behavior:'smooth',block:'start'})});
+  $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));
+  $s('socialGlobalFriendsBtn')?.addEventListener('click',()=>tab('friends'));
+  $s('socialGlobalEventsBtn')?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
+  // Apparence de l’accueil : sauvegarde locale, sans modifier les écrans d’événement.
+  function applyHomeAppearance(){
+    const root=$s('socialHome'); if(!root)return;
+    const bg=localStorage.getItem('myeventHomeBg')||'dark';
+    const accent=localStorage.getItem('myeventHomeAccent')||'#ff6a34';
+    root.classList.toggle('socialLight',bg==='light');
+    root.style.setProperty('--social-accent',accent);
+    document.querySelectorAll('.myeventAppearanceChoice').forEach(b=>b.classList.toggle('active',b.dataset.homeBg===bg));
+    document.querySelectorAll('.myeventAccent').forEach(b=>b.classList.toggle('active',b.dataset.accent===accent));
+  }
+  document.querySelectorAll('.myeventAppearanceChoice').forEach(b=>b.addEventListener('click',()=>{localStorage.setItem('myeventHomeBg',b.dataset.homeBg);applyHomeAppearance()}));
+  document.querySelectorAll('.myeventAccent').forEach(b=>b.addEventListener('click',()=>{localStorage.setItem('myeventHomeAccent',b.dataset.accent);applyHomeAppearance()}));
+  applyHomeAppearance();
   tab('feed');
   setInterval(()=>{try{const n=$s('who')?.textContent?.trim();if(n&&n!=='Utilisateur')$s('socialHeaderName').textContent='Bonjour '+n;const a=$s('profileAvatar');const h=$s('socialHeaderAvatar');if(a&&h&&a.querySelector('img'))h.innerHTML=a.innerHTML;else if(a&&h&&a.textContent.trim()&&a.textContent.trim()!=='?')h.textContent=a.textContent.trim()}catch(e){}},1500);
   try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?'){ $s('socialMyAvatar').textContent=av; $s('socialHeaderAvatar').textContent=av;} const n=$s('who')?.textContent?.trim(); if(n&&n!=='Utilisateur') $s('socialHeaderName').textContent='Bonjour '+n;}catch(e){}
