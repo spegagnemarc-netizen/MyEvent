@@ -1253,6 +1253,7 @@ body:has(#socialHome) .app > h1{display:none!important}
     <div class="myeventNearbyInfo" id="myeventNearbyInfo">
       Ton choix est mémorisé sur cet appareil. Tu n'auras pas à le refaire à chaque connexion.
     </div>
+    <button type="button" id="myeventMapSettingsFloating" class="myeventMapSettingsFloating" title="Réglages">⚙️</button>
     <div id="myeventNearbyMap" class="myeventNearbyMap"></div>
     <div class="myeventNearbyMapHint">👥 Les amis ayant activé le partage apparaîtront ici avec leur photo de profil.</div>
     <button type="button" id="myeventNearbyLocateBtn" class="secondary">📍 Actualiser ma position</button>
@@ -10463,6 +10464,96 @@ setTimeout(v58SetupModuleButtons,0);
   z-index:20!important;
 }
 </style>
+
+
+<style id="myevent-v54-70-map-controls">
+/* Écran À proximité : en-tête minimal, sans grand bloc gris. */
+#myeventNearbyPanel .myeventNearbyHead{
+  position:absolute!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  min-height:0!important;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 0!important;
+  background:transparent!important;
+  z-index:50!important;
+  pointer-events:none!important;
+}
+#myeventNearbyPanel .myeventNearbyHead>div:first-child{
+  display:none!important;
+}
+#myeventNearbyPanel .myeventNearbyHeaderActions{
+  margin-left:auto!important;
+  pointer-events:auto!important;
+}
+#myeventNearbyPanel .myeventNearbySettingsBtn{
+  display:none!important;
+}
+#myeventNearbyPanel .myeventPanelCloseBtn{
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  border-radius:50%!important;
+  background:rgba(17,22,27,.78)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  color:#fff!important;
+  box-shadow:0 2px 10px rgba(0,0,0,.3)!important;
+}
+
+/* Le bouton ⚙️ est placé en bas à droite, juste au-dessus d'Actualiser. */
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  position:absolute!important;
+  right:14px!important;
+  bottom:calc(72px + env(safe-area-inset-bottom))!important;
+  z-index:55!important;
+  width:42px!important;
+  height:42px!important;
+  border-radius:50%!important;
+  background:rgba(17,22,27,.88)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  color:#fff!important;
+  font-size:19px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.35)!important;
+}
+
+/* Suppression totale des anciens blocs d'information affichés sur la carte. */
+#myeventNearbyPanel>.myeventNearbySheet>.myeventNearbyInfo,
+#myeventNearbyPanel>.myeventNearbySheet>.myeventNearbyChoice{
+  display:none!important;
+}
+
+/* Les filtres restent légers, sans bandeau gris. */
+#myeventNearbyPanel .myeventNearbyMapTools{
+  top:calc(68px + env(safe-area-inset-top))!important;
+}
+
+/* Réglages s'ouvre toujours au-dessus de la carte. */
+#myeventNearbyPanel .myeventNearbySettings{
+  z-index:100!important;
+  padding:calc(58px + env(safe-area-inset-top)) 12px 12px!important;
+}
+</style>
+
+
+<script id="myevent-v54-70-map-settings-button">
+(function(){
+  function init(){
+    const btn=document.getElementById('myeventMapSettingsFloating');
+    const settings=document.getElementById('myeventNearbySettings');
+    if(btn&&settings){
+      btn.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
+        settings.classList.add('open');
+        settings.setAttribute('aria-hidden','false');
+      },true);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 
 </body>
 </html>
