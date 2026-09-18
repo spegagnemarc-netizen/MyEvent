@@ -11640,5 +11640,137 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-78-snap-maps-style">
+/* V54.78 — style carte inspiré de Snap/Maps : noms sobres, sans gros pavés orange. */
+#myeventNearbyPanel .myeventCityLabel{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  width:max-content!important;
+  white-space:nowrap!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  pointer-events:none!important;
+}
+#myeventNearbyPanel .myeventCityLabel .dot{
+  width:5px!important;
+  height:5px!important;
+  min-width:5px!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  border:1px solid rgba(0,0,0,.75)!important;
+  box-shadow:0 1px 3px rgba(0,0,0,.65)!important;
+}
+#myeventNearbyPanel .myeventCityLabel .name{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  line-height:1.05!important;
+  text-shadow:
+    -1px -1px 0 rgba(0,0,0,.9),
+     1px -1px 0 rgba(0,0,0,.9),
+    -1px  1px 0 rgba(0,0,0,.9),
+     1px  1px 0 rgba(0,0,0,.9),
+     0 2px 5px rgba(0,0,0,.85)!important;
+  box-shadow:none!important;
+}
+
+/* Lieux importants : petite icône + nom, comme une annotation de carte. */
+#myeventNearbyPanel .myeventInterestLabel{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  width:max-content!important;
+  max-width:210px!important;
+  white-space:nowrap!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+#myeventNearbyPanel .myeventInterestLabel .pin{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  background:#ff6a34!important;
+  color:#fff!important;
+  border:1.5px solid #fff!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.65)!important;
+  font-size:10px!important;
+  line-height:1!important;
+}
+#myeventNearbyPanel .myeventInterestLabel .name{
+  max-width:180px!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#ff8a5b!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1.05!important;
+  text-shadow:
+    -1px -1px 0 rgba(0,0,0,.9),
+     1px -1px 0 rgba(0,0,0,.9),
+    -1px  1px 0 rgba(0,0,0,.9),
+     1px  1px 0 rgba(0,0,0,.9),
+     0 2px 5px rgba(0,0,0,.85)!important;
+  box-shadow:none!important;
+}
+#myeventNearbyPanel .myeventInterestLabel.purple .pin{
+  background:#8b5cf6!important;
+}
+#myeventNearbyPanel .myeventInterestLabel.purple .name{
+  color:#c7a8ff!important;
+}
+
+/* Aucun énorme marqueur carré/pavé pour les villes ou les lieux. */
+#myeventNearbyPanel .myeventCityMarker,
+#myeventNearbyPanel .myeventInterestMarker{
+  background:transparent!important;
+  border:0!important;
+  overflow:visible!important;
+}
+</style>
+
+<script id="myevent-v54-78-snap-maps-final">
+(function(){
+  /* Renforce le rendu après les appels Overpass et conserve les couches existantes. */
+  function restyle(){
+    document.querySelectorAll('#myeventNearbyPanel .myeventCityLabel .name').forEach(el=>{
+      el.style.background='transparent';
+      el.style.border='0';
+      el.style.boxShadow='none';
+      el.style.padding='0';
+    });
+    document.querySelectorAll('#myeventNearbyPanel .myeventInterestLabel .name').forEach(el=>{
+      el.style.background='transparent';
+      el.style.border='0';
+      el.style.boxShadow='none';
+      el.style.padding='0';
+    });
+  }
+  function init(){
+    restyle();
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      new MutationObserver(restyle).observe(panel,{subtree:true,childList:true});
+    }
+    setInterval(restyle,2500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
