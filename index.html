@@ -11772,5 +11772,124 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+
+<style id="myevent-v54-79-natural-map-names">
+/* V54.79 — les noms de villes ne sont plus générés par MyEvent.
+   Ils proviennent directement de la couche cartographique. */
+#myeventNearbyPanel .myeventCityMarker{display:none!important}
+#myeventNearbyPanel .myeventCityLabel{display:none!important}
+</style>
+
+<script id="myevent-v54-79-natural-map-names-script">
+(function(){
+  const MAP_KEY='myevent_nearby_map_type_v1';
+  let labelsLayer=null;
+  let lastMap=null;
+
+  function getMap(){return window.myeventNearbyLeafletMap||null}
+
+  function removeCityMarkers(){
+    try{
+      const layer=window.myeventNearbyCityLayer;
+      if(layer && typeof layer.clearLayers==='function') layer.clearLayers();
+    }catch(e){}
+    document.querySelectorAll('#myeventNearbyPanel .myeventCityMarker').forEach(el=>el.remove());
+  }
+
+  function setNaturalMapType(type){
+    const m=getMap();
+    if(!m||!window.L)return false;
+
+    try{
+      if(window.myeventNearbyBaseLayer)m.removeLayer(window.myeventNearbyBaseLayer);
+    }catch(e){}
+    try{
+      if(labelsLayer)m.removeLayer(labelsLayer);
+    }catch(e){}
+
+    let url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attr='&copy; OpenStreetMap';
+
+    if(type==='satellite'){
+      url='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attr='Tiles &copy; Esri';
+    }else if(type==='terrain'){
+      url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      attr='&copy; OpenTopoMap';
+    }
+
+    window.myeventNearbyBaseLayer=L.tileLayer(url,{maxZoom:19,attribution:attr}).addTo(m);
+
+    /* En satellite, Esri fournit une couche séparée avec les noms de lieux
+       et frontières : on obtient ainsi des noms naturels, sans les créer en JS. */
+    if(type==='satellite'){
+      labelsLayer=L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom:19,opacity:1,attribution:'&copy; Esri'}
+      ).addTo(m);
+      labelsLayer.bringToFront();
+    }
+
+    lastMap=m;
+    try{localStorage.setItem(MAP_KEY,type)}catch(e){}
+    removeCityMarkers();
+    return true;
+  }
+
+  function apply(){
+    removeCityMarkers();
+    const m=getMap();
+    if(!m)return false;
+    const saved=localStorage.getItem(MAP_KEY)||'default';
+    return setNaturalMapType(saved);
+  }
+
+  function init(){
+    let tries=0;
+    const timer=setInterval(()=>{
+      tries++;
+      const m=getMap();
+      if(m){
+        clearInterval(timer);
+        apply();
+        /* Les anciens scripts peuvent tenter de remettre leurs villes de
+           secours. On les vide, mais on ne touche jamais aux lieux importants. */
+        setInterval(()=>{
+          if(getMap()===m)removeCityMarkers();
+        },1000);
+      }
+      if(tries>120)clearInterval(timer);
+    },100);
+
+    document.querySelectorAll('#myeventNearbyPanel [data-map-type]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const type=btn.dataset.mapType||'default';
+        let n=0;
+        const go=()=>{
+          n++;
+          if(setNaturalMapType(type)||n>15)return;
+          setTimeout(go,100);
+        };
+        go();
+      },true);
+    });
+
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      new MutationObserver(()=>{
+        if(panel.classList.contains('open')){
+          removeCityMarkers();
+          setTimeout(apply,250);
+          setTimeout(removeCityMarkers,1800);
+        }
+      }).observe(panel,{attributes:true,attributeFilter:['class']});
+    }
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
