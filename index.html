@@ -8751,3 +8751,67 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-50-fix">
+/* V54.50 — Accueil : 5 filtres sur une seule ligne + correction de priorité couleur */
+#socialHome .socialFilters{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:6px!important;
+  overflow:visible!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:7px 0 14px!important;
+}
+#socialHome button.socialFilter,
+#socialHome button.socialFilter:not(.active){
+  flex:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  padding:9px 2px!important;
+  margin:0!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  background:#11161b!important;
+  border:1px solid #2b3239!important;
+  color:#b8c0c7!important;
+  box-shadow:none!important;
+}
+#socialHome button.socialFilter.active{
+  background:var(--social-accent,#ff6a34)!important;
+  border-color:var(--social-accent,#ff6a34)!important;
+  color:#fff!important;
+  box-shadow:0 5px 18px color-mix(in srgb,var(--social-accent,#ff6a34) 24%,transparent)!important;
+}
+/* Réduction légère de l'encombrement sur téléphone, sans modifier les écrans d'événement. */
+@media(max-width:600px){
+  #socialHome{padding-left:12px!important;padding-right:12px!important}
+  #socialHome .socialTop{padding-top:12px!important;padding-bottom:8px!important}
+  #socialHome .socialProfileAvatar{width:54px!important;height:54px!important}
+  #socialHome .socialProfileText b{font-size:18px!important}
+  #socialHome .socialProfileText span{font-size:12px!important}
+  #socialHome .socialToolBtn{width:38px!important;height:38px!important}
+  #socialHome .socialStories{gap:7px!important;padding-bottom:8px!important}
+  #socialHome .socialStory{flex-basis:70px!important}
+  #socialHome .socialStoryBubble{width:64px!important;height:64px!important}
+}
+</style>
+<script id="myevent-v54-50-fix-js">
+(function(){
+  function normalizeSocialFilters(){
+    const root=document.getElementById('socialHome'); if(!root) return;
+    const filters=[...root.querySelectorAll('.socialFilter')]; if(!filters.length) return;
+    let active=filters.find(x=>x.classList.contains('active'))||filters[0];
+    filters.forEach(x=>x.classList.toggle('active',x===active));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',normalizeSocialFilters,{once:true});
+  else normalizeSocialFilters();
+  setTimeout(normalizeSocialFilters,300);
+})();
+</script>
