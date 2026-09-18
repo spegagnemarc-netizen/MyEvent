@@ -10555,5 +10555,135 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-71-controls">
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  left:12px!important;
+  right:64px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:auto!important;
+  margin:0!important;
+  min-height:44px!important;
+  height:44px!important;
+  padding:8px 14px!important;
+  font-size:12px!important;
+  border-radius:14px!important;
+}
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  right:12px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:44px!important;
+  height:44px!important;
+  font-size:18px!important;
+}
+#myeventNearbyPanel .myeventPanelCloseBtn{
+  background:rgba(17,22,27,.92)!important;
+  border:1px solid #59656f!important;
+  color:#fff!important;
+  box-shadow:0 3px 12px rgba(0,0,0,.4)!important;
+}
+</style>
+
+
+<script id="myevent-v54-71-maptype-fix">
+(function(){
+  const KEY='myevent_nearby_map_type_v1';
+  let baseLayer=null;
+
+  function findMap(){
+    const node=document.getElementById('myeventNearbyMap');
+    if(!node)return null;
+    // Leaflet keeps its map instance in _leaflet_id; the actual map object is
+    // not public, so find the closest known reference exposed by the prototype.
+    if(window.myeventNearbyLeafletMap)return window.myeventNearbyLeafletMap;
+    // Fallback: the map is created by the V54.65/V54.66 script in its closure.
+    // We can trigger its map type through the visible tile layer DOM only by
+    // rebuilding the tile layer on the map found from Leaflet's internal registry.
+    try{
+      const id=node._leaflet_id;
+      if(id && window.L && L.Map && L.Map._instances && L.Map._instances[id]) return L.Map._instances[id];
+    }catch(e){}
+    return null;
+  }
+
+  function setType(type){
+    const map=findMap();
+    if(!map || !window.L)return false;
+    if(baseLayer){try{map.removeLayer(baseLayer)}catch(e){}}
+    let url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attr='&copy; OpenStreetMap';
+    if(type==='satellite'){
+      url='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attr='Tiles &copy; Esri';
+    }else if(type==='terrain'){
+      url='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      attr='&copy; OpenTopoMap';
+    }
+    baseLayer=L.tileLayer(url,{maxZoom:19,attribution:attr}).addTo(map);
+    try{localStorage.setItem(KEY,type)}catch(e){}
+    return true;
+  }
+
+  function patchLeafletWhenReady(){
+    const node=document.getElementById('myeventNearbyMap');
+    if(!node)return;
+    // If the prototype has created a Leaflet map, locate its tile layer by
+    // walking the map's DOM is not enough; patch the map constructor so future
+    // map instances are exposed as well.
+    if(window.L && !window.__myeventMapPatched){
+      window.__myeventMapPatched=true;
+      const OriginalMap=L.Map;
+      const originalInit=OriginalMap.prototype.initialize;
+      OriginalMap.prototype.initialize=function(){
+        const r=originalInit.apply(this,arguments);
+        try{window.myeventNearbyLeafletMap=this}catch(e){}
+        return r;
+      };
+    }
+  }
+
+  function init(){
+    patchLeafletWhenReady();
+    const saved=localStorage.getItem(KEY)||'default';
+    document.querySelectorAll('[data-map-type]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.mapType===saved);
+      b.addEventListener('click',function(){
+        let tries=0;
+        const go=()=>{
+          tries++;
+          if(setType(b.dataset.mapType)||tries>10)return;
+          setTimeout(go,80);
+        };
+        go();
+      });
+    });
+    // Expose for the existing settings bridge too.
+    window.myeventSetNearbyMapType=setType;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<script id="myevent-v54-71-map-observer">
+(function(){
+  function expose(){
+    const node=document.getElementById('myeventNearbyMap');
+    if(!node||!window.L)return;
+    try{
+      const id=node._leaflet_id;
+      if(id && L.Map && L.Map._instances && L.Map._instances[id]){
+        window.myeventNearbyLeafletMap=L.Map._instances[id];
+      }
+    }catch(e){}
+  }
+  function init(){
+    expose();
+    new MutationObserver(expose).observe(document.getElementById('myeventNearbyMap')||document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
