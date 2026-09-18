@@ -7354,7 +7354,132 @@ body.discussionFullScreen{overflow:hidden!important;}
   a('socialHeaderNotificationsBtnTop')?.addEventListener('click',()=>a('socialHeaderNotificationsBtn')?.click());
 })();
 </script>
-</body>
+
+<style id="myevent-v54-49-theme">
+/* V54.49 — Accueil social : thème personnalisable + sélection unique */
+#socialHome{
+  --social-accent:#ff6a34;
+  --social-bg:#080b0f;
+  --social-panel:#11161b;
+  --social-panel-2:#15181b;
+  --social-border:#293139;
+  --social-text:#f4f7fa;
+  --social-muted:#aeb7bf;
+  background:var(--social-bg)!important;
+  color:var(--social-text)!important;
+}
+#socialHome .socialFilter{
+  flex:0 0 auto!important;
+  background:#0e1318!important;
+  border-color:#2b3239!important;
+  color:#b8c0c7!important;
+}
+#socialHome .socialFilter.active{
+  background:var(--social-accent)!important;
+  border-color:var(--social-accent)!important;
+  color:#fff!important;
+  box-shadow:0 5px 18px color-mix(in srgb,var(--social-accent) 24%,transparent)!important;
+}
+#socialHome .socialMyEventsActions button{
+  background:#0e1318!important;
+  border:1px solid #2b3239!important;
+  border-radius:16px!important;
+  color:#f4f7fa!important;
+}
+#socialHome .socialMyEventsActions button span{color:#aeb7bf!important}
+#socialHome .socialMyEventsActions button.active{
+  background:var(--social-accent)!important;
+  border-color:var(--social-accent)!important;
+  color:#fff!important;
+}
+#socialHome .socialMyEventsActions button.active span{color:#fff!important}
+#socialHome .socialToolBtn{
+  background:#0e1318!important;
+  border-color:#293139!important;
+}
+#socialHome .socialStoryBubble{
+  border-color:#4a555f;
+}
+#socialHome .socialStory.create .socialStoryBubble,
+#socialHome .socialStory.me .socialStoryBubble{
+  border-color:var(--social-accent)!important;
+}
+#socialHome .socialSectionHead button{color:var(--social-accent)!important}
+#socialHome .socialPost,
+#socialHome .socialEventCard{background:var(--social-panel-2)!important}
+#socialHome .socialFollowBtn.active,
+#socialHome .socialMessageBtn,
+#socialHome .socialComposerPanel button:not(.secondary),
+#socialHome .socialCommentBox button{
+  background:var(--social-accent)!important;
+  border-color:var(--social-accent)!important;
+}
+#socialHome .socialBottomNav [data-bottom-tab].active{color:var(--social-accent)!important}
+#socialHome .socialBottomCreate{background:var(--social-accent)!important}
+#socialHome .socialHeaderBadge,
+#socialHome .eventShortcutBadge{background:var(--social-accent)!important}
+
+/* Réglages d'apparence dans Profil */
+.myeventAppearanceCard{
+  margin-top:14px;
+  padding:14px;
+  border:1px solid #2b3239;
+  border-radius:18px;
+  background:#0e1318;
+}
+.myeventAppearanceTitle{font-weight:850;font-size:16px;margin-bottom:4px}
+.myeventAppearanceSub{font-size:12px;color:#9da7b0;margin-bottom:12px}
+.myeventAppearanceRow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.myeventAppearanceChoice{
+  border:1px solid #34404a!important;
+  background:#151b21!important;
+  color:#eef2f5!important;
+  border-radius:12px!important;
+  padding:9px 12px!important;
+  margin:0!important;
+  box-shadow:none!important;
+}
+.myeventAppearanceChoice.active{
+  background:var(--social-accent,#ff6a34)!important;
+  border-color:var(--social-accent,#ff6a34)!important;
+  color:#fff!important;
+}
+.myeventAccent{
+  width:34px!important;height:34px!important;padding:0!important;border-radius:50%!important;
+  border:3px solid #303943!important;margin:0!important;
+}
+.myeventAccent.active{border-color:#fff!important;box-shadow:0 0 0 2px var(--social-accent,#ff6a34)!important}
+#socialHome.socialLight{
+  --social-bg:#f4f5f7;
+  --social-panel:#ffffff;
+  --social-panel-2:#ffffff;
+  --social-border:#d8dde2;
+  --social-text:#11161b;
+  --social-muted:#626d77;
+}
+#socialHome.socialLight .socialTop,
+#socialHome.socialLight .socialMyEventsBox{background:transparent!important}
+#socialHome.socialLight .socialToolBtn,
+#socialHome.socialLight .socialMyEventsActions button,
+#socialHome.socialLight .socialFilter,
+#socialHome.socialLight .socialStoryBubble{
+  background:#fff!important;
+  color:#20262c!important;
+  border-color:#cfd6dc!important;
+}
+#socialHome.socialLight .socialMyEventsActions button span,
+#socialHome.socialLight .socialFilter{color:#59636c!important}
+#socialHome.socialLight .socialMyEventsActions button.active,
+#socialHome.socialLight .socialFilter.active{background:var(--social-accent)!important;color:#fff!important;border-color:var(--social-accent)!important}
+#socialHome.socialLight .socialMyEventsActions button.active span{color:#fff!important}
+#socialHome.socialLight .socialStory{color:#30373d!important}
+#socialHome.socialLight .socialPost,
+#socialHome.socialLight .socialEventCard{background:#fff!important;border-color:#d7dde2!important}
+#socialHome.socialLight .socialPostText{color:#252b30!important}
+#socialHome.socialLight .socialPostMeta span{color:#69737b!important}
+</style>
+
+<script id="myevent-v54-49-theme">
 <div style="display:none">V54 — Sortie IA indépendante</div>
 </html>
 
