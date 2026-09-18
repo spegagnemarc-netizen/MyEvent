@@ -10841,5 +10841,156 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-73-map-labels">
+.myeventCityLabel{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.myeventCityLabel .dot{
+  width:11px;height:11px;border-radius:50%;
+  background:#ff6a34;border:2px solid #fff;
+  box-shadow:0 2px 7px rgba(0,0,0,.45);
+}
+.myeventCityLabel .name{
+  padding:3px 7px;border-radius:7px;
+  background:rgba(18,22,27,.88);
+  color:#fff;font-size:12px;font-weight:900;
+  text-shadow:0 1px 2px #000;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.myeventInterestLabel{
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  pointer-events:auto;
+}
+.myeventInterestLabel .pin{
+  width:28px;height:28px;border-radius:50%;
+  display:grid;place-items:center;background:#fff;
+  border:2px solid #ff6a34;
+  box-shadow:0 2px 9px rgba(0,0,0,.45);font-size:14px;
+}
+.myeventInterestLabel .name{
+  max-width:155px;overflow:hidden;text-overflow:ellipsis;
+  padding:4px 7px;border-radius:7px;
+  background:rgba(255,106,52,.92);color:#fff;
+  font-size:10px;font-weight:900;line-height:1.15;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+.myeventInterestLabel.purple .name{
+  background:rgba(139,92,246,.92);
+}
+.myeventCityMarker,.myeventInterestMarker{background:transparent!important;border:0!important}
+</style>
+
+
+<script id="myevent-v54-73-map-content">
+(function(){
+  let cityLayer=null, interestLayer=null, loadedKey='';
+  const esc=x=>String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function getMap(){return window.myeventNearbyLeafletMap||null}
+  function pos(){
+    try{return JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null')}catch(e){return null}
+  }
+  function cityIcon(name){
+    return L.divIcon({className:'myeventCityMarker',html:'<div class="myeventCityLabel"><span class="dot"></span><span class="name">'+esc(name)+'</span></div>',iconSize:null,iconAnchor:[5,6]});
+  }
+  function interestIcon(name,emoji,purple){
+    return L.divIcon({className:'myeventInterestMarker',html:'<div class="myeventInterestLabel '+(purple?'purple':'')+'"><span class="pin">'+emoji+'</span><span class="name">'+esc(name)+'</span></div>',iconSize:null,iconAnchor:[14,14]});
+  }
+  async function loadContent(lat,lon){
+    const m=getMap(); if(!m||!window.L)return;
+    const key=lat.toFixed(3)+','+lon.toFixed(3);
+    if(loadedKey===key)return;
+    loadedKey=key;
+    cityLayer?.clearLayers(); interestLayer?.clearLayers();
+    if(!cityLayer)cityLayer=L.layerGroup().addTo(m);
+    if(!interestLayer)interestLayer=L.layerGroup().addTo(m);
+
+    const cityQ='[out:json][timeout:10];nwr(around:45000,'+lat+','+lon+')[place~"city|town|village"];out center tags 80;';
+    const poiQ='[out:json][timeout:12];(nwr(around:12000,'+lat+','+lon+')[tourism~"attraction|viewpoint|museum|zoo|theme_park|aquarium"];nwr(around:12000,'+lat+','+lon+')[leisure~"park|golf_course|sports_centre|stadium"];nwr(around:12000,'+lat+','+lon+')[amenity~"restaurant|cafe|cinema"];);out center tags 80;';
+
+    try{
+      const [cr,pr]=await Promise.all([
+        fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(cityQ)),
+        fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(poiQ))
+      ]);
+      if(cr.ok){
+        const d=await cr.json();
+        const seen=new Set();
+        (d.elements||[]).forEach(x=>{
+          const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+          const name=x.tags?.name;
+          if(!p[0]||!p[1]||!name||seen.has(name))return;
+          seen.add(name);
+          L.marker(p,{icon:cityIcon(name),interactive:false,zIndexOffset:-100}).addTo(cityLayer);
+        });
+      }
+      if(pr.ok){
+        const d=await pr.json();
+        const seen=new Set();
+        (d.elements||[]).forEach(x=>{
+          const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+          const t=x.tags||{},name=t.name;
+          if(!p[0]||!p[1]||!name||seen.has(name))return;
+          seen.add(name);
+          let emoji='📍',purple=false,type='activity';
+          if(t.amenity==='restaurant')emoji='🍽️',type='restaurant';
+          else if(t.amenity==='cafe')emoji='☕',type='restaurant';
+          else if(t.amenity==='cinema')emoji='🎬',type='activity';
+          else if(t.leisure==='golf_course')emoji='⛳',type='sport';
+          else if(t.leisure==='sports_centre'||t.leisure==='stadium')emoji='⚽',type='sport';
+          else if(t.leisure==='park')emoji='🌳',type='activity';
+          else if(t.tourism==='viewpoint')emoji='👀',purple=true,type='activity';
+          else if(t.tourism==='museum')emoji='🏛️',purple=true,type='activity';
+          else if(t.tourism)emoji='🎯',purple=true,type='activity';
+          const mk=L.marker(p,{icon:interestIcon(name,emoji,purple)});
+          mk.__nearbyType=type;
+          mk.bindPopup('<b>'+esc(name)+'</b><br><span>📍 Point intéressant à proximité</span>');
+          mk.addTo(interestLayer);
+        });
+      }
+    }catch(e){}
+  }
+
+  function refresh(){
+    const p=pos(); if(p?.lat&&p?.lon)loadContent(+p.lat,+p.lon);
+  }
+
+  function init(){
+    let n=0;
+    const timer=setInterval(()=>{
+      n++;
+      const m=getMap();
+      if(m){
+        clearInterval(timer);
+        refresh();
+        m.on('moveend',()=>{const c=m.getCenter(); if(Math.abs(c.lat-(pos()?.lat||c.lat))<0.5){}});
+      }
+      if(n>100)clearInterval(timer);
+    },150);
+
+    // Lors d'un clic sur un filtre, garder les villes visibles et adapter
+    // les points intéressants à la catégorie choisie.
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        const kind=b.dataset.nearbyFilter;
+        if(!interestLayer)return;
+        interestLayer.eachLayer(m=>{
+          const type=m.__nearbyType||'activity';
+          const show=kind==='all'||(kind==='activity'&&type==='activity')||type===kind;
+          if(show)m.addTo(interestLayer);else interestLayer.removeLayer(m);
+        });
+      },false);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
