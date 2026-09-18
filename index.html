@@ -9871,6 +9871,7 @@ setTimeout(v58SetupModuleButtons,0);
     if(!node||!window.L)return;
     if(!map){
       map=L.map(node,{zoomControl:true,attributionControl:true});
+      window.myeventNearbyLeafletMap=map;
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
         maxZoom:19,attribution:'&copy; OpenStreetMap'
       }).addTo(map);
@@ -10910,6 +10911,8 @@ setTimeout(v58SetupModuleButtons,0);
     cityLayer?.clearLayers(); interestLayer?.clearLayers();
     if(!cityLayer)cityLayer=L.layerGroup().addTo(m);
     if(!interestLayer)interestLayer=L.layerGroup().addTo(m);
+    window.myeventNearbyCityLayer=cityLayer;
+    window.myeventNearbyInterestLayer=interestLayer;
 
     const cityQ='[out:json][timeout:10];nwr(around:45000,'+lat+','+lon+')[place~"city|town|village"];out center tags 80;';
     const poiQ='[out:json][timeout:12];(nwr(around:12000,'+lat+','+lon+')[tourism~"attraction|viewpoint|museum|zoo|theme_park|aquarium"];nwr(around:12000,'+lat+','+lon+')[leisure~"park|golf_course|sports_centre|stadium"];nwr(around:12000,'+lat+','+lon+')[amenity~"restaurant|cafe|cinema"];);out center tags 80;';
@@ -10960,6 +10963,7 @@ setTimeout(v58SetupModuleButtons,0);
   function refresh(){
     const p=pos(); if(p?.lat&&p?.lon)loadContent(+p.lat,+p.lon);
   }
+  window.myeventLoadNearbyMapContent=loadContent;
 
   function init(){
     let n=0;
@@ -10986,6 +10990,161 @@ setTimeout(v58SetupModuleButtons,0);
           if(show)m.addTo(interestLayer);else interestLayer.removeLayer(m);
         });
       },false);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<style id="myevent-v54-74-persistent-map-css">
+#myeventNearbyPanel .myeventNearbyMapTools button.active{
+  background:rgba(17,22,27,.98)!important;
+  color:#fff!important;
+  border-color:#7d8993!important;
+}
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  background:rgba(17,22,27,.94)!important;
+  border-color:#59656f!important;
+}
+</style>
+
+
+<script id="myevent-v54-74-persistent-map">
+(function(){
+  const FILTER_KEY='myevent_nearby_filter_v2';
+  const MAP_KEY='myevent_nearby_map_type_v1';
+  const LEISURE_KEY='myevent_nearby_show_leisure_v1';
+  const SHARE_KEY='myevent_social_location_share_v1';
+
+  function getFilter(){
+    try{return localStorage.getItem(FILTER_KEY)||'all'}catch(e){return'all'}
+  }
+  function saveFilter(v){
+    try{localStorage.setItem(FILTER_KEY,v)}catch(e){}
+  }
+
+  function setFilterButton(kind){
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.nearbyFilter===kind);
+    });
+  }
+
+  function applyFilter(kind){
+    saveFilter(kind);
+    setFilterButton(kind);
+
+    // Reuse the active V54.65 layer references when available.
+    const layers=window.myeventNearbyLayers;
+    if(layers){
+      [layers.leisure,layers.friends,layers.events].forEach(layer=>{
+        if(!layer)return;
+        layer.eachLayer(m=>{
+          const type=m.__nearbyType||'friends';
+          const visible=kind==='all'
+            ||(kind==='friends'&&type==='friends')
+            ||(kind==='events'&&type==='event')
+            ||type===kind
+            ||(kind==='activity'&&type==='activity');
+          if(visible)m.addTo(layer);else layer.removeLayer(m);
+        });
+      });
+    }
+
+    // Also filter the V54.73 real POI layer if it exists.
+    if(window.myeventNearbyInterestLayer){
+      window.myeventNearbyInterestLayer.eachLayer(m=>{
+        const type=m.__nearbyType||'activity';
+        const visible=kind==='all'||(kind==='activity'&&type==='activity')||type===kind;
+        if(visible)m.addTo(window.myeventNearbyInterestLayer);
+        else window.myeventNearbyInterestLayer.removeLayer(m);
+      });
+    }
+  }
+
+  function applySavedMapType(){
+    const type=localStorage.getItem(MAP_KEY)||'default';
+    document.querySelectorAll('#nearbyMapTypeChoices [data-map-type]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.mapType===type);
+    });
+    let tries=0;
+    const run=()=>{
+      tries++;
+      if(typeof window.myeventSetNearbyMapType==='function' && window.myeventNearbyLeafletMap){
+        window.myeventSetNearbyMapType(type);
+        return;
+      }
+      if(tries<30)setTimeout(run,100);
+    };
+    run();
+  }
+
+  function syncSavedSettings(){
+    const leisure=document.getElementById('nearbyShowLeisureToggle');
+    if(leisure)leisure.checked=(localStorage.getItem(LEISURE_KEY)!=='0');
+
+    const share=document.getElementById('nearbySharePositionToggle');
+    if(share)share.checked=(localStorage.getItem(SHARE_KEY)==='1');
+
+    setFilterButton(getFilter());
+  }
+
+  function init(){
+    syncSavedSettings();
+
+    // Capture the filter choice once and persist it.
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.addEventListener('click',function(){
+        applyFilter(b.dataset.nearbyFilter||'all');
+      },true);
+    });
+
+    // Apply saved state when the map panel opens.
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      const obs=new MutationObserver(()=>{
+        if(panel.classList.contains('open')){
+          setTimeout(()=>{
+            syncSavedSettings();
+            applySavedMapType();
+            const p=(()=>{
+              try{return JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null')}catch(e){return null}
+            })();
+            if(p?.lat&&p?.lon && typeof window.myeventLoadNearbyMapContent==='function'){
+              window.myeventLoadNearbyMapContent(+p.lat,+p.lon);
+            }
+          },180);
+        }
+      });
+      obs.observe(panel,{attributes:true,attributeFilter:['class']});
+    }
+
+    // If the user changes map type from the settings sheet, keep it across
+    // reloads/reconnections and immediately update the visible map.
+    document.querySelectorAll('#nearbyMapTypeChoices [data-map-type]').forEach(b=>{
+      b.addEventListener('click',function(){
+        try{localStorage.setItem(MAP_KEY,b.dataset.mapType||'default')}catch(e){}
+      },true);
+    });
+
+    setTimeout(applySavedMapType,350);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<script id="myevent-v54-74-filter-finalizer">
+(function(){
+  const KEY='myevent_nearby_filter_v2';
+  function init(){
+    const saved=localStorage.getItem(KEY)||'all';
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.nearbyFilter===saved);
+      b.addEventListener('click',()=>{
+        localStorage.setItem(KEY,b.dataset.nearbyFilter||'all');
+      },true);
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
