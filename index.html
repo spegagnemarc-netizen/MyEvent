@@ -11151,5 +11151,147 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-75-fix-css">
+/* Toujours repartir au début de la rangée des filtres. */
+#myeventNearbyPanel .myeventNearbyMapTools{
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  scroll-behavior:auto!important;
+  scrollbar-width:none!important;
+  z-index:60!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools::-webkit-scrollbar{display:none!important}
+#myeventNearbyPanel .myeventNearbyMapTools button{flex:0 0 auto!important}
+</style>
+
+
+<script id="myevent-v54-75-final-map-fix">
+(function(){
+  const FILTER='myevent_nearby_filter_v2';
+  const MAP='myevent_nearby_map_type_v1';
+  let cityLayer=null, poiLayer=null, lastKey='';
+  let started=false;
+
+  function map(){return window.myeventNearbyLeafletMap||null}
+  function savedPos(){
+    try{
+      const p=JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null');
+      return p&&Number.isFinite(+p.lat)&&Number.isFinite(+p.lon)?{lat:+p.lat,lon:+p.lon}:null;
+    }catch(e){return null}
+  }
+  function esc(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function cityIcon(name){
+    return L.divIcon({
+      className:'myeventCityMarker',
+      html:'<div class="myeventCityLabel"><span class="dot"></span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[1,1],iconAnchor:[5,6]
+    });
+  }
+  function poiIcon(name,emoji,purple){
+    return L.divIcon({
+      className:'myeventInterestMarker',
+      html:'<div class="myeventInterestLabel '+(purple?'purple':'')+'"><span class="pin">'+emoji+'</span><span class="name">'+esc(name)+'</span></div>',
+      iconSize:[1,1],iconAnchor:[14,14]
+    });
+  }
+
+  async function load(lat,lon){
+    const m=map(); if(!m||!window.L)return;
+    const key=lat.toFixed(3)+','+lon.toFixed(3);
+    if(lastKey===key && cityLayer)return;
+    lastKey=key;
+
+    if(!cityLayer)cityLayer=L.layerGroup().addTo(m);
+    if(!poiLayer)poiLayer=L.layerGroup().addTo(m);
+    cityLayer.clearLayers(); poiLayer.clearLayers();
+
+    // Villes : rayon plus large pour conserver les noms visibles comme sur la capture.
+    const cq='[out:json][timeout:12];nwr(around:60000,'+lat+','+lon+')[place~"city|town|village"];out center tags 100;';
+    // Points intéressants : rayon local.
+    const pq='[out:json][timeout:12];(nwr(around:15000,'+lat+','+lon+')[tourism~"attraction|viewpoint|museum|theme_park|zoo|aquarium"];nwr(around:15000,'+lat+','+lon+')[leisure~"park|golf_course|sports_centre|stadium|pitch"];nwr(around:15000,'+lat+','+lon+')[amenity~"restaurant|cafe|cinema"];);out center tags 100;';
+
+    try{
+      const [a,b]=await Promise.all([
+        fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(cq)),
+        fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(pq))
+      ]);
+      if(a.ok){
+        const d=await a.json(), seen=new Set();
+        (d.elements||[]).forEach(x=>{
+          const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+          const name=x.tags?.name;
+          if(!name||!p[0]||!p[1]||seen.has(name))return;
+          seen.add(name);
+          L.marker(p,{icon:cityIcon(name),interactive:false,zIndexOffset:-200}).addTo(cityLayer);
+        });
+      }
+      if(b.ok){
+        const d=await b.json(), seen=new Set();
+        (d.elements||[]).forEach(x=>{
+          const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+          const t=x.tags||{},name=t.name;
+          if(!name||!p[0]||!p[1]||seen.has(name))return;
+          seen.add(name);
+          let emoji='🎯',purple=false;
+          if(t.amenity==='restaurant')emoji='🍽️';
+          else if(t.amenity==='cafe')emoji='☕';
+          else if(t.amenity==='cinema')emoji='🎬';
+          else if(t.leisure==='golf_course')emoji='⛳';
+          else if(t.leisure==='sports_centre'||t.leisure==='stadium'||t.leisure==='pitch')emoji='⚽';
+          else if(t.leisure==='park')emoji='🌳';
+          else if(t.tourism==='viewpoint')emoji='👀',purple=true;
+          else if(t.tourism==='museum')emoji='🏛️',purple=true;
+          else emoji='🎯',purple=true;
+          const marker=L.marker(p,{icon:poiIcon(name,emoji,purple)});
+          marker.__nearbyType=(t.amenity==='restaurant'||t.amenity==='cafe')?'restaurant':
+            (t.leisure==='golf_course'||t.leisure==='sports_centre'||t.leisure==='stadium'||t.leisure==='pitch')?'sport':'activity';
+          marker.bindPopup('<b>'+esc(name)+'</b><br>📍 Point intéressant à proximité').addTo(poiLayer);
+        });
+      }
+      window.myeventNearbyCityLayer=cityLayer;
+      window.myeventNearbyInterestLayer=poiLayer;
+    }catch(e){}
+  }
+
+  function openFix(){
+    const panel=document.getElementById('myeventNearbyPanel');
+    const tools=document.getElementById('myeventNearbyMapTools');
+    if(tools)tools.scrollLeft=0;
+
+    const m=map();
+    if(!m)return;
+    const p=savedPos();
+    if(p){
+      // Recentrage systématique sur la position mémorisée à chaque ouverture.
+      m.setView([p.lat,p.lon],14,{animate:false});
+      load(p.lat,p.lon);
+    }
+    // Restaurer visuellement le filtre choisi.
+    const saved=localStorage.getItem(FILTER)||'all';
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.nearbyFilter===saved);
+    });
+    setTimeout(()=>m.invalidateSize(),120);
+  }
+
+  function init(){
+    if(started)return; started=true;
+    const panel=document.getElementById('myeventNearbyPanel');
+    if(panel){
+      const obs=new MutationObserver(()=>{
+        if(panel.classList.contains('open'))setTimeout(openFix,80);
+      });
+      obs.observe(panel,{attributes:true,attributeFilter:['class']});
+    }
+    // Si la carte est déjà ouverte.
+    setTimeout(openFix,300);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
