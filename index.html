@@ -1193,8 +1193,16 @@ body:has(#socialHome) .app > h1{display:none!important}
 <div id="myeventNearbyPanel" class="myeventNearbyPanel" aria-hidden="true">
   <div class="myeventNearbySheet">
     <div class="myeventNearbyHead">
-      <div><b>📍 À proximité</b><span>Choisis une fois si tu veux partager ta position.</span></div>
+      <div><b>📍 À proximité</b><span>Amis, loisirs et événements autour de toi</span></div>
       <button type="button" id="closeNearbyPanelBtn" class="myeventPanelCloseBtn">✕</button>
+    </div>
+    <div class="myeventNearbyMapTools" id="myeventNearbyMapTools">
+      <button type="button" class="active" data-nearby-filter="all">✨ Tout</button>
+      <button type="button" data-nearby-filter="friends">👥 Amis</button>
+      <button type="button" data-nearby-filter="sport">⚽ Sport</button>
+      <button type="button" data-nearby-filter="restaurant">🍽️ Restaurants</button>
+      <button type="button" data-nearby-filter="activity">🎯 Loisirs</button>
+      <button type="button" data-nearby-filter="events">🎉 Événements</button>
     </div>
     <div class="myeventNearbyChoice">
       <div>
@@ -9772,6 +9780,154 @@ setTimeout(v58SetupModuleButtons,0);
 #socialHome .socialStory.weatherShortcut .socialStoryBubble{border-color:#5b6874!important;background:linear-gradient(145deg,#151c23,#0d1217)!important}
 #socialHome .socialStory.weatherShortcut>div:last-child{font-size:9px!important;line-height:1.1!important}
 </style>
+
+
+<style id="myevent-v54-65-css">
+/* Ma story : 6 cases strictement identiques et indépendantes. */
+#socialHome .socialStories{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important;width:100%!important;overflow:visible!important}
+#socialHome .socialStories .socialStory{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;min-width:0!important;flex:0 0 auto!important;box-sizing:border-box!important}
+#socialHome .socialStories .socialStoryBubble{width:100%!important;height:auto!important;aspect-ratio:1/1!important;max-width:none!important;min-width:0!important;margin:0 auto 5px!important;box-sizing:border-box!important}
+#socialHome .socialStories .socialStory.me{margin:0!important}
+
+/* À proximité devient une vraie expérience plein écran. */
+#myeventNearbyPanel{position:fixed!important;inset:0!important;padding:0!important;align-items:stretch!important;z-index:10000!important;background:#05080b!important}
+#myeventNearbyPanel .myeventNearbySheet{width:100%!important;height:100%!important;max-height:none!important;max-width:none!important;border:0!important;border-radius:0!important;padding:0!important;overflow:hidden!important;background:#071016!important;display:flex!important;flex-direction:column!important}
+#myeventNearbyPanel .myeventNearbyHead{padding:calc(12px + env(safe-area-inset-top)) 14px 10px!important;margin:0!important;background:rgba(7,16,22,.96)!important;z-index:3!important}
+#myeventNearbyPanel .myeventNearbyChoice,#myeventNearbyPanel .myeventNearbyInfo,#myeventNearbyPanel #myeventNearbyLocateBtn{position:relative!important;z-index:3!important}
+#myeventNearbyPanel .myeventNearbyChoice{margin:8px 12px 0!important}
+#myeventNearbyPanel .myeventNearbyInfo{margin:7px 14px!important}
+#myeventNearbyPanel .myeventNearbyMap{order:2!important;flex:1 1 auto!important;height:auto!important;min-height:0!important;width:100%!important;margin:0!important;border:0!important;border-radius:0!important}
+#myeventNearbyPanel .myeventNearbyMapHint{display:none!important}
+#myeventNearbyPanel #myeventNearbyLocateBtn{margin:8px 12px calc(10px + env(safe-area-inset-bottom))!important;width:calc(100% - 24px)!important}
+.myeventNearbyMapTools{position:absolute;left:12px;right:12px;top:120px;z-index:500;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.myeventNearbyMapTools::-webkit-scrollbar{display:none}
+.myeventNearbyMapTools button{flex:0 0 auto;background:rgba(255,255,255,.94)!important;color:#171b1f!important;border:0!important;border-radius:999px!important;padding:9px 13px!important;font-size:12px!important;font-weight:800!important;box-shadow:0 3px 12px rgba(0,0,0,.25)!important}
+.myeventNearbyMapTools button.active{background:#ff6a34!important;color:#fff!important}
+.myeventMapAvatarMarker{width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:#111;box-shadow:0 3px 12px rgba(0,0,0,.45);overflow:hidden}
+.myeventMapAvatarMarker img{width:100%;height:100%;object-fit:cover;display:block}
+.myeventMapAvatarMarker span{width:100%;height:100%;display:grid;place-items:center;font-size:23px;background:#fff}
+.myeventLeisureMarker{min-width:34px;height:34px;padding:0 7px;border-radius:18px;background:#fff;border:2px solid #ff6a34;display:grid;place-items:center;box-shadow:0 3px 12px rgba(0,0,0,.3);font-size:17px}
+</style>
+
+
+<script id="myevent-v54-65-nearby-fullscreen">
+(function(){
+  const $=id=>document.getElementById(id);
+  let map=null, meMarker=null, leisureLayer=null, friendLayer=null, eventLayer=null;
+
+  function avatarSrc(){
+    const img=$('profileAvatar')?.querySelector?.('img');
+    return img?.src||'';
+  }
+  function avatarIcon(src,emoji){
+    const html=src
+      ? '<div class="myeventMapAvatarMarker"><img src="'+String(src).replace(/"/g,'&quot;')+'" alt=""></div>'
+      : '<div class="myeventMapAvatarMarker"><span>'+emoji+'</span></div>';
+    return L.divIcon({className:'',html,iconSize:[46,46],iconAnchor:[23,23]});
+  }
+  function leisureIcon(emoji){
+    return L.divIcon({className:'',html:'<div class="myeventLeisureMarker">'+emoji+'</div>',iconSize:[38,38],iconAnchor:[19,19]});
+  }
+  function ensureMap(){
+    const node=$('myeventNearbyMap');
+    if(!node||!window.L)return;
+    if(!map){
+      map=L.map(node,{zoomControl:true,attributionControl:true});
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        maxZoom:19,attribution:'&copy; OpenStreetMap'
+      }).addTo(map);
+      leisureLayer=L.layerGroup().addTo(map);
+      friendLayer=L.layerGroup().addTo(map);
+      eventLayer=L.layerGroup().addTo(map);
+    }
+    setTimeout(()=>map.invalidateSize(),100);
+    return map;
+  }
+  function position(){
+    try{return JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null')}catch(e){return null}
+  }
+  function openFullMap(){
+    const p=$('myeventNearbyPanel'); if(!p)return;
+    p.classList.add('open');p.setAttribute('aria-hidden','false');
+    const m=ensureMap();
+    const pos=position();
+    if(!m||!pos?.lat||!pos?.lon){
+      navigator.geolocation?.getCurrentPosition(showPosition,()=>{});
+    }else showPosition({coords:{latitude:+pos.lat,longitude:+pos.lon}});
+  }
+  function showPosition(pos){
+    const lat=+pos.coords.latitude,lon=+pos.coords.longitude;
+    try{localStorage.setItem('myevent_social_last_position_v1',JSON.stringify({lat,lon,updatedAt:Date.now()}))}catch(e){}
+    const m=ensureMap(); if(!m)return;
+    m.setView([lat,lon],14);
+    if(meMarker)m.removeLayer(meMarker);
+    meMarker=L.marker([lat,lon],{icon:avatarIcon(avatarSrc(),'👤'),zIndexOffset:1000}).addTo(m).bindPopup('<b>📍 Ma position</b>');
+    loadNearbyLeisure(lat,lon);
+    loadDemoFriends(lat,lon);
+    setTimeout(()=>m.invalidateSize(),120);
+  }
+  async function loadNearbyLeisure(lat,lon){
+    if(!leisureLayer)return;
+    leisureLayer.clearLayers();
+    // OpenStreetMap/Overpass : recherche légère de points d'intérêt autour de l'utilisateur.
+    const q='[out:json][timeout:8];(nwr(around:2500,'+lat+','+lon+',leisure~"sports_centre|stadium|fitness_centre|park|pitch|golf_course");nwr(around:2500,'+lat+','+lon+',amenity~"restaurant|cafe|cinema|bar"););out center tags 40;';
+    try{
+      const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));
+      if(!r.ok)throw Error();
+      const d=await r.json();
+      (d.elements||[]).forEach(x=>{
+        const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+        if(!p[0]||!p[1])return;
+        const tags=x.tags||{}, name=tags.name||'Lieu à proximité';
+        let emoji='🎯',type='activity';
+        if(tags.amenity==='restaurant'||tags.amenity==='cafe')emoji='🍽️',type='restaurant';
+        else if(tags.leisure==='park')emoji='🌳',type='activity';
+        else if(tags.leisure==='golf_course')emoji='⛳',type='sport';
+        else if(tags.leisure)emoji='⚽',type='sport';
+        const mk=L.marker(p,{icon:leisureIcon(emoji)}).bindPopup('<b>'+String(name).replace(/</g,'&lt;')+'</b><br><span>📍 À proximité</span>');
+        mk.__nearbyType=type;mk.addTo(leisureLayer);
+      });
+    }catch(e){}
+  }
+  function loadDemoFriends(lat,lon){
+    if(!friendLayer)return;
+    friendLayer.clearLayers();
+    // En attendant la connexion Supabase des positions d'amis, on n'affiche pas de fausses positions.
+    // La couche est prête à recevoir les vrais amis partagés.
+  }
+  function filter(kind){
+    document.querySelectorAll('[data-nearby-filter]').forEach(b=>b.classList.toggle('active',b.dataset.nearbyFilter===kind));
+    if(!map)return;
+    [leisureLayer,friendLayer,eventLayer].forEach(layer=>{
+      if(layer)layer.eachLayer(m=>{
+        const type=m.__nearbyType||'friends';
+        const visible=kind==='all'||(kind==='friends'&&type==='friends')||type===kind|| (kind==='events'&&type==='event');
+        if(visible)m.addTo(layer);else layer.removeLayer(m);
+      });
+    });
+  }
+  function close(){
+    const p=$('myeventNearbyPanel'); if(!p)return;
+    p.classList.remove('open');p.setAttribute('aria-hidden','true');
+  }
+
+  function init(){
+    // Remplace l'ancien comportement : À proximité ouvre uniquement le plein écran.
+    document.querySelectorAll('#socialHome .socialStory').forEach(x=>{
+      if(x.textContent.trim()==='📍À proximité' || x.textContent.trim()==='À proximité'){
+        x.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openFullMap();});
+      }
+    });
+    // Le bouton séparé éventuel est neutralisé visuellement et fonctionnellement.
+    const old=$('socialNearbyShareBtn'); if(old)old.style.display='none';
+    $('closeNearbyPanelBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();close();});
+    $('myeventNearbyPanel')?.addEventListener('click',e=>{if(e.target===$('myeventNearbyPanel'))close();});
+    document.querySelectorAll('[data-nearby-filter]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();filter(b.dataset.nearbyFilter)}));
+    $('myeventNearbyLocateBtn')?.addEventListener('click',()=>navigator.geolocation?.getCurrentPosition(showPosition,()=>{}));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 
 </body>
 </html>
