@@ -9203,5 +9203,129 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<script id="myevent-v54-59-navigation-fix">
+(function(){
+  function el(id){ return document.getElementById(id); }
+
+  function forceTab(name){
+    const views = {
+      feed: el('socialFeedView'),
+      discover: el('socialDiscoverView'),
+      friends: el('socialFriendsView'),
+      messages: el('socialMessagesView'),
+      notifications: el('socialGlobalNotificationsView')
+    };
+
+    Object.keys(views).forEach(function(k){
+      if(views[k]) views[k].style.display = (k === name) ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('[data-social-tab]').forEach(function(b){
+      b.classList.toggle('active', b.dataset.socialTab === name);
+    });
+
+    document.querySelectorAll('[data-bottom-tab]').forEach(function(b){
+      b.classList.toggle('active', b.dataset.bottomTab === name);
+    });
+
+    const target = views[name];
+    if(target){
+      setTimeout(function(){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+      }, 20);
+    }
+  }
+
+  function replaceWithHandler(id, handler){
+    const old = el(id);
+    if(!old) return;
+    const fresh = old.cloneNode(true);
+    old.parentNode.replaceChild(fresh, old);
+    fresh.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      handler(fresh);
+    });
+  }
+
+  function openProfile(){
+    const card = el('profileSettingsCard');
+    if(!card) return;
+    card.classList.add('profileSettingsVisible');
+    card.classList.add('profileSettingsOpen');
+    card.style.display = 'block';
+    setTimeout(function(){
+      card.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 20);
+  }
+
+  function init(){
+    // Haut de l'accueil : les deux boutons ont maintenant des destinations distinctes.
+    replaceWithHandler('socialHeaderMessagesBtnTop', function(){
+      forceTab('messages');
+    });
+
+    replaceWithHandler('socialHeaderNotificationsBtnTop', function(){
+      forceTab('notifications');
+    });
+
+    // Raccourcis du cadre "Mes événements".
+    replaceWithHandler('socialHeaderMessagesBtn', function(){
+      forceTab('messages');
+    });
+
+    replaceWithHandler('socialHeaderNotificationsBtn', function(){
+      forceTab('notifications');
+    });
+
+    // Bouton Profil de la barre du bas.
+    const nav = el('socialBottomNav');
+    const profileBtn = nav ? nav.querySelector('[data-bottom-tab="profile"]') : null;
+    if(profileBtn){
+      const fresh = profileBtn.cloneNode(true);
+      profileBtn.parentNode.replaceChild(fresh, profileBtn);
+      fresh.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        nav.querySelectorAll('[data-bottom-tab]').forEach(function(x){
+          x.classList.toggle('active', x === fresh);
+        });
+        openProfile();
+      });
+    }
+
+    // Photo/avatar en haut : clic simple ouvre également le profil.
+    replaceWithHandler('profileAvatar', function(){
+      openProfile();
+    });
+
+    // Raccourci "Amis" éventuel dans les stories.
+    document.querySelectorAll('.socialStories .socialStory').forEach(function(item){
+      const label = item.textContent.trim();
+      if(label.indexOf('Amis') !== -1){
+        item.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          forceTab('friends');
+        });
+      }
+    });
+
+    // Expose la navigation pour les autres boutons du prototype.
+    window.myEventForceTab = forceTab;
+
+    // État initial.
+    forceTab('feed');
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  }else{
+    init();
+  }
+})();
+</script>
+
 </body>
 </html>
