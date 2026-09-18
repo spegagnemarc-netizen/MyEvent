@@ -10356,5 +10356,113 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v54-69-clean-map">
+/* Nettoyage de l'écran À proximité : les réglages ne doivent jamais
+   s'afficher directement sur la carte. */
+#myeventNearbyPanel .myeventNearbyHead{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  min-height:64px!important;
+  padding:calc(12px + env(safe-area-inset-top)) 14px 16px!important;
+}
+#myeventNearbyPanel .myeventNearbyHead>div:first-child{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+#myeventNearbyPanel .myeventNearbyHead>div:first-child b{
+  display:block!important;
+  font-size:22px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+}
+#myeventNearbyPanel .myeventNearbyHead>div:first-child span{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:11px!important;
+  line-height:1.25!important;
+  color:#c0c7cd!important;
+  white-space:normal!important;
+}
+#myeventNearbyPanel .myeventNearbyHeaderActions{
+  flex:0 0 auto!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+#myeventNearbyPanel .myeventNearbySettingsBtn,
+#myeventNearbyPanel .myeventPanelCloseBtn{
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:20px!important;
+}
+
+/* Les anciens contrôles "partager ma position" et leur texte
+   sont déplacés dans le menu Réglages. */
+#myeventNearbyPanel>.myeventNearbySheet>.myeventNearbyChoice,
+#myeventNearbyPanel>.myeventNearbySheet>.myeventNearbyInfo{
+  display:none!important;
+}
+
+/* Filtres carte : plus bas, sur une seule ligne scrollable. */
+#myeventNearbyPanel .myeventNearbyMapTools{
+  top:calc(78px + env(safe-area-inset-top))!important;
+  left:12px!important;
+  right:12px!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button{
+  font-size:11px!important;
+  padding:8px 12px!important;
+}
+
+/* Menu Réglages compact et propre. */
+#myeventNearbyPanel .myeventNearbySettings{
+  padding:calc(70px + env(safe-area-inset-top)) 12px 12px!important;
+}
+#myeventNearbyPanel .myeventNearbySettingsCard{
+  width:min(380px,100%)!important;
+  max-height:calc(100vh - 100px)!important;
+  overflow:auto!important;
+  border-radius:18px!important;
+}
+#myeventNearbyPanel .myeventSettingRow{
+  min-height:62px!important;
+}
+#myeventNearbyPanel .myeventSettingRow b{
+  font-size:12px!important;
+  line-height:1.25!important;
+}
+#myeventNearbyPanel .myeventSettingRow small{
+  font-size:9px!important;
+}
+#myeventNearbyPanel .myeventSwitch{
+  flex:0 0 auto!important;
+}
+
+/* Bouton actualiser plus petit, discret et toujours en bas. */
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  font-size:13px!important;
+  padding:11px 14px!important;
+  border-radius:14px!important;
+}
+
+/* Sécurité : la carte reste visible derrière toute l'interface. */
+#myeventNearbyPanel .myeventNearbyMap{
+  z-index:1!important;
+}
+#myeventNearbyPanel .myeventNearbyHead,
+#myeventNearbyPanel .myeventNearbyMapTools,
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  z-index:20!important;
+}
+</style>
+
 </body>
 </html>
