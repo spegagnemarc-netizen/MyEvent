@@ -1254,6 +1254,7 @@ body:has(#socialHome) .app > h1{display:none!important}
       Ton choix est mémorisé sur cet appareil. Tu n'auras pas à le refaire à chaque connexion.
     </div>
     <button type="button" id="myeventMapSettingsFloating" class="myeventMapSettingsFloating" title="Réglages">⚙️</button>
+    <div id="myeventNearbyToast" class="myeventNearbyToast" aria-live="polite"></div>
     <div id="myeventNearbyMap" class="myeventNearbyMap"></div>
     <div class="myeventNearbyMapHint">👥 Les amis ayant activé le partage apparaîtront ici avec leur photo de profil.</div>
     <button type="button" id="myeventNearbyLocateBtn" class="secondary">📍 Actualiser ma position</button>
@@ -10682,6 +10683,161 @@ setTimeout(v58SetupModuleButtons,0);
     new MutationObserver(expose).observe(document.getElementById('myeventNearbyMap')||document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<style id="myevent-v54-72-filter-ui">
+#myeventNearbyPanel .myeventNearbyMapTools{
+  pointer-events:auto!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button{
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  touch-action:manipulation!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button.active{
+  transform:translateY(-1px)!important;
+  border-color:#fff!important;
+}
+.myeventNearbyToast{
+  position:absolute;
+  left:50%;
+  bottom:calc(70px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(10px);
+  z-index:80;
+  max-width:calc(100% - 36px);
+  padding:9px 14px;
+  border-radius:999px;
+  background:rgba(17,22,27,.94);
+  border:1px solid rgba(255,255,255,.22);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  text-align:center;
+  box-shadow:0 5px 18px rgba(0,0,0,.35);
+  opacity:0;
+  pointer-events:none;
+  transition:.18s ease;
+}
+.myeventNearbyToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+
+
+<script id="myevent-v54-72-filter-actions">
+(function(){
+  const $=id=>document.getElementById(id);
+  let toastTimer=null;
+
+  const messages={
+    all:'✨ Affichage de tous les éléments autour de toi.',
+    friends:'👥 Amis : les amis ayant activé le partage apparaîtront sur la carte.',
+    sport:'⚽ Sport : recherche des activités sportives autour de toi.',
+    restaurant:'🍽️ Restaurants : recherche des restaurants et cafés autour de toi.',
+    activity:'🎯 Loisirs : recherche des loisirs et activités autour de toi.',
+    events:'🎉 Événements : les événements proches apparaîtront ici.'
+  };
+
+  function toast(txt){
+    const t=$('myeventNearbyToast'); if(!t)return;
+    clearTimeout(toastTimer);
+    t.textContent=txt;
+    t.classList.add('show');
+    toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  }
+
+  function setActive(btn){
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(b=>{
+      b.classList.toggle('active',b===btn);
+    });
+  }
+
+  function getPos(){
+    try{return JSON.parse(localStorage.getItem('myevent_social_last_position_v1')||'null')}catch(e){return null}
+  }
+
+  // On donne aux boutons un comportement direct, indépendant des anciens
+  // listeners des versions précédentes.
+  function activate(btn){
+    if(btn.__myevent72)return;
+    btn.__myevent72=true;
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      setActive(btn);
+      const type=btn.dataset.nearbyFilter||'all';
+      toast(messages[type]||'Filtre sélectionné.');
+
+      // Si le bouton correspond à une catégorie de lieux, on demande au
+      // moteur de recherche existant de rafraîchir la carte.
+      const pos=getPos();
+      if(pos && (type==='sport'||type==='restaurant'||type==='activity')){
+        if(window.myeventReloadNearbyCategory){
+          window.myeventReloadNearbyCategory(type,+pos.lat,+pos.lon);
+        }
+      }
+    },true);
+  }
+
+  function init(){
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(activate);
+
+    // Empêche les contrôles Leaflet ou la carte de manger les touch events.
+    const tools=$('myeventNearbyMapTools');
+    if(tools){
+      tools.style.pointerEvents='auto';
+      tools.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+    }
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+
+<script id="myevent-v54-72-category-loader">
+(function(){
+  let layer=null;
+  const esc=x=>String(x||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  function map(){
+    return window.myeventNearbyLeafletMap||null;
+  }
+  function icon(type){
+    const emoji=type==='sport'?'⚽':type==='restaurant'?'🍽️':'🎯';
+    return L.divIcon({className:'',html:'<div class="myeventLeisureMarker">'+emoji+'</div>',iconSize:[38,38],iconAnchor:[19,19]});
+  }
+  async function load(type,lat,lon){
+    const m=map(); if(!m||!window.L)return;
+    if(!layer)layer=L.layerGroup().addTo(m); else layer.clearLayers();
+    let q='';
+    if(type==='sport'){
+      q='[out:json][timeout:8];nwr(around:3000,'+lat+','+lon+',leisure~"sports_centre|stadium|fitness_centre|pitch|golf_course");out center tags 50;';
+    }else if(type==='restaurant'){
+      q='[out:json][timeout:8];nwr(around:3000,'+lat+','+lon+',amenity~"restaurant|cafe");out center tags 50;';
+    }else{
+      q='[out:json][timeout:8];nwr(around:3000,'+lat+','+lon+',leisure~"park|playground|water_park|bowling_alley|miniature_golf");out center tags 50;';
+    }
+    try{
+      const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));
+      if(!r.ok)throw Error();
+      const d=await r.json();
+      let count=0;
+      (d.elements||[]).forEach(x=>{
+        const p=x.type==='node'?[x.lat,x.lon]:[x.center?.lat,x.center?.lon];
+        if(!p[0]||!p[1])return;
+        const name=x.tags?.name||'Lieu à proximité';
+        L.marker(p,{icon:icon(type)}).bindPopup('<b>'+esc(name)+'</b><br><span>📍 À proximité</span>').addTo(layer);
+        count++;
+      });
+      const t=document.getElementById('myeventNearbyToast');
+      if(t){
+        t.textContent=count?('✓ '+count+' lieu'+(count>1?'x':'')+' trouvé'+(count>1?'s':'')+'.'): 'Aucun lieu trouvé dans ce rayon.';
+        t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200);
+      }
+    }catch(e){}
+  }
+  window.myeventReloadNearbyCategory=load;
 })();
 </script>
 
