@@ -1055,6 +1055,64 @@ body:has(#socialHome) .app > h1{display:none!important}
 }
 </style>
 
+
+<style id="myevent-camera-v2-polished">
+/* MyEvent Camera V2 — référence capture 2 : noir / blanc / gris, aucun orange */
+#myeventCameraModal .cameraProSheet{background:#050607!important;color:#fff!important;padding:0 12px calc(12px + env(safe-area-inset-bottom))!important;max-width:520px!important;gap:0!important;overflow:hidden!important}
+#myeventCameraModal .cameraProSheet:before{background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.055),transparent 46%)!important}
+#myeventCameraModal .cameraProTop{height:58px!important;padding:env(safe-area-inset-top) 4px 0!important;box-sizing:content-box!important}
+#myeventCameraModal .cameraProTopLeft,#myeventCameraModal .cameraProTopRight{display:flex;align-items:center;gap:7px}
+#myeventCameraModal .cameraProIcon{width:39px!important;height:39px!important;background:rgba(5,6,7,.72)!important;border:1px solid rgba(255,255,255,.22)!important;color:#fff!important;box-shadow:none!important;font-size:19px!important}
+#myeventCameraModal .cameraCloseIcon{font-size:27px!important;font-weight:300!important}
+#myeventCameraModal .cameraProTitle span{font-size:14px!important;letter-spacing:1.8px!important;font-weight:900!important}
+#myeventCameraModal .cameraProTitle small{font-size:10px!important;color:#aeb4ba!important;margin-top:5px!important}
+#myeventCameraModal .cameraPremiumQuality{display:none;position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translateX(-50%);z-index:20;background:rgba(7,8,9,.82);border:1px solid rgba(255,255,255,.22);border-radius:22px;padding:3px;backdrop-filter:blur(14px)}
+#myeventCameraModal .cameraPremiumQuality button{border:0;background:transparent;color:#d9dde0;padding:7px 11px;border-radius:18px;font-weight:800;font-size:11px}
+#myeventCameraModal .cameraPremiumQuality button.active{background:#fff;color:#0a0b0c}
+#myeventCameraModal .cameraProPreview{border-radius:18px!important;background:#080909!important;box-shadow:0 12px 34px rgba(0,0,0,.5)!important;overflow:hidden!important}
+#myeventCameraModal .cameraProPreview video,#myeventCameraModal .cameraProPreview img{width:100%!important;height:100%!important;object-fit:cover!important}
+#myeventCameraModal .cameraSideTools{top:18px!important;gap:8px!important;z-index:10!important}
+#myeventCameraModal .cameraSideTools.left{left:10px!important}.cameraSideTools.right{right:10px!important}
+#myeventCameraModal .cameraSideTool{width:55px!important;height:58px!important;border-radius:15px!important;background:rgba(5,6,7,.64)!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(0,0,0,.25)!important;font-size:21px!important}
+#myeventCameraModal .cameraSideTool small{font-size:8px!important;color:#f0f2f3!important;margin-top:3px!important;font-weight:700!important}
+#myeventCameraModal .cameraSideTool.active{border-color:#fff!important;background:rgba(255,255,255,.13)!important}
+#myeventCameraModal .cameraFaceGuide{width:min(58vw,250px)!important;height:min(70vw,320px)!important;border:1px solid rgba(255,255,255,.78)!important;border-radius:45% 45% 42% 42%!important;box-shadow:0 0 0 9999px rgba(0,0,0,.035)!important;opacity:.78!important}
+#myeventCameraModal .cameraProZoom{bottom:12px!important;background:rgba(7,8,9,.75)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:24px!important;padding:3px!important;backdrop-filter:blur(14px)!important}
+#myeventCameraModal .cameraZoomBtn{min-width:44px!important;padding:8px 10px!important;background:transparent!important;color:#fff!important;font-size:12px!important}
+#myeventCameraModal .cameraZoomBtn.active{background:#fff!important;color:#111!important;border-radius:20px!important}
+#myeventCameraModal .cameraFilterStrip{display:flex;gap:7px;overflow-x:auto;padding:9px 2px 5px;scrollbar-width:none}
+#myeventCameraModal .cameraFilterStrip::-webkit-scrollbar{display:none}
+#myeventCameraModal .cameraFilterCard{flex:0 0 65px;height:78px;padding:4px 3px 5px;background:#0b0d0f;border:1px solid rgba(255,255,255,.14);border-radius:11px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-size:8px;font-weight:700}
+#myeventCameraModal .cameraFilterCard.active{border:2px solid #fff;background:#111315}
+#myeventCameraModal .cameraFilterCard b{font-size:8px;white-space:nowrap;max-width:62px;overflow:hidden;text-overflow:ellipsis}
+#myeventCameraModal .filterThumb{width:57px;height:52px;border-radius:8px;background:linear-gradient(145deg,#4b403c,#1c1d1f);display:block;position:relative;overflow:hidden}
+#myeventCameraModal .filterThumb:after{content:'';position:absolute;width:25px;height:34px;border-radius:48% 48% 45% 45%;left:16px;top:8px;background:linear-gradient(160deg,#b98d78,#6e5047);box-shadow:0 11px 0 -3px #111}
+#myeventCameraModal .naturalThumb{filter:saturate(1.1) brightness(1.06)}.portraitThumb{filter:contrast(1.05) brightness(1.05)}.bwThumb{filter:grayscale(1)}.cartoonThumb{filter:saturate(1.8) contrast(1.18)}.animeThumb{filter:saturate(1.35) brightness(1.12)}.cinemaThumb{filter:contrast(1.15) saturate(.9)}.ageThumb{filter:sepia(.25) grayscale(.15)}
+#myeventCameraModal .cameraProModes{display:flex!important;justify-content:center!important;gap:22px!important;padding:6px 0 7px!important;white-space:nowrap}
+#myeventCameraModal .cameraModeBtn{background:transparent!important;border:0!important;color:#9da4aa!important;font-size:11px!important;font-weight:800!important;padding:3px 0!important}
+#myeventCameraModal .cameraModeBtn.active{color:#fff!important;border-bottom:2px solid #fff!important}
+#myeventCameraModal .cameraProBottom{height:78px!important;display:grid!important;grid-template-columns:1fr 100px 1fr!important;align-items:center!important}
+#myeventCameraModal .cameraProRoundAction{background:transparent!important;color:#fff!important;border:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:5px!important;font-size:24px!important}
+#myeventCameraModal .cameraProRoundAction small{font-size:10px!important;color:#fff!important;font-weight:700!important}
+#myeventCameraModal .cameraProShutter{width:74px!important;height:74px!important;border-radius:50%!important;background:#fff!important;border:5px solid #050607!important;box-shadow:0 0 0 2px rgba(255,255,255,.9)!important;justify-self:center!important}
+#myeventCameraModal .cameraProShutter span{display:none!important}
+#myeventCameraModal .cameraProTools{display:none!important}
+#myeventCameraModal .cameraAiPrompt{display:none;align-items:center;gap:10px;margin:0 0 7px;padding:11px 13px;border-radius:15px;background:#0a0d10!important;border:1px solid rgba(255,255,255,.17)!important;color:#fff!important}
+#myeventCameraModal .cameraAiPrompt b{display:block;font-size:12px}.cameraAiPrompt span{display:block;color:#9ea5ab;font-size:9px;margin-top:2px}.cameraAiPrompt em{margin-left:auto;font-size:24px;font-style:normal}.aiSpark{font-size:23px}
+#myeventCameraModal .cameraCaptured{display:none!important}.cameraCaptured.open{display:flex!important}
+#myeventCameraModal .cameraProCaptured{gap:7px!important}.cameraProCaptured button{flex:1;border:1px solid rgba(255,255,255,.18)!important;background:#0d0f11!important;color:#fff!important;border-radius:12px!important;padding:9px!important;font-weight:800!important;font-size:10px!important}
+#myeventCameraModal .cameraRetakeBtn{flex-basis:100%!important}.cameraAiResult{width:100%;font-size:9px;color:#aeb4ba;text-align:center}
+#myeventCameraModal .cameraProHint{color:#737a80!important;font-size:8px!important}
+#myeventCameraModal .premiumOnlyTool,#myeventCameraModal .premiumFilter,#myeventCameraModal .premiumMode,#myeventCameraModal .cameraPremiumQuality{display:none!important}
+/* Premium state */
+#myeventCameraModal.premiumMode .premiumOnlyTool{display:flex!important}
+#myeventCameraModal.premiumMode .premiumFilter{display:flex!important}
+#myeventCameraModal.premiumMode .premiumMode{display:block!important}
+#myeventCameraModal.premiumMode .cameraPremiumQuality{display:flex!important}
+#myeventCameraModal.premiumMode .cameraAiPrompt{display:flex!important}
+#myeventCameraModal.premiumMode .cameraProSheet{padding-top:0!important}
+@media(max-width:430px){#myeventCameraModal .cameraSideTool{width:52px!important;height:55px!important}#myeventCameraModal .cameraProModes{gap:15px!important}.cameraFilterCard{flex-basis:62px!important}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1226,14 +1284,24 @@ body:has(#socialHome) .app > h1{display:none!important}
   </div>
 
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
-    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra selfie MyEvent">
+    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
       <div class="cameraProTop">
-        <button type="button" class="cameraProIcon" id="cameraCloseBtn" aria-label="Fermer">✕</button>
+        <div class="cameraProTopLeft">
+          <button type="button" class="cameraProIcon cameraSettingsBtn" id="cameraSettingsBtn" aria-label="Réglages">⚙</button>
+        </div>
         <div class="cameraProTitle"><span id="cameraModeTitle">SELFIE</span><small id="cameraQualityLabel">Auto</small></div>
         <div class="cameraProTopRight">
-          <button type="button" class="cameraProIcon" id="cameraFlashBtn" aria-label="Flash">⚡</button>
+          <button type="button" class="cameraProIcon" id="cameraFlashBtn" aria-label="Flash">ϟ</button>
           <button type="button" class="cameraProIcon" id="cameraGridBtn" aria-label="Grille">▦</button>
+          <button type="button" class="cameraProIcon cameraCloseIcon" id="cameraCloseBtn" aria-label="Fermer">×</button>
         </div>
+      </div>
+
+      <div class="cameraPremiumQuality" id="cameraPremiumQuality" aria-label="Qualité premium">
+        <button type="button" data-quality="RAW">RAW</button>
+        <button type="button" class="active" data-quality="HD">HD</button>
+        <button type="button" data-quality="4K">4K</button>
+        <button type="button" data-quality="8K">8K</button>
       </div>
 
       <div class="cameraPreview cameraProPreview">
@@ -1243,33 +1311,48 @@ body:has(#socialHome) .app > h1{display:none!important}
           <button type="button" class="cameraSideTool" id="cameraTimerSide">◷<small>Minuteur</small></button>
           <button type="button" class="cameraSideTool" id="cameraRatioSide">▣<small>Ratio</small></button>
           <button type="button" class="cameraSideTool" id="cameraGridSide">▦<small>Grille</small></button>
-          <button type="button" class="cameraSideTool" id="cameraLevelSide">−<small>Niveau</small></button>
+          <button type="button" class="cameraSideTool" id="cameraLevelSide">≡<small>Niveau</small></button>
+          <button type="button" class="cameraSideTool premiumOnlyTool" id="cameraStabilizationSide">◌<small>Stabilisation</small></button>
+          <button type="button" class="cameraSideTool premiumOnlyTool" id="cameraRawSide">RAW<small>Format</small></button>
         </div>
-        <div class="cameraSideTools right" aria-label="Retouches et IA">
-          <button type="button" class="cameraSideTool active" id="cameraAiSide">✨<small>IA</small></button>
+        <div class="cameraSideTools right" aria-label="IA et retouches">
+          <button type="button" class="cameraSideTool active" id="cameraAiSide">✦<small>IA</small></button>
           <button type="button" class="cameraSideTool" id="cameraBeautySide">☺<small>Beauté</small></button>
-          <button type="button" class="cameraSideTool" id="cameraRetouchSide">✦<small>Retouches</small></button>
+          <button type="button" class="cameraSideTool" id="cameraRetouchSide">✧<small>Retouches</small></button>
           <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Filtres</small></button>
-        </div>
-        <div class="cameraAiPrompt" id="cameraAiPrompt">
-          <div class="aiSpark">✨</div><div><b>Améliorer cette photo ?</b><span>Plus de netteté, meilleur éclairage, retouches naturelles</span></div><em>›</em>
+          <button type="button" class="cameraSideTool premiumOnlyTool" id="cameraBackgroundSide">▧<small>Arrière-plan</small></button>
+          <button type="button" class="cameraSideTool premiumOnlyTool" id="cameraStyleSide">✺<small>Style</small></button>
+          <button type="button" class="cameraSideTool premiumOnlyTool" id="cameraMoreSide">•••<small>Plus</small></button>
         </div>
         <div class="cameraFaceGuide" aria-hidden="true"></div>
         <div class="cameraFocusDot" id="cameraFocusDot" aria-hidden="true"></div>
         <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prépare ton selfie</strong><span>Place ton visage dans le cadre.</span></div>
         <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
         <div class="cameraProZoom" id="cameraZoomRow">
-          <button type="button" class="cameraZoomBtn" data-zoom="0.5">0,5×</button>
+          <button type="button" class="cameraZoomBtn" data-zoom="0.5">0,5</button>
           <button type="button" class="cameraZoomBtn active" data-zoom="1">1×</button>
-          <button type="button" class="cameraZoomBtn" data-zoom="2">2×</button>
-          <button type="button" class="cameraZoomBtn" data-zoom="3">3×</button>
+          <button type="button" class="cameraZoomBtn" data-zoom="2">2</button>
+          <button type="button" class="cameraZoomBtn" data-zoom="3">3</button>
         </div>
+      </div>
+
+      <div class="cameraFilterStrip" id="cameraFilterStrip" aria-label="Filtres">
+        <button type="button" class="cameraFilterCard active" data-effect="original"><span class="filterThumb originalThumb"></span><b>Original</b></button>
+        <button type="button" class="cameraFilterCard" data-effect="natural"><span class="filterThumb naturalThumb"></span><b>Naturel</b></button>
+        <button type="button" class="cameraFilterCard" data-effect="portrait"><span class="filterThumb portraitThumb"></span><b>Portrait</b></button>
+        <button type="button" class="cameraFilterCard" data-effect="bw"><span class="filterThumb bwThumb"></span><b>Noir & blanc</b></button>
+        <button type="button" class="cameraFilterCard" data-effect="cartoon"><span class="filterThumb cartoonThumb"></span><b>Cartoon</b></button>
+        <button type="button" class="cameraFilterCard" data-effect="anime"><span class="filterThumb animeThumb"></span><b>Anime</b></button>
+        <button type="button" class="cameraFilterCard premiumFilter" data-effect="cinema"><span class="filterThumb cinemaThumb"></span><b>Cinéma</b></button>
+        <button type="button" class="cameraFilterCard premiumFilter" data-effect="age"><span class="filterThumb ageThumb"></span><b>Âge</b></button>
       </div>
 
       <div class="cameraProModes" aria-label="Modes caméra">
         <button type="button" class="cameraModeBtn" id="cameraVideoBtn">VIDÉO</button>
         <button type="button" class="cameraModeBtn active">PHOTO</button>
         <button type="button" class="cameraModeBtn" id="cameraSelfieBtn">SELFIE</button>
+        <button type="button" class="cameraModeBtn premiumMode">PORTRAIT</button>
+        <button type="button" class="cameraModeBtn premiumMode">PRO</button>
       </div>
 
       <div class="cameraProBottom">
@@ -1279,17 +1362,21 @@ body:has(#socialHome) .app > h1{display:none!important}
       </div>
 
       <div class="cameraProTools">
-        <button type="button" id="cameraIaBtn">✨ <b>IA</b><small>Améliorer</small></button>
-        <button type="button" id="cameraRetouchBtn">✦ <b>Retouche</b><small>Après photo</small></button>
+        <button type="button" id="cameraIaBtn">✦ <b>IA</b><small>Améliorer</small></button>
+        <button type="button" id="cameraRetouchBtn">✧ <b>Retouche</b><small>Après photo</small></button>
         <button type="button" id="cameraTimerBtn">◷ <b>Minuteur</b><small>3 s</small></button>
         <button type="button" id="cameraQualityBtn">HD <b>Qualité</b><small>Auto</small></button>
-        <button type="button" id="cameraEventBtn">🎉 <b>Événement</b><small>Créer</small></button>
+        <button type="button" id="cameraEventBtn">⌂ <b>Événement</b><small>Créer</small></button>
       </div>
+
+      <div class="cameraAiPrompt" id="cameraAiPrompt"><div class="aiSpark">✦</div><div><b>Améliorer cette photo avec l’IA ?</b><span>Plus de netteté, meilleur éclairage, retouches naturelles</span></div><em>›</em></div>
 
       <input id="cameraFileInput" type="file" accept="image/*" capture="user" style="display:none">
       <div class="cameraCaptured cameraProCaptured" id="cameraCapturedActions">
-        <button type="button" id="cameraPublishBtn">🚀 Publier</button>
-        <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
+        <button type="button" id="cameraPublishBtn">Publier</button>
+        <button type="button" id="cameraAttachEventBtn">Ajouter à un événement</button>
+        <button type="button" class="cameraRetakeBtn" id="cameraRetakeBtn">Reprendre</button>
+        <span class="cameraAiResult" id="cameraAiResult"></span>
       </div>
       <div class="cameraHint cameraProHint" id="cameraHint">Selfie MyEvent · photo non publiée tant que tu ne valides pas.</div>
     </div>
@@ -12307,5 +12394,43 @@ setTimeout(v58SetupModuleButtons,0);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<script id="myevent-camera-v2-controller">
+(function(){
+ const modal=document.getElementById('myeventCameraModal'); if(!modal)return;
+ const strip=document.getElementById('cameraFilterStrip');
+ const preview=modal.querySelector('.cameraProPreview');
+ const img=document.getElementById('myeventCapturedImage');
+ const video=document.getElementById('myeventCameraVideo');
+ const result=document.getElementById('cameraAiResult');
+ let effect='original';
+ function apply(name){
+   effect=name||'original';
+   const all=['original','natural','portrait','bw','cartoon','anime','cinema','age'];
+   all.forEach(x=>preview.classList.toggle('ai-'+x,x===effect));
+   strip?.querySelectorAll('.cameraFilterCard').forEach(b=>b.classList.toggle('active',b.dataset.effect===effect));
+   if(result) result.textContent=effect==='original'?'':('Effet : '+(effect==='bw'?'Noir & blanc':effect.charAt(0).toUpperCase()+effect.slice(1)));
+ }
+ strip?.addEventListener('click',e=>{const b=e.target.closest('.cameraFilterCard');if(b)apply(b.dataset.effect)});
+ // Premium preview mode for testing; default remains free. Tap the small quality label 5 times to toggle.
+ let taps=0,timer;
+ document.getElementById('cameraQualityLabel')?.addEventListener('click',()=>{
+   taps++; clearTimeout(timer); timer=setTimeout(()=>taps=0,1200);
+   if(taps>=5){modal.classList.toggle('premiumMode');taps=0;}
+ });
+ document.getElementById('cameraQualityBtn')?.addEventListener('click',()=>modal.classList.toggle('premiumMode'));
+ document.getElementById('cameraRetakeBtn')?.addEventListener('click',()=>{
+   document.getElementById('cameraCapturedActions')?.classList.remove('open');
+   if(img){img.style.display='none';img.removeAttribute('src')}
+   if(video)video.style.display='block';
+   document.getElementById('cameraPlaceholder')?.style.setProperty('display','none');
+ });
+ document.querySelectorAll('#cameraPremiumQuality button').forEach(b=>b.addEventListener('click',()=>{
+   document.querySelectorAll('#cameraPremiumQuality button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+   const q=b.dataset.quality; const label=document.getElementById('cameraQualityLabel');if(label)label.textContent=q;
+ }));
+ apply('original');
 })();
 </script>
