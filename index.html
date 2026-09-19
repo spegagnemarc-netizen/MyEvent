@@ -12054,6 +12054,169 @@ setTimeout(v58SetupModuleButtons,0);
 })();
 </script>
 
+
+<style id="myevent-v1-camera-ai">
+/* V1 caméra — style Snap : simple, sombre, effets IA en aperçu local */
+#myeventCameraModal .cameraProSheet{background:#050505!important}
+#myeventCameraModal .cameraSideTool.active{
+  border-color:#fff!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18) inset!important;
+}
+#myeventCameraModal .cameraAiPrompt{
+  border-color:rgba(255,255,255,.20)!important;
+}
+#myeventCameraModal .cameraAiPrompt .aiSpark,
+#myeventCameraModal .cameraAiPrompt em{color:#fff!important}
+#myeventCameraModal .cameraAiTray{
+  position:absolute;left:10px;right:10px;bottom:72px;z-index:30;
+  display:none;padding:10px;border-radius:18px;
+  background:rgba(8,8,8,.88);border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(16px);box-sizing:border-box;
+}
+#myeventCameraModal .cameraAiTray.open{display:block}
+#myeventCameraModal .cameraAiTrayHead{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;font-size:12px;font-weight:800;color:#fff
+}
+#myeventCameraModal .cameraAiEffects{
+  display:flex;gap:7px;overflow-x:auto;scrollbar-width:none
+}
+#myeventCameraModal .cameraAiEffects::-webkit-scrollbar{display:none}
+#myeventCameraModal .cameraAiEffect{
+  flex:0 0 62px!important;width:62px!important;min-height:58px!important;
+  padding:6px 4px!important;border-radius:13px!important;
+  background:#11161b!important;border:1px solid #343b42!important;
+  color:#fff!important;font-size:11px!important;font-weight:750!important
+}
+#myeventCameraModal .cameraAiEffect span{display:block;font-size:21px;margin-bottom:3px}
+#myeventCameraModal .cameraAiEffect.active{border-color:#fff!important;box-shadow:0 0 0 1px #fff inset!important}
+#myeventCameraModal .cameraAiReset{
+  background:transparent!important;border:0!important;color:#aeb5bb!important;
+  padding:3px 0!important;font-size:11px!important
+}
+#myeventCameraModal .cameraCaptured.open{display:flex!important;flex-wrap:wrap}
+#myeventCameraModal .cameraCaptured .cameraRetakeBtn{
+  flex:0 0 100%!important;background:transparent!important;
+  border-color:rgba(255,255,255,.12)!important;color:#bfc5ca!important
+}
+#myeventCameraModal .cameraCaptured .cameraAiResult{
+  flex:0 0 100%;font-size:10px;color:#9ca5ad;text-align:center;margin-top:2px
+}
+#myeventCameraModal .cameraPreview.ai-cartoon video,
+#myeventCameraModal .cameraPreview.ai-cartoon img{filter:saturate(1.65) contrast(1.18) brightness(1.05)}
+#myeventCameraModal .cameraPreview.ai-anime video,
+#myeventCameraModal .cameraPreview.ai-anime img{filter:saturate(1.35) contrast(1.08) brightness(1.12) blur(.15px)}
+#myeventCameraModal .cameraPreview.ai-vintage video,
+#myeventCameraModal .cameraPreview.ai-vintage img{filter:sepia(.45) saturate(.85) contrast(1.05)}
+#myeventCameraModal .cameraPreview.ai-bw video,
+#myeventCameraModal .cameraPreview.ai-bw img{filter:grayscale(1) contrast(1.12)}
+#myeventCameraModal .cameraPreview.ai-beauty video,
+#myeventCameraModal .cameraPreview.ai-beauty img{filter:saturate(1.05) brightness(1.04) contrast(.96)}
+#myeventCameraModal .cameraPreview.ai-light video,
+#myeventCameraModal .cameraPreview.ai-light img{filter:brightness(1.16) contrast(1.04) saturate(1.08)}
+@media(max-width:430px){
+  #myeventCameraModal .cameraAiTray{bottom:67px;left:7px;right:7px}
+}
+</style>
+
+
+<script id="myevent-v1-camera-ai-js">
+(function(){
+  const $=id=>document.getElementById(id);
+  const modal=$('myeventCameraModal');
+  const preview=modal?.querySelector('.cameraProPreview');
+  const video=$('myeventCameraVideo');
+  const img=$('myeventCapturedImage');
+  if(!modal||!preview||!video||!img)return;
+
+  let effect='original';
+
+  const tray=document.createElement('div');
+  tray.className='cameraAiTray';
+  tray.id='cameraAiTray';
+  tray.innerHTML=`
+    <div class="cameraAiTrayHead">
+      <span>✨ Effets IA</span>
+      <button type="button" class="cameraAiReset" id="cameraAiReset">Original</button>
+    </div>
+    <div class="cameraAiEffects">
+      <button type="button" class="cameraAiEffect active" data-effect="original"><span>◉</span>Original</button>
+      <button type="button" class="cameraAiEffect" data-effect="cartoon"><span>🎨</span>Cartoon</button>
+      <button type="button" class="cameraAiEffect" data-effect="anime"><span>✨</span>Anime</button>
+      <button type="button" class="cameraAiEffect" data-effect="vintage"><span>📷</span>Vintage</button>
+      <button type="button" class="cameraAiEffect" data-effect="bw"><span>◐</span>N&B</button>
+      <button type="button" class="cameraAiEffect" data-effect="beauty"><span>☺</span>Beauté</button>
+      <button type="button" class="cameraAiEffect" data-effect="light"><span>☀</span>Lumière</button>
+    </div>`;
+  preview.appendChild(tray);
+
+  function applyEffect(name){
+    effect=name||'original';
+    ['original','cartoon','anime','vintage','bw','beauty','light']
+      .forEach(x=>preview.classList.toggle('ai-'+x,x===effect));
+    tray.querySelectorAll('.cameraAiEffect').forEach(b=>b.classList.toggle('active',b.dataset.effect===effect));
+  }
+
+  function openTray(){
+    tray.classList.toggle('open');
+    if(tray.classList.contains('open')){
+      $('cameraAiSide')?.classList.add('active');
+    }
+  }
+
+  $('cameraAiSide')?.addEventListener('click',openTray);
+  $('cameraAiPrompt')?.addEventListener('click',openTray);
+  $('cameraAiBtn')?.addEventListener('click',openTray);
+  tray.addEventListener('click',e=>{
+    const b=e.target.closest('.cameraAiEffect');
+    if(b){applyEffect(b.dataset.effect);return;}
+    if(e.target.closest('#cameraAiReset'))applyEffect('original');
+  });
+
+  $('cameraShutterBtn')?.addEventListener('click',()=>{
+    setTimeout(()=>{ tray.classList.remove('open'); },80);
+  },true);
+
+  // Applique l'effet à la photo capturée sans prétendre à un traitement IA serveur.
+  const observer=new MutationObserver(()=>{
+    if(img.style.display!=='none'){
+      preview.classList.remove('ai-original','ai-cartoon','ai-anime','ai-vintage','ai-bw','ai-beauty','ai-light');
+      preview.classList.add('ai-'+effect);
+    }
+  });
+  observer.observe(img,{attributes:true,attributeFilter:['style','src']});
+
+  // Retouche : ouvre directement les effets après une capture.
+  $('cameraRetouchBtn')?.addEventListener('click',()=>{
+    if(img.src)tray.classList.add('open');
+  },true);
+
+  // Revenir à l'original à chaque nouvelle ouverture.
+  $('cameraCloseBtn')?.addEventListener('click',()=>{tray.classList.remove('open');applyEffect('original')});
+})();
+</script>
+
+
+<script id="myevent-v1-camera-retake">
+(function(){
+  const $=id=>document.getElementById(id);
+  $('cameraRetakeBtn')?.addEventListener('click',()=>{
+    $('cameraCapturedActions')?.classList.remove('open');
+    $('myeventCapturedImage')?.setAttribute('style','display:none');
+    $('cameraPlaceholder')?.style && ($('cameraPlaceholder').style.display='none');
+    $('myeventCameraVideo')?.style && ($('myeventCameraVideo').style.display='block');
+    $('cameraAiResult') && ($('cameraAiResult').textContent='Effet IA : Original');
+    $('cameraAiTray')?.classList.remove('open');
+  });
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('.cameraAiEffect');
+    if(!b)return;
+    const label=b.textContent.trim();
+    const r=$('cameraAiResult');
+    if(r)r.textContent='Effet IA : '+label;
+  });
+})();
+</script>
 </body>
 </html>
 
