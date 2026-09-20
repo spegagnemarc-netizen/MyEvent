@@ -132,4 +132,42 @@
   #myeventCameraModal,
   #myeventCameraModal .cameraProSheet{height:100vh!important;min-height:100vh!important}
 }
+/* FINAL OVERRIDE — neutraliser les anciens styles orange de la caméra */
+#myeventCameraModal .cameraSideTool,
+#myeventCameraModal .cameraSideTool.active,
+#myeventCameraModal .cameraProIcon,
+#myeventCameraModal .cameraProModes .cameraModeBtn,
+#myeventCameraModal .cameraProRoundAction,
+#myeventCameraModal .cameraProRoundAction span,
+#myeventCameraModal .cameraFilterChip,
+#myeventCameraModal .cameraProBottom,
+#myeventCameraModal .cameraProModes,
+#myeventCameraModal .cameraFilterStrip {
+  background-color: #050505 !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
 
+#myeventCameraModal .cameraSideTool.active {
+  background-color: rgba(255,255,255,.10) !important;
+  border-color: #fff !important;
+}
+
+#myeventCameraModal .cameraProShutter {
+  background: transparent !important;
+  border-color: #fff !important;
+}
+
+#myeventCameraModal .cameraProShutter span {
+  background: #fff !important;
+}
+
+#myeventCameraModal .cameraFilterChip.active {
+  background-color: #171717 !important;
+  border-color: #fff !important;
+}
+
+#myeventCameraModal .cameraProRoundAction span {
+  background-color: #111 !important;
+}
