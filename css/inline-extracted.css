@@ -2562,3 +2562,39 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
   background:#1a2127!important;
 }
 
+/* FINAL CAMERA OVERRIDE — neutralize legacy accent styles */
+#myeventCameraModal .cameraProIcon,
+#myeventCameraModal .cameraSideTool,
+#myeventCameraModal .cameraSideTool.active,
+#myeventCameraModal .cameraFilterChip,
+#myeventCameraModal .cameraFilterChip.active,
+#myeventCameraModal .cameraProRoundAction,
+#myeventCameraModal .cameraProModes .cameraModeBtn,
+#myeventCameraModal .cameraProBottom button,
+#myeventCameraModal .cameraProTop button {
+  background:#050505 !important;
+  background-image:none !important;
+  color:#fff !important;
+  box-shadow:none !important;
+}
+
+#myeventCameraModal .cameraSideTool,
+#myeventCameraModal .cameraSideTool.active {
+  border-color:rgba(255,255,255,.22) !important;
+}
+
+#myeventCameraModal .cameraSideTool.active,
+#myeventCameraModal .cameraFilterChip.active {
+  background:rgba(255,255,255,.10) !important;
+  border-color:#fff !important;
+}
+
+#myeventCameraModal .cameraProShutter {
+  background:transparent !important;
+  border-color:#fff !important;
+  box-shadow:none !important;
+}
+
+#myeventCameraModal .cameraProShutter span {
+  background:#fff !important;
+}
