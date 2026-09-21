@@ -755,8 +755,9 @@ body.discussionFullScreen #discussionPanel.active{
 @media(max-width:600px){.socialHome{margin-left:-20px;margin-right:-20px;padding-left:14px;padding-right:14px}.socialProfileText b{font-size:19px}.socialTopTools{gap:3px}.socialToolBtn{width:39px;height:39px}.socialEventCover{height:145px}.socialBottomNav{height:74px}.socialMyEventsActions button{font-size:19px!important}.socialMyEventsActions button span{font-size:8px}}
 
 /* V54.48 — Accueil 100% orange + caméra centrale MyEvent */
-#socialHome button:not(.secondary), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
-#socialHome button.secondary, #socialHome .socialFilter { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
+/* The camera modal lives inside #socialHome, but is intentionally outside its orange theme. */
+#socialHome button:not(.secondary):not(#myeventCameraModal button), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
+#socialHome button.secondary:not(#myeventCameraModal button), #socialHome .socialFilter:not(#myeventCameraModal *) { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
 #socialHome .socialFilter.active { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
 #socialHome .socialActions button { background:transparent!important; border-color:transparent!important; color:#aeb7bf!important; box-shadow:none!important; }
 #socialHome .socialActions button.active { color:#ff7040!important; }

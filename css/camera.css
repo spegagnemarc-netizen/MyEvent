@@ -171,3 +171,41 @@
 #myeventCameraModal .cameraProRoundAction span {
   background-color: #111 !important;
 }
+
+/* Guard the legacy orange camera rules kept in inline-extracted.css. */
+#myeventCameraModal .cameraShutter,
+#myeventCameraModal .cameraProShutter {
+  background: transparent !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
+}
+
+#myeventCameraModal .cameraShutter::after,
+#myeventCameraModal .cameraProShutter::after {
+  display: none !important;
+  background: transparent !important;
+}
+
+#myeventCameraModal .cameraCaptured button {
+  background: rgba(7,7,7,.92) !important;
+  border-color: #3b4146 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+#myeventCameraModal .cameraSideTool.active {
+  background: rgba(255,255,255,.10) !important;
+  border-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset !important;
+}
+
+#myeventCameraModal .cameraAiPrompt {
+  background: rgba(5,5,5,.78) !important;
+  border-color: rgba(255,255,255,.20) !important;
+  box-shadow: none !important;
+}
+
+#myeventCameraModal .cameraAiPrompt .aiSpark,
+#myeventCameraModal .cameraAiPrompt em {
+  color: #fff !important;
+}
