@@ -11,6 +11,32 @@
     const topRight=modal.querySelector('.cameraProTopRight');
     if(!sheet||!preview||!right||!left) return;
 
+    const settings=document.createElement('details');
+    settings.className='cameraGlassSettings';
+    settings.innerHTML='<summary aria-label="Réglages caméra">⚙</summary><label for="cameraControlOpacity">Transparence des boutons <output id="cameraControlOpacityValue">35 %</output></label><input id="cameraControlOpacity" type="range" min="15" max="70" step="1" value="35" aria-describedby="cameraControlOpacityValue">';
+    sheet.appendChild(settings);
+    const opacityInput=settings.querySelector('input'), opacityValue=settings.querySelector('output');
+    const opacityKey='myeventCameraControlOpacity';
+    function applyOpacity(value){
+      const number=Number(value);
+      const percent=Number.isFinite(number)?Math.min(70,Math.max(15,number)):35;
+      opacityInput.value=String(percent);
+      opacityValue.textContent=percent+' %';
+      modal.style.setProperty('--camera-control-opacity',String(percent/100));
+      return percent;
+    }
+    let savedOpacity=35;
+    try{const saved=localStorage.getItem(opacityKey);if(saved!==null&&saved.trim()!=='')savedOpacity=saved;}catch(e){}
+    applyOpacity(savedOpacity);
+    opacityInput.addEventListener('input',()=>{
+      const percent=applyOpacity(opacityInput.value);
+      try{localStorage.setItem(opacityKey,String(percent));}catch(e){}
+    });
+    const retake=document.createElement('button');
+    retake.type='button';retake.className='cameraRetake';retake.textContent='↻ Reprendre';
+    retake.addEventListener('click',()=>modal.dispatchEvent(new Event('camera-retake')));
+    sheet.appendChild(retake);
+
     // Tier switch: visual test now; later bind to the real subscription flag.
     const tier=document.createElement('div');
     tier.className='cameraTierSwitch';
@@ -61,7 +87,7 @@
       const premium=btn.dataset.tier==='premium';
       tier.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));
       sheet.classList.toggle('cameraPremiumMode',premium);
-      // Keep the capture2 visual neutral: premium is signalled by the crown, not orange/gold.
+      // Gold is reserved for selected IA/Premium controls.
     }));
 
     // Make the top flash/grid buttons neutral; preserve their existing behavior.

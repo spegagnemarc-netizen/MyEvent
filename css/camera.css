@@ -225,7 +225,7 @@
 #myeventCameraModal .cameraAiPrompt,
 #myeventCameraModal .cameraProRoundAction span,
 #myeventCameraModal .cameraCaptured button {
-  background: rgba(0,0,0,.24) !important;
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
   border-color: rgba(255,255,255,.20) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.12) !important;
@@ -250,7 +250,7 @@
 #myeventCameraModal .cameraZoomBtn.active,
 #myeventCameraModal .cameraTierSwitch button.active,
 #myeventCameraModal .cameraQualityBar button.active {
-  background: rgba(255,255,255,.18) !important;
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
   border-color: rgba(255,255,255,.48) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.38) !important;
@@ -264,7 +264,7 @@
 #myeventCameraModal .cameraQualityBar button:hover,
 #myeventCameraModal .cameraProRoundAction:hover span,
 #myeventCameraModal .cameraCaptured button:hover {
-  background: rgba(255,255,255,.14) !important;
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
   color: #fff !important;
 }
 
@@ -311,7 +311,7 @@
   -webkit-backdrop-filter: none !important;
 }
 #myeventCameraModal .cameraProModes .cameraModeBtn {
-  background: rgba(0,0,0,.24) !important;
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   text-shadow: 0 1px 3px rgba(0,0,0,.65);
@@ -321,30 +321,71 @@
   color: #fff !important;
   text-shadow: 0 1px 4px rgba(0,0,0,.8);
 }
-/* Gold is reserved for IA and Premium; normal controls stay white. */
-#myeventCameraModal #cameraAiSide,
-#myeventCameraModal .cameraAiPrompt,
-#myeventCameraModal .cameraSideTool.premiumOnly,
-#myeventCameraModal .cameraPremiumBar,
-#myeventCameraModal .cameraQualityBar,
+/* Black glass frames; selected ordinary controls remain neutral. */
+#myeventCameraModal {
+  --camera-control-opacity: .35;
+}
+#myeventCameraModal :is(.cameraProIcon,.cameraSideTool,.cameraProZoom,.cameraFilterChip,.cameraTierSwitch,.cameraQualityBar,.cameraPremiumBar,.cameraAiPrompt,.cameraProRoundAction span,.cameraCaptured button,.cameraGlassSettings,.cameraRetake) {
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
+  border-color: rgba(35,35,35,.65) !important;
+  box-shadow: inset 0 0 0 1px rgba(30,30,30,.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: #fff;
+}
+#myeventCameraModal :is(.cameraProIcon,.cameraSideTool,.cameraFilterChip,.cameraZoomBtn,.cameraTierSwitch button,.cameraQualityBar button):is(.active,:hover) {
+  background: rgba(0,0,0,var(--camera-control-opacity,.35)) !important;
+  border-color: rgba(70,70,70,.75) !important;
+  box-shadow: inset 0 0 0 1px rgba(70,70,70,.6) !important;
+}
+#myeventCameraModal .cameraFilterChip .thumb {
+  background: rgba(0,0,0,.12) !important;
+}
+#myeventCameraModal .cameraGlassSettings {
+  position: absolute;
+  top: calc(116px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  border: 1px solid;
+  border-radius: 14px;
+  padding: 6px 10px;
+  max-width: calc(100% - 140px);
+  font-size: 11px;
+}
+#myeventCameraModal .cameraGlassSettings summary { cursor: pointer; text-align: center; }
+#myeventCameraModal .cameraGlassSettings label { display: block; margin-top: 6px; }
+#myeventCameraModal .cameraGlassSettings input { width: 100%; accent-color: #fff; }
+#myeventCameraModal .cameraRetake {
+  position: absolute;
+  top: calc(116px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 41;
+  border: 1px solid;
+  border-radius: 14px;
+  padding: 8px 12px;
+}
+#myeventCameraModal #cameraCapturedActions,
+#myeventCameraModal .cameraRetake { display: none !important; }
+#myeventCameraModal[data-camera-state="preview"] #cameraCapturedActions.open { display: flex !important; }
+#myeventCameraModal[data-camera-state="preview"] .cameraRetake { display: block !important; }
+#myeventCameraModal[data-camera-state="preview"] .cameraGlassSettings { visibility: hidden; }
+
+/* Gold indicates an active selection, never simple Premium availability. */
+#myeventCameraModal #cameraAiSide.active,
+#myeventCameraModal:has(#cameraAiSide.active) .cameraAiPrompt,
+#myeventCameraModal .cameraSideTool.premiumOnly.active,
 #myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
 #myeventCameraModal .cameraQualityBar button.active {
   border-color: rgba(245,205,105,.65) !important;
-  box-shadow: inset 0 0 0 1px rgba(245,205,105,.42), 0 0 9px rgba(245,205,105,.14) !important;
+  box-shadow: inset 0 0 0 1px rgba(245,205,105,.55), 0 0 9px rgba(245,205,105,.14) !important;
 }
-#myeventCameraModal #cameraAiSide,
-#myeventCameraModal .cameraAiPrompt .aiSpark,
-#myeventCameraModal .cameraAiPrompt em,
-#myeventCameraModal .cameraPremiumBar > span:first-child,
+#myeventCameraModal #cameraAiSide.active,
+#myeventCameraModal:has(#cameraAiSide.active) .cameraAiPrompt .aiSpark,
+#myeventCameraModal:has(#cameraAiSide.active) .cameraAiPrompt em,
 #myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
 #myeventCameraModal .cameraQualityBar button.active,
 #myeventCameraModal .cameraSideTool.premiumOnly.active {
   color: #f5cd69 !important;
-}
-#myeventCameraModal #cameraAiSide.active,
-#myeventCameraModal .cameraSideTool.premiumOnly.active,
-#myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
-#myeventCameraModal .cameraQualityBar button.active {
-  background: rgba(80,61,17,.28) !important;
-  box-shadow: inset 0 0 0 1px rgba(245,205,105,.7), 0 0 12px rgba(245,205,105,.18) !important;
 }

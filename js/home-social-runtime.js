@@ -64,19 +64,59 @@
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
-  function stopMyEventCamera(){try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;}
-  async function startMyEventCamera(){
-    if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie avec l’appareil photo de ton iPhone.</span>';return;}
-    try{stopMyEventCamera();myeventCameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});cameraVideo.srcObject=myeventCameraStream;cameraVideo.style.display='block';cameraPlaceholder.style.display='none';cameraImg.style.display='none';}
-    catch(e){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}
+  let cameraRevision=0;
+  function resetCameraPreview(){
+    cameraRevision++;
+    myeventCapturedDataUrl='';
+    cameraModal.dataset.cameraState='viewfinder';
+    cameraImg.onload=null;cameraImg.onerror=null;
+    cameraImg.removeAttribute('src');cameraImg.style.display='none';
+    cameraVideo.style.display='block';
+    $s('cameraCapturedActions')?.classList.remove('open');
+    return cameraRevision;
   }
-  function openMyEventCamera(){cameraModal.classList.add('open');cameraModal.setAttribute('aria-hidden','false');cameraImg.style.display='none';cameraVideo.style.display='block';cameraPlaceholder.style.display='grid';$s('cameraCapturedActions')?.classList.remove('open');startMyEventCamera();}
-  function closeMyEventCamera(){stopMyEventCamera();cameraModal.classList.remove('open');cameraModal.setAttribute('aria-hidden','true');}
+  function showCameraPreview(data,revision){
+    if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+    cameraImg.onload=()=>{
+      if(revision!==cameraRevision||!cameraModal.classList.contains('open')||!cameraImg.naturalWidth)return;
+      myeventCapturedDataUrl=data;
+      cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';
+      cameraModal.dataset.cameraState='preview';
+      $s('cameraCapturedActions')?.classList.add('open');
+    };
+    cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
+    cameraImg.src=data;
+  }
+  function stopMyEventCamera(){try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
+  async function startMyEventCamera(){
+    const revision=resetCameraPreview();stopMyEventCamera();cameraPlaceholder.style.display='grid';
+    if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie.</span>';return;}
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});
+      if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
+      myeventCameraStream=stream;cameraVideo.srcObject=stream;cameraPlaceholder.style.display='none';
+    }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
+  }
+  function openMyEventCamera(){cameraModal.classList.add('open');cameraModal.setAttribute('aria-hidden','false');startMyEventCamera();}
+  function closeMyEventCamera(){resetCameraPreview();stopMyEventCamera();cameraModal.classList.remove('open');cameraModal.setAttribute('aria-hidden','true');}
+  cameraModal?.addEventListener('camera-retake',()=>{if(cameraModal.classList.contains('open'))startMyEventCamera();});
   $s('cameraCloseBtn')?.addEventListener('click',closeMyEventCamera);
   cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
-  $s('cameraShutterBtn')?.addEventListener('click',()=>{if(!cameraVideo.videoWidth){cameraFile?.click();return;}const c=document.createElement('canvas');c.width=cameraVideo.videoWidth;c.height=cameraVideo.videoHeight;c.getContext('2d').drawImage(cameraVideo,0,0);myeventCapturedDataUrl=c.toDataURL('image/jpeg',.9);cameraImg.src=myeventCapturedDataUrl;cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';$s('cameraCapturedActions')?.classList.add('open');});
+  $s('cameraShutterBtn')?.addEventListener('click',()=>{
+    if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
+    if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
+    const revision=resetCameraPreview(),c=document.createElement('canvas');
+    c.width=cameraVideo.videoWidth;c.height=cameraVideo.videoHeight;
+    c.getContext('2d').drawImage(cameraVideo,0,0);
+    showCameraPreview(c.toDataURL('image/jpeg',.9),revision);
+  });
   $s('cameraGalleryBtn')?.addEventListener('click',()=>cameraFile?.click());
-  cameraFile?.addEventListener('change',()=>{const f=cameraFile.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{myeventCapturedDataUrl=r.result;cameraImg.src=r.result;cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';$s('cameraCapturedActions')?.classList.add('open')};r.readAsDataURL(f)});
+  cameraFile?.addEventListener('change',()=>{
+    const f=cameraFile.files?.[0];if(!f)return;
+    const revision=resetCameraPreview(),reader=new FileReader();
+    reader.onload=()=>showCameraPreview(reader.result,revision);
+    reader.readAsDataURL(f);cameraFile.value='';
+  });
   $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
   $s('cameraIaBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl){cameraFile?.click();return;}alert('✨ IA photo : module IA à connecter. La photo est prête pour le traitement.');});
   $s('cameraVideoBtn')?.addEventListener('click',()=>{alert('🎬 Le mode vidéo sera activé dans la prochaine étape.');});
