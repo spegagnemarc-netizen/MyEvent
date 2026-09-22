@@ -1,4 +1,4 @@
-/* MyEvent Camera — Capture 2 final visual direction. Orange is intentionally excluded. */
+/* MyEvent Camera — neutral controls with dedicated gold IA/Premium accents. */
 #myeventCameraModal{background:#000!important;color:#fff!important}
 #myeventCameraModal .cameraProSheet{background:#050505!important;color:#f7f7f7!important;max-width:520px!important;padding:0!important;border:0!important;overflow:hidden!important}
 #myeventCameraModal .cameraProTop{height:72px!important;background:#050505!important;padding:calc(8px + env(safe-area-inset-top)) 16px 6px!important;box-sizing:border-box!important;border-bottom:1px solid rgba(255,255,255,.06)!important}
@@ -225,12 +225,12 @@
 #myeventCameraModal .cameraAiPrompt,
 #myeventCameraModal .cameraProRoundAction span,
 #myeventCameraModal .cameraCaptured button {
-  background: rgba(12,16,20,.58) !important;
+  background: rgba(0,0,0,.24) !important;
   border-color: rgba(255,255,255,.20) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.12) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Clear inner buttons avoid stacking opaque backgrounds on glass panels. */
@@ -250,7 +250,7 @@
 #myeventCameraModal .cameraZoomBtn.active,
 #myeventCameraModal .cameraTierSwitch button.active,
 #myeventCameraModal .cameraQualityBar button.active {
-  background: rgba(65,73,82,.72) !important;
+  background: rgba(255,255,255,.18) !important;
   border-color: rgba(255,255,255,.48) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.38) !important;
@@ -264,7 +264,7 @@
 #myeventCameraModal .cameraQualityBar button:hover,
 #myeventCameraModal .cameraProRoundAction:hover span,
 #myeventCameraModal .cameraCaptured button:hover {
-  background: rgba(45,53,62,.72) !important;
+  background: rgba(255,255,255,.14) !important;
   color: #fff !important;
 }
 
@@ -276,4 +276,75 @@
 #myeventCameraModal .cameraAiPrompt span,
 #myeventCameraModal .cameraPremiumBar span {
   color: rgba(255,255,255,.88) !important;
+}
+
+/* Full-screen media behind the existing control layout. */
+#myeventCameraModal {
+  background: transparent !important;
+}
+#myeventCameraModal .cameraProSheet {
+  background: transparent !important;
+  isolation: isolate;
+}
+#myeventCameraModal .cameraProPreview {
+  background: transparent !important;
+  overflow: visible !important;
+}
+#myeventCameraModal .cameraProPreview video,
+#myeventCameraModal .cameraProPreview img {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: -1;
+  pointer-events: none;
+}
+/* Broad bars have no painted background; individual controls retain glass. */
+#myeventCameraModal .cameraProTop,
+#myeventCameraModal .cameraProBottom,
+#myeventCameraModal .cameraProModes,
+#myeventCameraModal .cameraFilterStrip {
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#myeventCameraModal .cameraProModes .cameraModeBtn {
+  background: rgba(0,0,0,.24) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,.65);
+}
+#myeventCameraModal .cameraProTitle,
+#myeventCameraModal .cameraProRoundAction small {
+  color: #fff !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+}
+/* Gold is reserved for IA and Premium; normal controls stay white. */
+#myeventCameraModal #cameraAiSide,
+#myeventCameraModal .cameraAiPrompt,
+#myeventCameraModal .cameraSideTool.premiumOnly,
+#myeventCameraModal .cameraPremiumBar,
+#myeventCameraModal .cameraQualityBar,
+#myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
+#myeventCameraModal .cameraQualityBar button.active {
+  border-color: rgba(245,205,105,.65) !important;
+  box-shadow: inset 0 0 0 1px rgba(245,205,105,.42), 0 0 9px rgba(245,205,105,.14) !important;
+}
+#myeventCameraModal #cameraAiSide,
+#myeventCameraModal .cameraAiPrompt .aiSpark,
+#myeventCameraModal .cameraAiPrompt em,
+#myeventCameraModal .cameraPremiumBar > span:first-child,
+#myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
+#myeventCameraModal .cameraQualityBar button.active,
+#myeventCameraModal .cameraSideTool.premiumOnly.active {
+  color: #f5cd69 !important;
+}
+#myeventCameraModal #cameraAiSide.active,
+#myeventCameraModal .cameraSideTool.premiumOnly.active,
+#myeventCameraModal .cameraTierSwitch button[data-tier="premium"].active,
+#myeventCameraModal .cameraQualityBar button.active {
+  background: rgba(80,61,17,.28) !important;
+  box-shadow: inset 0 0 0 1px rgba(245,205,105,.7), 0 0 12px rgba(245,205,105,.18) !important;
 }
