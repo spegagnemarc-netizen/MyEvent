@@ -756,8 +756,8 @@ body.discussionFullScreen #discussionPanel.active{
 
 /* V54.48 — Accueil 100% orange + caméra centrale MyEvent */
 /* The camera modal lives inside #socialHome, but is intentionally outside its orange theme. */
-#socialHome button:not(.secondary):not(#myeventCameraModal button), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
-#socialHome button.secondary:not(#myeventCameraModal button), #socialHome .socialFilter:not(#myeventCameraModal *) { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
+#socialHome button:not(.secondary):not(:where(#myeventCameraModal button)), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
+#socialHome button.secondary:not(:where(#myeventCameraModal button)), #socialHome .socialFilter:not(:where(#myeventCameraModal *)) { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
 #socialHome .socialFilter.active { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
 #socialHome .socialActions button { background:transparent!important; border-color:transparent!important; color:#aeb7bf!important; box-shadow:none!important; }
 #socialHome .socialActions button.active { color:#ff7040!important; }
@@ -1783,8 +1783,8 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 .myeventGlobalPanelBody{padding:12px}
 
 /* ===== extracted style block 43 ===== */
-.myeventHomeUtilityRow{display:none!important;/*justify-content:flex-end;align-items:center;gap:7px;margin:1px 2px 6px}
-*/ .myeventGpsWeatherCard{width:82px;height:62px;flex:0 0 82px;padding:5px 4px!important;border:1px solid #343d45!important;border-radius:15px!important;background:#11161b!important;color:#fff!important;display:grid!important;grid-template-columns:25px 1fr;grid-template-rows:1fr 14px;align-items:center;box-shadow:none!important}
+.myeventHomeUtilityRow{display:none!important;}
+.myeventGpsWeatherCard{width:82px;height:62px;flex:0 0 82px;padding:5px 4px!important;border:1px solid #343d45!important;border-radius:15px!important;background:#11161b!important;color:#fff!important;display:grid!important;grid-template-columns:25px 1fr;grid-template-rows:1fr 14px;align-items:center;box-shadow:none!important}
 .myeventGpsWeatherIcon{font-size:21px;grid-row:1/3}
 .myeventGpsWeatherTemp{font-size:15px;font-weight:900;line-height:1}
 .myeventGpsWeatherLabel{font-size:8px;color:#9da7af;white-space:nowrap}
