@@ -35,31 +35,99 @@
     const view=e.target.closest('.socialViewEventBtn');if(view){document.getElementById('eventsCard')?.scrollIntoView({behavior:'smooth'});return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
-  // V54.82 — interface selfie pro : zoom visuel, grille, qualité et minuteur UI.
-  (function(){
+  // Camera controls reuse the existing capture and filter actions.
+  const cameraZoom=(function(){
     const sheet=$s('myeventCameraModal')?.querySelector('.cameraProSheet');
     const video=$s('myeventCameraVideo');
-    document.querySelectorAll('.cameraZoomBtn').forEach(btn=>btn.addEventListener('click',()=>{
-      document.querySelectorAll('.cameraZoomBtn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-      const z=Number(btn.dataset.zoom||1); if(video) video.style.transform=`scale(${z})`;
-    }));
+    const preview=sheet?.querySelector('.cameraProPreview'), indicator=$s('cameraZoomIndicator');
+    let factor=1, track=null, hardware=false, startDistance=0, startFactor=1, hideTimer, zoomRequest=0;
+    const distance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+    function display(){
+      if(!indicator)return;
+      indicator.textContent=factor.toFixed(1)+'×';indicator.classList.add('visible');
+      clearTimeout(hideTimer);hideTimer=setTimeout(()=>indicator.classList.remove('visible'),850);
+    }
+    function set(value){
+      factor=Math.min(4,Math.max(1,value));display();
+      if(hardware&&track?.readyState==='live'){
+        const caps=track.getCapabilities(), zoom=Math.min(caps.zoom.max,Math.max(caps.zoom.min,factor));
+        const request=++zoomRequest;
+        track.applyConstraints({advanced:[{zoom}]}).then(()=>{
+          if(request===zoomRequest)video.style.transform='none';
+        }).catch(()=>{hardware=false;video.style.transform=`scale(${factor})`;});
+      }else if(video)video.style.transform=`scale(${factor})`;
+    }
+    preview?.addEventListener('touchstart',e=>{
+      if(e.touches.length!==2||e.target.closest('button, input, .cameraCreativePanel'))return;
+      startDistance=distance(e.touches);startFactor=factor;e.preventDefault();
+    },{passive:false});
+    preview?.addEventListener('touchmove',e=>{
+      if(e.touches.length!==2||!startDistance)return;
+      e.preventDefault();set(startFactor*distance(e.touches)/startDistance);
+    },{passive:false});
+    preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
+    const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
+    const filters=content?.querySelector('.cameraFilterStrip');
+    const buttons=['cameraAiSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide'];
+    function closePanel(){
+      if(panel)panel.hidden=true;
+      buttons.forEach(id=>{const b=$s(id);b?.classList.remove('active');b?.setAttribute('aria-expanded','false');});
+    }
+    function openPanel(kind,source){
+      if(!panel||!content)return;
+      if(!panel.hidden&&panel.dataset.kind===kind){closePanel();return;}
+      closePanel();panel.hidden=false;panel.dataset.kind=kind;
+      source?.classList.add('active');source?.setAttribute('aria-expanded','true');
+      const names={ai:'IA photo',filters:'Effets / Filtres',appearance:'Apparence',stickers:'Stickers / Plus',music:'Ajouter un son'};
+      title.textContent=names[kind];
+      content.replaceChildren();
+      if(kind==='filters'){content.appendChild(filters);return;}
+      const descriptions={
+        ai:'Traitement IA à connecter. La commande existante est disponible après une photo.',
+        appearance:'Cheveux · Barbe · Maquillage · Lunettes · Accessoires · Looks · Transformations créatives IA : à venir.',
+        stickers:'Emoji · Stickers · Texte · Décorations : à venir.',
+        music:'Le catalogue et le module Musique MyEvent ne sont pas encore connectés.'
+      };
+      const note=document.createElement('p');note.textContent=descriptions[kind];content.appendChild(note);
+      if(kind==='ai'){
+        const row=document.createElement('div');row.className='cameraPanelChips';
+        ['Auto','Lumière','Netteté','Naturel','Visage / Couleurs'].forEach(label=>{
+          const chip=document.createElement('span');chip.textContent=label;chip.title='Traitement à venir';row.appendChild(chip);
+        });content.appendChild(row);
+        const action=document.createElement('button');action.type='button';action.textContent='Ouvrir l’IA existante';
+        action.addEventListener('click',()=>{
+          if($s('myeventCameraModal')?.dataset.cameraState==='preview')$s('cameraIaBtn')?.click();
+          else note.textContent='Prends ou importe une photo avant d’ouvrir l’IA existante. Traitement à connecter.';
+        });content.appendChild(action);
+      }
+      if(kind==='music'){
+        const search=document.createElement('input');search.type='search';search.placeholder='Rechercher un son ou un artiste';search.disabled=true;content.appendChild(search);
+        const row=document.createElement('div');row.className='cameraPanelChips';
+        ['Pour vous','Tendances','MyEvent','Genres'].forEach(label=>{const chip=document.createElement('span');chip.textContent=label;row.appendChild(chip);});content.appendChild(row);
+        const fields=document.createElement('div');fields.className='cameraMusicFields';
+        fields.innerHTML='<label>Aperçu / lecture <button type="button" disabled>▶</button></label><label>Choix du son <select disabled><option>Aucun son disponible</option></select></label><label>Extrait <input type="range" disabled></label><label>Volume <input type="range" disabled></label><button type="button" disabled>Utiliser ce son</button>';
+        content.appendChild(fields);
+      }
+    }
+    buttons.forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
+    $s('cameraPanelClose')?.addEventListener('click',closePanel);
     $s('cameraGridBtn')?.addEventListener('click',()=> $s('cameraGridOverlay')?.classList.toggle('on'));
     const triggerCamera=(id)=>$s(id)?.click();
     $s('cameraTimerSide')?.addEventListener('click',e=>{triggerCamera('cameraTimerBtn');e.currentTarget.classList.toggle('active')});
     $s('cameraRatioSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
     $s('cameraGridSide')?.addEventListener('click',()=>{triggerCamera('cameraGridBtn');});
     $s('cameraLevelSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
-    $s('cameraAiSide')?.addEventListener('click',()=>triggerCamera('cameraIaBtn'));
-    $s('cameraBeautySide')?.addEventListener('click',()=>alert('☺ Beauté : réglage naturel du visage disponible après la capture.'));
-    $s('cameraRetouchSide')?.addEventListener('click',()=>triggerCamera('cameraRetouchBtn'));
-    $s('cameraFilterSide')?.addEventListener('click',()=>alert('◉ Filtres : les filtres photo seront proposés après la capture.'));
-    $s('cameraAiPrompt')?.addEventListener('click',()=>triggerCamera('cameraIaBtn'));
+    $s('cameraBeautySide')?.addEventListener('click',()=>{if(panel?.hidden||panel?.dataset.kind!=='filters')openPanel('filters',$s('cameraFilterSide'));content?.querySelector('[data-filter="beauty"]')?.click();});
+    $s('cameraRetouchSide')?.addEventListener('click',()=>openPanel('appearance',$s('cameraAppearanceSide')));
 
     $s('cameraFlashBtn')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active'); e.currentTarget.textContent=e.currentTarget.classList.contains('active')?'⚡':'⚡';});
     $s('cameraSelfieBtn')?.addEventListener('click',()=>{ if(sheet){sheet.classList.add('selfieActive');} });
-    $s('cameraRetouchBtn')?.addEventListener('click',()=>{ if(!$s('myeventCapturedImage')?.src){$s('cameraShutterBtn')?.click();return;} alert('✦ Retouche : peau, lumière, cadrage et corrections seront disponibles ici.'); });
+    $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
     $s('cameraTimerBtn')?.addEventListener('click',e=>{ const active=e.currentTarget.dataset.timer==='3'; e.currentTarget.dataset.timer=active?'0':'3'; e.currentTarget.innerHTML=active?'◷ <b>Minuteur</b><small>Désactivé</small>':'◷ <b>Minuteur</b><small>3 s</small>'; });
     $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
+    return {get factor(){return factor;},get hardware(){return hardware;},
+      reset(){factor=1;track=null;hardware=false;zoomRequest++;startDistance=0;if(video)video.style.transform='none';if(indicator)indicator.classList.remove('visible');closePanel();},
+      setTrack(newTrack){track=newTrack;let caps;try{caps=track?.getCapabilities?.();}catch(e){}hardware=!!(caps?.zoom&&typeof track.applyConstraints==='function');}};
   })();
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
@@ -87,14 +155,14 @@
     cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
     cameraImg.src=data;
   }
-  function stopMyEventCamera(){try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
+  function stopMyEventCamera(){cameraZoom.reset();try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
   async function startMyEventCamera(){
     const revision=resetCameraPreview();stopMyEventCamera();cameraPlaceholder.style.display='grid';
     if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie.</span>';return;}
     try{
       const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
-      myeventCameraStream=stream;cameraVideo.srcObject=stream;cameraPlaceholder.style.display='none';
+      myeventCameraStream=stream;cameraVideo.srcObject=stream;cameraZoom.setTrack(stream.getVideoTracks()[0]);cameraPlaceholder.style.display='none';
     }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
   }
   function openMyEventCamera(){cameraModal.classList.add('open');cameraModal.setAttribute('aria-hidden','false');startMyEventCamera();}
@@ -107,7 +175,10 @@
     if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
     const revision=resetCameraPreview(),c=document.createElement('canvas');
     c.width=cameraVideo.videoWidth;c.height=cameraVideo.videoHeight;
-    c.getContext('2d').drawImage(cameraVideo,0,0);
+    const z=cameraZoom.factor||1;
+    // Hardware zoom is already baked into the track. Visual fallback needs a matching crop.
+    if(cameraZoom.hardware)c.getContext('2d').drawImage(cameraVideo,0,0);
+    else {const w=c.width/z,h=c.height/z;c.getContext('2d').drawImage(cameraVideo,(c.width-w)/2,(c.height-h)/2,w,h,0,0,c.width,c.height);}
     showCameraPreview(c.toDataURL('image/jpeg',.9),revision);
   });
   $s('cameraGalleryBtn')?.addEventListener('click',()=>cameraFile?.click());

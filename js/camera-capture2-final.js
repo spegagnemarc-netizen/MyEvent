@@ -8,7 +8,6 @@
     const preview=modal.querySelector('.cameraProPreview');
     const right=modal.querySelector('.cameraSideTools.right');
     const left=modal.querySelector('.cameraSideTools.left');
-    const topRight=modal.querySelector('.cameraProTopRight');
     if(!sheet||!preview||!right||!left) return;
 
     const settings=document.createElement('details');
@@ -41,38 +40,15 @@
     const tier=document.createElement('div');
     tier.className='cameraTierSwitch';
     tier.innerHTML='<button type="button" data-tier="free" class="active">GRATUIT</button><button type="button" data-tier="premium">♛ PREMIUM</button>';
-    sheet.appendChild(tier);
-
-    const quality=document.createElement('div');
-    quality.className='cameraQualityBar';
-    quality.innerHTML='<button class="active">RAW</button><button>HD</button><button>4K</button><button>8K</button>';
-    preview.appendChild(quality);
-
-    const premiumBar=document.createElement('div');
-    premiumBar.className='cameraPremiumBar';
-    premiumBar.innerHTML='<span>♛</span><b>Mode Premium</b><span style="color:#92979d">IA avancée · qualité pro · retouches avancées</span>';
-    sheet.appendChild(premiumBar);
-
-    function addTool(parent,id,icon,label,extra){
-      if(document.getElementById(id)) return;
-      const b=document.createElement('button');
-      b.type='button'; b.className='cameraSideTool'+(extra?' premiumOnly':''); b.id=id;
-      b.innerHTML=icon+'<small>'+label+'</small>';
-      parent.appendChild(b);
-    }
-    addTool(left,'cameraStabilizeSide','◌','Stabilisation',true);
-    addTool(left,'cameraRawSide','RAW','RAW',true);
-    addTool(right,'cameraBackgroundSide','▧','Arrière-plan',true);
-    addTool(right,'cameraStyleSide','◉','Style',true);
-    addTool(right,'cameraMoreSide','•••','Plus',true);
+    sheet.querySelector('.cameraProTop').appendChild(tier);
 
     const strip=document.createElement('div');
     strip.className='cameraFilterStrip';
     strip.innerHTML=[
       ['original','◯','Original'],['naturel','●','Naturel'],['portrait','◉','Portrait'],['nb','◐','Noir & blanc'],['cartoon','✦','Cartoon'],['anime','◈','Anime'],['vintage','◍','Vintage'],['beauty','☺','Beauté']
     ].map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+x[1]+'</span>'+x[2]+'</button>').join('');
-    const modes=sheet.querySelector('.cameraProModes');
-    if(modes) sheet.insertBefore(strip,modes);
+    const filterHost=document.getElementById('cameraPanelContent');
+    if(filterHost) filterHost.appendChild(strip);
 
     function setFilter(name){
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.classList.toggle('active',b.dataset.filter===name));
@@ -90,8 +66,6 @@
       // Gold is reserved for selected IA/Premium controls.
     }));
 
-    // Make the top flash/grid buttons neutral; preserve their existing behavior.
-    [topRight,...topRight?.querySelectorAll('button')||[]].forEach(()=>{});
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCameraV2); else initCameraV2();
 })();

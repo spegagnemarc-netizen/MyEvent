@@ -233,37 +233,38 @@
           <button type="button" class="cameraSideTool" id="cameraRatioSide">▣<small>Ratio</small></button>
           <button type="button" class="cameraSideTool" id="cameraGridSide">▦<small>Grille</small></button>
           <button type="button" class="cameraSideTool" id="cameraLevelSide">−<small>Niveau</small></button>
+          <button type="button" class="cameraSideTool" id="cameraMusicSide">♫<small>Musique</small></button>
         </div>
         <div class="cameraSideTools right" aria-label="Retouches et IA">
-          <button type="button" class="cameraSideTool active" id="cameraAiSide">✨<small>IA</small></button>
+          <button type="button" class="cameraSideTool" id="cameraAiSide" aria-controls="cameraCreativePanel" aria-expanded="false">✨<small>IA</small></button>
           <button type="button" class="cameraSideTool" id="cameraBeautySide">☺<small>Beauté</small></button>
           <button type="button" class="cameraSideTool" id="cameraRetouchSide">✦<small>Retouches</small></button>
-          <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Filtres</small></button>
-        </div>
-        <div class="cameraAiPrompt" id="cameraAiPrompt">
-          <div class="aiSpark">✨</div><div><b>Améliorer cette photo ?</b><span>Plus de netteté, meilleur éclairage, retouches naturelles</span></div><em>›</em>
+          <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Effets / Filtres</small></button>
+          <button type="button" class="cameraSideTool" id="cameraAppearanceSide">◈<small>Apparence</small></button>
+          <button type="button" class="cameraSideTool" id="cameraStickerSide">✳<small>Stickers / Plus</small></button>
         </div>
         <div class="cameraFaceGuide" aria-hidden="true"></div>
         <div class="cameraFocusDot" id="cameraFocusDot" aria-hidden="true"></div>
         <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prépare ton selfie</strong><span>Place ton visage dans le cadre.</span></div>
         <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
-        <div class="cameraProZoom" id="cameraZoomRow">
-          <button type="button" class="cameraZoomBtn" data-zoom="0.5">0,5×</button>
-          <button type="button" class="cameraZoomBtn active" data-zoom="1">1×</button>
-          <button type="button" class="cameraZoomBtn" data-zoom="2">2×</button>
-          <button type="button" class="cameraZoomBtn" data-zoom="3">3×</button>
-        </div>
+        <div class="cameraZoomIndicator" id="cameraZoomIndicator" aria-live="off"></div>
       </div>
 
+      <section class="cameraCreativePanel" id="cameraCreativePanel" aria-label="Outils créatifs" hidden>
+        <header><strong id="cameraPanelTitle"></strong><button type="button" id="cameraPanelClose" aria-label="Fermer le panneau">✕</button></header>
+        <div id="cameraPanelContent"></div>
+      </section>
       <div class="cameraProModes" aria-label="Modes caméra">
-        <button type="button" class="cameraModeBtn" id="cameraVideoBtn">VIDÉO</button>
+        <button type="button" class="cameraModeBtn" id="cameraVideoBtn" disabled title="À venir">VIDÉO</button>
         <button type="button" class="cameraModeBtn active">PHOTO</button>
         <button type="button" class="cameraModeBtn" id="cameraSelfieBtn">SELFIE</button>
+        <button type="button" class="cameraModeBtn" disabled title="À venir">PORTRAIT</button>
+        <button type="button" class="cameraModeBtn" disabled title="À venir">PLUS</button>
       </div>
 
       <div class="cameraProBottom">
         <button type="button" class="cameraProRoundAction" id="cameraGalleryBtn" aria-label="Galerie"><span>▣</span><small>Galerie</small></button>
-        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span></span></button>
+        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span>ME</span></button>
         <button type="button" class="cameraProRoundAction" id="cameraFlipBtn" aria-label="Changer de caméra"><span>↻</span><small>Caméra</small></button>
       </div>
 
@@ -1327,7 +1328,6 @@
 
 </body>
 </html>
-
 
 
 
