@@ -209,3 +209,71 @@
 #myeventCameraModal .cameraAiPrompt em {
   color: #fff !important;
 }
+
+/* Glass camera controls: appearance only; preserve all existing geometry. */
+#myeventCameraModal .cameraProTop,
+#myeventCameraModal .cameraProBottom,
+#myeventCameraModal .cameraProModes,
+#myeventCameraModal .cameraFilterStrip,
+#myeventCameraModal .cameraProIcon,
+#myeventCameraModal .cameraSideTool,
+#myeventCameraModal .cameraProZoom,
+#myeventCameraModal .cameraFilterChip,
+#myeventCameraModal .cameraTierSwitch,
+#myeventCameraModal .cameraQualityBar,
+#myeventCameraModal .cameraPremiumBar,
+#myeventCameraModal .cameraAiPrompt,
+#myeventCameraModal .cameraProRoundAction span,
+#myeventCameraModal .cameraCaptured button {
+  background: rgba(12,16,20,.58) !important;
+  border-color: rgba(255,255,255,.20) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Clear inner buttons avoid stacking opaque backgrounds on glass panels. */
+#myeventCameraModal .cameraProBottom .cameraProRoundAction,
+#myeventCameraModal .cameraProModes .cameraModeBtn,
+#myeventCameraModal .cameraZoomBtn,
+#myeventCameraModal .cameraTierSwitch button,
+#myeventCameraModal .cameraQualityBar button {
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+#myeventCameraModal .cameraSideTool.active,
+#myeventCameraModal .cameraProIcon.active,
+#myeventCameraModal .cameraFilterChip.active,
+#myeventCameraModal .cameraZoomBtn.active,
+#myeventCameraModal .cameraTierSwitch button.active,
+#myeventCameraModal .cameraQualityBar button.active {
+  background: rgba(65,73,82,.72) !important;
+  border-color: rgba(255,255,255,.48) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.38) !important;
+}
+
+#myeventCameraModal .cameraProIcon:hover,
+#myeventCameraModal .cameraSideTool:hover,
+#myeventCameraModal .cameraFilterChip:hover,
+#myeventCameraModal .cameraZoomBtn:hover,
+#myeventCameraModal .cameraTierSwitch button:hover,
+#myeventCameraModal .cameraQualityBar button:hover,
+#myeventCameraModal .cameraProRoundAction:hover span,
+#myeventCameraModal .cameraCaptured button:hover {
+  background: rgba(45,53,62,.72) !important;
+  color: #fff !important;
+}
+
+#myeventCameraModal .cameraFilterChip .thumb {
+  background: linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.24)) !important;
+  color: #fff !important;
+}
+
+#myeventCameraModal .cameraAiPrompt span,
+#myeventCameraModal .cameraPremiumBar span {
+  color: rgba(255,255,255,.88) !important;
+}
