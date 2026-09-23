@@ -7,8 +7,8 @@ void main(){v_uv=(a_position+1.0)*0.5;gl_Position=vec4(a_position,0.0,1.0);}`;
 const FRAGMENT=`#version 300 es
 precision highp float;
 uniform sampler2D u_image;
-uniform vec2 u_leftEye,u_rightEye,u_face,u_mouth;
-uniform float u_eye,u_faceWarp,u_mouthWarp,u_aspect;
+uniform vec2 u_leftEye,u_rightEye,u_face,u_mouth,u_nose;
+uniform float u_eye,u_faceWarp,u_mouthWarp,u_noseWarp,u_aspect;
 in vec2 v_uv;
 out vec4 outColor;
 vec2 warp(vec2 uv,vec2 c,float radius,float strength){
@@ -22,6 +22,7 @@ void main(){
  uv=warp(uv,u_leftEye,.115,u_eye);
  uv=warp(uv,u_rightEye,.115,u_eye);
  uv=warp(uv,u_mouth,.15,u_mouthWarp);
+ uv=warp(uv,u_nose,.12,u_noseWarp);
  outColor=texture(u_image,clamp(uv,vec2(.001),vec2(.999)));
 }`;
 function compile(gl,type,source){
@@ -45,7 +46,7 @@ export class FaceWarpRenderer{
   this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-  this.u={};for(const n of ['u_image','u_leftEye','u_rightEye','u_face','u_mouth','u_eye','u_faceWarp','u_mouthWarp','u_aspect'])this.u[n]=gl.getUniformLocation(program,n);
+  this.u={};for(const n of ['u_image','u_leftEye','u_rightEye','u_face','u_mouth','u_nose','u_eye','u_faceWarp','u_mouthWarp','u_noseWarp','u_aspect'])this.u[n]=gl.getUniformLocation(program,n);
   gl.uniform1i(this.u.u_image,0);
  }
  render(source,marks,effect,width=source.width,height=source.height){
@@ -53,13 +54,14 @@ export class FaceWarpRenderer{
   const gl=this.gl,w=Math.max(1,width|0),h=Math.max(1,height|0);this.canvas.width=w;this.canvas.height=h;
   gl.viewport(0,0,w,h);gl.useProgram(this.program);gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
-  gl.uniform2fv(this.u.u_leftEye,uv(marks,468));gl.uniform2fv(this.u.u_rightEye,uv(marks,473));gl.uniform2fv(this.u.u_face,uv(marks,1));gl.uniform2fv(this.u.u_mouth,uv(marks,13));
+  gl.uniform2fv(this.u.u_leftEye,uv(marks,468));gl.uniform2fv(this.u.u_rightEye,uv(marks,473));gl.uniform2fv(this.u.u_face,uv(marks,1));gl.uniform2fv(this.u.u_mouth,uv(marks,13));gl.uniform2fv(this.u.u_nose,uv(marks,4));
   const t=p(marks,13),bt=p(marks,14),a=p(marks,61),b=p(marks,291);
   const openness=Math.hypot(bt.x-t.x,bt.y-t.y)/Math.max(.001,Math.hypot(b.x-a.x,b.y-a.y));
   const eye=effect==='big-eyes'?.58:effect==='toon-face'?.48:effect==='wild-face'?.42:0;
   const face=effect==='puffy-face'?.42:effect==='toon-face'?.28:effect==='wild-face'?.38:0;
-  const mouth=effect==='reactive-mouth'?Math.min(.68,Math.max(.12,(openness-.02)*4.6)):effect==='toon-face'?.28:effect==='wild-face'?.5:0;
-  gl.uniform1f(this.u.u_eye,eye);gl.uniform1f(this.u.u_faceWarp,face);gl.uniform1f(this.u.u_mouthWarp,mouth);
+  const mouth=effect==='reactive-mouth'?Math.min(.68,Math.max(.12,(openness-.02)*4.6)):effect==='toon-face'?.28:effect==='wild-face'?.5:effect==='pig-face'?.24:0;
+  const nose=effect==='pig-face'?.64:effect==='wild-face'?.22:0;
+  gl.uniform1f(this.u.u_eye,eye);gl.uniform1f(this.u.u_faceWarp,face);gl.uniform1f(this.u.u_mouthWarp,mouth);gl.uniform1f(this.u.u_noseWarp,nose);
   gl.uniform1f(this.u.u_aspect,w/h);gl.drawArrays(gl.TRIANGLES,0,6);return true;
  }
  close(){const gl=this.gl;if(!gl)return;gl.deleteTexture(this.texture);gl.deleteBuffer(this.buffer);gl.deleteProgram(this.program);this.gl=null;}
