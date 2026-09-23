@@ -238,7 +238,23 @@
     $s('cameraBeautySide')?.addEventListener('click',e=>openPanel('beauty',e.currentTarget));
     $s('cameraRetouchSide')?.addEventListener('click',e=>openPanel('retouch',e.currentTarget));
 
-    $s('cameraFlashBtn')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active'); e.currentTarget.textContent=e.currentTarget.classList.contains('active')?'⚡':'⚡';});
+    $s('cameraFlashBtn')?.addEventListener('click',async e=>{
+      const button=e.currentTarget,track=myeventCameraStream?.getVideoTracks?.()[0];
+      let caps;try{caps=track?.getCapabilities?.();}catch(error){}
+      if(!track||track.readyState!=='live'||!caps?.torch){
+        button.classList.remove('active');button.setAttribute('aria-pressed','false');
+        button.setAttribute('aria-label',myeventFacingMode==='user'?'Flash matériel indisponible avec la caméra avant':'Flash matériel indisponible');
+        return;
+      }
+      const enable=!button.classList.contains('active');
+      try{
+        await track.applyConstraints({advanced:[{torch:enable}]});
+        button.classList.toggle('active',enable);button.setAttribute('aria-pressed',String(enable));
+        button.setAttribute('aria-label',enable?'Désactiver le flash':'Activer le flash');
+      }catch(error){
+        button.classList.remove('active');button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Flash matériel indisponible');
+      }
+    });
     $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
     $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
     $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
@@ -311,7 +327,14 @@
     try{
       const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
-      myeventCameraStream=stream;cameraVideo.srcObject=stream;cameraZoom.setTrack(stream.getVideoTracks()[0]);cameraPlaceholder.style.display='none';
+      myeventCameraStream=stream;cameraVideo.srcObject=stream;
+      const videoTrack=stream.getVideoTracks()[0];cameraZoom.setTrack(videoTrack);cameraPlaceholder.style.display='none';
+      const flash=$s('cameraFlashBtn');let caps;try{caps=videoTrack?.getCapabilities?.();}catch(error){}
+      if(flash){
+        const available=!!caps?.torch;
+        flash.disabled=!available;flash.classList.remove('active');flash.setAttribute('aria-pressed','false');
+        flash.setAttribute('aria-label',available?'Activer le flash':(myeventFacingMode==='user'?'Flash matériel indisponible avec la caméra avant':'Flash matériel indisponible'));
+      }
       cameraModal.dispatchEvent(new Event('camera-stream-ready'));
     }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
   }
