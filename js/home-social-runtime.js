@@ -280,8 +280,12 @@
     sheet?.querySelectorAll('.cameraModeBtn').forEach(b=>b.classList.toggle('active',b.dataset.cameraMode===mode));
     const title=$s('cameraModeTitle');if(title)title.textContent=({video:'VIDÉO',photo:'PHOTO',selfie:'SELFIE',portrait:'PORTRAIT',plus:'PLUS'})[mode]||'PHOTO';
     sheet?.classList.toggle('cameraPortraitMode',mode==='portrait');
-    if(mode==='selfie'&&myeventFacingMode!=='user'){myeventFacingMode='user';startMyEventCamera();}
-    if(mode==='photo'&&sheet)sheet.classList.remove('cameraPortraitMode');
+    if(mode==='selfie'){
+      if(myeventFacingMode!=='user'){myeventFacingMode='user';startMyEventCamera();}
+    }else if(mode==='photo'){
+      sheet?.classList.remove('cameraPortraitMode');
+      if(myeventFacingMode!=='environment'){myeventFacingMode='environment';startMyEventCamera();}
+    }
     if(mode==='plus')cameraZoom?.openPanel?.('stickers',$s('cameraStickerSide'));
   }
   $s('cameraPhotoBtn')?.addEventListener('click',()=>setCameraMode('photo'));
@@ -444,7 +448,16 @@
     };
     source.src=objectUrl;
   });
-  $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
+  $s('cameraFlipBtn')?.addEventListener('click',()=>{
+    myeventFacingMode=myeventFacingMode==='user'?'environment':'user';
+    if(cameraMode==='photo'||cameraMode==='selfie'){
+      cameraMode=myeventFacingMode==='user'?'selfie':'photo';
+      const sheet=cameraModal?.querySelector('.cameraProSheet');
+      sheet?.querySelectorAll('.cameraModeBtn').forEach(b=>b.classList.toggle('active',b.dataset.cameraMode===cameraMode));
+      const title=$s('cameraModeTitle');if(title)title.textContent=cameraMode==='selfie'?'SELFIE':'PHOTO';
+    }
+    startMyEventCamera();
+  });
   $s('cameraIaBtn')?.addEventListener('click',()=>{
     if(!myeventCapturedDataUrl){cameraFile?.click();return;}
     if(cameraModal.cameraApplyAutoEnhance?.())return;
