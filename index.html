@@ -40,10 +40,10 @@
 
 
 
-<script src="js/camera-capture2-final.js?v=lens-composite-2"></script>
+<script src="js/camera-capture2-final.js?v=camera-controls-1"></script>
 
   <link rel="stylesheet" href="css/inline-extracted.css">
-  <link rel="stylesheet" href="css/camera.css?v=lens-composite-2">
+  <link rel="stylesheet" href="css/camera.css?v=camera-controls-1">
 </head>
 <body>
 <div class="app">
@@ -257,11 +257,11 @@
         <div id="cameraPanelContent"></div>
       </section>
       <div class="cameraProModes" aria-label="Modes caméra">
-        <button type="button" class="cameraModeBtn" id="cameraVideoBtn" disabled title="À venir">VIDÉO</button>
-        <button type="button" class="cameraModeBtn active">PHOTO</button>
-        <button type="button" class="cameraModeBtn" id="cameraSelfieBtn">SELFIE</button>
-        <button type="button" class="cameraModeBtn" disabled title="À venir">PORTRAIT</button>
-        <button type="button" class="cameraModeBtn" disabled title="À venir">PLUS</button>
+        <button type="button" class="cameraModeBtn" id="cameraVideoBtn" data-camera-mode="video">VIDÉO</button>
+        <button type="button" class="cameraModeBtn active" id="cameraPhotoBtn" data-camera-mode="photo">PHOTO</button>
+        <button type="button" class="cameraModeBtn" id="cameraSelfieBtn" data-camera-mode="selfie">SELFIE</button>
+        <button type="button" class="cameraModeBtn" id="cameraPortraitBtn" data-camera-mode="portrait">PORTRAIT</button>
+        <button type="button" class="cameraModeBtn" id="cameraPlusBtn" data-camera-mode="plus">PLUS</button>
       </div>
 
       <div class="cameraProBottom">
@@ -1170,7 +1170,7 @@
 
 
 
-<script src="js/home-social-runtime.js?v=appearance-1"></script>
+<script src="js/home-social-runtime.js?v=camera-controls-1"></script>
 
 
 
