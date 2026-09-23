@@ -2714,6 +2714,22 @@ async function vote(pollId, optionId, button){
   }
 }
 
+window.myeventAttachCameraPhoto=async function(eventId,dataUrl){
+  if(!eventId||!dataUrl||!user)throw new Error('Photo ou événement manquant.');
+  const r=await sb.from('events').select('id').eq('id',eventId).maybeSingle();
+  if(r.error||!r.data)throw new Error('Cet événement n’est pas accessible.');
+  const response=await fetch(dataUrl),blob=await response.blob();
+  if(!blob.type.startsWith('image/'))throw new Error('La capture n’est pas une image valide.');
+  const path=String(eventId)+'/'+user.id+'/'+crypto.randomUUID()+'-camera.jpg';
+  const up=await sb.storage.from('event-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
+  if(up.error)throw up.error;
+  const ins=await sb.from('media').insert({event_id:eventId,user_id:user.id,storage_path:path,media_type:'image'}).select('id').single();
+  if(ins.error){await sb.storage.from('event-media').remove([path]);throw ins.error;}
+  rememberLocalCreated('media',ins.data?.id);
+  if(event&&String(event.id)===String(eventId))await loadMedia();
+  return ins.data;
+};
+
 async function uploadMedia(){
   if(!event||!user){msg('mediaMsg','Connecte-toi et sélectionne un événement.','err');return}
   const files=Array.from($('mediaInput').files||[]);
