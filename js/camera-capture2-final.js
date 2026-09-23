@@ -56,6 +56,7 @@
     const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],portrait:[['contrast',1.04],['saturate',1.03]],nb:[['grayscale',1]],cartoon:[['saturate',1.45],['contrast',1.12]],anime:[['saturate',1.28],['brightness',1.06],['contrast',1.04]],vintage:[['sepia',.42],['contrast',.94]],beauty:[['brightness',1.07],['saturate',.94],['contrast',.98]]};
     let selectedFilter='original';
     const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
+    let beautyAmount=0;
     modal.cameraRenderPhoto=function(source){
       const output=document.createElement('canvas');output.width=source.width;output.height=source.height;
       const context=output.getContext('2d');context.drawImage(source,0,0);
@@ -64,6 +65,7 @@
       if(retouch.contrast!==100)recipe.push(['contrast',retouch.contrast/100]);
       if(retouch.saturate!==100)recipe.push(['saturate',retouch.saturate/100]);
       if(retouch.warmth!==0)recipe.push(['warmth',retouch.warmth]);
+      if(beautyAmount>0){const t=beautyAmount/100;recipe.push(['brightness',1+.055*t],['contrast',1-.025*t],['saturate',1-.045*t],['warmth',3*t]);}
       if(!recipe.length)return output;
       const pixels=context.getImageData(0,0,output.width,output.height),data=pixels.data;
       const clamp=value=>Math.min(255,Math.max(0,value));
@@ -93,12 +95,14 @@
       selectedFilter=Object.hasOwn(recipes,name)?name:'original';
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>{const active=b.dataset.filter===selectedFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
       const video=modal.querySelector('#myeventCameraVideo'),img=modal.querySelector('#myeventCapturedImage');
-      if(video){const live=[...recipes[selectedFilter]];if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);video.style.filter=live.filter(([k])=>k!=='warmth').map(([kind,value])=>kind+'('+value+')').join(' ')||'none';}
+      if(video){const live=[...recipes[selectedFilter]];if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);if(beautyAmount>0){const t=beautyAmount/100;live.push(['brightness',1+.055*t],['contrast',1-.025*t],['saturate',1-.045*t]);}video.style.filter=live.filter(([k])=>k!=='warmth').map(([kind,value])=>kind+'('+value+')').join(' ')||'none';}
       if(img)img.style.filter='none'; // The preview file already contains the filter.
       modal.dispatchEvent(new CustomEvent('camera-filter-change',{detail:{filter:selectedFilter}}));
     }
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
+    modal.cameraSetBeauty=value=>{beautyAmount=Math.min(100,Math.max(0,Number(value)||0));setFilter(selectedFilter);};
+    modal.cameraGetBeauty=()=>beautyAmount;
     modal.cameraSetRetouch=(key,value)=>{if(!(key in retouch))return;retouch[key]=value;setFilter(selectedFilter);};
     modal.cameraResetRetouch=()=>{Object.assign(retouch,{brightness:100,contrast:100,saturate:100,warmth:0});setFilter(selectedFilter);};
     modal.cameraApplyAutoEnhance=()=>{
