@@ -99,8 +99,16 @@
     }
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
-    modal.cameraSetRetouch=(key,value)=>{if(!(key in retouch))return;retouch[key]=value;setFilter(selectedFilter);if(cameraSourceCanvas)modal.dispatchEvent(new CustomEvent('camera-filter-change'));};
-    modal.cameraResetRetouch=()=>{Object.assign(retouch,{brightness:100,contrast:100,saturate:100,warmth:0});setFilter(selectedFilter);if(cameraSourceCanvas)modal.dispatchEvent(new CustomEvent('camera-filter-change'));};
+    modal.cameraSetRetouch=(key,value)=>{if(!(key in retouch))return;retouch[key]=value;setFilter(selectedFilter);};
+    modal.cameraResetRetouch=()=>{Object.assign(retouch,{brightness:100,contrast:100,saturate:100,warmth:0});setFilter(selectedFilter);};
+    modal.cameraApplyAutoEnhance=()=>{
+      const source=modal.querySelector('#myeventCapturedImage');
+      if(!source?.naturalWidth)return false;
+      // Conservative local auto-enhancement: improve light/contrast/color without pretending to call a remote AI.
+      Object.assign(retouch,{brightness:106,contrast:106,saturate:104,warmth:2});
+      setFilter('naturel');
+      return true;
+    };
     setFilter('original');
 
     let appearance=null,appearanceLoading=null,panelRequest=0;
