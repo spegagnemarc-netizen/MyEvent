@@ -47,26 +47,52 @@
     $s('myeventCameraModal')?.dispatchEvent(new Event('camera-framing-change'));
   }
   window.addEventListener('resize',applyCameraRatio);applyCameraRatio();
+  function setCameraLevelState(active){
+    levelActive=!!active;
+    const button=$s('cameraLevelSide'),indicator=$s('cameraLevelIndicator');
+    button?.classList.toggle('active',levelActive);
+    button?.setAttribute('aria-pressed',levelActive?'true':'false');
+    if(indicator)indicator.hidden=!levelActive;
+    if(!levelActive)window.removeEventListener('deviceorientation',onCameraOrientation);
+  }
   function onCameraOrientation(e){
     if(!levelActive)return;
     const indicator=$s('cameraLevelIndicator');
     if(!indicator)return;
     const angle=screen.orientation?.angle??window.orientation??0;
-    const tilt=(angle===90||angle===-90)?e.beta:e.gamma;
-    if(typeof tilt!=='number'||!Number.isFinite(tilt)){indicator.classList.add('unavailable');indicator.setAttribute('aria-label','Niveau indisponible');return;}
-    indicator.classList.remove('unavailable');indicator.setAttribute('aria-label','Inclinaison '+Math.round(tilt)+' degrés');
-    indicator.style.setProperty('--level-angle',Math.max(-45,Math.min(45,tilt))+'deg');
-    indicator.classList.toggle('aligned',Math.abs(tilt)<2);
+    const raw=(angle===90||angle===-90)?e.beta:e.gamma;
+    if(typeof raw!=='number'||!Number.isFinite(raw)){indicator.classList.add('unavailable');indicator.setAttribute('aria-label','Niveau indisponible');return;}
+    const tilt=Math.max(-45,Math.min(45,raw));
+    const aligned=Math.abs(raw)<2;
+    indicator.classList.remove('unavailable');
+    indicator.removeAttribute('data-message');
+    indicator.setAttribute('aria-label',aligned?'Appareil à niveau':'Inclinaison '+Math.round(raw)+' degrés');
+    indicator.style.setProperty('--level-angle',tilt+'deg');
+    indicator.classList.toggle('aligned',aligned);
   }
   async function toggleCameraLevel(){
     const button=$s('cameraLevelSide'),indicator=$s('cameraLevelIndicator');
-    if(levelActive){levelActive=false;window.removeEventListener('deviceorientation',onCameraOrientation);indicator.hidden=true;button.classList.remove('active');return;}
-    if(!indicator.hidden&&indicator.classList.contains('unavailable')){indicator.hidden=true;return;}
-    if(typeof DeviceOrientationEvent==='undefined'||!window.isSecureContext){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Niveau indisponible sur cet appareil');return;}
-    if(typeof DeviceOrientationEvent.requestPermission==='function'){
-      try{if(await DeviceOrientationEvent.requestPermission()!=='granted'){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau refusée');return;}}catch(e){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau indisponible');return;}
+    if(levelActive){setCameraLevelState(false);return;}
+    if(typeof DeviceOrientationEvent==='undefined'||!window.isSecureContext){
+      setCameraLevelState(false);
+      if(indicator){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Niveau indisponible sur cet appareil');}
+      return;
     }
-    levelActive=true;button.classList.add('active');indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','En attente du capteur d’orientation');
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      try{
+        if(await DeviceOrientationEvent.requestPermission()!=='granted'){
+          setCameraLevelState(false);
+          if(indicator){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau refusée');}
+          return;
+        }
+      }catch(e){
+        setCameraLevelState(false);
+        if(indicator){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau indisponible');}
+        return;
+      }
+    }
+    setCameraLevelState(true);
+    if(indicator){indicator.classList.add('unavailable');indicator.setAttribute('data-message','En attente du capteur d’orientation');}
     window.addEventListener('deviceorientation',onCameraOrientation);
   }
   function cancelCountdown(){countdownToken++;const el=$s('cameraCountdown');if(el){el.hidden=true;el.textContent='';}}
