@@ -68,13 +68,13 @@ create table if not exists public.event_music_settings (
 -- Membership helper: supports current MyEvent event creator and participants model.
 create or replace function public.myevent_music_event_member(target_event uuid)
 returns boolean language sql stable security definer set search_path=public as $$
-  select exists(select 1 from public.events e where e.id=target_event and e.created_by=auth.uid())
-  or exists(select 1 from public.participants p where p.event_id=target_event and p.user_id=auth.uid());
+  select exists(select 1 from public.events e where e.id=target_event and e.creator_id=auth.uid())
+  or exists(select 1 from public.event_members p where p.event_id=target_event and p.user_id=auth.uid());
 $$;
 
 create or replace function public.myevent_music_event_owner(target_event uuid)
 returns boolean language sql stable security definer set search_path=public as $$
-  select exists(select 1 from public.events e where e.id=target_event and e.created_by=auth.uid());
+  select exists(select 1 from public.events e where e.id=target_event and e.creator_id=auth.uid());
 $$;
 
 alter table public.music_tracks enable row level security;
