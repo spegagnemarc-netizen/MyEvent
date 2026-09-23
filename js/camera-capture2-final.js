@@ -103,7 +103,15 @@
     modal.cameraSetFilter=setFilter;
     modal.cameraSetBeauty=value=>{beautyAmount=Math.min(100,Math.max(0,Number(value)||0));setFilter(selectedFilter);};
     modal.cameraGetBeauty=()=>beautyAmount;
-    modal.cameraSetRetouch=(key,value)=>{if(!(key in retouch))return;retouch[key]=value;setFilter(selectedFilter);};
+    modal.cameraSetRetouch=(key,value)=>{
+      if(!(key in retouch))return;
+      const limits={brightness:[70,130],contrast:[70,140],saturate:[0,160],warmth:[-40,40]};
+      const n=Number(value),range=limits[key];
+      if(!Number.isFinite(n)||!range)return;
+      retouch[key]=Math.min(range[1],Math.max(range[0],n));
+      setFilter(selectedFilter);
+    };
+    modal.cameraGetRetouch=()=>({...retouch});
     modal.cameraResetRetouch=()=>{Object.assign(retouch,{brightness:100,contrast:100,saturate:100,warmth:0});setFilter(selectedFilter);};
     modal.cameraApplyAutoEnhance=()=>{
       const source=modal.querySelector('#myeventCapturedImage');
