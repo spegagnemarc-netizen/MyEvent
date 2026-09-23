@@ -107,15 +107,24 @@
       indicator.textContent=factor.toFixed(1)+'×';indicator.classList.add('visible');
       clearTimeout(hideTimer);hideTimer=setTimeout(()=>indicator.classList.remove('visible'),850);
     }
+    function zoomBounds(){
+      if(hardware&&track?.readyState==='live'){
+        try{
+          const z=track.getCapabilities?.().zoom;
+          if(z&&Number.isFinite(z.min)&&Number.isFinite(z.max))return {min:z.min,max:z.max};
+        }catch(e){}
+      }
+      return {min:1,max:3};
+    }
     function set(value){
-      factor=Math.min(4,Math.max(1,value));display();
+      const bounds=zoomBounds();
+      factor=Math.min(bounds.max,Math.max(bounds.min,value));display();
       $s('myeventCameraModal')?.dispatchEvent(new Event('camera-framing-change'));
       if(hardware&&track?.readyState==='live'){
-        const caps=track.getCapabilities(), zoom=Math.min(caps.zoom.max,Math.max(caps.zoom.min,factor));
         const request=++zoomRequest;
-        track.applyConstraints({advanced:[{zoom}]}).then(()=>{
-          if(request===zoomRequest)video.style.transform='none';
-        }).catch(()=>{hardware=false;video.style.transform=`scale(${factor})`;});
+        track.applyConstraints({advanced:[{zoom:factor}]}).then(()=>{
+          if(request===zoomRequest&&video)video.style.transform='none';
+        }).catch(()=>{hardware=false;factor=Math.min(3,Math.max(1,factor));if(video)video.style.transform=`scale(${factor})`;});
       }else if(video)video.style.transform=`scale(${factor})`;
     }
     preview?.addEventListener('touchstart',e=>{
@@ -217,7 +226,17 @@
     $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
     return {get factor(){return factor;},get hardware(){return hardware;},
       reset(){factor=1;track=null;hardware=false;zoomRequest++;startDistance=0;if(video)video.style.transform='none';if(indicator)indicator.classList.remove('visible');closePanel();},
-      setTrack(newTrack){track=newTrack;let caps;try{caps=track?.getCapabilities?.();}catch(e){}hardware=!!(caps?.zoom&&typeof track.applyConstraints==='function');}};
+      setTrack(newTrack){
+        track=newTrack;let caps;
+        try{caps=track?.getCapabilities?.();}catch(e){}
+        hardware=!!(caps?.zoom&&Number.isFinite(caps.zoom.min)&&Number.isFinite(caps.zoom.max)&&typeof track.applyConstraints==='function');
+        if(hardware){
+          const current=Number(track.getSettings?.().zoom);
+          factor=Number.isFinite(current)?current:Math.max(caps.zoom.min,1);
+        }else factor=1;
+        if(video)video.style.transform='none';
+        display();
+      }};
   })();
   // Camera modes: each button now has a distinct behavior instead of being decorative.
   let cameraMode='photo',mediaRecorder=null,recordedChunks=[];
