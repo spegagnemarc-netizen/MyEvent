@@ -100,7 +100,6 @@
     },{passive:false});
     preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
-    const filters=content?.querySelector('.cameraFilterStrip');
     const buttons=['cameraAiSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide','cameraTimerSide','cameraRatioSide'];
     function closePanel(){
       if(panel)panel.hidden=true;
@@ -114,7 +113,8 @@
       const names={ai:'IA photo',filters:'Effets / Filtres',appearance:'Apparence',stickers:'Stickers / Plus',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage'};
       title.textContent=names[kind];
       content.replaceChildren();
-      if(kind==='filters'){content.appendChild(filters);return;}
+      if(kind==='filters'){const filters=$s('myeventCameraModal').cameraFilterStrip;if(filters)content.appendChild(filters);return;}
+      if(kind==='appearance'){$s('myeventCameraModal').cameraRenderAppearance?.(content);return;}
       if(kind==='timer'||kind==='ratio'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
         const options=kind==='timer'?[['0','Désactivé'],['3','3 s'],['5','5 s'],['10','10 s']]:[['9:16','9:16'],['4:3','4:3'],['1:1','1:1']];
@@ -123,7 +123,6 @@
       }
       const descriptions={
         ai:'Traitement IA à connecter. La commande existante est disponible après une photo.',
-        appearance:'Cheveux · Barbe · Maquillage · Lunettes · Accessoires · Looks · Transformations créatives IA : à venir.',
         stickers:'Emoji · Stickers · Texte · Décorations : à venir.',
         music:'Le catalogue et le module Musique MyEvent ne sont pas encore connectés.'
       };
@@ -148,7 +147,7 @@
         content.appendChild(fields);
       }
     }
-    buttons.forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
+    buttons.filter(id=>id!=='cameraTimerSide'&&id!=='cameraRatioSide').forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
     $s('cameraPanelClose')?.addEventListener('click',closePanel);
     sheet?.querySelector('.cameraGlassSettings')?.addEventListener('toggle',e=>{if(e.currentTarget.open)closePanel();});
     $s('cameraGridBtn')?.addEventListener('click',()=> $s('cameraGridOverlay')?.classList.toggle('on'));
@@ -172,11 +171,12 @@
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
-  let cameraRevision=0;
+  let cameraRevision=0,cameraSourceCanvas=null;
   function resetCameraPreview(){
     cancelCountdown();
     cameraRevision++;
     myeventCapturedDataUrl='';
+    cameraSourceCanvas=null;
     cameraModal.dataset.cameraState='viewfinder';
     cameraImg.onload=null;cameraImg.onerror=null;
     cameraImg.removeAttribute('src');cameraImg.style.display='none';
@@ -189,6 +189,7 @@
     cameraImg.onload=()=>{
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')||!cameraImg.naturalWidth)return;
       myeventCapturedDataUrl=data;
+      cameraImg.style.filter='none';
       cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';
       cameraModal.dataset.cameraState='preview';
       $s('cameraCapturedActions')?.classList.add('open');
@@ -211,6 +212,19 @@
   cameraModal?.addEventListener('camera-retake',()=>{if(cameraModal.classList.contains('open'))startMyEventCamera();});
   $s('cameraCloseBtn')?.addEventListener('click',closeMyEventCamera);
   cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
+  function renderCameraPhoto(revision){
+    if(!cameraSourceCanvas||revision!==cameraRevision)return;
+    // Always render from the unfiltered source, including after changing a filter.
+    myeventCapturedDataUrl='';
+    $s('cameraCapturedActions')?.classList.remove('open');
+    try{
+      const output=cameraModal.cameraRenderPhoto?cameraModal.cameraRenderPhoto(cameraSourceCanvas):cameraSourceCanvas;
+      showCameraPreview(output.toDataURL('image/jpeg',.9),revision);
+    }catch(error){
+      resetCameraPreview();cameraPlaceholder.textContent='Impossible de préparer la photo. Réessaie ou utilise Galerie.';cameraPlaceholder.style.display='grid';
+    }
+  }
+  cameraModal.addEventListener('camera-filter-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
   function captureMyEventPhoto(){
     if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
     if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
@@ -223,7 +237,7 @@
     // Crop the visible central frame; hardware zoom is already part of the track.
     const cropZoom=hardware?1:z,w=c.width/cropZoom,h=c.height/cropZoom;
     c.getContext('2d').drawImage(cameraVideo,(sourceW-w)/2,(sourceH-h)/2,w,h,0,0,c.width,c.height);
-    showCameraPreview(c.toDataURL('image/jpeg',.9),revision);
+    cameraSourceCanvas=c;renderCameraPhoto(revision);
   }
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
     if(cameraModal.dataset.cameraState==='preview'||!timerSeconds||!myeventCameraStream||cameraVideo.readyState<2){captureMyEventPhoto();return;}
@@ -239,7 +253,19 @@
   cameraFile?.addEventListener('change',()=>{
     const f=cameraFile.files?.[0];if(!f)return;
     const revision=resetCameraPreview(),reader=new FileReader();
-    reader.onload=()=>showCameraPreview(reader.result,revision);
+    reader.onload=()=>{
+      if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+      const source=new Image();
+      source.onload=()=>{
+        if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+        try{
+          const canvas=document.createElement('canvas');canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;
+          canvas.getContext('2d').drawImage(source,0,0);cameraSourceCanvas=canvas;renderCameraPhoto(revision);
+        }catch(error){resetCameraPreview();}
+      };
+      source.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
+      source.src=reader.result;
+    };
     reader.readAsDataURL(f);cameraFile.value='';
   });
   $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});

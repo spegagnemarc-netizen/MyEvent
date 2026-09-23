@@ -35,8 +35,9 @@
 #myeventCameraModal .cameraProShutter,#myeventCameraModal .cameraShutter{width:76px!important;height:76px!important;background:rgba(0,0,0,var(--camera-control-opacity,.35))!important;border:1.5px solid #fff!important;box-shadow:inset 0 0 0 2px rgba(255,106,52,.28)!important;display:grid;place-items:center;font-size:0!important;transition:transform .15s}
 #myeventCameraModal .cameraProShutter:after{display:none!important}
 #myeventCameraModal .cameraProShutter span{display:grid!important;place-items:center;width:59px!important;height:59px!important;background:rgba(0,0,0,.35)!important;border:1px solid rgba(255,106,52,.7)!important;border-radius:50%;color:#fff;font-size:21px;font-weight:900;letter-spacing:-2px}
-#myeventCameraModal .cameraProShutter span{overflow:hidden}
-#myeventCameraModal .cameraProShutter span img{display:block;width:70px;height:70px;max-width:none;object-fit:cover;object-position:center;filter:drop-shadow(0 0 2px rgba(255,112,35,.55))}
+#myeventCameraModal #cameraShutterBtn{border-radius:50%!important;overflow:hidden!important;aspect-ratio:1;box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#myeventCameraModal .cameraProShutter span{overflow:hidden!important;border-radius:50%!important;clip-path:circle(50%);box-sizing:border-box;pointer-events:none}
+#myeventCameraModal .cameraProShutter span img{display:block;width:100%!important;height:100%!important;max-width:100%;border-radius:50%!important;clip-path:circle(50%);object-fit:cover;object-position:center}
 #myeventCameraModal .cameraProShutter:active{transform:scale(.93)}
 #myeventCameraModal .cameraProRoundAction{background:transparent!important;border:0!important;color:#fff!important}
 #myeventCameraModal .cameraProRoundAction span{width:42px!important;height:42px!important;color:#fff!important}
@@ -85,6 +86,13 @@
 #myeventCameraModal .cameraFilterChip.active{border-color:#fff!important}
 #myeventCameraModal .cameraFilterChip[data-filter="nb"] .thumb{filter:grayscale(1)}
 #myeventCameraModal .cameraFilterChip[data-filter="vintage"] .thumb{filter:sepia(.55)}
+#myeventCameraModal .cameraAppearanceCategories{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x;padding:10px 2px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#myeventCameraModal .cameraAppearanceCategories::-webkit-scrollbar{display:none}
+#myeventCameraModal .cameraAppearanceCategories button{flex:0 0 auto;min-width:82px;min-height:48px;white-space:nowrap;scroll-snap-align:start;font-size:12px}
+#myeventCameraModal .cameraAppearanceCategories button[aria-pressed="true"]{border-color:#ff8b52;background:rgba(255,139,82,.18)}
+#myeventCameraModal .cameraAppearanceCategories button:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+#myeventCameraModal .cameraAppearanceStatus{min-height:34px}
+@media(prefers-reduced-motion:reduce){#myeventCameraModal #cameraShutterBtn{transition:none!important}}
 #myeventCameraModal :is(.cameraProIcon,.cameraSideTool,.cameraTierSwitch,.cameraGlassSettings,.cameraRetake,.cameraCreativePanel,.cameraFilterChip,.cameraProRoundAction span,.cameraCaptured button){background:rgba(0,0,0,var(--camera-control-opacity,.35))!important;border-color:rgba(255,255,255,.24)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
 #myeventCameraModal .cameraProIcon{width:40px!important;height:40px!important;border-radius:50%!important}
 @media(max-width:375px){#myeventCameraModal .cameraSideTool{width:46px!important;min-height:44px!important;font-size:16px!important}#myeventCameraModal .cameraSideTool small{font-size:7px!important}#myeventCameraModal .cameraSideTools{gap:3px!important}#myeventCameraModal .cameraProTitle span{font-size:12px!important}}
