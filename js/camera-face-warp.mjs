@@ -56,8 +56,10 @@ export class FaceWarpRenderer{
   gl.uniform2fv(this.u.u_leftEye,uv(marks,468));gl.uniform2fv(this.u.u_rightEye,uv(marks,473));gl.uniform2fv(this.u.u_face,uv(marks,1));gl.uniform2fv(this.u.u_mouth,uv(marks,13));
   const t=p(marks,13),bt=p(marks,14),a=p(marks,61),b=p(marks,291);
   const openness=Math.hypot(bt.x-t.x,bt.y-t.y)/Math.max(.001,Math.hypot(b.x-a.x,b.y-a.y));
-  gl.uniform1f(this.u.u_eye,effect==='big-eyes'?.34:0);gl.uniform1f(this.u.u_faceWarp,effect==='puffy-face'?.24:0);
-  gl.uniform1f(this.u.u_mouthWarp,effect==='reactive-mouth'?Math.min(.42,Math.max(0,(openness-.035)*2.8)):0);
+  const eye=effect==='big-eyes'?.58:effect==='toon-face'?.48:effect==='wild-face'?.42:0;
+  const face=effect==='puffy-face'?.42:effect==='toon-face'?.28:effect==='wild-face'?.38:0;
+  const mouth=effect==='reactive-mouth'?Math.min(.68,Math.max(.12,(openness-.02)*4.6)):effect==='toon-face'?.28:effect==='wild-face'?.5:0;
+  gl.uniform1f(this.u.u_eye,eye);gl.uniform1f(this.u.u_faceWarp,face);gl.uniform1f(this.u.u_mouthWarp,mouth);
   gl.uniform1f(this.u.u_aspect,w/h);gl.drawArrays(gl.TRIANGLES,0,6);return true;
  }
  close(){const gl=this.gl;if(!gl)return;gl.deleteTexture(this.texture);gl.deleteBuffer(this.buffer);gl.deleteProgram(this.program);this.gl=null;}
