@@ -116,3 +116,11 @@
 #myeventCameraModal .cameraLens.active{flex-basis:78px;width:78px}
 #myeventCameraModal .cameraLens.active span{width:70px;height:70px;font-size:34px;border:4px solid #fff;transform:translateY(-2px);box-shadow:0 0 0 2px rgba(255,106,52,.75),0 3px 14px rgba(0,0,0,.5)}
 #myeventCameraModal[data-camera-state="preview"] .cameraLensStrip{display:none!important}
+
+/* Functional camera controls */
+#myeventCameraModal .cameraRetouchControl{display:grid;gap:5px;margin:10px 0;font-size:11px}
+#myeventCameraModal .cameraRetouchControl span{display:flex;justify-content:space-between}
+#myeventCameraModal .cameraRetouchControl input{width:100%;accent-color:#fff}
+#myeventCameraModal .cameraPortraitMode #myeventCameraVideo{filter:contrast(1.04) saturate(1.03)}
+#myeventCameraModal #cameraShutterBtn.recording{border-color:#ff3b30!important;box-shadow:0 0 0 5px rgba(255,59,48,.28)!important}
+#myeventCameraModal #cameraShutterBtn.recording span{background:#ff3b30!important}
