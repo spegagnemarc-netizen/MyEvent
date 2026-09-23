@@ -140,6 +140,9 @@
       e.preventDefault();set(startFactor*distance(e.touches)/startDistance);
     },{passive:false});
     preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
+    let cameraMusicFile=null,cameraMusicUrl='',cameraMusicAudio=null,cameraMusicVolume=.7;
+    function clearCameraMusic(){if(cameraMusicAudio){cameraMusicAudio.pause();cameraMusicAudio.src='';}if(cameraMusicUrl)URL.revokeObjectURL(cameraMusicUrl);cameraMusicFile=null;cameraMusicUrl='';cameraMusicAudio=null;$s('cameraMusicSide')?.classList.remove('active');}
+    function setCameraMusic(file){clearCameraMusic();cameraMusicFile=file;cameraMusicUrl=URL.createObjectURL(file);cameraMusicAudio=new Audio(cameraMusicUrl);cameraMusicAudio.preload='metadata';cameraMusicAudio.volume=cameraMusicVolume;cameraMusicAudio.loop=true;$s('cameraMusicSide')?.classList.add('active');}
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
     const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide','cameraTimerSide','cameraRatioSide'];
     function closePanel(){
@@ -222,12 +225,19 @@
         content.appendChild(row);
       }
       if(kind==='music'){
-        const search=document.createElement('input');search.type='search';search.placeholder='Rechercher un son ou un artiste';search.disabled=true;content.appendChild(search);
-        const row=document.createElement('div');row.className='cameraPanelChips';
-        ['Pour vous','Tendances','MyEvent','Genres'].forEach(label=>{const chip=document.createElement('span');chip.textContent=label;row.appendChild(chip);});content.appendChild(row);
+        note.textContent='Choisis un fichier audio présent sur ton iPhone. Tu peux l’écouter et régler son volume avant de l’utiliser.';
+        const picker=document.createElement('input');picker.type='file';picker.accept='audio/*';picker.hidden=true;content.appendChild(picker);
+        const choose=document.createElement('button');choose.type='button';choose.textContent=cameraMusicFile?'♫ Changer de son':'♫ Choisir un son';content.appendChild(choose);
         const fields=document.createElement('div');fields.className='cameraMusicFields';
-        fields.innerHTML='<label>Aperçu / lecture <button type="button" disabled>▶</button></label><label>Choix du son <select disabled><option>Aucun son disponible</option></select></label><label>Extrait <input type="range" disabled></label><label>Volume <input type="range" disabled></label><button type="button" disabled>Utiliser ce son</button>';
-        content.appendChild(fields);
+        const name=document.createElement('p');name.textContent=cameraMusicFile?cameraMusicFile.name:'Aucun son sélectionné';fields.appendChild(name);
+        const preview=document.createElement('button');preview.type='button';preview.textContent=cameraMusicAudio&&!cameraMusicAudio.paused?'⏸ Pause':'▶ Écouter';preview.disabled=!cameraMusicFile;fields.appendChild(preview);
+        const volume=document.createElement('label');volume.innerHTML='Volume <input type="range" min="0" max="100" value="'+Math.round(cameraMusicVolume*100)+'">';fields.appendChild(volume);
+        const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer le son';remove.disabled=!cameraMusicFile;fields.appendChild(remove);content.appendChild(fields);
+        choose.addEventListener('click',()=>picker.click());
+        picker.addEventListener('change',()=>{const file=picker.files?.[0];picker.value='';if(!file)return;if(!file.type.startsWith('audio/')){note.textContent='Ce fichier n’est pas un son compatible.';return;}setCameraMusic(file);closePanel();openPanel('music',$s('cameraMusicSide'));});
+        preview.addEventListener('click',async()=>{if(!cameraMusicAudio)return;if(cameraMusicAudio.paused){try{await cameraMusicAudio.play();preview.textContent='⏸ Pause';}catch(error){note.textContent='Lecture impossible sur cet appareil.';}}else{cameraMusicAudio.pause();preview.textContent='▶ Écouter';}});
+        volume.querySelector('input').addEventListener('input',e=>{cameraMusicVolume=Number(e.target.value)/100;if(cameraMusicAudio)cameraMusicAudio.volume=cameraMusicVolume;});
+        remove.addEventListener('click',()=>{clearCameraMusic();closePanel();openPanel('music',$s('cameraMusicSide'));});
       }
     }
     buttons.filter(id=>!['cameraTimerSide','cameraRatioSide','cameraBeautySide','cameraRetouchSide'].includes(id)).forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
