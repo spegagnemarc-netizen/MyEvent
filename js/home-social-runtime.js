@@ -204,6 +204,19 @@
         });
         content.appendChild(action);
       }
+      if(kind==='stickers'){
+        const note=document.createElement('p');note.textContent='Outils disponibles dans la caméra.';content.appendChild(note);
+        const row=document.createElement('div');row.className='cameraPanelChoices';
+        [
+          ['Galerie',()=>{$s('cameraGalleryBtn')?.click();}],
+          ['Minuteur',()=>{closePanel();openPanel('timer',$s('cameraTimerSide'));}],
+          ['Cadrage',()=>{closePanel();openPanel('ratio',$s('cameraRatioSide'));}],
+          ['Grille',()=>{toggleCameraGrid();}],
+          ['Niveau',()=>{$s('cameraLevelSide')?.click();}],
+          ['Retouches',()=>{closePanel();openPanel('retouch',$s('cameraRetouchSide'));}]
+        ].forEach(([label,action])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',action);row.appendChild(b);});
+        content.appendChild(row);
+      }
       if(kind==='music'){
         const search=document.createElement('input');search.type='search';search.placeholder='Rechercher un son ou un artiste';search.disabled=true;content.appendChild(search);
         const row=document.createElement('div');row.className='cameraPanelChips';
@@ -287,12 +300,12 @@
       if(mode==='photo')sheet?.classList.remove('cameraPortraitMode');
       if(myeventFacingMode!=='environment'){myeventFacingMode='environment';startMyEventCamera();}
     }
-    if(mode==='plus')cameraZoom?.openPanel?.('stickers',$s('cameraStickerSide'));
+    if(mode==='plus')$s('cameraStickerSide')?.click();
   }
   $s('cameraPhotoBtn')?.addEventListener('click',()=>setCameraMode('photo'));
   $s('cameraSelfieBtn')?.addEventListener('click',()=>setCameraMode('selfie'));
   $s('cameraPortraitBtn')?.addEventListener('click',()=>setCameraMode('portrait'));
-  $s('cameraPlusBtn')?.addEventListener('click',()=>{$s('cameraStickerSide')?.click();setCameraMode('plus');});
+  $s('cameraPlusBtn')?.addEventListener('click',()=>setCameraMode('plus'));
   $s('cameraVideoBtn')?.addEventListener('click',()=>setCameraMode('video'));
 
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
