@@ -40,10 +40,14 @@
   const cameraSheet=$s('myeventCameraModal')?.querySelector('.cameraProSheet');
   function applyCameraRatio(){
     const [w,h]=cameraRatio.split(':').map(Number),aspect=w/h;
-    const width=Math.min(innerWidth,innerHeight*aspect),height=width/aspect;
-    cameraSheet?.style.setProperty('--camera-frame-width',width+'px');
-    cameraSheet?.style.setProperty('--camera-frame-height',height+'px');
-    $s('cameraRatioSide')?.setAttribute('aria-label','Ratio '+cameraRatio);
+    const vw=window.visualViewport?.width||innerWidth,vh=window.visualViewport?.height||innerHeight;
+    let width=vw,height=width/aspect;
+    if(height>vh){height=vh;width=height*aspect;}
+    cameraSheet?.style.setProperty('--camera-frame-width',Math.round(width)+'px');
+    cameraSheet?.style.setProperty('--camera-frame-height',Math.round(height)+'px');
+    const ratioButton=$s('cameraRatioSide');
+    ratioButton?.setAttribute('aria-label','Ratio '+cameraRatio);
+    ratioButton?.setAttribute('data-ratio',cameraRatio);
     $s('myeventCameraModal')?.dispatchEvent(new Event('camera-framing-change'));
   }
   window.addEventListener('resize',applyCameraRatio);applyCameraRatio();
@@ -407,12 +411,13 @@
   cameraModal.cameraDrawFrame=function(c,maxEdge=Infinity){
     const z=cameraZoom.factor||1,hardware=cameraZoom.hardware;
     const [rw,rh]=cameraRatio.split(':').map(Number),ratio=rw/rh;
-    const sourceW=cameraVideo.videoWidth,sourceH=cameraVideo.videoHeight;
-    c.width=sourceW;c.height=Math.round(sourceW/ratio);
-    if(c.height>sourceH){c.height=sourceH;c.width=Math.round(sourceH*ratio);}
-    // Crop the visible central frame; hardware zoom is already part of the track.
-    const cropZoom=hardware?1:z,w=c.width/cropZoom,h=c.height/cropZoom;
-    const scale=Math.min(1,maxEdge/Math.max(c.width,c.height));c.width=Math.max(1,Math.round(c.width*scale));c.height=Math.max(1,Math.round(c.height*scale));
+    const sourceW=cameraVideo.videoWidth,sourceH=cameraVideo.videoHeight,sourceRatio=sourceW/sourceH;
+    let cropW,cropH;
+    if(sourceRatio>ratio){cropH=sourceH;cropW=cropH*ratio;}else{cropW=sourceW;cropH=cropW/ratio;}
+    // The exported image uses the same centered aspect-ratio crop as the live view.
+    const cropZoom=hardware?1:z,w=cropW/cropZoom,h=cropH/cropZoom;
+    const scale=Math.min(1,maxEdge/Math.max(cropW,cropH));
+    c.width=Math.max(1,Math.round(cropW*scale));c.height=Math.max(1,Math.round(cropH*scale));
     c.getContext('2d').drawImage(cameraVideo,(sourceW-w)/2,(sourceH-h)/2,w,h,0,0,c.width,c.height);
   };
   async function captureMyEventPhoto(){
