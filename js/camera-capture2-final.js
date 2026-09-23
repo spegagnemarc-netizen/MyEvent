@@ -107,7 +107,7 @@
     // Direct Lens carousel: one tap/swipe from the viewfinder, no settings panel.
     const lensStrip=document.createElement('div');lensStrip.className='cameraLensStrip';lensStrip.setAttribute('role','group');lensStrip.setAttribute('aria-label','Lens MyEvent');
     const lensItems=[
-      [null,'Aucun','ME'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Gonflé','😮'],['reactive-mouth','Bouche','😛']
+      [null,'Aucun','ME'],['pig-face','Cochon','🐷'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Gonflé','😮'],['reactive-mouth','Bouche','😛']
     ];
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);
