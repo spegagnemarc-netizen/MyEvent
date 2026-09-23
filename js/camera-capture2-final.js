@@ -103,7 +103,25 @@
       }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
     };
     modal.cameraComposeAppearance=(source,output)=>appearance?appearance.compose(source,output):output;
-    modal.addEventListener('camera-closed',()=>{panelRequest++;});
+
+    // Direct Lens carousel: one tap/swipe from the viewfinder, no settings panel.
+    const lensStrip=document.createElement('div');lensStrip.className='cameraLensStrip';lensStrip.setAttribute('role','group');lensStrip.setAttribute('aria-label','Lens MyEvent');
+    const lensItems=[
+      [null,'Aucun','ME'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Gonflé','😮'],['reactive-mouth','Bouche','😛']
+    ];
+    lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
+    sheet.appendChild(lensStrip);
+    function ensureAppearance(){
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      return appearanceLoading;
+    }
+    function selectLens(button){
+      lensStrip.querySelectorAll('.cameraLens').forEach(x=>{const on=x===button;x.classList.toggle('active',on);x.setAttribute('aria-pressed',String(on));});
+      button.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+      ensureAppearance().then(controller=>controller.setLens(button.dataset.lens||null)).catch(()=>{button.classList.remove('active');lensStrip.querySelector('.cameraLens[data-lens=""]').classList.add('active');});
+    }
+    lensStrip.querySelectorAll('.cameraLens').forEach(button=>button.addEventListener('click',()=>selectLens(button)));
+    modal.addEventListener('camera-closed',()=>{panelRequest++;const none=lensStrip.querySelector('.cameraLens[data-lens=""]');if(none){lensStrip.querySelectorAll('.cameraLens').forEach(x=>x.classList.toggle('active',x===none));}});
 
     tier.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
       const premium=btn.dataset.tier==='premium';
