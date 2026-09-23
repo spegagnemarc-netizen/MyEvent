@@ -1,6 +1,6 @@
-export const categories=[['fun','Fun'],['glasses','Lunettes'],['accessories','Accessoires'],['makeup','Maquillage'],['hair','Cheveux'],['beard','Barbe'],['looks','Looks'],['creative-ai','Créatif IA']];
+export const categories=[['glasses','Lunettes'],['accessories','Accessoires'],['makeup','Maquillage'],['fun','Déformations'],['hair','Cheveux'],['beard','Barbe'],['looks','Looks'],['creative-ai','Créatif IA']];
 export const effects={
-  fun:[['pig-face','Cochon','🐷'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Visage gonflé','😮'],['reactive-mouth','Bouche','😛']],
+  fun:[['big-eyes','Grands yeux','◉'],['puffy-face','Visage arrondi','○'],['reactive-mouth','Bouche réactive','⌣']],
   glasses:[['round','Rondes','◯◯'],['sun','Soleil','🕶']],
   accessories:[['stars','Étoiles','✦'],['crown','Couronne','♛']],
   makeup:[['rose','Rose','🌸'],['coral','Corail','💋']]
