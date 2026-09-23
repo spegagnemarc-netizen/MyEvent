@@ -163,11 +163,24 @@
     buttons.filter(id=>!['cameraTimerSide','cameraRatioSide','cameraBeautySide','cameraRetouchSide'].includes(id)).forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
     $s('cameraPanelClose')?.addEventListener('click',closePanel);
     sheet?.querySelector('.cameraGlassSettings')?.addEventListener('toggle',e=>{if(e.currentTarget.open)closePanel();});
-    $s('cameraGridBtn')?.addEventListener('click',()=> $s('cameraGridOverlay')?.classList.toggle('on'));
+    let cameraGridActive=false;
+    function setCameraGrid(active){
+      cameraGridActive=!!active;
+      const overlay=$s('cameraGridOverlay'),top=$s('cameraGridBtn'),side=$s('cameraGridSide');
+      overlay?.classList.toggle('on',cameraGridActive);
+      overlay?.setAttribute('aria-hidden',cameraGridActive?'false':'true');
+      [top,side].forEach(button=>{
+        button?.classList.toggle('active',cameraGridActive);
+        button?.setAttribute('aria-pressed',cameraGridActive?'true':'false');
+      });
+    }
+    function toggleCameraGrid(){setCameraGrid(!cameraGridActive);}
+    $s('cameraGridBtn')?.addEventListener('click',toggleCameraGrid);
     const triggerCamera=(id)=>$s(id)?.click();
     $s('cameraTimerSide')?.addEventListener('click',e=>openPanel('timer',e.currentTarget));
     $s('cameraRatioSide')?.addEventListener('click',e=>openPanel('ratio',e.currentTarget));
-    $s('cameraGridSide')?.addEventListener('click',()=>{triggerCamera('cameraGridBtn');});
+    $s('cameraGridSide')?.addEventListener('click',toggleCameraGrid);
+    setCameraGrid(false);
     $s('cameraLevelSide')?.addEventListener('click',toggleCameraLevel);
     $s('cameraBeautySide')?.addEventListener('click',e=>openPanel('beauty',e.currentTarget));
     $s('cameraRetouchSide')?.addEventListener('click',e=>openPanel('retouch',e.currentTarget));
