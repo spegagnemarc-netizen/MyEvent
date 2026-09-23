@@ -1,13 +1,16 @@
-export const categories=[['glasses','Lunettes'],['accessories','Accessoires'],['makeup','Maquillage'],['hair','Cheveux'],['beard','Barbe'],['looks','Looks'],['creative-ai','Créatif IA']];
+export const categories=[['fun','Fun'],['glasses','Lunettes'],['accessories','Accessoires'],['makeup','Maquillage'],['hair','Cheveux'],['beard','Barbe'],['looks','Looks'],['creative-ai','Créatif IA']];
 export const effects={
+  fun:[['big-eyes','Gros yeux','👀'],['puffy-face','Visage gonflé','😮'],['reactive-mouth','Bouche réactive','😛']],
   glasses:[['round','Rondes','◯◯'],['sun','Soleil','🕶']],
   accessories:[['stars','Étoiles','✦'],['crown','Couronne','♛']],
   makeup:[['rose','Rose','🌸'],['coral','Corail','💋']]
 };
+export const warpEffects=new Set(['big-eyes','puffy-face','reactive-mouth']);
+export const selectedWarp=selection=>selection.fun||null;
 export const hasEffects=selection=>Object.values(selection).some(Boolean);
 
 // Landmarks and the canvas share the exact cropped, unmirrored camera frame.
-// This function is used unchanged for the live overlay and final JPEG.
+// This function remains the Canvas2D layer for glasses/accessories/makeup.
 export function drawAppearance(ctx,landmarks,selection,width,height){
   if(!landmarks||landmarks.length<468)return;
   const p=i=>({x:landmarks[i].x*width,y:landmarks[i].y*height});
