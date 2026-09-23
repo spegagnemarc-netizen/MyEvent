@@ -1,11 +1,11 @@
 export const categories=[['fun','Fun'],['glasses','Lunettes'],['accessories','Accessoires'],['makeup','Maquillage'],['hair','Cheveux'],['beard','Barbe'],['looks','Looks'],['creative-ai','Créatif IA']];
 export const effects={
-  fun:[['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Visage gonflé','😮'],['reactive-mouth','Bouche','😛']],
+  fun:[['pig-face','Cochon','🐷'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Visage gonflé','😮'],['reactive-mouth','Bouche','😛']],
   glasses:[['round','Rondes','◯◯'],['sun','Soleil','🕶']],
   accessories:[['stars','Étoiles','✦'],['crown','Couronne','♛']],
   makeup:[['rose','Rose','🌸'],['coral','Corail','💋']]
 };
-export const warpEffects=new Set(['toon-face','wild-face','big-eyes','puffy-face','reactive-mouth']);
+export const warpEffects=new Set(['pig-face','toon-face','wild-face','big-eyes','puffy-face','reactive-mouth']);
 export const selectedWarp=selection=>selection.fun||null;
 export const hasEffects=selection=>Object.values(selection).some(Boolean);
 
@@ -18,6 +18,16 @@ export function drawAppearance(ctx,landmarks,selection,width,height){
   const span=Math.hypot(b.x-a.x,b.y-a.y),angle=Math.atan2(b.y-a.y,b.x-a.x);
   if(!Number.isFinite(span)||span<2)return;
   ctx.save();
+  if(selection.fun==='pig-face'){
+    const nose=p(4),mouth=p(13);ctx.save();ctx.translate(nose.x,nose.y);ctx.rotate(angle);
+    ctx.fillStyle='rgba(239,151,151,.94)';ctx.strokeStyle='rgba(126,61,61,.75)';ctx.lineWidth=Math.max(2,span*.012);
+    ctx.beginPath();ctx.ellipse(0,0,span*.19,span*.13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(55,24,28,.88)';for(const x of [-.065,.065]){ctx.beginPath();ctx.ellipse(span*x,0,span*.035,span*.052,0,0,Math.PI*2);ctx.fill();}ctx.restore();
+    ctx.save();ctx.translate(mouth.x,mouth.y+span*.12);ctx.rotate(angle);ctx.fillStyle='rgba(244,116,146,.96)';ctx.strokeStyle='rgba(130,49,70,.7)';ctx.lineWidth=Math.max(2,span*.01);ctx.beginPath();ctx.ellipse(0,span*.07,span*.12,span*.24,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+  }
+  if(selection.fun==='wild-face'){
+    const mouth=p(13);ctx.save();ctx.translate(mouth.x,mouth.y+span*.08);ctx.rotate(angle);ctx.fillStyle='rgba(244,112,145,.94)';ctx.strokeStyle='rgba(116,42,65,.7)';ctx.lineWidth=Math.max(2,span*.01);ctx.beginPath();ctx.ellipse(0,span*.07,span*.105,span*.21,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+  }
   if(selection.makeup){
     const lip=selection.makeup==='coral'?'rgba(238,83,63,.58)':'rgba(194,46,108,.48)';
     const contours=[[61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185],[78,95,88,178,87,14,317,402,318,324,308,415,310,311,312,13,82,81,80,191]];
