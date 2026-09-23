@@ -152,9 +152,16 @@
       content.replaceChildren();
       if(kind==='filters'){const filters=$s('myeventCameraModal').cameraFilterStrip;if(filters)content.appendChild(filters);return;}
       if(kind==='beauty'){
-        const note=document.createElement('p');note.textContent='Adoucissement et lumière du visage. Le réglage agit en direct et sur la photo enregistrée.';content.appendChild(note);
+        const modal=$s('myeventCameraModal'),current=modal.cameraGetBeauty?.()??0;
+        const note=document.createElement('p');note.textContent='Réglage Beauté indépendant des filtres. Il ajuste progressivement lumière, contraste, saturation et chaleur.';content.appendChild(note);
+        const wrap=document.createElement('label');wrap.className='cameraRetouchControl';
+        wrap.innerHTML='<span>Intensité <output>'+Math.round(current)+'</output>%</span><input type="range" min="0" max="100" value="'+current+'" step="1">';
+        const input=wrap.querySelector('input'),out=wrap.querySelector('output');
+        input.addEventListener('input',()=>{out.textContent=input.value;modal.cameraSetBeauty?.(Number(input.value));});
+        content.appendChild(wrap);
         const row=document.createElement('div');row.className='cameraPanelChoices';
-        [['original','Désactivé'],['naturel','Naturel'],['beauty','Doux']].forEach(([value,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>{$s('myeventCameraModal').cameraSetFilter?.(value);row.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));});row.appendChild(b);});content.appendChild(row);return;
+        [['0','Désactivé'],['35','Naturel'],['65','Doux']].forEach(([value,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>{input.value=value;out.textContent=value;modal.cameraSetBeauty?.(Number(value));});row.appendChild(b);});
+        content.appendChild(row);return;
       }
       if(kind==='retouch'){
         const note=document.createElement('p');note.textContent='Réglages photo indépendants des filtres.';content.appendChild(note);
