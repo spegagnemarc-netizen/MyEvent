@@ -182,7 +182,7 @@
       if(kind==='timer'||kind==='ratio'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
         const options=kind==='timer'?[['0','Désactivé'],['3','3 s'],['5','5 s'],['10','10 s']]:[['9:16','9:16'],['4:3','4:3'],['1:1','1:1']];
-        options.forEach(([value,label])=>{const choice=document.createElement('button');choice.type='button';choice.textContent=label;choice.classList.toggle('active',value===(kind==='timer'?String(timerSeconds):cameraRatio));choice.addEventListener('click',()=>{if(kind==='timer'){timerSeconds=Number(value);$s('cameraTimerBtn').dataset.timer=value;}else{cameraRatio=value;applyCameraRatio();}closePanel();});row.appendChild(choice);});
+        options.forEach(([value,label])=>{const choice=document.createElement('button');choice.type='button';choice.textContent=label;choice.classList.toggle('active',value===(kind==='timer'?String(timerSeconds):cameraRatio));choice.addEventListener('click',()=>{if(kind==='timer'){timerSeconds=Number(value);const legacy=$s('cameraTimerBtn'),side=$s('cameraTimerSide');if(legacy){legacy.dataset.timer=value;legacy.querySelector('small')&&(legacy.querySelector('small').textContent=timerSeconds?timerSeconds+' s':'Off');}if(side){side.classList.toggle('active',timerSeconds>0);side.setAttribute('aria-pressed',String(timerSeconds>0));side.setAttribute('aria-label',timerSeconds?'Minuteur '+timerSeconds+' secondes':'Minuteur désactivé');}}else{cameraRatio=value;applyCameraRatio();}closePanel();});row.appendChild(choice);});
         content.appendChild(row);return;
       }
       const descriptions={
@@ -436,6 +436,7 @@
   }
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
     if(cameraMode==='video'){
+      cancelCountdown();
       if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();return;}
       if(!myeventCameraStream||typeof MediaRecorder==='undefined'){
         cameraPlaceholder.textContent='Enregistrement vidéo indisponible sur ce navigateur.';cameraPlaceholder.style.display='grid';return;
@@ -466,7 +467,7 @@
     el.hidden=false;el.textContent=String(timerSeconds);
     let remaining=timerSeconds;
     const tick=()=>{if(token!==countdownToken||revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
-      remaining--;if(remaining>0){el.textContent=String(remaining);setTimeout(tick,1000);}else{el.hidden=true;captureMyEventPhoto();}};
+      remaining--;if(remaining>0){el.textContent=String(remaining);setTimeout(tick,1000);}else{el.hidden=true;el.textContent='';captureMyEventPhoto();}};
     setTimeout(tick,1000);
   });
   $s('cameraGalleryBtn')?.addEventListener('click',()=>{
