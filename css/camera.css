@@ -106,3 +106,13 @@
 @media(max-width:375px){#myeventCameraModal .cameraGlassSettings{width:46px;min-height:44px}#myeventCameraModal .cameraGlassSettings[open]{right:124px;margin-right:-124px}}
 @media(max-height:670px){#myeventCameraModal .cameraSideTool{min-height:39px!important;padding:2px!important}#myeventCameraModal .cameraSideTools{gap:2px!important}#myeventCameraModal .cameraProTop{height:calc(92px + env(safe-area-inset-top))!important;min-height:calc(92px + env(safe-area-inset-top))!important}}
 @supports not (height:100dvh){#myeventCameraModal,#myeventCameraModal .cameraProSheet{height:100vh!important;min-height:100vh!important}}
+
+/* Direct Lens carousel — fast camera-first access inspired by familiar lens UX. */
+#myeventCameraModal .cameraLensStrip{position:absolute;left:0;right:0;bottom:calc(126px + env(safe-area-inset-bottom));z-index:18;display:flex;align-items:flex-end;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:calc(50vw - 39px);padding:10px calc(50vw - 39px) 5px;box-sizing:border-box;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+#myeventCameraModal .cameraLensStrip::-webkit-scrollbar{display:none}
+#myeventCameraModal .cameraLens{flex:0 0 64px;width:64px;border:0!important;background:transparent!important;color:#fff!important;padding:0!important;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;text-shadow:0 1px 4px #000}
+#myeventCameraModal .cameraLens span{display:grid;place-items:center;width:54px;height:54px;box-sizing:border-box;border-radius:50%;font-size:27px;background:rgba(20,20,24,.68);border:2px solid rgba(255,255,255,.72);box-shadow:0 2px 10px rgba(0,0,0,.35);transition:transform .16s,border-width .16s}
+#myeventCameraModal .cameraLens small{font-size:9px;font-weight:800;white-space:nowrap;color:#fff}
+#myeventCameraModal .cameraLens.active{flex-basis:78px;width:78px}
+#myeventCameraModal .cameraLens.active span{width:70px;height:70px;font-size:34px;border:4px solid #fff;transform:translateY(-2px);box-shadow:0 0 0 2px rgba(255,106,52,.75),0 3px 14px rgba(0,0,0,.5)}
+#myeventCameraModal[data-camera-state="preview"] .cameraLensStrip{display:none!important}
