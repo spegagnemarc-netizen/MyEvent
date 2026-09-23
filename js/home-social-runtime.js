@@ -576,30 +576,30 @@
     }
   },true);
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
-  const cameraFeedStorageKey='myevent_camera_feed_v1';
-  function loadCameraFeedPosts(){
-    let rows=[];try{rows=JSON.parse(localStorage.getItem(cameraFeedStorageKey)||'[]');}catch(error){}
-    if(!Array.isArray(rows))return;
-    rows.slice().reverse().forEach(item=>{
-      if(!item?.image)return;
-      const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
-      post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-      post.querySelector('img').src=item.image;post.querySelector('.socialPostMeta span').textContent=new Date(item.createdAt||Date.now()).toLocaleString('fr-FR')+' · 📍 MyEvent';$s('socialFeed')?.prepend(post);
-    });
+  function renderCameraFeedPost(item,prepend=true){
+    if(!item?.image)return;
+    const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
+    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
+    post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
+    prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
   }
-  loadCameraFeedPosts();
-  $s('cameraPublishBtn')?.addEventListener('click',()=>{
+  async function loadCameraFeedPosts(){
+    if(typeof window.myeventLoadCameraPosts!=='function')return;
+    try{const rows=await window.myeventLoadCameraPosts(30);rows.slice().reverse().forEach(item=>renderCameraFeedPost(item,true));}catch(error){console.warn('Fil caméra Supabase indisponible:',error?.message||error);}
+  }
+  setTimeout(loadCameraFeedPosts,500);
+  $s('cameraPublishBtn')?.addEventListener('click',async()=>{
     if(!myeventCapturedDataUrl)return;
-    let rows=[];try{rows=JSON.parse(localStorage.getItem(cameraFeedStorageKey)||'[]');}catch(error){}
-    if(!Array.isArray(rows))rows=[];
-    const item={id:crypto.randomUUID?.()||String(Date.now()),image:myeventCapturedDataUrl,createdAt:new Date().toISOString()};
-    rows.push(item);
-    try{localStorage.setItem(cameraFeedStorageKey,JSON.stringify(rows.slice(-12)));}catch(error){
-      cameraPlaceholder.textContent='Photo trop volumineuse pour être conservée sur cet appareil.';cameraPlaceholder.style.display='grid';return;
-    }
-    const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id;
-    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-    post.querySelector('img').src=item.image;$s('socialFeed')?.prepend(post);closeMyEventCamera();
+    const button=$s('cameraPublishBtn');button.disabled=true;
+    try{
+      if(typeof window.myeventPublishCameraPost!=='function')throw new Error('Publication Supabase indisponible.');
+      const saved=await window.myeventPublishCameraPost(myeventCapturedDataUrl);
+      const signedRows=await window.myeventLoadCameraPosts?.(1);
+      renderCameraFeedPost(signedRows?.[0]||{...saved,image:myeventCapturedDataUrl},true);
+      closeMyEventCamera();
+    }catch(error){
+      cameraPlaceholder.textContent='Publication impossible : '+(error?.message||String(error));cameraPlaceholder.style.display='grid';
+    }finally{button.disabled=false;}
   });
   $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));
