@@ -179,7 +179,7 @@
           content.appendChild(wrap);
         });
         const reset=document.createElement('button');reset.type='button';reset.textContent='Réinitialiser';
-        reset.addEventListener('click',()=>{modal.cameraResetRetouch?.();openPanel('retouch',source);openPanel('retouch',source);});
+        reset.addEventListener('click',()=>{modal.cameraResetRetouch?.();closePanel();openPanel('retouch',source);});
         content.appendChild(reset);return;
       }
       if(kind==='appearance'){$s('myeventCameraModal').cameraRenderAppearance?.(content);return;}
@@ -272,7 +272,7 @@
         button.classList.remove('active');button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Flash matériel indisponible');
       }
     });
-    $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
+    $s('cameraRetouchBtn')?.addEventListener('click',()=>openPanel('retouch',$s('cameraRetouchSide')||$s('cameraRetouchBtn')));
     $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
     $s('cameraQualityBtn')?.addEventListener('click',async e=>{
       const button=e.currentTarget,track=myeventCameraStream?.getVideoTracks?.()[0];
