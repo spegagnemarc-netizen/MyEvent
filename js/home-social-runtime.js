@@ -283,8 +283,8 @@
     sheet?.classList.toggle('cameraPortraitMode',mode==='portrait');
     if(mode==='selfie'){
       if(myeventFacingMode!=='user'){myeventFacingMode='user';startMyEventCamera();}
-    }else if(mode==='photo'){
-      sheet?.classList.remove('cameraPortraitMode');
+    }else if(mode==='photo'||mode==='portrait'){
+      if(mode==='photo')sheet?.classList.remove('cameraPortraitMode');
       if(myeventFacingMode!=='environment'){myeventFacingMode='environment';startMyEventCamera();}
     }
     if(mode==='plus')cameraZoom?.openPanel?.('stickers',$s('cameraStickerSide'));
@@ -383,10 +383,21 @@
     const scale=Math.min(1,maxEdge/Math.max(c.width,c.height));c.width=Math.max(1,Math.round(c.width*scale));c.height=Math.max(1,Math.round(c.height*scale));
     c.getContext('2d').drawImage(cameraVideo,(sourceW-w)/2,(sourceH-h)/2,w,h,0,0,c.width,c.height);
   };
-  function captureMyEventPhoto(){
+  async function captureMyEventPhoto(){
     if(cameraModal.dataset.cameraState==='processing')return;
     if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
     if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
+    if(cameraMode==='portrait'){
+      cameraPlaceholder.textContent='Mode Portrait : vérification du visage…';cameraPlaceholder.style.display='grid';
+      const probe=document.createElement('canvas');cameraModal.cameraDrawFrame(probe,640);
+      try{
+        const {FaceEngine}=await import('./camera-face-engine.mjs'),engine=new FaceEngine();
+        let face=null;try{face=await engine.detect(probe,'IMAGE');}finally{engine.close();probe.width=probe.height=0;}
+        if(!face){cameraPlaceholder.textContent='Aucun visage détecté. Rapproche-toi ou utilise PHOTO.';cameraPlaceholder.style.display='grid';return;}
+      }catch(error){
+        cameraPlaceholder.textContent='Portrait indisponible sur cet appareil. Utilise PHOTO.';cameraPlaceholder.style.display='grid';return;
+      }
+    }
     const revision=resetCameraPreview(),c=document.createElement('canvas');
     cameraModal.cameraDrawFrame(c);
     cameraSourceCanvas=c;renderCameraPhoto(revision);
