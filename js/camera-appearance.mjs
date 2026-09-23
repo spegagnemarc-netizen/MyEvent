@@ -59,6 +59,7 @@ export function createAppearance(modal){
       }
     }finally{busy=false;schedule(Math.max(0,interval-(performance.now()-started)));}
   }
+  function setLens(id){selection.fun=id||null;changed();modal.dispatchEvent(new CustomEvent('camera-lens-state',{detail:{lens:selection.fun}}));}
   function changed(){
     photoEpoch++;failed=false;cache=new WeakMap();stopLive();
     if(!hasEffects(selection)){release();setStatus('Aucun effet Apparence.');}
@@ -128,5 +129,5 @@ export function createAppearance(modal){
     if(modal.classList.contains('open')&&modal.dataset.cameraState==='processing')modal.dispatchEvent(new Event('camera-appearance-change'));
     else schedule();
   });
-  return {renderPanel,compose};
+  return {renderPanel,compose,setLens,getLens:()=>selection.fun};
 }
