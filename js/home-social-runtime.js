@@ -36,6 +36,39 @@
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
   // Camera controls reuse the existing capture and filter actions.
+  let timerSeconds=0,cameraRatio='9:16',countdownToken=0,levelActive=false;
+  const cameraSheet=$s('myeventCameraModal')?.querySelector('.cameraProSheet');
+  function applyCameraRatio(){
+    const [w,h]=cameraRatio.split(':').map(Number),aspect=w/h;
+    const width=Math.min(innerWidth,innerHeight*aspect),height=width/aspect;
+    cameraSheet?.style.setProperty('--camera-frame-width',width+'px');
+    cameraSheet?.style.setProperty('--camera-frame-height',height+'px');
+    $s('cameraRatioSide')?.setAttribute('aria-label','Ratio '+cameraRatio);
+  }
+  window.addEventListener('resize',applyCameraRatio);applyCameraRatio();
+  function onCameraOrientation(e){
+    if(!levelActive)return;
+    const indicator=$s('cameraLevelIndicator');
+    if(!indicator)return;
+    const angle=screen.orientation?.angle??window.orientation??0;
+    const tilt=(angle===90||angle===-90)?e.beta:e.gamma;
+    if(typeof tilt!=='number'||!Number.isFinite(tilt)){indicator.classList.add('unavailable');indicator.setAttribute('aria-label','Niveau indisponible');return;}
+    indicator.classList.remove('unavailable');indicator.setAttribute('aria-label','Inclinaison '+Math.round(tilt)+' degrés');
+    indicator.style.setProperty('--level-angle',Math.max(-45,Math.min(45,tilt))+'deg');
+    indicator.classList.toggle('aligned',Math.abs(tilt)<2);
+  }
+  async function toggleCameraLevel(){
+    const button=$s('cameraLevelSide'),indicator=$s('cameraLevelIndicator');
+    if(levelActive){levelActive=false;window.removeEventListener('deviceorientation',onCameraOrientation);indicator.hidden=true;button.classList.remove('active');return;}
+    if(!indicator.hidden&&indicator.classList.contains('unavailable')){indicator.hidden=true;return;}
+    if(typeof DeviceOrientationEvent==='undefined'||!window.isSecureContext){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Niveau indisponible sur cet appareil');return;}
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      try{if(await DeviceOrientationEvent.requestPermission()!=='granted'){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau refusée');return;}}catch(e){indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','Autorisation du niveau indisponible');return;}
+    }
+    levelActive=true;button.classList.add('active');indicator.hidden=false;indicator.classList.add('unavailable');indicator.setAttribute('data-message','En attente du capteur d’orientation');
+    window.addEventListener('deviceorientation',onCameraOrientation);
+  }
+  function cancelCountdown(){countdownToken++;const el=$s('cameraCountdown');if(el){el.hidden=true;el.textContent='';}}
   const cameraZoom=(function(){
     const sheet=$s('myeventCameraModal')?.querySelector('.cameraProSheet');
     const video=$s('myeventCameraVideo');
@@ -68,7 +101,7 @@
     preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
     const filters=content?.querySelector('.cameraFilterStrip');
-    const buttons=['cameraAiSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide'];
+    const buttons=['cameraAiSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide','cameraTimerSide','cameraRatioSide'];
     function closePanel(){
       if(panel)panel.hidden=true;
       buttons.forEach(id=>{const b=$s(id);b?.classList.remove('active');b?.setAttribute('aria-expanded','false');});
@@ -76,12 +109,18 @@
     function openPanel(kind,source){
       if(!panel||!content)return;
       if(!panel.hidden&&panel.dataset.kind===kind){closePanel();return;}
-      closePanel();panel.hidden=false;panel.dataset.kind=kind;
+      closePanel();const settings=sheet?.querySelector('.cameraGlassSettings');if(settings)settings.open=false;panel.hidden=false;panel.dataset.kind=kind;
       source?.classList.add('active');source?.setAttribute('aria-expanded','true');
-      const names={ai:'IA photo',filters:'Effets / Filtres',appearance:'Apparence',stickers:'Stickers / Plus',music:'Ajouter un son'};
+      const names={ai:'IA photo',filters:'Effets / Filtres',appearance:'Apparence',stickers:'Stickers / Plus',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage'};
       title.textContent=names[kind];
       content.replaceChildren();
       if(kind==='filters'){content.appendChild(filters);return;}
+      if(kind==='timer'||kind==='ratio'){
+        const row=document.createElement('div');row.className='cameraPanelChoices';
+        const options=kind==='timer'?[['0','Désactivé'],['3','3 s'],['5','5 s'],['10','10 s']]:[['9:16','9:16'],['4:3','4:3'],['1:1','1:1']];
+        options.forEach(([value,label])=>{const choice=document.createElement('button');choice.type='button';choice.textContent=label;choice.classList.toggle('active',value===(kind==='timer'?String(timerSeconds):cameraRatio));choice.addEventListener('click',()=>{if(kind==='timer'){timerSeconds=Number(value);$s('cameraTimerBtn').dataset.timer=value;}else{cameraRatio=value;applyCameraRatio();}closePanel();});row.appendChild(choice);});
+        content.appendChild(row);return;
+      }
       const descriptions={
         ai:'Traitement IA à connecter. La commande existante est disponible après une photo.',
         appearance:'Cheveux · Barbe · Maquillage · Lunettes · Accessoires · Looks · Transformations créatives IA : à venir.',
@@ -111,19 +150,20 @@
     }
     buttons.forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
     $s('cameraPanelClose')?.addEventListener('click',closePanel);
+    sheet?.querySelector('.cameraGlassSettings')?.addEventListener('toggle',e=>{if(e.currentTarget.open)closePanel();});
     $s('cameraGridBtn')?.addEventListener('click',()=> $s('cameraGridOverlay')?.classList.toggle('on'));
     const triggerCamera=(id)=>$s(id)?.click();
-    $s('cameraTimerSide')?.addEventListener('click',e=>{triggerCamera('cameraTimerBtn');e.currentTarget.classList.toggle('active')});
-    $s('cameraRatioSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
+    $s('cameraTimerSide')?.addEventListener('click',e=>openPanel('timer',e.currentTarget));
+    $s('cameraRatioSide')?.addEventListener('click',e=>openPanel('ratio',e.currentTarget));
     $s('cameraGridSide')?.addEventListener('click',()=>{triggerCamera('cameraGridBtn');});
-    $s('cameraLevelSide')?.addEventListener('click',e=>e.currentTarget.classList.toggle('active'));
+    $s('cameraLevelSide')?.addEventListener('click',toggleCameraLevel);
     $s('cameraBeautySide')?.addEventListener('click',()=>{if(panel?.hidden||panel?.dataset.kind!=='filters')openPanel('filters',$s('cameraFilterSide'));content?.querySelector('[data-filter="beauty"]')?.click();});
     $s('cameraRetouchSide')?.addEventListener('click',()=>openPanel('appearance',$s('cameraAppearanceSide')));
 
     $s('cameraFlashBtn')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active'); e.currentTarget.textContent=e.currentTarget.classList.contains('active')?'⚡':'⚡';});
     $s('cameraSelfieBtn')?.addEventListener('click',()=>{ if(sheet){sheet.classList.add('selfieActive');} });
     $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
-    $s('cameraTimerBtn')?.addEventListener('click',e=>{ const active=e.currentTarget.dataset.timer==='3'; e.currentTarget.dataset.timer=active?'0':'3'; e.currentTarget.innerHTML=active?'◷ <b>Minuteur</b><small>Désactivé</small>':'◷ <b>Minuteur</b><small>3 s</small>'; });
+    $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
     $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
     return {get factor(){return factor;},get hardware(){return hardware;},
       reset(){factor=1;track=null;hardware=false;zoomRequest++;startDistance=0;if(video)video.style.transform='none';if(indicator)indicator.classList.remove('visible');closePanel();},
@@ -134,6 +174,7 @@
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
   let cameraRevision=0;
   function resetCameraPreview(){
+    cancelCountdown();
     cameraRevision++;
     myeventCapturedDataUrl='';
     cameraModal.dataset.cameraState='viewfinder';
@@ -155,7 +196,7 @@
     cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
     cameraImg.src=data;
   }
-  function stopMyEventCamera(){cameraZoom.reset();try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
+  function stopMyEventCamera(){cameraZoom.reset();if(levelActive){levelActive=false;window.removeEventListener('deviceorientation',onCameraOrientation);$s('cameraLevelIndicator').hidden=true;$s('cameraLevelSide').classList.remove('active');}try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
   async function startMyEventCamera(){
     const revision=resetCameraPreview();stopMyEventCamera();cameraPlaceholder.style.display='grid';
     if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie.</span>';return;}
@@ -170,16 +211,29 @@
   cameraModal?.addEventListener('camera-retake',()=>{if(cameraModal.classList.contains('open'))startMyEventCamera();});
   $s('cameraCloseBtn')?.addEventListener('click',closeMyEventCamera);
   cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
-  $s('cameraShutterBtn')?.addEventListener('click',()=>{
+  function captureMyEventPhoto(){
     if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
     if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
+    const z=cameraZoom.factor||1,hardware=cameraZoom.hardware;
     const revision=resetCameraPreview(),c=document.createElement('canvas');
-    c.width=cameraVideo.videoWidth;c.height=cameraVideo.videoHeight;
-    const z=cameraZoom.factor||1;
-    // Hardware zoom is already baked into the track. Visual fallback needs a matching crop.
-    if(cameraZoom.hardware)c.getContext('2d').drawImage(cameraVideo,0,0);
-    else {const w=c.width/z,h=c.height/z;c.getContext('2d').drawImage(cameraVideo,(c.width-w)/2,(c.height-h)/2,w,h,0,0,c.width,c.height);}
+    const [rw,rh]=cameraRatio.split(':').map(Number),ratio=rw/rh;
+    const sourceW=cameraVideo.videoWidth,sourceH=cameraVideo.videoHeight;
+    c.width=sourceW;c.height=Math.round(sourceW/ratio);
+    if(c.height>sourceH){c.height=sourceH;c.width=Math.round(sourceH*ratio);}
+    // Crop the visible central frame; hardware zoom is already part of the track.
+    const cropZoom=hardware?1:z,w=c.width/cropZoom,h=c.height/cropZoom;
+    c.getContext('2d').drawImage(cameraVideo,(sourceW-w)/2,(sourceH-h)/2,w,h,0,0,c.width,c.height);
     showCameraPreview(c.toDataURL('image/jpeg',.9),revision);
+  }
+  $s('cameraShutterBtn')?.addEventListener('click',()=>{
+    if(cameraModal.dataset.cameraState==='preview'||!timerSeconds||!myeventCameraStream||cameraVideo.readyState<2){captureMyEventPhoto();return;}
+    if(!$s('cameraCountdown').hidden){cancelCountdown();return;}
+    const token=++countdownToken,revision=cameraRevision,el=$s('cameraCountdown');
+    el.hidden=false;el.textContent=String(timerSeconds);
+    let remaining=timerSeconds;
+    const tick=()=>{if(token!==countdownToken||revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+      remaining--;if(remaining>0){el.textContent=String(remaining);setTimeout(tick,1000);}else{el.hidden=true;captureMyEventPhoto();}};
+    setTimeout(tick,1000);
   });
   $s('cameraGalleryBtn')?.addEventListener('click',()=>cameraFile?.click());
   cameraFile?.addEventListener('change',()=>{

@@ -40,10 +40,10 @@
 
 
 
-<script src="js/camera-capture2-final.js"></script>
+<script src="js/camera-capture2-final.js?v=3"></script>
 
   <link rel="stylesheet" href="css/inline-extracted.css">
-  <link rel="stylesheet" href="css/camera.css?v=2">
+  <link rel="stylesheet" href="css/camera.css?v=3">
 </head>
 <body>
 <div class="app">
@@ -248,6 +248,8 @@
         <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prépare ton selfie</strong><span>Place ton visage dans le cadre.</span></div>
         <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
         <div class="cameraZoomIndicator" id="cameraZoomIndicator" aria-live="off"></div>
+        <div class="cameraCountdown" id="cameraCountdown" aria-live="assertive" hidden></div>
+        <div class="cameraLevelIndicator" id="cameraLevelIndicator" aria-hidden="true" hidden><span></span></div>
       </div>
 
       <section class="cameraCreativePanel" id="cameraCreativePanel" aria-label="Outils créatifs" hidden>
@@ -264,7 +266,7 @@
 
       <div class="cameraProBottom">
         <button type="button" class="cameraProRoundAction" id="cameraGalleryBtn" aria-label="Galerie"><span>▣</span><small>Galerie</small></button>
-        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span>ME</span></button>
+        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span aria-hidden="true"><img src="assets/camera-me-logo.jpeg" alt=""></span></button>
         <button type="button" class="cameraProRoundAction" id="cameraFlipBtn" aria-label="Changer de caméra"><span>↻</span><small>Caméra</small></button>
       </div>
 
@@ -276,7 +278,7 @@
         <button type="button" id="cameraEventBtn">🎉 <b>Événement</b><small>Créer</small></button>
       </div>
 
-      <input id="cameraFileInput" type="file" accept="image/*" capture="user" style="display:none">
+      <input id="cameraFileInput" type="file" accept="image/*" style="display:none">
       <div class="cameraCaptured cameraProCaptured" id="cameraCapturedActions">
         <button type="button" id="cameraPublishBtn">🚀 Publier</button>
         <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
@@ -1168,7 +1170,7 @@
 
 
 
-<script src="js/home-social-runtime.js"></script>
+<script src="js/home-social-runtime.js?v=3"></script>
 
 
 
@@ -1328,6 +1330,3 @@
 
 </body>
 </html>
-
-
-

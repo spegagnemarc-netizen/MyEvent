@@ -13,7 +13,7 @@
     const settings=document.createElement('details');
     settings.className='cameraGlassSettings';
     settings.innerHTML='<summary aria-label="Réglages caméra">⚙</summary><label for="cameraControlOpacity">Transparence des boutons <output id="cameraControlOpacityValue">35 %</output></label><input id="cameraControlOpacity" type="range" min="15" max="70" step="1" value="35" aria-describedby="cameraControlOpacityValue">';
-    sheet.appendChild(settings);
+    right.appendChild(settings);
     const opacityInput=settings.querySelector('input'), opacityValue=settings.querySelector('output');
     const opacityKey='myeventCameraControlOpacity';
     function applyOpacity(value){

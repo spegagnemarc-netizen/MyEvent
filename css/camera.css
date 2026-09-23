@@ -4,6 +4,7 @@
 #myeventCameraModal .cameraProSheet:before{display:none!important}
 #myeventCameraModal .cameraProPreview{flex:1 1 auto!important;min-height:0!important;height:auto!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important;box-shadow:none!important;touch-action:none}
 #myeventCameraModal .cameraProPreview video,#myeventCameraModal .cameraProPreview img{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:-1;pointer-events:none;transform-origin:center center}
+#myeventCameraModal .cameraProPreview video,#myeventCameraModal .cameraProPreview img{width:var(--camera-frame-width,100vw)!important;height:var(--camera-frame-height,100dvh)!important;margin:auto!important}
 #myeventCameraModal .cameraProTop{height:calc(104px + env(safe-area-inset-top))!important;min-height:calc(104px + env(safe-area-inset-top))!important;box-sizing:border-box!important;padding:calc(7px + env(safe-area-inset-top)) 12px 4px!important;background:transparent!important;border:0!important;position:relative;z-index:5;backdrop-filter:none!important}
 #myeventCameraModal .cameraProTopRight{gap:7px!important}
 #myeventCameraModal .cameraProTitle span{font-size:15px!important;font-weight:900!important;letter-spacing:1.5px!important}
@@ -34,6 +35,8 @@
 #myeventCameraModal .cameraProShutter,#myeventCameraModal .cameraShutter{width:76px!important;height:76px!important;background:rgba(0,0,0,var(--camera-control-opacity,.35))!important;border:1.5px solid #fff!important;box-shadow:inset 0 0 0 2px rgba(255,106,52,.28)!important;display:grid;place-items:center;font-size:0!important;transition:transform .15s}
 #myeventCameraModal .cameraProShutter:after{display:none!important}
 #myeventCameraModal .cameraProShutter span{display:grid!important;place-items:center;width:59px!important;height:59px!important;background:rgba(0,0,0,.35)!important;border:1px solid rgba(255,106,52,.7)!important;border-radius:50%;color:#fff;font-size:21px;font-weight:900;letter-spacing:-2px}
+#myeventCameraModal .cameraProShutter span{overflow:hidden}
+#myeventCameraModal .cameraProShutter span img{display:block;width:70px;height:70px;max-width:none;object-fit:cover;object-position:center;filter:drop-shadow(0 0 2px rgba(255,112,35,.55))}
 #myeventCameraModal .cameraProShutter:active{transform:scale(.93)}
 #myeventCameraModal .cameraProRoundAction{background:transparent!important;border:0!important;color:#fff!important}
 #myeventCameraModal .cameraProRoundAction span{width:42px!important;height:42px!important;color:#fff!important}
@@ -42,7 +45,9 @@
 #myeventCameraModal .cameraProTools:after{display:none!important;content:none!important}
 #myeventCameraModal .cameraHint{display:none!important}
 #myeventCameraModal .cameraPremiumBar,#myeventCameraModal .cameraQualityBar{display:none!important}
-#myeventCameraModal .cameraGlassSettings{position:absolute;right:8px;top:calc(110px + env(safe-area-inset-top));z-index:15;border:1px solid;border-radius:14px;padding:6px 9px;max-width:170px;font-size:11px}
+#myeventCameraModal .cameraGlassSettings{position:relative;right:auto;top:auto;z-index:15;border:1px solid;border-radius:14px;padding:6px 9px;width:53px;box-sizing:border-box;font-size:11px;min-height:49px;flex:none}
+#myeventCameraModal .cameraGlassSettings[open]{width:170px;right:117px;margin-right:-117px}
+#myeventCameraModal .cameraGlassSettings summary{height:35px;display:grid;place-items:center;font-size:20px}
 #myeventCameraModal .cameraGlassSettings summary{cursor:pointer;text-align:right;list-style:none}
 #myeventCameraModal .cameraGlassSettings input{width:100%;accent-color:#fff}
 #myeventCameraModal .cameraRetake{position:absolute;top:calc(110px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:15;border:1px solid;border-radius:14px;padding:8px 12px}
@@ -50,6 +55,14 @@
 #myeventCameraModal[data-camera-state="preview"] #cameraCapturedActions.open{display:flex!important}
 #myeventCameraModal[data-camera-state="preview"] .cameraRetake{display:block!important}
 #myeventCameraModal[data-camera-state="preview"] .cameraGlassSettings{visibility:hidden}
+#myeventCameraModal .cameraCountdown{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:clamp(80px,22vw,144px);font-weight:900;color:#fff;text-shadow:0 2px 22px #000;pointer-events:none;z-index:12}
+#myeventCameraModal .cameraCountdown[hidden],#myeventCameraModal .cameraLevelIndicator[hidden]{display:none!important}
+#myeventCameraModal .cameraLevelIndicator{position:fixed;left:50%;top:46%;transform:translate(-50%,-50%);width:110px;height:38px;pointer-events:none;z-index:10;border-bottom:2px solid rgba(255,255,255,.6)}
+#myeventCameraModal .cameraLevelIndicator span{display:block;width:110px;border-top:3px solid #fff;position:absolute;bottom:0;transform:rotate(var(--level-angle,0deg));transform-origin:center center}
+#myeventCameraModal .cameraLevelIndicator.aligned span{border-color:#f5cd69}
+#myeventCameraModal .cameraLevelIndicator.unavailable{width:auto;height:auto;min-width:110px;border:1px solid #fff;border-radius:12px;padding:6px 9px;background:rgba(0,0,0,.6);text-align:center;font-size:11px}
+#myeventCameraModal .cameraLevelIndicator.unavailable:after{content:attr(data-message)}
+#myeventCameraModal .cameraLevelIndicator.unavailable span{display:none}
 #myeventCameraModal .cameraCaptured{position:absolute!important;bottom:calc(126px + env(safe-area-inset-bottom))!important;left:8px!important;right:8px!important;z-index:20;gap:8px;flex-wrap:wrap}
 #myeventCameraModal .cameraCaptured button{flex:1;min-width:120px;border-radius:14px!important;color:#fff!important}
 #myeventCameraModal .cameraCreativePanel{position:absolute;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:calc(126px + env(safe-area-inset-bottom));z-index:21;max-height:min(46dvh,380px);overflow:auto;border:1px solid rgba(255,255,255,.24);border-radius:18px;padding:12px;color:#fff}
@@ -61,6 +74,8 @@
 #myeventCameraModal .cameraCreativePanel button{color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:7px}
 #myeventCameraModal .cameraCreativePanel button:disabled,#myeventCameraModal .cameraCreativePanel input:disabled{opacity:.55}
 #myeventCameraModal .cameraPanelChips{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+#myeventCameraModal .cameraPanelChoices{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#myeventCameraModal .cameraPanelChoices button.active{border-color:#fff;background:rgba(255,255,255,.3)}
 #myeventCameraModal .cameraPanelChips span{font-size:11px;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:6px}
 #myeventCameraModal .cameraMusicFields{display:grid;gap:8px;font-size:11px}
 #myeventCameraModal .cameraMusicFields label{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -73,5 +88,6 @@
 #myeventCameraModal :is(.cameraProIcon,.cameraSideTool,.cameraTierSwitch,.cameraGlassSettings,.cameraRetake,.cameraCreativePanel,.cameraFilterChip,.cameraProRoundAction span,.cameraCaptured button){background:rgba(0,0,0,var(--camera-control-opacity,.35))!important;border-color:rgba(255,255,255,.24)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
 #myeventCameraModal .cameraProIcon{width:40px!important;height:40px!important;border-radius:50%!important}
 @media(max-width:375px){#myeventCameraModal .cameraSideTool{width:46px!important;min-height:44px!important;font-size:16px!important}#myeventCameraModal .cameraSideTool small{font-size:7px!important}#myeventCameraModal .cameraSideTools{gap:3px!important}#myeventCameraModal .cameraProTitle span{font-size:12px!important}}
+@media(max-width:375px){#myeventCameraModal .cameraGlassSettings{width:46px;min-height:44px}#myeventCameraModal .cameraGlassSettings[open]{right:124px;margin-right:-124px}}
 @media(max-height:670px){#myeventCameraModal .cameraSideTool{min-height:39px!important;padding:2px!important}#myeventCameraModal .cameraSideTools{gap:2px!important}#myeventCameraModal .cameraProTop{height:calc(92px + env(safe-area-inset-top))!important;min-height:calc(92px + env(safe-area-inset-top))!important}}
 @supports not (height:100dvh){#myeventCameraModal,#myeventCameraModal .cameraProSheet{height:100vh!important;min-height:100vh!important}}
