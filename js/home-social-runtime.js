@@ -270,7 +270,23 @@
     });
     $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
     $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
-    $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
+    $s('cameraQualityBtn')?.addEventListener('click',async e=>{
+      const button=e.currentTarget,track=myeventCameraStream?.getVideoTracks?.()[0];
+      if(!track||track.readyState!=='live')return;
+      let caps,settings;try{caps=track.getCapabilities?.();settings=track.getSettings?.();}catch(error){}
+      const maxW=Number(caps?.width?.max)||Number(settings?.width)||0,maxH=Number(caps?.height?.max)||Number(settings?.height)||0;
+      const options=[['Auto',null],['HD',1280],['FHD',1920]].filter(([label,width])=>!width||maxW>=width);
+      if(maxW>=3840)options.push(['4K',3840]);
+      const current=button.dataset.q||'Auto',index=options.findIndex(([label])=>label===current),[next,width]=options[(index+1+options.length)%options.length];
+      if(width){
+        try{await track.applyConstraints({width:{ideal:width},height:{ideal:Math.round(width*9/16)}});}catch(error){return;}
+      }else{
+        try{await track.applyConstraints({width:{ideal:1280},height:{ideal:1280}});}catch(error){}
+      }
+      const actual=track.getSettings?.()||{},label=next==='Auto'?'Auto':next;
+      button.dataset.q=next;button.innerHTML=label+' <b>Qualité</b><small>'+(actual.width&&actual.height?actual.width+'×'+actual.height:label)+'</small>';
+      if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=actual.width&&actual.height?actual.width+'×'+actual.height:label;
+    });
     return {get factor(){return factor;},get hardware(){return hardware;},
       reset(){factor=1;track=null;hardware=false;zoomRequest++;startDistance=0;if(video)video.style.transform='none';if(indicator)indicator.classList.remove('visible');closePanel();},
       setTrack(newTrack){
@@ -351,6 +367,9 @@
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
       myeventCameraStream=stream;cameraVideo.srcObject=stream;
       const videoTrack=stream.getVideoTracks()[0];cameraZoom.setTrack(videoTrack);cameraPlaceholder.style.display='none';
+      const quality=$s('cameraQualityBtn'),qualityLabel=$s('cameraQualityLabel'),settings=videoTrack.getSettings?.()||{};
+      if(quality){quality.dataset.q='Auto';quality.innerHTML='Auto <b>Qualité</b><small>'+(settings.width&&settings.height?settings.width+'×'+settings.height:'Auto')+'</small>';}
+      if(qualityLabel)qualityLabel.textContent=settings.width&&settings.height?settings.width+'×'+settings.height:'Auto';
       const flash=$s('cameraFlashBtn');let caps;try{caps=videoTrack?.getCapabilities?.();}catch(error){}
       if(flash){
         const available=!!caps?.torch;
