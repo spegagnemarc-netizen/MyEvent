@@ -45,7 +45,7 @@
     const strip=document.createElement('div');
     strip.className='cameraFilterStrip';
     strip.innerHTML=[
-      ['original','◯','Original'],['naturel','●','Naturel'],['portrait','◉','Portrait'],['nb','◐','Noir & blanc'],['cartoon','✦','Cartoon'],['anime','◈','Anime'],['vintage','◍','Vintage'],['beauty','☺','Beauté']
+      ['original','◯','Original'],['naturel','●','Naturel'],['vif','✹','Vif'],['froid','❄','Froid'],['chaud','☀','Chaud'],['nb','◐','Noir & blanc'],['vintage','◍','Vintage'],['cinema','▰','Cinéma']
     ].map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+x[1]+'</span>'+x[2]+'</button>').join('');
     const filterHost=modal.querySelector('#cameraPanelContent');
     if(filterHost) filterHost.appendChild(strip);
@@ -53,7 +53,7 @@
 
     // Shared definitions for CSS live preview and pixel-based JPEG rendering.
     // No CanvasRenderingContext2D.filter dependency (including iPhone Safari).
-    const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],portrait:[['contrast',1.04],['saturate',1.03]],nb:[['grayscale',1]],cartoon:[['saturate',1.45],['contrast',1.12]],anime:[['saturate',1.28],['brightness',1.06],['contrast',1.04]],vintage:[['sepia',.42],['contrast',.94]],beauty:[['brightness',1.07],['saturate',.94],['contrast',.98]]};
+    const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],vif:[['saturate',1.22],['contrast',1.08]],froid:[['warmth',-12],['contrast',1.03]],chaud:[['warmth',14],['saturate',1.06]],nb:[['grayscale',1],['contrast',1.08]],vintage:[['sepia',.42],['contrast',.94],['saturate',.9]],cinema:[['contrast',1.12],['saturate',.88],['warmth',5]]};
     let selectedFilter='original';
     const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
     let beautyAmount=0;
@@ -101,6 +101,7 @@
     }
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
+    modal.cameraGetFilter=()=>selectedFilter;
     modal.cameraSetBeauty=value=>{beautyAmount=Math.min(100,Math.max(0,Number(value)||0));setFilter(selectedFilter);};
     modal.cameraGetBeauty=()=>beautyAmount;
     modal.cameraSetRetouch=(key,value)=>{
