@@ -55,10 +55,15 @@
     // No CanvasRenderingContext2D.filter dependency (including iPhone Safari).
     const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],portrait:[['contrast',1.04],['saturate',1.03]],nb:[['grayscale',1]],cartoon:[['saturate',1.45],['contrast',1.12]],anime:[['saturate',1.28],['brightness',1.06],['contrast',1.04]],vintage:[['sepia',.42],['contrast',.94]],beauty:[['brightness',1.07],['saturate',.94],['contrast',.98]]};
     let selectedFilter='original';
+    const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
     modal.cameraRenderPhoto=function(source){
       const output=document.createElement('canvas');output.width=source.width;output.height=source.height;
       const context=output.getContext('2d');context.drawImage(source,0,0);
-      const recipe=recipes[selectedFilter];
+      const recipe=[...recipes[selectedFilter]];
+      if(retouch.brightness!==100)recipe.push(['brightness',retouch.brightness/100]);
+      if(retouch.contrast!==100)recipe.push(['contrast',retouch.contrast/100]);
+      if(retouch.saturate!==100)recipe.push(['saturate',retouch.saturate/100]);
+      if(retouch.warmth!==0)recipe.push(['warmth',retouch.warmth]);
       if(!recipe.length)return output;
       const pixels=context.getImageData(0,0,output.width,output.height),data=pixels.data;
       const clamp=value=>Math.min(255,Math.max(0,value));
@@ -70,6 +75,8 @@
           else if(kind==='saturate'||kind==='grayscale'){
             const saturation=kind==='grayscale'?1-amount:amount,luma=.2126*r+.7152*g+.0722*b;
             r=luma+(r-luma)*saturation;g=luma+(g-luma)*saturation;b=luma+(b-luma)*saturation;
+          }else if(kind==='warmth'){
+            r+=amount*.75;b-=amount*.75;
           }else if(kind==='sepia'){
             const red=r,green=g,blue=b;
             r=red*(1-amount)+(.393*red+.769*green+.189*blue)*amount;
@@ -86,11 +93,14 @@
       selectedFilter=Object.hasOwn(recipes,name)?name:'original';
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>{const active=b.dataset.filter===selectedFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
       const video=modal.querySelector('#myeventCameraVideo'),img=modal.querySelector('#myeventCapturedImage');
-      if(video)video.style.filter=recipes[selectedFilter].map(([kind,value])=>kind+'('+value+')').join(' ')||'none';
+      if(video){const live=[...recipes[selectedFilter]];if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);video.style.filter=live.filter(([k])=>k!=='warmth').map(([kind,value])=>kind+'('+value+')').join(' ')||'none';}
       if(img)img.style.filter='none'; // The preview file already contains the filter.
       modal.dispatchEvent(new CustomEvent('camera-filter-change',{detail:{filter:selectedFilter}}));
     }
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
+    modal.cameraSetFilter=setFilter;
+    modal.cameraSetRetouch=(key,value)=>{if(!(key in retouch))return;retouch[key]=value;setFilter(selectedFilter);if(cameraSourceCanvas)modal.dispatchEvent(new CustomEvent('camera-filter-change'));};
+    modal.cameraResetRetouch=()=>{Object.assign(retouch,{brightness:100,contrast:100,saturate:100,warmth:0});setFilter(selectedFilter);if(cameraSourceCanvas)modal.dispatchEvent(new CustomEvent('camera-filter-change'));};
     setFilter('original');
 
     let appearance=null,appearanceLoading=null,panelRequest=0;
