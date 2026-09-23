@@ -275,6 +275,7 @@
   // Camera modes: each button now has a distinct behavior instead of being decorative.
   let cameraMode='photo',mediaRecorder=null,recordedChunks=[];
   function setCameraMode(mode){
+    if(mediaRecorder?.state==='recording'&&mode!=='video')mediaRecorder.stop();
     cameraMode=mode;
     const modal=$s('myeventCameraModal'),sheet=modal?.querySelector('.cameraProSheet');
     sheet?.querySelectorAll('.cameraModeBtn').forEach(b=>b.classList.toggle('active',b.dataset.cameraMode===mode));
@@ -324,12 +325,16 @@
     cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
     cameraImg.src=data;
   }
-  function stopMyEventCamera(){cameraZoom.reset();if(levelActive){levelActive=false;window.removeEventListener('deviceorientation',onCameraOrientation);$s('cameraLevelIndicator').hidden=true;$s('cameraLevelSide').classList.remove('active');}try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;}
+  function stopMyEventCamera(){
+    if(mediaRecorder?.state==='recording')mediaRecorder.stop();
+    cameraZoom.reset();if(levelActive){levelActive=false;window.removeEventListener('deviceorientation',onCameraOrientation);$s('cameraLevelIndicator').hidden=true;$s('cameraLevelSide').classList.remove('active');}
+    try{myeventCameraStream?.getTracks().forEach(t=>t.stop())}catch(e){} myeventCameraStream=null;cameraVideo.srcObject=null;
+  }
   async function startMyEventCamera(){
     const revision=resetCameraPreview();stopMyEventCamera();cameraPlaceholder.style.display='grid';
     if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie.</span>';return;}
     try{
-      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:cameraMode==='video'});
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
       myeventCameraStream=stream;cameraVideo.srcObject=stream;
       const videoTrack=stream.getVideoTracks()[0];cameraZoom.setTrack(videoTrack);cameraPlaceholder.style.display='none';
@@ -389,9 +394,27 @@
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
     if(cameraMode==='video'){
       if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();return;}
-      if(!myeventCameraStream||typeof MediaRecorder==='undefined')return;
+      if(!myeventCameraStream||typeof MediaRecorder==='undefined'){
+        cameraPlaceholder.textContent='Enregistrement vidéo indisponible sur ce navigateur.';cameraPlaceholder.style.display='grid';return;
+      }
+      if(!myeventCameraStream.getAudioTracks().length){
+        startMyEventCamera();cameraPlaceholder.textContent='Autorise le micro puis appuie de nouveau pour enregistrer.';cameraPlaceholder.style.display='grid';return;
+      }
       recordedChunks=[];
-      try{mediaRecorder=new MediaRecorder(myeventCameraStream);mediaRecorder.ondataavailable=e=>{if(e.data?.size)recordedChunks.push(e.data);};mediaRecorder.onstop=()=>{const blob=new Blob(recordedChunks,{type:mediaRecorder.mimeType||'video/mp4'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='MyEvent-video.'+(blob.type.includes('mp4')?'mp4':'webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);$s('cameraShutterBtn')?.classList.remove('recording');};mediaRecorder.start();$s('cameraShutterBtn')?.classList.add('recording');}catch(e){}return;
+      try{
+        const preferred=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp8,opus','video/webm'].find(type=>MediaRecorder.isTypeSupported?.(type));
+        mediaRecorder=preferred?new MediaRecorder(myeventCameraStream,{mimeType:preferred}):new MediaRecorder(myeventCameraStream);
+        mediaRecorder.ondataavailable=e=>{if(e.data?.size)recordedChunks.push(e.data);};
+        mediaRecorder.onerror=()=>{cameraPlaceholder.textContent='Erreur pendant l’enregistrement vidéo.';cameraPlaceholder.style.display='grid';$s('cameraShutterBtn')?.classList.remove('recording');};
+        mediaRecorder.onstop=()=>{
+          const type=mediaRecorder?.mimeType||recordedChunks[0]?.type||'video/mp4',blob=new Blob(recordedChunks,{type});
+          if(!blob.size){$s('cameraShutterBtn')?.classList.remove('recording');return;}
+          const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MyEvent-video.'+(type.includes('mp4')?'mp4':'webm');a.click();
+          setTimeout(()=>URL.revokeObjectURL(url),3000);$s('cameraShutterBtn')?.classList.remove('recording');
+        };
+        mediaRecorder.start(1000);$s('cameraShutterBtn')?.classList.add('recording');
+      }catch(e){cameraPlaceholder.textContent='Impossible de démarrer l’enregistrement vidéo.';cameraPlaceholder.style.display='grid';}
+      return;
     }
     if(cameraModal.dataset.cameraState==='processing')return;
     if(cameraModal.dataset.cameraState==='preview'||!timerSeconds||!myeventCameraStream||cameraVideo.readyState<2){captureMyEventPhoto();return;}
