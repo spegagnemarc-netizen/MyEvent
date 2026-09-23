@@ -541,9 +541,18 @@
     }
     openPanel('ai',source);
   });
-  $s('cameraEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('socialCreateEventBtn')?.click()});
+  function openCameraEventDestination(){
+    if(!myeventCapturedDataUrl){
+      cameraPlaceholder.textContent='Prends ou importe une photo avant de l’ajouter à un événement.';
+      cameraPlaceholder.style.display='grid';return;
+    }
+    closeMyEventCamera();
+    const events=$s('eventsCard');
+    if(events){events.open=true;events.scrollIntoView({behavior:'smooth',block:'start'});}
+  }
+  $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
-  $s('cameraAttachEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('eventsCard')?.scrollIntoView({behavior:'smooth',block:'start'})});
+  $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));
   $s('socialGlobalFriendsBtn')?.addEventListener('click',()=>tab('friends'));
   $s('socialGlobalEventsBtn')?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
