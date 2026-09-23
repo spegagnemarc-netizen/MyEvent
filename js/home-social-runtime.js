@@ -176,15 +176,17 @@
       };
       const note=document.createElement('p');note.textContent=descriptions[kind];content.appendChild(note);
       if(kind==='ai'){
-        const row=document.createElement('div');row.className='cameraPanelChips';
-        ['Auto','Lumière','Netteté','Naturel','Visage / Couleurs'].forEach(label=>{
-          const chip=document.createElement('span');chip.textContent=label;chip.title='Traitement à venir';row.appendChild(chip);
-        });content.appendChild(row);
-        const action=document.createElement('button');action.type='button';action.textContent='Ouvrir l’IA existante';
+        note.textContent='Amélioration automatique locale de la photo : lumière, contraste et couleurs. Aucun traitement distant n’est simulé.';
+        const action=document.createElement('button');action.type='button';action.textContent='✨ Améliorer automatiquement';
         action.addEventListener('click',()=>{
-          if($s('myeventCameraModal')?.dataset.cameraState==='preview')$s('cameraIaBtn')?.click();
-          else note.textContent='Prends ou importe une photo avant d’ouvrir l’IA existante. Traitement à connecter.';
-        });content.appendChild(action);
+          const modal=$s('myeventCameraModal');
+          if(modal?.dataset.cameraState!=='preview'){note.textContent='Prends ou importe une photo avant d’utiliser l’amélioration automatique.';return;}
+          if(modal.cameraApplyAutoEnhance?.()){
+            note.textContent='✓ Amélioration appliquée. Tu peux encore modifier les retouches ou les filtres.';
+            action.textContent='✓ Amélioration appliquée';
+          }else note.textContent='Impossible d’améliorer cette photo.';
+        });
+        content.appendChild(action);
       }
       if(kind==='music'){
         const search=document.createElement('input');search.type='search';search.placeholder='Rechercher un son ou un artiste';search.disabled=true;content.appendChild(search);
@@ -404,7 +406,12 @@
     source.src=objectUrl;
   });
   $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
-  $s('cameraIaBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl){cameraFile?.click();return;}alert('✨ IA photo : module IA à connecter. La photo est prête pour le traitement.');});
+  $s('cameraIaBtn')?.addEventListener('click',()=>{
+    if(!myeventCapturedDataUrl){cameraFile?.click();return;}
+    if(cameraModal.cameraApplyAutoEnhance?.())return;
+    cameraPlaceholder.textContent='Amélioration automatique indisponible pour cette photo.';
+    cameraPlaceholder.style.display='grid';
+  });
   $s('cameraEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('socialCreateEventBtn')?.click()});
   $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
   $s('cameraAttachEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('eventsCard')?.scrollIntoView({behavior:'smooth',block:'start'})});
