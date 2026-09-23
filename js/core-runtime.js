@@ -2714,6 +2714,8 @@ async function vote(pollId, optionId, button){
   }
 }
 
+window.myeventMusicContext=function(){return {sb,user,event};};
+
 window.myeventPublishCameraPost=async function(dataUrl){
   if(!dataUrl||!user)throw new Error('Photo ou utilisateur manquant.');
   const response=await fetch(dataUrl),blob=await response.blob();
