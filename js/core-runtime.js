@@ -2714,6 +2714,27 @@ async function vote(pollId, optionId, button){
   }
 }
 
+window.myeventPublishCameraPost=async function(dataUrl){
+  if(!dataUrl||!user)throw new Error('Photo ou utilisateur manquant.');
+  const response=await fetch(dataUrl),blob=await response.blob();
+  if(!blob.type.startsWith('image/'))throw new Error('La capture n’est pas une image valide.');
+  const path=user.id+'/'+crypto.randomUUID()+'-feed.jpg';
+  const up=await sb.storage.from('social-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
+  if(up.error)throw up.error;
+  const ins=await sb.from('social_posts').insert({user_id:user.id,media_path:path,media_type:'image',content:'📸 Nouveau moment partagé sur MyEvent.'}).select('id,user_id,media_path,media_type,content,created_at').single();
+  if(ins.error){await sb.storage.from('social-media').remove([path]);throw ins.error;}
+  return ins.data;
+};
+window.myeventLoadCameraPosts=async function(limit=30){
+  if(!user)return [];
+  const r=await sb.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',user.id).eq('media_type','image').order('created_at',{ascending:false}).limit(limit);
+  if(r.error)throw r.error;
+  return await Promise.all((r.data||[]).map(async row=>{
+    const signed=await sb.storage.from('social-media').createSignedUrl(row.media_path,3600);
+    return {...row,image:signed.data?.signedUrl||''};
+  }));
+};
+
 window.myeventAttachCameraPhoto=async function(eventId,dataUrl){
   if(!eventId||!dataUrl||!user)throw new Error('Photo ou événement manquant.');
   const r=await sb.from('events').select('id').eq('id',eventId).maybeSingle();
