@@ -46,11 +46,8 @@
 #myeventCameraModal .cameraProTools:after{display:none!important;content:none!important}
 #myeventCameraModal .cameraHint{display:none!important}
 #myeventCameraModal .cameraPremiumBar,#myeventCameraModal .cameraQualityBar{display:none!important}
-#myeventCameraModal .cameraGlassSettings{position:relative;right:auto;top:auto;z-index:15;border:1px solid;border-radius:14px;padding:6px 9px;width:53px;box-sizing:border-box;font-size:11px;min-height:49px;flex:none}
-#myeventCameraModal .cameraGlassSettings[open]{width:170px;right:117px;margin-right:-117px}
-#myeventCameraModal .cameraGlassSettings summary{height:35px;display:grid;place-items:center;font-size:20px}
-#myeventCameraModal .cameraGlassSettings summary{cursor:pointer;text-align:right;list-style:none}
-#myeventCameraModal .cameraGlassSettings input{width:100%;accent-color:#fff}
+/* Legacy floating settings control removed: it overlapped the right camera toolbar on iPhone. */
+#myeventCameraModal .cameraGlassSettings{display:none!important}
 #myeventCameraModal .cameraRetake{position:absolute;top:calc(110px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:15;border:1px solid;border-radius:14px;padding:8px 12px}
 #myeventCameraModal #cameraCapturedActions,#myeventCameraModal .cameraRetake{display:none!important}
 #myeventCameraModal[data-camera-state="preview"] #cameraCapturedActions.open{display:flex!important}
@@ -124,3 +121,6 @@
 #myeventCameraModal .cameraPortraitMode #myeventCameraVideo{filter:contrast(1.04) saturate(1.03)}
 #myeventCameraModal #cameraShutterBtn.recording{border-color:#ff3b30!important;box-shadow:0 0 0 5px rgba(255,59,48,.28)!important}
 #myeventCameraModal #cameraShutterBtn.recording span{background:#ff3b30!important}
+
+/* Guard against any legacy settings/details control injected by older markup/cache. */
+#myeventCameraModal details.cameraGlassSettings,#myeventCameraModal .cameraProPreview>.cameraGlassSettings{display:none!important;visibility:hidden!important;pointer-events:none!important}
