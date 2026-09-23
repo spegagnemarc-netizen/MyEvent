@@ -358,24 +358,50 @@
       remaining--;if(remaining>0){el.textContent=String(remaining);setTimeout(tick,1000);}else{el.hidden=true;captureMyEventPhoto();}};
     setTimeout(tick,1000);
   });
-  $s('cameraGalleryBtn')?.addEventListener('click',()=>cameraFile?.click());
+  $s('cameraGalleryBtn')?.addEventListener('click',()=>{
+    if(cameraModal.dataset.cameraState==='processing')return;
+    cameraFile?.click();
+  });
   cameraFile?.addEventListener('change',()=>{
-    const f=cameraFile.files?.[0];if(!f)return;
-    const revision=resetCameraPreview(),reader=new FileReader();
-    reader.onload=()=>{
+    const file=cameraFile.files?.[0];
+    cameraFile.value='';
+    if(!file)return;
+    if(!file.type.startsWith('image/')){
+      cameraPlaceholder.textContent='Choisis une photo dans ta galerie.';
+      cameraPlaceholder.style.display='grid';
+      return;
+    }
+    const revision=resetCameraPreview(),objectUrl=URL.createObjectURL(file),source=new Image();
+    cameraPlaceholder.textContent='Préparation de la photo…';
+    cameraPlaceholder.style.display='grid';
+    source.onload=()=>{
+      URL.revokeObjectURL(objectUrl);
       if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
-      const source=new Image();
-      source.onload=()=>{
-        if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
-        try{
-          const canvas=document.createElement('canvas');canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;
-          canvas.getContext('2d').drawImage(source,0,0);cameraSourceCanvas=canvas;renderCameraPhoto(revision);
-        }catch(error){resetCameraPreview();}
-      };
-      source.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
-      source.src=reader.result;
+      try{
+        const maxEdge=4096,scale=Math.min(1,maxEdge/Math.max(source.naturalWidth,source.naturalHeight));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));
+        canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
+        const ctx=canvas.getContext('2d',{alpha:false});
+        if(!ctx)throw new Error('Canvas indisponible');
+        ctx.drawImage(source,0,0,canvas.width,canvas.height);
+        cameraSourceCanvas=canvas;
+        cameraPlaceholder.style.display='none';
+        renderCameraPhoto(revision);
+      }catch(error){
+        resetCameraPreview();
+        cameraPlaceholder.textContent='Impossible d’importer cette photo.';
+        cameraPlaceholder.style.display='grid';
+      }
     };
-    reader.readAsDataURL(f);cameraFile.value='';
+    source.onerror=()=>{
+      URL.revokeObjectURL(objectUrl);
+      if(revision!==cameraRevision)return;
+      resetCameraPreview();
+      cameraPlaceholder.textContent='Format de photo non pris en charge.';
+      cameraPlaceholder.style.display='grid';
+    };
+    source.src=objectUrl;
   });
   $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
   $s('cameraIaBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl){cameraFile?.click();return;}alert('✨ IA photo : module IA à connecter. La photo est prête pour le traitement.');});
