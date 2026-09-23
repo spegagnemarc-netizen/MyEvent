@@ -92,6 +92,13 @@
 #myeventCameraModal .cameraAppearanceCategories button[aria-pressed="true"]{border-color:#ff8b52;background:rgba(255,139,82,.18)}
 #myeventCameraModal .cameraAppearanceCategories button:focus-visible{outline:2px solid #fff;outline-offset:-3px}
 #myeventCameraModal .cameraAppearanceStatus{min-height:34px}
+#myeventCameraModal .cameraAppearanceEffects{display:flex;gap:12px;overflow-x:auto;touch-action:pan-x;padding:10px 2px}
+#myeventCameraModal .cameraAppearanceEffect{flex:0 0 72px;display:flex;flex-direction:column;align-items:center;gap:6px;background:transparent!important;border:0!important;font-size:11px}
+#myeventCameraModal .cameraAppearanceThumb{display:grid;place-items:center;width:56px;height:56px;box-sizing:border-box;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.35);background:rgba(0,0,0,.5);font-size:26px}
+#myeventCameraModal .cameraAppearanceEffect[aria-pressed="true"] .cameraAppearanceThumb{border-color:#ff8b52;box-shadow:0 0 0 2px rgba(255,139,82,.25)}
+#myeventCameraModal .cameraAppearanceOverlay{position:fixed;inset:0;margin:auto;width:var(--camera-frame-width,100vw);height:var(--camera-frame-height,100dvh);pointer-events:none;z-index:0}
+#myeventCameraModal .cameraAppearanceOverlay[hidden],#myeventCameraModal .cameraAppearanceNotice[hidden]{display:none!important}
+#myeventCameraModal .cameraAppearanceNotice{position:absolute;top:calc(90px + env(safe-area-inset-top));left:65px;right:65px;z-index:4;margin:0;text-align:center;font-size:10px;line-height:1.3;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
 @media(prefers-reduced-motion:reduce){#myeventCameraModal #cameraShutterBtn{transition:none!important}}
 #myeventCameraModal :is(.cameraProIcon,.cameraSideTool,.cameraTierSwitch,.cameraGlassSettings,.cameraRetake,.cameraCreativePanel,.cameraFilterChip,.cameraProRoundAction span,.cameraCaptured button){background:rgba(0,0,0,var(--camera-control-opacity,.35))!important;border-color:rgba(255,255,255,.24)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
 #myeventCameraModal .cameraProIcon{width:40px!important;height:40px!important;border-radius:50%!important}

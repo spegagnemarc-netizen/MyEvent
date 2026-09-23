@@ -93,26 +93,17 @@
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     setFilter('original');
 
-    const appearanceCategories=[['hair','Cheveux'],['beard','Barbe'],['makeup','Maquillage'],['glasses','Lunettes'],['accessories','Accessoires'],['looks','Looks'],['creative-ai','Créatif IA']];
-    let appearanceCategory='hair';
-    // Selection is an integration event, never a claim that a treatment ran.
+    let appearance=null,appearanceLoading=null,panelRequest=0;
+    // The small UI module loads on opening Apparence; MediaPipe loads on an effect.
     modal.cameraRenderAppearance=function(host){
-      const row=document.createElement('div');row.className='cameraAppearanceCategories';row.setAttribute('role','group');row.setAttribute('aria-label','Catégories Apparence');
-      const status=document.createElement('p');status.className='cameraAppearanceStatus';status.setAttribute('role','status');
-      const action=document.createElement('button');action.type='button';action.disabled=true;action.textContent='Traitement IA non connecté';
-      function select(id,label,notify){
-        appearanceCategory=id;
-        row.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===id)));
-        status.textContent=label+' : aucun traitement connecté. La photo reste inchangée.';
-        if(notify)modal.dispatchEvent(new CustomEvent('camera-appearance-select',{detail:{category:id,connected:false}}));
-      }
-      appearanceCategories.forEach(([id,label])=>{
-        const button=document.createElement('button');button.type='button';button.dataset.category=id;button.textContent=label;
-        button.addEventListener('click',()=>select(id,label,true));row.appendChild(button);
-      });
-      host.append(row,status,action);
-      select(appearanceCategory,appearanceCategories.find(([id])=>id===appearanceCategory)[1],false);
+      const request=++panelRequest;host.textContent='Ouverture d’Apparence…';
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      appearanceLoading.then(controller=>{
+        if(request===panelRequest&&modal.classList.contains('open')&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')controller.renderPanel(host);
+      }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
     };
+    modal.cameraComposeAppearance=(source,output)=>appearance?appearance.compose(source,output):output;
+    modal.addEventListener('camera-closed',()=>{panelRequest++;});
 
     tier.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
       const premium=btn.dataset.tier==='premium';

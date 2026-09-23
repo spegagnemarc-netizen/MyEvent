@@ -44,6 +44,7 @@
     cameraSheet?.style.setProperty('--camera-frame-width',width+'px');
     cameraSheet?.style.setProperty('--camera-frame-height',height+'px');
     $s('cameraRatioSide')?.setAttribute('aria-label','Ratio '+cameraRatio);
+    $s('myeventCameraModal')?.dispatchEvent(new Event('camera-framing-change'));
   }
   window.addEventListener('resize',applyCameraRatio);applyCameraRatio();
   function onCameraOrientation(e){
@@ -82,6 +83,7 @@
     }
     function set(value){
       factor=Math.min(4,Math.max(1,value));display();
+      $s('myeventCameraModal')?.dispatchEvent(new Event('camera-framing-change'));
       if(hardware&&track?.readyState==='live'){
         const caps=track.getCapabilities(), zoom=Math.min(caps.zoom.max,Math.max(caps.zoom.min,factor));
         const request=++zoomRequest;
@@ -178,6 +180,7 @@
     myeventCapturedDataUrl='';
     cameraSourceCanvas=null;
     cameraModal.dataset.cameraState='viewfinder';
+    cameraModal.dispatchEvent(new Event('camera-source-reset'));
     cameraImg.onload=null;cameraImg.onerror=null;
     cameraImg.removeAttribute('src');cameraImg.style.display='none';
     cameraVideo.style.display='block';
@@ -205,41 +208,55 @@
       const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:false});
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
       myeventCameraStream=stream;cameraVideo.srcObject=stream;cameraZoom.setTrack(stream.getVideoTracks()[0]);cameraPlaceholder.style.display='none';
+      cameraModal.dispatchEvent(new Event('camera-stream-ready'));
     }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
   }
   function openMyEventCamera(){cameraModal.classList.add('open');cameraModal.setAttribute('aria-hidden','false');startMyEventCamera();}
-  function closeMyEventCamera(){resetCameraPreview();stopMyEventCamera();cameraModal.classList.remove('open');cameraModal.setAttribute('aria-hidden','true');}
+  function closeMyEventCamera(){resetCameraPreview();stopMyEventCamera();cameraModal.classList.remove('open');cameraModal.setAttribute('aria-hidden','true');cameraModal.dispatchEvent(new Event('camera-closed'));}
   cameraModal?.addEventListener('camera-retake',()=>{if(cameraModal.classList.contains('open'))startMyEventCamera();});
   $s('cameraCloseBtn')?.addEventListener('click',closeMyEventCamera);
   cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
-  function renderCameraPhoto(revision){
+  async function renderCameraPhoto(revision){
     if(!cameraSourceCanvas||revision!==cameraRevision)return;
+    const source=cameraSourceCanvas;
     // Always render from the unfiltered source, including after changing a filter.
     myeventCapturedDataUrl='';
+    cameraModal.dataset.cameraState='processing';
+    cameraModal.dispatchEvent(new Event('camera-photo-pending'));
     $s('cameraCapturedActions')?.classList.remove('open');
     try{
-      const output=cameraModal.cameraRenderPhoto?cameraModal.cameraRenderPhoto(cameraSourceCanvas):cameraSourceCanvas;
+      let output=cameraModal.cameraRenderPhoto?cameraModal.cameraRenderPhoto(source):source;
+      if(cameraModal.cameraComposeAppearance)output=await cameraModal.cameraComposeAppearance(source,output);
+      if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
       showCameraPreview(output.toDataURL('image/jpeg',.9),revision);
     }catch(error){
+      if(revision!==cameraRevision||error.name==='AbortError')return;
       resetCameraPreview();cameraPlaceholder.textContent='Impossible de préparer la photo. Réessaie ou utilise Galerie.';cameraPlaceholder.style.display='grid';
     }
   }
   cameraModal.addEventListener('camera-filter-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
-  function captureMyEventPhoto(){
-    if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
-    if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
+  cameraModal.addEventListener('camera-appearance-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
+  cameraModal.cameraDrawFrame=function(c,maxEdge=Infinity){
     const z=cameraZoom.factor||1,hardware=cameraZoom.hardware;
-    const revision=resetCameraPreview(),c=document.createElement('canvas');
     const [rw,rh]=cameraRatio.split(':').map(Number),ratio=rw/rh;
     const sourceW=cameraVideo.videoWidth,sourceH=cameraVideo.videoHeight;
     c.width=sourceW;c.height=Math.round(sourceW/ratio);
     if(c.height>sourceH){c.height=sourceH;c.width=Math.round(sourceH*ratio);}
     // Crop the visible central frame; hardware zoom is already part of the track.
     const cropZoom=hardware?1:z,w=c.width/cropZoom,h=c.height/cropZoom;
+    const scale=Math.min(1,maxEdge/Math.max(c.width,c.height));c.width=Math.max(1,Math.round(c.width*scale));c.height=Math.max(1,Math.round(c.height*scale));
     c.getContext('2d').drawImage(cameraVideo,(sourceW-w)/2,(sourceH-h)/2,w,h,0,0,c.width,c.height);
+  };
+  function captureMyEventPhoto(){
+    if(cameraModal.dataset.cameraState==='processing')return;
+    if(cameraModal.dataset.cameraState==='preview'){startMyEventCamera();return;}
+    if(!myeventCameraStream||cameraVideo.readyState<2||!cameraVideo.videoWidth){cameraFile?.click();return;}
+    const revision=resetCameraPreview(),c=document.createElement('canvas');
+    cameraModal.cameraDrawFrame(c);
     cameraSourceCanvas=c;renderCameraPhoto(revision);
   }
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
+    if(cameraModal.dataset.cameraState==='processing')return;
     if(cameraModal.dataset.cameraState==='preview'||!timerSeconds||!myeventCameraStream||cameraVideo.readyState<2){captureMyEventPhoto();return;}
     if(!$s('cameraCountdown').hidden){cancelCountdown();return;}
     const token=++countdownToken,revision=cameraRevision,el=$s('cameraCountdown');
