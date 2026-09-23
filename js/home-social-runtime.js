@@ -173,7 +173,6 @@
     $s('cameraRetouchSide')?.addEventListener('click',e=>openPanel('retouch',e.currentTarget));
 
     $s('cameraFlashBtn')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active'); e.currentTarget.textContent=e.currentTarget.classList.contains('active')?'⚡':'⚡';});
-    $s('cameraSelfieBtn')?.addEventListener('click',()=>{ if(sheet){sheet.classList.add('selfieActive');} });
     $s('cameraRetouchBtn')?.addEventListener('click',()=>{alert('✦ Retouches : module à connecter.');});
     $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
     $s('cameraQualityBtn')?.addEventListener('click',e=>{ const q=e.currentTarget.dataset.q||'Auto'; const next=q==='Auto'?'HD':q==='HD'?'4K':'Auto'; e.currentTarget.dataset.q=next; e.currentTarget.innerHTML=next+' <b>Qualité</b><small>'+next+'</small>'; if($s('cameraQualityLabel'))$s('cameraQualityLabel').textContent=next; });
@@ -181,6 +180,24 @@
       reset(){factor=1;track=null;hardware=false;zoomRequest++;startDistance=0;if(video)video.style.transform='none';if(indicator)indicator.classList.remove('visible');closePanel();},
       setTrack(newTrack){track=newTrack;let caps;try{caps=track?.getCapabilities?.();}catch(e){}hardware=!!(caps?.zoom&&typeof track.applyConstraints==='function');}};
   })();
+  // Camera modes: each button now has a distinct behavior instead of being decorative.
+  let cameraMode='photo',mediaRecorder=null,recordedChunks=[];
+  function setCameraMode(mode){
+    cameraMode=mode;
+    const modal=$s('myeventCameraModal'),sheet=modal?.querySelector('.cameraProSheet');
+    sheet?.querySelectorAll('.cameraModeBtn').forEach(b=>b.classList.toggle('active',b.dataset.cameraMode===mode));
+    const title=$s('cameraModeTitle');if(title)title.textContent=({video:'VIDÉO',photo:'PHOTO',selfie:'SELFIE',portrait:'PORTRAIT',plus:'PLUS'})[mode]||'PHOTO';
+    sheet?.classList.toggle('cameraPortraitMode',mode==='portrait');
+    if(mode==='selfie'&&myeventFacingMode!=='user'){myeventFacingMode='user';startMyEventCamera();}
+    if(mode==='photo'&&sheet)sheet.classList.remove('cameraPortraitMode');
+    if(mode==='plus')cameraZoom?.openPanel?.('stickers',$s('cameraStickerSide'));
+  }
+  $s('cameraPhotoBtn')?.addEventListener('click',()=>setCameraMode('photo'));
+  $s('cameraSelfieBtn')?.addEventListener('click',()=>setCameraMode('selfie'));
+  $s('cameraPortraitBtn')?.addEventListener('click',()=>setCameraMode('portrait'));
+  $s('cameraPlusBtn')?.addEventListener('click',()=>{$s('cameraStickerSide')?.click();setCameraMode('plus');});
+  $s('cameraVideoBtn')?.addEventListener('click',()=>setCameraMode('video'));
+
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
@@ -267,6 +284,12 @@
     cameraSourceCanvas=c;renderCameraPhoto(revision);
   }
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
+    if(cameraMode==='video'){
+      if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();return;}
+      if(!myeventCameraStream||typeof MediaRecorder==='undefined')return;
+      recordedChunks=[];
+      try{mediaRecorder=new MediaRecorder(myeventCameraStream);mediaRecorder.ondataavailable=e=>{if(e.data?.size)recordedChunks.push(e.data);};mediaRecorder.onstop=()=>{const blob=new Blob(recordedChunks,{type:mediaRecorder.mimeType||'video/mp4'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='MyEvent-video.'+(blob.type.includes('mp4')?'mp4':'webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);$s('cameraShutterBtn')?.classList.remove('recording');};mediaRecorder.start();$s('cameraShutterBtn')?.classList.add('recording');}catch(e){}return;
+    }
     if(cameraModal.dataset.cameraState==='processing')return;
     if(cameraModal.dataset.cameraState==='preview'||!timerSeconds||!myeventCameraStream||cameraVideo.readyState<2){captureMyEventPhoto();return;}
     if(!$s('cameraCountdown').hidden){cancelCountdown();return;}
@@ -298,7 +321,6 @@
   });
   $s('cameraFlipBtn')?.addEventListener('click',()=>{myeventFacingMode=myeventFacingMode==='user'?'environment':'user';startMyEventCamera()});
   $s('cameraIaBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl){cameraFile?.click();return;}alert('✨ IA photo : module IA à connecter. La photo est prête pour le traitement.');});
-  $s('cameraVideoBtn')?.addEventListener('click',()=>{alert('🎬 Le mode vidéo sera activé dans la prochaine étape.');});
   $s('cameraEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('socialCreateEventBtn')?.click()});
   $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
   $s('cameraAttachEventBtn')?.addEventListener('click',()=>{closeMyEventCamera();$s('eventsCard')?.scrollIntoView({behavior:'smooth',block:'start'})});
