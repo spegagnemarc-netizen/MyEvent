@@ -164,10 +164,19 @@
         content.appendChild(row);return;
       }
       if(kind==='retouch'){
-        const note=document.createElement('p');note.textContent='Réglages photo indépendants des filtres.';content.appendChild(note);
-        const controls=[['brightness','Luminosité',70,130,100],['contrast','Contraste',70,140,100],['saturate','Saturation',0,160,100],['warmth','Chaleur',-40,40,0]];
-        controls.forEach(([key,label,min,max,value])=>{const wrap=document.createElement('label');wrap.className='cameraRetouchControl';wrap.innerHTML='<span>'+label+' <output>'+value+'</output></span><input type="range" min="'+min+'" max="'+max+'" value="'+value+'" step="1">';const input=wrap.querySelector('input'),out=wrap.querySelector('output');input.addEventListener('input',()=>{out.textContent=input.value;$s('myeventCameraModal').cameraSetRetouch?.(key,Number(input.value));});content.appendChild(wrap);});
-        const reset=document.createElement('button');reset.type='button';reset.textContent='Réinitialiser';reset.addEventListener('click',()=>{$s('myeventCameraModal').cameraResetRetouch?.();openPanel('retouch',source);openPanel('retouch',source);});content.appendChild(reset);return;
+        const modal=$s('myeventCameraModal'),state=modal.cameraGetRetouch?.()||{brightness:100,contrast:100,saturate:100,warmth:0};
+        const note=document.createElement('p');note.textContent='Réglages indépendants conservés pendant la session et intégrés à la photo finale.';content.appendChild(note);
+        const controls=[['brightness','Luminosité',70,130],['contrast','Contraste',70,140],['saturate','Saturation',0,160],['warmth','Chaleur',-40,40]];
+        controls.forEach(([key,label,min,max])=>{
+          const value=state[key],wrap=document.createElement('label');wrap.className='cameraRetouchControl';
+          wrap.innerHTML='<span>'+label+' <output>'+value+'</output></span><input type="range" min="'+min+'" max="'+max+'" value="'+value+'" step="1">';
+          const input=wrap.querySelector('input'),out=wrap.querySelector('output');
+          input.addEventListener('input',()=>{out.textContent=input.value;modal.cameraSetRetouch?.(key,Number(input.value));});
+          content.appendChild(wrap);
+        });
+        const reset=document.createElement('button');reset.type='button';reset.textContent='Réinitialiser';
+        reset.addEventListener('click',()=>{modal.cameraResetRetouch?.();openPanel('retouch',source);openPanel('retouch',source);});
+        content.appendChild(reset);return;
       }
       if(kind==='appearance'){$s('myeventCameraModal').cameraRenderAppearance?.(content);return;}
       if(kind==='timer'||kind==='ratio'){
