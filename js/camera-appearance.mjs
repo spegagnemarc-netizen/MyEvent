@@ -4,7 +4,7 @@ import {FaceWarpRenderer} from './camera-face-warp.mjs';
 
 export function createAppearance(modal){
   const video=modal.querySelector('#myeventCameraVideo'),sheet=modal.querySelector('.cameraProSheet');
-  let selection={fun:null,glasses:null,accessories:null,makeup:null},category='fun';
+  let selection={fun:null,glasses:null,accessories:null,makeup:null},category='glasses';
   let engine=null,overlay=null,warpCanvas=null,warpRenderer=null,frame=null,notice=null,timer=0,epoch=0,photoEpoch=0,busy=false,lastVideoTime=-1;
   let interval=1000/12,average=0,cache=new WeakMap(),failed=false,status='Choisis un effet local.';
   function setStatus(text){
@@ -76,7 +76,7 @@ export function createAppearance(modal){
     function showChoices(){
       choices.replaceChildren();
       row.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));
-      if(!effects[category]){message.textContent='Cette catégorie nécessite une IA générative, non connectée. Les effets locaux sélectionnés restent actifs.';choices.hidden=true;return;}
+      if(!effects[category]){message.textContent=category==='creative-ai'?'Créatif IA sera connecté séparément.':'Cette catégorie n’est pas encore disponible. Les effets locaux sélectionnés restent actifs.';choices.hidden=true;return;}
       choices.hidden=false;message.textContent=status;
       for(const [id,label,glyph] of [[null,'Aucun','∅'],...effects[category]]){
         const button=document.createElement('button');button.type='button';button.className='cameraAppearanceEffect';button.setAttribute('aria-pressed',String(selection[category]===id));
@@ -86,7 +86,7 @@ export function createAppearance(modal){
       }
     }
     for(const [id,label] of categories){
-      const button=document.createElement('button');button.type='button';button.dataset.category=id;button.textContent=label+(effects[id]||id==='creative-ai'?'':' · IA');
+      const button=document.createElement('button');button.type='button';button.dataset.category=id;button.textContent=label+(effects[id]||id==='creative-ai'?'':' · bientôt');
       button.addEventListener('click',()=>{category=id;showChoices();modal.dispatchEvent(new CustomEvent('camera-appearance-select',{detail:{category:id,connected:!!effects[id]}}));});row.appendChild(button);
     }
     host.append(row,choices,message,reset);showChoices();
