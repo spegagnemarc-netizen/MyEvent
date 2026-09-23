@@ -541,15 +541,40 @@
     }
     openPanel('ai',source);
   });
+  let pendingCameraEventPhoto='';
   function openCameraEventDestination(){
     if(!myeventCapturedDataUrl){
       cameraPlaceholder.textContent='Prends ou importe une photo avant de l’ajouter à un événement.';
       cameraPlaceholder.style.display='grid';return;
     }
+    pendingCameraEventPhoto=myeventCapturedDataUrl;
     closeMyEventCamera();
     const events=$s('eventsCard');
     if(events){events.open=true;events.scrollIntoView({behavior:'smooth',block:'start'});}
+    const list=$s('eventList');
+    list?.setAttribute('data-camera-photo-pending','true');
   }
+  $s('eventList')?.addEventListener('click',async ev=>{
+    if(!pendingCameraEventPhoto)return;
+    const card=ev.target.closest('.eventCard');
+    if(!card||ev.target.closest('.eventCardMenu,.eventCardSettings'))return;
+    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    const id=card.dataset.eventId;if(!id)return;
+    const photo=pendingCameraEventPhoto;
+    card.setAttribute('aria-busy','true');
+    try{
+      if(typeof window.myeventAttachCameraPhoto!=='function')throw new Error('Enregistrement des souvenirs indisponible.');
+      await window.myeventAttachCameraPhoto(id,photo);
+      pendingCameraEventPhoto='';$s('eventList')?.removeAttribute('data-camera-photo-pending');
+      card.removeAttribute('aria-busy');
+      const name=card.querySelector('.eventCardTopInfo b')?.textContent||'cet événement';
+      globalThis.dispatchEvent(new CustomEvent('myevent-camera-photo-attached',{detail:{eventId:id}}));
+      alert('Photo ajoutée aux souvenirs de « '+name+' » ✓');
+    }catch(error){
+      card.removeAttribute('aria-busy');
+      alert('Impossible d’ajouter la photo : '+(error?.message||String(error)));
+    }
+  },true);
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('cameraPublishBtn')?.addEventListener('click',()=>{if(!myeventCapturedDataUrl)return;const post=document.createElement('article');post.className='socialPost';post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span>À l’instant · 📍 MyEvent</span></div></div><div class="socialPostText">📸 Nouveau moment partagé sur MyEvent.</div><img src="'+myeventCapturedDataUrl+'" alt="Photo MyEvent" style="display:block;width:100%;max-height:430px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';$s('socialFeed')?.prepend(post);closeMyEventCamera();});
   $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
