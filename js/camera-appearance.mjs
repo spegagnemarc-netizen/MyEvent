@@ -1,10 +1,11 @@
 import {FaceEngine} from './camera-face-engine.mjs';
-import {categories,effects,hasEffects,drawAppearance} from './camera-appearance-renderer.mjs';
+import {categories,effects,hasEffects,drawAppearance,selectedWarp} from './camera-appearance-renderer.mjs';
+import {FaceWarpRenderer} from './camera-face-warp.mjs';
 
 export function createAppearance(modal){
   const video=modal.querySelector('#myeventCameraVideo'),sheet=modal.querySelector('.cameraProSheet');
-  let selection={glasses:null,accessories:null,makeup:null},category='glasses';
-  let engine=null,overlay=null,frame=null,notice=null,timer=0,epoch=0,photoEpoch=0,busy=false,lastVideoTime=-1;
+  let selection={fun:null,glasses:null,accessories:null,makeup:null},category='fun';
+  let engine=null,overlay=null,warpCanvas=null,warpRenderer=null,frame=null,notice=null,timer=0,epoch=0,photoEpoch=0,busy=false,lastVideoTime=-1;
   let interval=1000/12,average=0,cache=new WeakMap(),failed=false,status='Choisis un effet local.';
   function setStatus(text){
     status=text;
@@ -12,16 +13,18 @@ export function createAppearance(modal){
     if(notice){notice.textContent=text;notice.hidden=!hasEffects(selection);}
   }
   function active(){return modal.classList.contains('open')&&hasEffects(selection)&&!document.hidden;}
-  function clearOverlay(){if(overlay){overlay.getContext('2d').clearRect(0,0,overlay.width,overlay.height);overlay.hidden=true;}}
+  function clearOverlay(){if(overlay){overlay.getContext('2d').clearRect(0,0,overlay.width,overlay.height);overlay.hidden=true;}if(warpCanvas)warpCanvas.hidden=true;}
   function stopLive(){clearTimeout(timer);timer=0;epoch++;clearOverlay();}
   function release(){
     photoEpoch++;stopLive();engine?.close();engine=null;cache=new WeakMap();failed=false;average=0;interval=1000/12;lastVideoTime=-1;
     if(frame){frame.width=frame.height=0;frame=null;}
     if(overlay){overlay.width=overlay.height=0;overlay.remove();overlay=null;}
+    warpRenderer?.close();warpRenderer=null;if(warpCanvas){warpCanvas.width=warpCanvas.height=0;warpCanvas.remove();warpCanvas=null;}
     notice?.remove();notice=null;
   }
   function ensureSurfaces(){
     if(!overlay){overlay=document.createElement('canvas');overlay.className='cameraAppearanceOverlay';overlay.setAttribute('aria-hidden','true');overlay.hidden=true;sheet.appendChild(overlay);}
+    if(!warpCanvas){warpCanvas=document.createElement('canvas');warpCanvas.className='cameraAppearanceWarp';warpCanvas.setAttribute('aria-hidden','true');warpCanvas.hidden=true;sheet.appendChild(warpCanvas);}
     if(!notice){notice=document.createElement('p');notice.className='cameraAppearanceNotice';notice.setAttribute('role','status');sheet.appendChild(notice);}
   }
   function getEngine(){
@@ -43,6 +46,8 @@ export function createAppearance(modal){
       const current=getEngine(),warmed=current.backend!=='loading',points=await current.detect(frame,'VIDEO');
       if(generation!==epoch||!active()||modal.dataset.cameraState!=='viewfinder')return;
       overlay.width=frame.width;overlay.height=frame.height;
+      const warp=selectedWarp(selection);
+      if(points&&warp){if(!warpRenderer)warpRenderer=new FaceWarpRenderer(warpCanvas);warpRenderer.render(frame,points,warp,frame.width,frame.height);warpCanvas.hidden=false;}else if(warpCanvas)warpCanvas.hidden=true;
       drawAppearance(overlay.getContext('2d'),points,selection,overlay.width,overlay.height);overlay.hidden=!points;
       setStatus(points?'Apparence locale active':'Aucun visage détecté — effet masqué.');
       // Start near 12 Hz. Spend at most ~55% of time on inference; fallback caps at 8 Hz.
@@ -66,7 +71,7 @@ export function createAppearance(modal){
     const choices=document.createElement('div');choices.className='cameraAppearanceEffects';choices.setAttribute('role','group');choices.setAttribute('aria-label','Effets locaux');
     const message=document.createElement('p');message.className='cameraAppearanceStatus';message.setAttribute('role','status');
     const reset=document.createElement('button');reset.type='button';reset.textContent='Retirer tous les effets';
-    reset.addEventListener('click',()=>{selection={glasses:null,accessories:null,makeup:null};changed();showChoices();});
+    reset.addEventListener('click',()=>{selection={fun:null,glasses:null,accessories:null,makeup:null};changed();showChoices();});
     function showChoices(){
       choices.replaceChildren();
       row.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));
@@ -101,6 +106,8 @@ export function createAppearance(modal){
         if(generation!==photoEpoch||!modal.classList.contains('open'))throw new DOMException('Stale photo','AbortError');
         cache.set(source,points);
       }
+      const warp=selectedWarp(chosen);
+      if(points&&warp){const photoWarp=document.createElement('canvas'),renderer=new FaceWarpRenderer(photoWarp);try{renderer.render(output,points,warp,output.width,output.height);output.getContext('2d').drawImage(photoWarp,0,0);}finally{renderer.close();photoWarp.width=photoWarp.height=0;}}
       drawAppearance(output.getContext('2d'),points,chosen,output.width,output.height);
       setStatus(points?'Effets locaux intégrés à la photo.':'Aucun visage détecté : photo conservée sans Apparence.');
       return output;
@@ -114,7 +121,7 @@ export function createAppearance(modal){
   modal.addEventListener('camera-stream-ready',()=>schedule());
   modal.addEventListener('camera-framing-change',()=>{stopLive();lastVideoTime=-1;schedule();});
   modal.addEventListener('camera-photo-pending',stopLive);
-  modal.addEventListener('camera-closed',()=>{selection={glasses:null,accessories:null,makeup:null};release();setStatus('Choisis un effet local.');});
+  modal.addEventListener('camera-closed',()=>{selection={fun:null,glasses:null,accessories:null,makeup:null};release();setStatus('Choisis un effet local.');});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopLive();else schedule();});
   window.addEventListener('pagehide',release);
   window.addEventListener('pageshow',()=>{
