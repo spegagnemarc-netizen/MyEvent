@@ -93,7 +93,7 @@
     extra.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));rows(S.get().recent.slice(0,5),$('musicRecent'));
     const genres=['Pop','Rap','Hip-Hop','R&B','Jazz','Rock','Électro','Dance','Variété française','Chanson française','Latino','Reggaeton','Reggae','Classique','K-Pop','Métal','Afro','Afrobeats','Amapiano','Country','Soul','Funk','Disco','House','Techno','Trance','Drum & Bass','Dubstep','Gospel','Blues','Folk','Indie','Alternative','Punk','Hard Rock','Musique du monde','Oriental','Raï','Zouk','Kompa','Salsa','Bachata','Années 60','Années 70','Années 80','Années 90','Années 2000','Années 2010'];
     const state=S.get(),norm=v=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
-    const rankedGenres=genres.map((genre,index)=>{const g=norm(genre);let plays=0;for(const track of state.recent){const hay=norm((track.title||'')+' '+(track.artist||''));if(hay.includes(g))plays+=Number(state.playCounts[S.key(track)]||0);}return{genre,index,plays};}).sort((a,b)=>b.plays-a.plays||a.index-b.index).slice(0,6);
+    const rankedGenres=genres.map((genre,index)=>{const g=norm(genre);let plays=0;for(const track of state.recent){const hay=norm((track.title||'')+' '+(track.artist||''));if(hay.includes(g))plays+=Number(state.playCounts[S.key(track)]||0);}return{genre,index,plays};}).sort((a,b)=>b.plays-a.plays||a.index-b.index).slice(0,10);
     for(const {genre} of rankedGenres){const key='genre:'+norm(genre);const b=button(genre,()=>{go('discover');search(genre,key);},$('musicGenres'));b.classList.add('musicGenreCard');b.dataset.artKey=key;const art=state.artwork[key]?.thumbnail_url;if(art)b.style.setProperty('background-image','linear-gradient(180deg,rgba(5,8,12,.06),rgba(5,8,12,.78)),url("'+art.replace(/"/g,'%22')+'")','important');}
     loadHomeTrends();
   }
@@ -103,7 +103,7 @@
     try{
       const r=await fetch('/api/search-music?q='+encodeURIComponent('musique tendances France'),{cache:'no-store'}),data=await r.json();
       if(!r.ok)throw Error(data.error||'Tendances indisponibles');if(token!==revision||screen!=='home')return;
-      const tracks=(data.items||[]).slice(0,4);box.replaceChildren();
+      const tracks=(data.items||[]).slice(0,8);box.replaceChildren();
       tracks.forEach((track,index)=>{const card=document.createElement('article');card.className='musicTrendCard';
         card.innerHTML='<button class="musicTrendOpen"><span class="musicTrendRank">'+(index+1)+'</span><img alt="" loading="lazy" src="'+esc(track.thumbnail_url||'')+'"><strong>'+meta(track.title)+'</strong><small>'+meta(track.artist)+'</small><span class="musicTrendPlay">▶</span></button>';
         card.querySelector('button').onclick=()=>{M.openPlayer(track,tracks);P.play(track,tracks);};box.appendChild(card);
