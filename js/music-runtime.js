@@ -34,8 +34,27 @@
   }
   function renderSearchResults(items){
     const box=$('musicTrending');if(!box)return;
-    box.innerHTML=items.length?items.map(x=>'<div class="musicSearchResult"><img src="'+esc(x.thumbnail_url)+'" alt=""><div><strong>'+esc(x.title)+'</strong><small>'+esc(x.artist)+'</small></div><button type="button" data-music-add="'+esc(x.provider_track_id)+'">＋</button></div>').join(''):'<div class="musicEmpty">Aucun résultat.</div>';
-    box.querySelectorAll('[data-music-add]').forEach(b=>b.addEventListener('click',()=>{const x=items.find(v=>v.provider_track_id===b.dataset.musicAdd);if(x)addTrackToEvent(x,b)}));
+    box.innerHTML=items.length?items.map(x=>'<article class="musicSearchResult" data-music-open="'+esc(x.provider_track_id)+'"><img src="'+esc(x.thumbnail_url)+'" alt=""><div><strong>'+esc(x.title)+'</strong><small>'+esc(x.artist)+'</small></div><button type="button" data-music-add="'+esc(x.provider_track_id)+'" aria-label="Ajouter à la playlist">＋</button></article>').join(''):'<div class="musicEmpty">Aucun résultat.</div>';
+    box.querySelectorAll('[data-music-open]').forEach(row=>row.addEventListener('click',e=>{if(e.target.closest('[data-music-add]'))return;const x=items.find(v=>v.provider_track_id===row.dataset.musicOpen);if(x)openPlayer(x,items)}));
+    box.querySelectorAll('[data-music-add]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const x=items.find(v=>v.provider_track_id===b.dataset.musicAdd);if(x)addTrackToEvent(x,b)}));
+  }
+  function openPlayer(track,items=[]){
+    let panel=$('musicPlayer');
+    if(!panel){panel=document.createElement('section');panel.id='musicPlayer';panel.className='musicPlayer';music.appendChild(panel);}
+    const id=encodeURIComponent(track.provider_track_id||'');
+    panel.innerHTML='<div class="musicPlayerTop"><button type="button" data-player-close aria-label="Retour">‹</button><b>Lecture en cours</b><button type="button" data-player-fav aria-label="Favori">♡</button></div>'+
+      '<img class="musicPlayerCover" src="'+esc(track.thumbnail_url)+'" alt="">'+
+      '<div class="musicPlayerMeta"><h2>'+esc(track.title)+'</h2><p>'+esc(track.artist)+'</p></div>'+
+      '<div class="musicPlayerEmbed"><iframe src="https://www.youtube-nocookie.com/embed/'+id+'?playsinline=1&rel=0" title="'+esc(track.title)+'" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>'+
+      '<div class="musicPlayerActions"><button type="button" data-player-add>＋<span>Playlist</span></button><button type="button" data-player-share>↗<span>Partager</span></button><button type="button" data-player-related>♫<span>Similaires</span></button></div>'+
+      '<div class="musicPlayerRelated"><div class="musicSectionTitle"><h3>Titres similaires</h3></div><div class="musicCards">'+items.filter(x=>x.provider_track_id!==track.provider_track_id).slice(0,5).map(x=>'<button type="button" class="musicRelatedCard" data-related="'+esc(x.provider_track_id)+'"><img src="'+esc(x.thumbnail_url)+'" alt=""><span><b>'+esc(x.title)+'</b><small>'+esc(x.artist)+'</small></span></button>').join('')+'</div></div>';
+    panel.classList.add('open');
+    panel.querySelector('[data-player-close]')?.addEventListener('click',()=>panel.classList.remove('open'));
+    panel.querySelector('[data-player-add]')?.addEventListener('click',e=>addTrackToEvent(track,e.currentTarget));
+    panel.querySelector('[data-player-share]')?.addEventListener('click',async()=>{const url='https://www.youtube.com/watch?v='+track.provider_track_id;try{if(navigator.share)await navigator.share({title:track.title,text:track.artist,url});else{await navigator.clipboard.writeText(url);status('Lien copié.')}}catch(_){}});
+    panel.querySelector('[data-player-fav]')?.addEventListener('click',()=>status('Favoris : connexion Supabase à finaliser.'));
+    panel.querySelectorAll('[data-related]').forEach(b=>b.addEventListener('click',()=>{const x=items.find(v=>v.provider_track_id===b.dataset.related);if(x)openPlayer(x,items)}));
+    panel.querySelector('[data-player-related]')?.addEventListener('click',()=>panel.querySelector('.musicPlayerRelated')?.scrollIntoView({behavior:'smooth'}));
   }
   async function searchMusic(q){
     status('Recherche YouTube…');
