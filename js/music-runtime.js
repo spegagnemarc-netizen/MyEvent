@@ -166,6 +166,7 @@
   async function runSearch(){
     const q=searchInput?.value.trim()||'';
     if(q.length<2){status('Écris au moins 2 caractères.');return}
+    if(window.MyEventMusicWorkspace?.openSearch){window.MyEventMusicWorkspace.openSearch(q);return;}
     try{await searchMusic(q)}catch(err){status('Recherche : '+err.message)}
   }
   searchInput?.addEventListener('search',runSearch);
