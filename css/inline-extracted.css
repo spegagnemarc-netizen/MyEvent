@@ -3106,3 +3106,40 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
   #musicHome .musicMoodCards button{height:86px!important}
   #musicHome .musicMoodCards button b{font-size:12px!important}
 }
+
+
+/* Music V1.14 — MyEvent playlist artwork refresh */
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{
+  min-height:122px!important;
+  padding:10px!important;
+  border:1px solid rgba(255,106,44,.78)!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+  isolation:isolate;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(5,8,14,.04) 20%,rgba(5,8,14,.28) 48%,rgba(5,8,14,.94) 100%);
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="event"]{
+  background-image:url("https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=82")!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="dj"]{
+  background-image:url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=800&q=82")!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="favorites"]{
+  background-image:url("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=800&q=82")!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile span{
+  font-size:20px!important;margin:0 0 auto!important;color:#fff!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile b{
+  font-size:14px!important;line-height:1.08;text-shadow:0 2px 8px #000;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{
+  font-size:10px!important;color:#d8dbe2!important;text-shadow:0 2px 7px #000;
+}
