@@ -2617,3 +2617,23 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 .musicHome.open{display:block;position:fixed;inset:0;z-index:2140;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:110px}
 body.musicModeOpen{overflow:hidden}
 body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
+
+/* Music V1.1 — compact premium hierarchy matching the approved mockup */
+.musicHome{padding:14px 14px 96px!important}
+.musicHead{gap:10px!important}.musicHead h2{font-size:27px!important}.musicHead p{font-size:13px!important}
+.musicHead button{width:34px!important;height:34px!important;font-size:20px!important;background:transparent!important;border-color:#303640!important}
+.musicSearch{margin:14px 0 10px!important;padding:0 6px 0 12px!important;border-radius:13px!important}
+.musicSearch input{font-size:14px!important;padding:11px 0!important}
+.musicSearch #musicSearchBtn{flex:0 0 auto;border:0;border-radius:10px;background:#ff6b2c;color:#fff;font-weight:800;font-size:12px;padding:9px 11px}
+.musicTabs,.musicChips{gap:7px!important}
+.musicTabs button,.musicChips button{padding:7px 11px!important;font-size:12px!important;background:#15191f!important}
+.musicTabs button.active{background:#ff6b2c!important}
+.musicSection{margin-top:18px!important}.musicSectionTitle h3{font-size:17px!important;margin-bottom:9px!important}
+.musicSectionTitle button{font-size:12px!important;color:#d5d8dd!important}
+.musicTile{min-width:116px!important;padding:11px!important;border-radius:13px!important;background:#11151b!important}
+.musicTile span{font-size:24px!important;margin-bottom:10px!important}.musicTile b{font-size:13px!important}.musicTile small{font-size:11px!important}
+.musicEmpty{padding:18px!important;font-size:13px!important}
+.musicProvider{padding:11px!important;margin-top:20px!important;font-size:12px!important}
+.musicSearchResult{min-width:250px!important;grid-template-columns:58px 1fr 34px!important;padding:7px!important}
+.musicSearchResult img{width:58px!important;height:58px!important}.musicSearchResult strong{font-size:13px!important}.musicSearchResult small{font-size:11px!important}
+.musicSearchResult button{width:32px!important;height:32px!important;font-size:18px!important}
