@@ -1,17 +1,25 @@
 <!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Music runtime regression tests</title><link rel="stylesheet" href="../css/inline-extracted.css"><link rel="stylesheet" href="../css/music-workspace.css">
-<style>body{background:#080b10;color:white}#testResults{white-space:pre-wrap;padding:20px}#musicHome{position:relative;display:block;inset:auto;padding:16px}#socialBottomNav{position:relative;display:block}</style>
+<style>body{background:#080b10;color:white}#testResults{white-space:pre-wrap;padding:20px}#musicHome{position:relative;display:block;inset:auto;padding:16px}#socialBottomNav{position:relative;display:block} .musicHome.open{position:fixed!important;inset:0!important;z-index:2140!important} </style>
 <pre id="testResults">Tests en attente</pre><button id="runTests">Exécuter les tests</button>
-<div id="socialHome"></div><nav id="socialBottomNav"><button data-bottom-tab="music">Musique</button></nav>
-<section id="musicHome"><button id="musicBackBtn">Retour accueil</button><input id="musicSearchInput" type="search" aria-label="Recherche"><button id="musicSearchBtn">Rechercher</button><button data-music-action="event">Playlist événement</button><button data-music-action="favorites">Mes favoris</button><div id="musicTrending" class="musicCards"></div><p id="musicProviderStatus"></p></section>
+<div id="socialHome"></div><div id="myeventAppearanceCard"></div><nav id="socialBottomNav"><button data-bottom-tab="music">Musique</button></nav>
+<section id="musicHome" class="musicHome" aria-hidden="true">
+  <div class="musicHead"><button type="button" id="musicBackBtn" aria-label="Retour">‹</button><div><h2>Musique</h2><p>La bande-son de tous vos événements</p></div><button type="button" id="musicFavoritesBtn" aria-label="Favoris">♡</button></div>
+  <div class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" enterkeyhint="search" placeholder="Titre, artiste, playlist…"><button type="button" id="musicSearchBtn" aria-label="Rechercher">Rechercher</button></div>
+  <div class="musicTabs"><button class="active" data-music-filter="for-you">Pour vous</button><button data-music-filter="trends">Tendances</button><button data-music-filter="moods">Ambiances</button><button data-music-filter="genres">Genres</button></div>
+  <div class="musicSection"><div class="musicSectionTitle"><h3>Tendances</h3><button type="button">Voir tout ›</button></div><div class="musicCards" id="musicTrending"><div class="musicEmpty">Le catalogue sera alimenté par les fournisseurs Musique.</div></div></div>
+  <div class="musicSection"><div class="musicSectionTitle"><h3>Playlists MyEvent</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards"><button class="musicTile" data-music-action="event"><span>🎉</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj"><span>🎧</span><b>Mode DJ</b><small>Manuel · Auto</small></button><button class="musicTile" data-music-action="favorites"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
+  <div class="musicSection"><div class="musicSectionTitle"><h3>Ambiances</h3></div><div class="musicChips"><button>Chill</button><button>Soirée</button><button>Années 80</button><button>Rap</button><button>Électro</button><button>Variété</button></div></div>
+  <div class="musicProvider"><b>MyEvent Music</b><span id="musicProviderStatus">Fournisseur : non connecté</span></div>
+</section>
 <script>
 const cover='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="#34445d"/><circle cx="300" cy="280" r="150" fill="#a1819e"/><text x="300" y="470" text-anchor="middle" fill="white" font-size="44">CÉLINE DION</text></svg>');
 const tracks=[{provider:'youtube',provider_track_id:'videoA',title:'Pour que tu m&#39;aimes encore',artist:'Céline &amp; René',thumbnail_url:cover},{provider:'youtube',provider_track_id:'videoB',title:'L&#x2019;été &quot;live&quot; &lt;3',artist:'Chœur &amp; invités',thumbnail_url:cover},{provider:'youtube',provider_track_id:'videoC',title:'</textarea><img src=x onerror=alert(1)> &lt;script&gt; &#39;',artist:'A & B',thumbnail_url:cover}];
-const db={music_tracks:[],music_favorites:[],music_playlist_items:[]};let hasEvent=false,signedIn=true,failFavorite=false,shared=null;const calls=[];
+const db={profiles:[],music_tracks:[],music_favorites:[],music_playlist_items:[]};let hasEvent=false,signedIn=true,failFavorite=false,shared=null;const calls=[];
 window.YT={Player:class {constructor(id,options){this.options=options;this.time=0;this.state=2;const node=document.getElementById(id);const frame=document.createElement('iframe');frame.id=id;frame.title='Test provider';frame.src='about:blank';node.replaceWith(frame);this.node=frame;queueMicrotask(()=>options.events.onReady({target:this}));}playVideo(){this.state=1;this.options.events.onStateChange({data:1});}pauseVideo(){this.state=2;this.options.events.onStateChange({data:2});}cueVideoById(id){this.id=id;this.time=0;}getCurrentTime(){return this.time;}getDuration(){return 180;}seekTo(t){this.time=t;}destroy(){this.node.remove();}}};
 window.fetch=async()=>({ok:true,json:async()=>({items:tracks})});
 Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{shared=data;}});
-const sb={from(table){let action='select',value,columns='',filters=[];const query={select(v){columns=v;return query},eq(k,v){filters.push([k,v]);return query},order(){return query},limit(){return query},insert(v){action='insert';value=v;return query},delete(){action='delete';return query},upsert(v){action='upsert';value=v;return query},maybeSingle(){return execute(true)},single(){return execute(true)},then(resolve,reject){return execute(false).then(resolve,reject)}};
+const sb={from(table){let action='select',value,columns='',filters=[];const query={select(v){columns=v;return query},eq(k,v){filters.push([k,v]);return query},in(){return query},order(){return query},limit(){return query},insert(v){action='insert';value=v;return query},delete(){action='delete';return query},upsert(v){action='upsert';value=v;return query},maybeSingle(){return execute(true)},single(){return execute(true)},then(resolve,reject){return execute(false).then(resolve,reject)}};
 async function execute(single){
  calls.push({table,action,value,filters});if(table==='music_favorites'&&failFavorite)return {error:{message:'Accès refusé'}};
  if(table==='music_playlists')return {data:{id:'playlist',name:'Playlist test'}};
@@ -27,7 +35,7 @@ async function execute(single){
  return {data:single?data[0]||null:data};
 }return query;}};
 window.myeventMusicContext=()=>({sb,user:signedIn?{id:'user'}:null,event:hasEvent?{id:'event'}:null});
-</script><script src="../js/music-session.js"></script><script src="../js/music-controller.js"></script><script src="../js/music-runtime.js"></script><script src="../js/music-workspace.js"></script>
+</script><script src="../js/music-session.js"></script><script src="../js/music-controller.js"></script><script src="../js/music-runtime.js"></script><script src="../js/music-workspace.js"></script><script src="../js/theme-runtime.js"></script>
 <script>
 const $=s=>document.querySelector(s),tick=()=>new Promise(r=>setTimeout(r,0));
 function assert(ok,msg){if(!ok)throw Error(msg);}
@@ -41,6 +49,8 @@ await click('#musicDiscoverResults .musicTrackOpen');await click('[data-player-p
 S.update({draft:[{...tracks[0],locked:true},{...tracks[1]},{...tracks[2]}]});W.go('ai');const draftRows=document.querySelectorAll('#musicDraftTracks .musicListRow');assert([...draftRows[0].querySelectorAll('button')].find(b=>b.textContent==='Retirer').disabled,'locked deletion disabled');assert([...draftRows[1].querySelectorAll('button')].find(b=>b.textContent==='↑').disabled,'locked position preserved');[...draftRows[1].querySelectorAll('button')].find(b=>b.textContent==='↓').click();assert(S.get().draft[2].provider_track_id===tracks[1].provider_track_id,'reorder');out.push('PASS draft locking and reorder');
 hasEvent=true;W.go('event');await tick();assert($('#musicScreen #musicEventPanel'),'event dedicated page');out.push('PASS event isolation in dedicated screen');
 signedIn=false;S.get();assert($('#musicPlayback').hidden,'signout stops playback');assert(S.get().draft.length===0,'accounts isolated');signedIn=true;S.get();assert(S.get().draft.length===3,'account state restored');assert(!P.playing,'no autoplay on restore');out.push('PASS account isolation and silent restoration');
+S.update({current:tracks[0],position:42});P.select(tracks[0]);assert(S.get().position===42,'saved position survives reopening');P.stop();out.push('PASS saved position');
+const color=document.querySelector('[data-theme="accent"]');color.value='#8b5cf6';color.dispatchEvent(new Event('input',{bubbles:true}));assert(document.documentElement.style.getPropertyValue('--myevent-accent')==='#8b5cf6','theme accent');document.querySelector('[data-theme-reset]').click();assert(document.documentElement.style.getPropertyValue('--myevent-accent')==='#ff6a34','theme reset');out.push('PASS theme selection and reset');
 $('#testResults').textContent=out.join('\n')+'\nALL PASS';M.closeMusic();
 }catch(e){$('#testResults').textContent=out.join('\n')+'\nFAIL '+e.stack;}}
 $('#runTests').onclick=run;if(new URLSearchParams(location.search).has('run'))run();

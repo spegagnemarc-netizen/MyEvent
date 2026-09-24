@@ -103,7 +103,7 @@
     let panel=$('musicPlayer');
     if(!panel){panel=document.createElement('section');panel.id='musicPlayer';panel.className='musicPlayer';music.appendChild(panel);}
     window.MyEventMusicPlayback?.select(track,items);
-    
+
     const id=encodeURIComponent(track.provider_track_id||'');
     panel.innerHTML='<div class="musicPlayerTop"><button type="button" data-player-close aria-label="Retour">‹</button><b>MyEvent · Musique</b><span aria-hidden="true">♫</span></div>'+
       '<div class="musicPlayerMedia"><button type="button" class="musicPlayerCover" data-player-play aria-label="Lire sur YouTube"><img src="'+esc(track.thumbnail_url)+'" alt=""><span>▶<small>Lire sur YouTube</small></span></button></div>'+
@@ -122,10 +122,13 @@
     panel.querySelectorAll('[data-related]').forEach(b=>b.addEventListener('click',()=>{const x=items.find(v=>v.provider_track_id===b.dataset.related);if(x)openPlayer(x,items)}));
     panel.querySelector('[data-player-related]')?.addEventListener('click',()=>panel.querySelector('.musicPlayerRelated')?.scrollIntoView({behavior:'smooth'}));
   }
+  let searchRequest=0;
   async function searchMusic(q){
+    const request=++searchRequest,searchUser=ctx().user?.id;
     status('Recherche YouTube…');
     const r=await fetch('/api/search-music?q='+encodeURIComponent(q));const data=await r.json();
     if(!r.ok)throw new Error(data.error||'Recherche indisponible');
+    if(request!==searchRequest||ctx().user?.id!==searchUser)return;
     window.MyEventMusicSession?.update({query:q});window.dispatchEvent(new CustomEvent('music-search-results',{detail:data.items||[]}));renderSearchResults(data.items||[]);status((data.items||[]).length+' résultat(s) YouTube');
   }
   async function addTrackToEvent(track,button){

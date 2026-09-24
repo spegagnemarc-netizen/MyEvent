@@ -9,6 +9,7 @@
     try{const saved=JSON.parse(localStorage.getItem('myevent.music.v2.'+id)||'null');if(saved&&typeof saved==='object'){
       for(const key of ['recent','playlists','artists','draft','dj'])if(Array.isArray(saved[key]))state[key]=saved[key].slice(0,100);
       state.screen=typeof saved.screen==='string'?saved.screen:'home';state.query=typeof saved.query==='string'?saved.query:'';
+      state.prompt=typeof saved.prompt==='string'?saved.prompt:'';
       state.current=saved.current?.provider_track_id?saved.current:null;state.position=Math.max(0,Number(saved.position)||0);
     }}catch(e){}
     if(previous!==undefined)window.dispatchEvent(new CustomEvent('music-user-change'));

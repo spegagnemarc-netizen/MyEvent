@@ -76,7 +76,7 @@
     for(const label of ['Proposer avec l’IA','Ajoute plus de…','Garde ceux-là et refais le reste'])button(label+' — à venir',()=>{},$('musicDraftActions')).disabled=true;
     editable('draft',$('musicDraftTracks'));
     button('Enregistrer comme playlist',()=>{const name=prompt('Nom de la playlist');if(!name?.trim()||!S.get().draft.length)return;S.get().playlists.push({name:name.trim(),tracks:S.get().draft.map(t=>({...t}))});S.save();notice('Playlist enregistrée sur cet appareil.');},body);
-    button('Ajouter à l’événement',async()=>{for(const t of [...S.get().draft])await M.addTrackToEvent(t);},body);
+    button('Ajouter à l’événement',async e=>{const eventId=ctx().event?.id,userId=ctx().user?.id;const tracks=[...S.get().draft];let count=0;e.currentTarget.disabled=true;for(const t of tracks){if(ctx().event?.id!==eventId||ctx().user?.id!==userId)break;if(await M.addTrackToEvent(t))count++;else break;}notice(count+' / '+tracks.length+' morceau(x) ajouté(s).'+(count<tracks.length?' Consulte le statut de la playlist pour le dernier échec.':''));e.target.disabled=false;},body);
     button('Envoyer au Mode DJ',()=>{S.update({dj:S.get().draft.map(t=>({...t}))});go('dj');},body);
   }
   function dj(body){
@@ -98,7 +98,7 @@
     else if(filter==='trends'||b.matches('.musicChips button')){e.stopImmediatePropagation();go('discover');search(filter?'musique tendances France':b.textContent);}
     else if(filter==='moods')home.querySelector('.musicChips')?.scrollIntoView();else if(filter==='genres')$('musicGenres')?.scrollIntoView();else if(filter==='for-you')$('musicHomeExtras')?.scrollIntoView();
   },true);
-  window.addEventListener('music-library-loaded',()=>{if(screen==='library'&&$('musicLiked')){$('musicLiked').appendChild($('musicFavoritesPanel'));$('musicFavoritesPanel').querySelector('[data-favorites-close]').onclick=back;}});
+  window.addEventListener('music-library-loaded',()=>{if(screen==='library'&&$('musicLiked')){$('musicLiked').appendChild($('musicFavoritesPanel'));$('musicFavoritesPanel').querySelector('[data-favorites-close]').onclick=back;}else $('musicFavoritesPanel')?.classList.remove('open');});
   window.addEventListener('music-event-loaded',e=>{eventData=e.detail;if(screen==='event'){$('musicScreenBody').appendChild($('musicEventPanel'));$('musicClosePlaylist').onclick=back;eventControls();participants();}else $('musicEventPanel')?.classList.remove('open');});
   function eventControls(){
     const {user,event}=ctx();if(!eventData||!user||!event)return;
@@ -116,15 +116,21 @@
     });
     if(items.length)button('Lire cette file',()=>{const tracks=items.map(i=>i.track).filter(Boolean);if(tracks.length){M.openPlayer(tracks[0],tracks);P.play(tracks[0],tracks);}},controls);
   }
-  async function participants(){const {sb,event}=ctx();const token=revision;try{const r=await sb.from('event_members').select('user_id').eq('event_id',event.id);if(r.error)throw r.error;if(token!==revision)return;const p=document.createElement('p');p.textContent=(r.data||[]).length+' membre(s) dans cet événement';$('musicScreenBody').appendChild(p);}catch(e){notice('Participants : '+e.message);}}
+  async function participants(){const {sb,event}=ctx();const token=revision;try{const r=await sb.from('event_members').select('user_id').eq('event_id',event.id);if(r.error)throw r.error;const ids=[...new Set([event.creator_id,...(r.data||[]).map(x=>x.user_id)].filter(Boolean))];let profiles=[];if(ids.length){const names=await sb.from('profiles').select('id,display_name').in('id',ids);if(names.error)throw names.error;profiles=names.data||[];}if(token!==revision)return;const p=document.createElement('p');p.dataset.musicParticipants='';p.textContent=ids.length+' participant(s) : '+ids.map(id=>profiles.find(p=>p.id===id)?.display_name||'Participant').join(', ');$('musicScreenBody').querySelector('[data-music-participants]')?.remove();$('musicScreenBody').appendChild(p);}catch(e){if(token===revision)notice('Participants : '+e.message);}}
   window.addEventListener('music-recent-change',()=>{if(screen==='home')renderHome();});
   window.addEventListener('music-user-change',()=>{history=[];results=[];eventData=null;revision++;page.replaceChildren();page.hidden=true;home.hidden=false;screen='home';for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.remove();M.closePlayer();$('musicTrending').replaceChildren();$('musicSearchInput').value=S.get().query;renderHome();});
   window.addEventListener('music-player-open',()=>{const panel=$('musicPlayer');if(panel&&!panel.querySelector('[data-full-menu]'))button('⋮ Actions du morceau',()=>menu(P.current),panel).dataset.fullMenu='true';});
+  window.addEventListener('music-track-change',e=>{if($('musicPlayer')?.classList.contains('open'))M.openPlayer(e.detail);});
   window.addEventListener('music-storage-error',()=>notice('Stockage local indisponible : les changements restent valables pour cette session.'));
   // Contract for a future Selfie integration; it does not change Camera V1.
   M.createSelfieSelection=(track,options={})=>({track,segment:{start:Math.max(0,Number(options.start)||0),duration:[15,30,60].includes(options.duration)?options.duration:Math.max(1,Number(options.duration)||15)},musicVolume:1,originalVolume:1,fadeIn:0,fadeOut:0,renderable:false});
   M.registerRecommendationProvider=adapter=>{M.recommendationProvider=adapter;};
   M.registerProvider('youtube',P);
+  home.querySelector('.musicSectionTitle button:not([id])')?.addEventListener('click',()=>{go('discover');search('musique tendances France');});
+  home.querySelector('[data-music-action="dj"] small')?.replaceChildren(document.createTextNode('File · Manuel'));
+  $('musicProviderStatus').textContent='Recherche YouTube · lecture à la demande';
   window.MyEventMusicWorkspace={go,back};renderHome();$('musicSearchInput').value=S.get().query;
+  let eventId=ctx().event?.id;
+  setInterval(()=>{const next=ctx().event?.id;if(next===eventId)return;eventId=next;eventData=null;$('musicEventPanel')?.remove();if(screen==='event'&&root.classList.contains('open'))go('event',false);},750);
   document.querySelector('[data-bottom-tab="music"]')?.addEventListener('click',()=>go(S.get().screen,false),true);
 })();

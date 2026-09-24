@@ -16,11 +16,11 @@
       const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.onerror=()=>{clearTimeout(timeout);loading=null;reject(new Error('Connexion YouTube impossible.'));};document.head.appendChild(script);
     });return loading;
   }
-  function remember(){if(!current)return;const s=session.get();session.update({current,position:ready?player.getCurrentTime()||0:s.position});}
+  function remember(){const s=session.get();if(!current)return;session.update({current,position:ready?player.getCurrentTime()||0:s.position});}
   function select(track,items=[]){
     session.get();const same=current&&session.key(current)===session.key(track);
-    if(!same){ready&&player.pauseVideo();current=track;playing=false;session.update({current:track,position:0});if(ready)player.cueVideoById(track.provider_track_id);}
-    if(items.length)queue=items;host.hidden=false;host.querySelector('[data-transport="open"]').textContent=track.title;return same;
+    if(!same){const saved=session.get();const resume=!current&&saved.current&&session.key(saved.current)===session.key(track)?saved.position:0;ready&&player.pauseVideo();current=track;playing=false;session.update({current:track,position:resume});if(ready)player.cueVideoById({videoId:track.provider_track_id,startSeconds:resume});}
+    if(items.length)queue=items;host.hidden=false;host.querySelector('[data-transport="open"]').textContent=window.MyEventMusic?.metadata(track.title)||track.title;return same;
   }
   async function play(track,items=[]){
     if(track)select(track,items);if(!current)return;
@@ -43,5 +43,7 @@
   setInterval(()=>{session.get();if(!ready)return;const range=host.querySelector('input');range.max=player.getDuration()||0;range.value=player.getCurrentTime()||0;remember();},1000);
   window.addEventListener('pagehide',remember);
   window.addEventListener('music-user-change',()=>{generation++;player?.destroy();player=null;ready=false;playing=false;current=null;queue=[];host.hidden=true;});
+  const camera=document.getElementById('myeventCameraModal');
+  if(camera)new MutationObserver(()=>{if(camera.classList.contains('open')){stop();}else if(current)host.hidden=false;}).observe(camera,{attributes:true,attributeFilter:['class']});
   window.MyEventMusicPlayback={select,play,stop,previous:()=>step(-1),next:()=>step(1),get current(){return current;},get playing(){return playing;},capabilities:{youtube:{seek:true,download:false,background:false,mix:false}}};
 })();
