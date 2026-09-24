@@ -360,7 +360,7 @@
 
 <section id="musicHome" class="musicHome" aria-hidden="true">
   <div class="musicHead"><button type="button" id="musicBackBtn" aria-label="Retour">‹</button><div><h2>Musique</h2><p>La bande-son de tous vos événements</p></div><button type="button" id="musicFavoritesBtn" aria-label="Favoris">♡</button></div>
-  <label class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" placeholder="Titre, artiste, playlist…"></label>
+  <div class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" enterkeyhint="search" placeholder="Titre, artiste, playlist…"><button type="button" id="musicSearchBtn" aria-label="Rechercher">Rechercher</button></div>
   <div class="musicTabs"><button class="active" data-music-filter="for-you">Pour vous</button><button data-music-filter="trends">Tendances</button><button data-music-filter="moods">Ambiances</button><button data-music-filter="genres">Genres</button></div>
   <div class="musicSection"><div class="musicSectionTitle"><h3>Tendances</h3><button type="button">Voir tout ›</button></div><div class="musicCards" id="musicTrending"><div class="musicEmpty">Le catalogue sera alimenté par les fournisseurs Musique.</div></div></div>
   <div class="musicSection"><div class="musicSectionTitle"><h3>Playlists MyEvent</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards"><button class="musicTile" data-music-action="event"><span>🎉</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj"><span>🎧</span><b>Mode DJ</b><small>Manuel · Auto</small></button><button class="musicTile" data-music-action="favorites"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
@@ -1181,7 +1181,7 @@
 
 
 <script src="js/home-social-runtime.js?v=camera-controls-1"></script>
-<script src="js/music-runtime.js?v=music-5"></script>
+<script src="js/music-runtime.js?v=music-6"></script>
 
 
 
