@@ -3188,3 +3188,26 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="favorites"]{
   background:#10151d url("https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=88") center/cover no-repeat!important;
 }
+
+
+/* Music V1.17 — force Music bottom nav and final neutral trend cards */
+#socialBottomNav{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+body.musicModeOpen #socialBottomNav{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:fixed!important;
+  left:50%!important;
+  bottom:0!important;
+  transform:translateX(-50%)!important;
+  z-index:9999!important;
+}
+body.musicModeOpen #musicHome{padding-bottom:170px!important}
+#musicTrending .musicTrendOpen strong,
+#musicTrending .musicTrendOpen small{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
