@@ -2967,3 +2967,32 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
  #musicHomeExtras .musicIllustrated>small{font-size:9px!important}
  #musicHomeExtras .musicIllustrated>i{right:7px}
 }
+
+
+/* Music V1.12 — five-up shelves, trend preview and reference artwork */
+#musicHome #musicRecent{gap:7px!important}
+#musicHome #musicRecent .musicListRow{flex:0 0 calc((100% - 28px)/5)!important;min-width:0!important}
+#musicHome #musicRecent .musicTrackOpen img{width:100%!important;height:auto!important;aspect-ratio:1/1!important}
+#musicHome #musicRecent .musicTrackOpen strong{font-size:9px!important}
+#musicHome #musicRecent .musicTrackOpen small{font-size:8px!important}
+#musicHome .musicGenreShelf #musicGenres{gap:7px!important}
+#musicHome .musicGenreShelf #musicGenres .musicGenreCard{flex:0 0 calc((100% - 28px)/5)!important;width:calc((100% - 28px)/5)!important;height:64px!important;padding:0 6px 6px!important;font-size:10px!important}
+#musicHome #musicGenres .musicGenreCard[data-art-key="genre:pop"]{background-image:linear-gradient(180deg,rgba(4,7,12,.03),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=500&q=84")!important}
+#musicHome #musicGenres .musicGenreCard[data-art-key="genre:jazz"]{background-image:linear-gradient(180deg,rgba(4,7,12,.03),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=500&q=84")!important}
+#musicHome #musicGenres .musicGenreCard[data-art-key="genre:rock"]{background-image:linear-gradient(180deg,rgba(4,7,12,.03),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=500&q=84")!important}
+#musicHome #musicGenres .musicGenreCard[data-art-key="genre:electro"]{background-image:linear-gradient(180deg,rgba(4,7,12,.03),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=500&q=84")!important}
+#musicHome #musicGenres .musicGenreCard[data-art-key="genre:classique"]{background-image:linear-gradient(180deg,rgba(4,7,12,.03),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=500&q=84")!important}
+#musicTrending{display:flex!important;gap:9px!important;overflow-x:auto!important;padding:2px 0 4px!important;scrollbar-width:none}
+#musicTrending::-webkit-scrollbar{display:none}
+#musicTrending .musicTrendCard{flex:0 0 30.5%;min-width:0}
+#musicTrending .musicTrendOpen{position:relative;display:grid;width:100%;padding:0;border:0;background:transparent!important;text-align:left;color:#fff}
+#musicTrending .musicTrendOpen img{width:100%;aspect-ratio:1.28/1;object-fit:cover;border-radius:12px}
+#musicTrending .musicTrendOpen strong,#musicTrending .musicTrendOpen small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#musicTrending .musicTrendOpen strong{margin-top:5px;font-size:10px}
+#musicTrending .musicTrendOpen small{margin-top:2px;font-size:8px;color:#929aa6}
+#musicTrending .musicTrendRank{position:absolute;left:5px;top:5px;z-index:2;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--myevent-accent,#ff6a00);font-size:10px;font-weight:900}
+#musicTrending .musicTrendPlay{position:absolute;right:5px;top:calc(100% * .55 - 10px);z-index:2;width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:rgba(7,10,15,.86);font-size:9px}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn)>.musicCards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:visible!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{min-width:0!important;width:100%!important;min-height:105px!important;padding:10px!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile b{font-size:12px!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{font-size:9px!important}
