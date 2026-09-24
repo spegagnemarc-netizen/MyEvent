@@ -3042,3 +3042,26 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(.musicMoodCards){margin-top:10px!important}
 #musicHome>.musicSection:has(#musicTrending){margin-top:18px!important}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn){margin-top:18px!important}
+
+
+/* Music V1.14 — requested final shelf/order/color corrections */
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn){order:5!important}
+#musicHome>.musicSection:has(.musicMoodCards){order:6!important}
+#musicHome>.musicSection:has(#musicTrending){order:7!important}
+
+#musicTrending .musicTrendCard,
+#musicTrending .musicTrendOpen,
+#musicTrending .musicTrendOpen strong,
+#musicTrending .musicTrendOpen small{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+}
+#musicTrending .musicTrendOpen::before,
+#musicTrending .musicTrendOpen::after,
+#musicTrending .musicTrendCard::before,
+#musicTrending .musicTrendCard::after{background:transparent!important}
+#musicTrending .musicTrendOpen img{background:#11151b!important}
+#musicTrending .musicTrendRank{background:rgba(8,11,16,.88)!important;border:1px solid rgba(255,255,255,.28)!important}
+
+#musicHome .musicHead>#musicFavoritesBtn{color:#e53935!important}
