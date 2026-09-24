@@ -2996,3 +2996,49 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{min-width:0!important;width:100%!important;min-height:105px!important;padding:10px!important}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile b{font-size:12px!important}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{font-size:9px!important}
+
+
+/* Music V1.13 — final home shelf order and compact controls */
+#musicHome{display:flex!important;flex-direction:column!important}
+#musicHome>.musicHead{order:1}#musicHome>.musicSearch{order:2}#musicHome>.musicTabs{order:3}
+#musicHome>#musicHomeExtras{order:4}
+#musicHome>.musicSection:has(.musicMoodCards){order:5}
+#musicHome>.musicSection:has(#musicTrending){order:6}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn){order:7}
+#musicHome>.musicProvider{order:8}
+
+#musicHome #musicRecent{overflow-x:auto!important;scroll-snap-type:x proximity}
+#musicHome #musicRecent .musicListRow{scroll-snap-align:start}
+#musicHome .musicGenreShelf #musicGenres{overflow-x:auto!important;scroll-snap-type:x proximity;flex-wrap:nowrap!important}
+#musicHome .musicGenreShelf #musicGenres .musicGenreCard{scroll-snap-align:start}
+
+#musicTrending{overflow-x:auto!important;scroll-snap-type:x proximity}
+#musicTrending .musicTrendCard{scroll-snap-align:start;flex:0 0 30.5%!important}
+#musicTrending .musicTrendOpen{border-radius:12px!important;overflow:visible!important}
+#musicTrending .musicTrendOpen img{border:1px solid #282e38}
+#musicTrending .musicTrendOpen strong{color:#f7f8fa!important;background:transparent!important;padding:0!important}
+#musicTrending .musicTrendOpen small{background:transparent!important;padding:0!important}
+#musicTrending .musicTrendRank{background:var(--myevent-accent,#ff6a00)!important;color:#fff}
+#musicTrending .musicTrendCard,#musicTrending .musicTrendOpen{background:transparent!important}
+
+#musicHome .musicSectionTitle,#musicHomeExtras .musicShelfHead,#musicHomeExtras .musicForYouHead{align-items:center!important}
+#musicHome .musicSectionTitle button,#musicHomeExtras .musicShelfHead button,#musicHomeExtras .musicForYouHead button{
+  width:auto!important;height:24px!important;min-height:24px!important;padding:2px 9px!important;
+  border:1px solid var(--myevent-accent,#ff6a00)!important;border-radius:999px!important;
+  background:transparent!important;color:#f5f6f8!important;font-size:10px!important;font-weight:800!important;line-height:18px!important;
+}
+#musicHomeExtras .musicShelfHead button{font-size:0!important}
+#musicHomeExtras .musicShelfHead button::after{content:"Voir tout ›";font-size:10px}
+
+#musicHome .musicHead>button{
+  display:grid!important;place-items:center!important;padding:0!important;
+  width:38px!important;height:38px!important;min-width:38px!important;border-radius:50%!important;
+  border:1.5px solid var(--myevent-accent,#ff6a00)!important;background:#fff!important;color:#11151b!important;
+  line-height:1!important;box-shadow:none!important;
+}
+#musicHome .musicHead>#musicBackBtn{font-size:27px!important;padding-bottom:3px!important}
+#musicHome .musicHead>#musicFavoritesBtn{font-size:24px!important;padding-bottom:2px!important}
+
+#musicHome>.musicSection:has(.musicMoodCards){margin-top:10px!important}
+#musicHome>.musicSection:has(#musicTrending){margin-top:18px!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn){margin-top:18px!important}
