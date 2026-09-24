@@ -2609,3 +2609,6 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 
 
 .musicSearchResult{min-width:270px;max-width:320px;display:grid;grid-template-columns:72px 1fr 42px;align-items:center;gap:10px;padding:9px;border:1px solid #252b34;border-radius:15px;background:#11151b}.musicSearchResult img{width:72px;height:72px;object-fit:cover;border-radius:10px}.musicSearchResult>div{min-width:0}.musicSearchResult strong,.musicSearchResult small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicSearchResult small{color:#969eaa;margin-top:5px}.musicSearchResult button{width:38px;height:38px;border:0;border-radius:50%;background:#ff6b2c;color:#fff;font-size:23px}.musicSearchResult button:disabled{opacity:.65}
+
+
+#socialBottomCreate img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
