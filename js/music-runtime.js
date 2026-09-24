@@ -23,6 +23,12 @@
       renderPlaylist(playlist,items);
     }catch(e){status('Playlist : '+e.message)}
   }
+  function bindTrackOpen(rows,tracks){
+    rows.forEach((row,i)=>row.addEventListener('click',e=>{
+      if(e.target.closest('[data-music-add],[data-music-vote]'))return;
+      if(tracks[i])openPlayer(tracks[i],tracks.filter(Boolean));
+    }));
+  }
   function renderPlaylist(playlist,items){
     let panel=$('musicEventPanel');
     if(!panel){panel=document.createElement('div');panel.id='musicEventPanel';panel.className='musicEventPanel';music.appendChild(panel);}
@@ -30,12 +36,13 @@
       (items.length?items.map((x,i)=>'<div class="musicQueueRow"><b>'+(i+1)+'</b><div><strong>'+esc(x.track?.title||'Morceau')+'</strong><small>'+esc(x.track?.artist||x.track?.provider||'')+'</small></div><button data-music-vote="'+x.id+'">👍 '+x.score+'</button></div>').join(''):'<div class="musicEmpty">Aucun morceau proposé pour cet événement.</div>');
     panel.classList.add('open');
     $('musicClosePlaylist')?.addEventListener('click',()=>panel.classList.remove('open'));
-    panel.querySelectorAll('[data-music-vote]').forEach(b=>b.addEventListener('click',()=>vote(b.dataset.musicVote)));
+    bindTrackOpen(panel.querySelectorAll('.musicQueueRow'),items.map(x=>x.track));
+    panel.querySelectorAll('[data-music-vote]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();vote(b.dataset.musicVote)}));
   }
   function renderSearchResults(items){
     const box=$('musicTrending');if(!box)return;
     box.innerHTML=items.length?items.map(x=>'<article class="musicSearchResult" data-music-open="'+esc(x.provider_track_id)+'"><img src="'+esc(x.thumbnail_url)+'" alt=""><div><strong>'+esc(x.title)+'</strong><small>'+esc(x.artist)+'</small></div><button type="button" data-music-add="'+esc(x.provider_track_id)+'" aria-label="Ajouter à la playlist">＋</button></article>').join(''):'<div class="musicEmpty">Aucun résultat.</div>';
-    box.querySelectorAll('[data-music-open]').forEach(row=>row.addEventListener('click',e=>{if(e.target.closest('[data-music-add]'))return;const x=items.find(v=>v.provider_track_id===row.dataset.musicOpen);if(x)openPlayer(x,items)}));
+    bindTrackOpen(box.querySelectorAll('[data-music-open]'),items);
     box.querySelectorAll('[data-music-add]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const x=items.find(v=>v.provider_track_id===b.dataset.musicAdd);if(x)addTrackToEvent(x,b)}));
   }
   function openPlayer(track,items=[]){
