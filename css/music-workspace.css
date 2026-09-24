@@ -60,3 +60,30 @@
   #musicHomeExtras .musicIllustrated>small{font-size:9.5px!important}
   #musicPlayback{width:calc(100% - 20px)!important}
 }
+
+
+/* Music Discover V2 — artwork-first mobile layout */
+#musicScreen:has(#musicDiscoverForm){max-width:980px;padding-left:18px;padding-right:18px}
+#musicScreen:has(#musicDiscoverForm) .musicScreenHead{margin-bottom:8px}
+#musicScreen:has(#musicDiscoverForm) #musicScreenStatus{margin:4px 0 14px;color:#9aa3b1;font-size:13px}
+#musicDiscoverForm{display:grid!important;grid-template-columns:1fr auto;gap:9px!important;align-items:end!important;margin:0 0 14px}
+#musicDiscoverForm label{font-size:0}
+#musicDiscoverForm label::before{content:"Rechercher";display:block;font-size:13px;font-weight:700;color:#c9ced7;margin:0 0 6px}
+#musicDiscoverForm input{height:46px;border-radius:15px!important;background:#10151c!important;border-color:#303844!important;padding:0 15px!important;font-size:16px}
+#musicDiscoverForm button{height:46px!important;min-height:46px!important;padding:0 17px!important;background:var(--myevent-accent)!important;border-color:var(--myevent-accent)!important;font-weight:800}
+#musicDiscoverResults{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 12px;padding:4px 0 20px}
+#musicDiscoverResults .musicListRow{display:block!important;padding:0!important;border:0!important;background:transparent!important;border-radius:0!important;min-width:0;position:relative}
+#musicDiscoverResults .musicTrackOpen{display:block!important;width:100%;padding:0!important;background:transparent!important;border:0!important;min-width:0!important;text-align:left}
+#musicDiscoverResults .musicTrackOpen img{display:block;width:100%!important;height:auto!important;aspect-ratio:1/1;object-fit:cover;border-radius:14px!important;background:#151a22}
+#musicDiscoverResults .musicTrackOpen span{display:block;padding:7px 2px 0;min-width:0}
+#musicDiscoverResults .musicTrackOpen strong{font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#musicDiscoverResults .musicTrackOpen small{font-size:11px!important;line-height:1.25;margin-top:3px;color:#9ba4b2!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#musicDiscoverResults .musicListRow>button:not(.musicTrackOpen){position:absolute;right:7px;top:7px;width:32px;height:32px;min-height:32px!important;padding:0!important;border-radius:50%!important;background:rgba(7,10,15,.82)!important;border:1px solid rgba(255,255,255,.22)!important;font-size:18px;backdrop-filter:blur(7px)}
+@media(max-width:520px){
+ #musicScreen:has(#musicDiscoverForm){padding-left:14px;padding-right:14px}
+ #musicScreen:has(#musicDiscoverForm) .musicScreenHead{gap:10px}
+ #musicScreen:has(#musicDiscoverForm) .musicScreenHead h2{font-size:27px}
+ #musicScreen:has(#musicDiscoverForm) .musicScreenHead button{width:42px;height:42px;min-height:42px!important;padding:0!important;border-radius:50%!important;font-size:0}
+ #musicScreen:has(#musicDiscoverForm) .musicScreenHead button::after{content:"‹";font-size:30px;line-height:1}
+ #musicDiscoverResults{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 9px}
+}
