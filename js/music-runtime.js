@@ -11,7 +11,7 @@
   function metadata(value){decoder.innerHTML=String(value??'').replace(/</g,'&lt;');return decoder.value;}
   const meta=value=>esc(metadata(value));
   function status(t){for(const id of ['musicProviderStatus','musicPlayerStatus']){const e=$(id);if(e)e.textContent=t}}
-  function closePlayer(){const panel=$('musicPlayer');if(panel){panel.classList.remove('open');panel.replaceChildren();}}
+  function closePlayer(){const panel=$('musicPlayer');if(panel){panel.classList.remove('open');panel.replaceChildren();window.dispatchEvent(new CustomEvent('music-player-close'));}}
   async function findTrack(sb,track){
     const r=await sb.from('music_tracks').select('id').eq('provider',track.provider).eq('provider_track_id',track.provider_track_id).maybeSingle();
     if(r.error)throw r.error;return r.data?.id;
@@ -57,7 +57,7 @@
       const tracks=(r.data||[]).map(x=>x.track).filter(Boolean);
       let panel=$('musicFavoritesPanel');if(!panel){panel=document.createElement('div');panel.id='musicFavoritesPanel';panel.className='musicEventPanel';music.appendChild(panel);}
       panel.innerHTML='<div class="musicSectionTitle"><h3>Mes favoris</h3><button type="button" data-favorites-close>Fermer</button></div>'+(tracks.length?tracks.map(x=>'<button type="button" class="musicFavoriteRow"><strong>'+meta(x.title)+'</strong><small>'+meta(x.artist)+'</small></button>').join(''):'<div class="musicEmpty">Aucun favori pour le moment.</div>');
-      panel.classList.add('open');panel.querySelector('[data-favorites-close]').addEventListener('click',()=>panel.classList.remove('open'));
+      panel.classList.add('open');window.dispatchEvent(new CustomEvent('music-library-loaded'));panel.querySelector('[data-favorites-close]').addEventListener('click',()=>panel.classList.remove('open'));
       bindTrackOpen(panel.querySelectorAll('.musicFavoriteRow'),tracks);
     }catch(e){status('Favoris : '+e.message);}
   }
@@ -102,6 +102,8 @@
   function openPlayer(track,items=[]){
     let panel=$('musicPlayer');
     if(!panel){panel=document.createElement('section');panel.id='musicPlayer';panel.className='musicPlayer';music.appendChild(panel);}
+    window.MyEventMusicPlayback?.select(track,items);
+    window.dispatchEvent(new CustomEvent('music-player-open'));
     const id=encodeURIComponent(track.provider_track_id||'');
     panel.innerHTML='<div class="musicPlayerTop"><button type="button" data-player-close aria-label="Retour">‹</button><b>MyEvent · Musique</b><span aria-hidden="true">♫</span></div>'+
       '<div class="musicPlayerMedia"><button type="button" class="musicPlayerCover" data-player-play aria-label="Lire sur YouTube"><img src="'+esc(track.thumbnail_url)+'" alt=""><span>▶<small>Lire sur YouTube</small></span></button></div>'+
@@ -112,7 +114,7 @@
     panel.classList.add('open');panel.scrollTop=0;
     panel.querySelector('[data-player-close]')?.addEventListener('click',closePlayer);
     panel.querySelector('[data-player-play]').addEventListener('click',()=>{
-      panel.querySelector('.musicPlayerMedia').innerHTML='<div class="musicPlayerEmbed"><iframe src="https://www.youtube-nocookie.com/embed/'+id+'?playsinline=1&rel=0&autoplay=1" title="'+meta(track.title)+'" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>';
+      window.MyEventMusicPlayback.play(track,items);
     });
     panel.querySelector('[data-player-add]')?.addEventListener('click',e=>addTrackToEvent(track,e.currentTarget));
     panel.querySelector('[data-player-share]')?.addEventListener('click',async()=>{const url='https://www.youtube.com/watch?v='+track.provider_track_id;try{if(navigator.share)await navigator.share({title:metadata(track.title),text:metadata(track.artist),url});else{await navigator.clipboard.writeText(url);status('Lien copié.')}}catch(e){if(e.name!=='AbortError')status('Partage indisponible : '+e.message)}});
@@ -124,7 +126,7 @@
     status('Recherche YouTube…');
     const r=await fetch('/api/search-music?q='+encodeURIComponent(q));const data=await r.json();
     if(!r.ok)throw new Error(data.error||'Recherche indisponible');
-    renderSearchResults(data.items||[]);status((data.items||[]).length+' résultat(s) YouTube');
+    window.MyEventMusicSession?.update({query:q});window.dispatchEvent(new CustomEvent('music-search-results',{detail:data.items||[]}));renderSearchResults(data.items||[]);status((data.items||[]).length+' résultat(s) YouTube');
   }
   async function addTrackToEvent(track,button){
     const original=button?.innerHTML;
@@ -149,9 +151,9 @@
     registerProvider(id,adapter){if(id&&adapter)providers.set(id,adapter);},
     getProvider(id){return providers.get(id)||null;},
     listProviders(){return [...providers.keys()]},
-    ensureEventPlaylist:ensurePlaylist,loadEventPlaylist
+    ensureEventPlaylist:ensurePlaylist,loadEventPlaylist,loadFavorites,openPlayer,closePlayer,searchMusic,addTrackToEvent,bindFavorite,ensureTrack,metadata,escape:esc,openMusic,closeMusic
   };
-  function openMusic(){music.classList.add('open');music.setAttribute('aria-hidden','false');document.body.classList.add('musicModeOpen');nav.querySelectorAll('[data-bottom-tab]').forEach(b=>b.classList.toggle('active',b.dataset.bottomTab==='music'))}
+  function openMusic(){window.MyEventMusicSession?.get();music.classList.add('open');music.setAttribute('aria-hidden','false');document.body.classList.add('musicModeOpen');nav.querySelectorAll('[data-bottom-tab]').forEach(b=>b.classList.toggle('active',b.dataset.bottomTab==='music'))}
   function closeMusic(){closePlayer();music.classList.remove('open');music.setAttribute('aria-hidden','true');document.body.classList.remove('musicModeOpen');nav.querySelectorAll('[data-bottom-tab]').forEach(b=>b.classList.toggle('active',b.dataset.bottomTab==='feed'))}
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab="music"]');if(b){e.preventDefault();e.stopImmediatePropagation();openMusic()}},true);
   $('musicBackBtn')?.addEventListener('click',closeMusic);
@@ -169,6 +171,6 @@
   music.querySelector('[data-music-filter="trends"]')?.addEventListener('click',()=>{if(searchInput)searchInput.value='musique tendances France';runSearch()});
   music.querySelector('[data-music-action="event"]')?.addEventListener('click',loadEventPlaylist);
   $('musicEventPlaylistsBtn')?.addEventListener('click',loadEventPlaylist);
-  music.querySelector('[data-music-action="dj"]')?.addEventListener('click',()=>status('Mode DJ : prochaine étape'));
+  music.querySelector('[data-music-action="dj"]')?.addEventListener('click',()=>window.MyEventMusicWorkspace?.go('dj'));
   music.querySelector('[data-music-action="favorites"]')?.addEventListener('click',loadFavorites);
 })();
