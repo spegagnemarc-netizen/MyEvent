@@ -2873,3 +2873,26 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
   color:#d8dce3;
   font-size:20px;
 }
+
+
+/* Music V1.10 — richer genre catalogue + illustrated live mini-player */
+#musicHome #musicGenres{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important;overflow:visible!important}
+#musicHome #musicGenres .musicGenreCard{width:100%!important;min-width:0!important;flex:none!important}
+#musicPlayback .musicTransport{grid-template-rows:54px 18px!important;padding-bottom:6px!important}
+#musicPlayback .musicTransport [data-transport="open"]{
+  display:grid!important;grid-template-columns:38px minmax(0,1fr)!important;align-items:center!important;gap:9px!important;
+  padding-right:5px!important;
+}
+#musicPlayback [data-now-art]{width:38px;height:38px;display:block;object-fit:cover;border-radius:9px;background:#20252d}
+#musicPlayback [data-transport="open"]>span{min-width:0;display:block}
+#musicPlayback [data-now-title],#musicPlayback [data-now-artist]{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#musicPlayback [data-now-title]{font-size:11px;color:#fff}
+#musicPlayback [data-now-artist]{margin-top:2px;font-size:9px;color:#8f97a3}
+#musicPlayback .musicLiveProgress{
+  --music-progress:0%;grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:32px minmax(0,1fr) 32px;
+  align-items:center;gap:5px;position:relative;height:18px;color:#929aa6;font-size:8px;font-variant-numeric:tabular-nums;
+}
+#musicPlayback .musicLiveProgress input[type="range"]{grid-column:2;grid-row:1;width:100%!important;height:4px!important;z-index:2;opacity:.001;cursor:pointer}
+#musicPlayback .musicLiveProgress i{grid-column:2;grid-row:1;height:3px;border-radius:999px;background:linear-gradient(90deg,var(--myevent-accent,#ff6b2c) 0 var(--music-progress),#343a44 var(--music-progress) 100%);pointer-events:none}
+#musicPlayback .musicLiveProgress span:first-of-type{grid-column:1;grid-row:1;text-align:right}
+#musicPlayback .musicLiveProgress span:last-of-type{grid-column:3;grid-row:1;text-align:left}
