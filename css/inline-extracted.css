@@ -3065,3 +3065,31 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicTrending .musicTrendRank{background:rgba(8,11,16,.88)!important;border:1px solid rgba(255,255,255,.28)!important}
 
 #musicHome .musicHead>#musicFavoritesBtn{color:#e53935!important}
+
+
+/* Music V1.15 — screenshot corrections */
+#musicHome>.musicSection:has(.musicMoodCards){order:5!important}
+#musicHome>.musicSection:has(#musicTrending){order:6!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn){order:7!important}
+
+/* Trend cards: artwork stays clean; orange only remains as an accent */
+#musicTrending .musicTrendOpen strong,
+#musicTrending .musicTrendOpen small{
+  background:#0f141b!important;
+  background-image:none!important;
+  color:#f5f6f8!important;
+}
+#musicTrending .musicTrendOpen small{color:#929aa6!important}
+#musicTrending .musicTrendRank{
+  background:rgba(10,14,20,.90)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.32)!important;
+}
+
+/* Favourite button: white disc + orange outline + red heart */
+#musicHome .musicHead>#musicFavoritesBtn{
+  color:#e53935!important;
+  -webkit-text-fill-color:#e53935!important;
+  background:#fff!important;
+  border-color:var(--myevent-accent,#ff6a00)!important;
+}
