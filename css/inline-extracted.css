@@ -3143,3 +3143,48 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{
   font-size:10px!important;color:#d8dbe2!important;text-shadow:0 2px 7px #000;
 }
+
+
+/* Music V1.16 — iPhone corrections from visual QA */
+/* Do not alter the app-wide bottom nav from Music CSS. */
+#socialBottomNav{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+
+/* Trending: remove every orange fill/strip; keep artwork + neutral metadata. */
+#musicTrending .musicTrendCard,
+#musicTrending .musicTrendOpen,
+#musicTrending .musicTrendOpen strong,
+#musicTrending .musicTrendOpen small{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  border-color:transparent!important;
+}
+#musicTrending .musicTrendOpen strong,
+#musicTrending .musicTrendOpen small{
+  display:block!important;
+  padding:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+#musicTrending .musicTrendOpen strong{color:#f7f8fa!important}
+#musicTrending .musicTrendOpen small{color:#929aa6!important}
+#musicTrending .musicTrendOpen::before,
+#musicTrending .musicTrendOpen::after,
+#musicTrending .musicTrendCard::before,
+#musicTrending .musicTrendCard::after{
+  content:none!important;
+  display:none!important;
+  background:none!important;
+}
+
+/* Playlist artwork: explicit overlays ensure old decorative artwork cannot win. */
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="event"]{
+  background:#10151d url("https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=88") center/cover no-repeat!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="dj"]{
+  background:#10151d url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=900&q=88") center/cover no-repeat!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="favorites"]{
+  background:#10151d url("https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=88") center/cover no-repeat!important;
+}
