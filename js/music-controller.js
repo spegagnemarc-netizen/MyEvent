@@ -3,7 +3,7 @@
   const session=window.MyEventMusicSession;
   let player=null,ready=false,current=null,queue=[],playing=false,loading=null,generation=0;
   const host=document.createElement('aside');host.id='musicPlayback';host.hidden=true;
-  host.innerHTML='<div id="musicVideoHost"><div id="musicVideo"></div></div><div class="musicTransport"><button data-transport="open" aria-label="Ouvrir le lecteur">♫</button><button data-transport="previous" aria-label="Morceau précédent">⏮</button><button data-transport="toggle" aria-label="Lecture ou pause">▶</button><button data-transport="next" aria-label="Morceau suivant">⏭</button><button data-transport="stop" aria-label="Arrêter le lecteur">×</button><input aria-label="Position de lecture" type="range" min="0" max="0" value="0"><small role="status"></small></div>';
+  host.innerHTML='<div id="musicVideoHost"><div id="musicVideo"></div></div><div class="musicTransport"><button data-transport="open" aria-label="Ouvrir le lecteur"><img data-mini-cover alt=""><span><b data-mini-title>Musique</b><small data-mini-artist></small></span></button><button data-transport="previous" aria-label="Morceau précédent">⏮</button><button data-transport="toggle" aria-label="Lecture ou pause">▶</button><button data-transport="next" aria-label="Morceau suivant">⏭</button><button data-transport="stop" aria-label="Arrêter le lecteur">×</button><input aria-label="Position de lecture" type="range" min="0" max="0" value="0"><time data-mini-time>0:00 / 0:00</time><small role="status"></small></div>';
   document.body.appendChild(host);
   const message=t=>{host.querySelector('small').textContent=t;};
   function api(){
@@ -20,7 +20,7 @@
   function select(track,items=[]){
     session.get();const same=current&&session.key(current)===session.key(track);
     if(!same){const saved=session.get();const resume=!current&&saved.current&&session.key(saved.current)===session.key(track)?saved.position:0;ready&&player.pauseVideo();current=track;playing=false;session.update({current:track,position:resume});if(ready)player.cueVideoById({videoId:track.provider_track_id,startSeconds:resume});}
-    if(items.length)queue=items;host.hidden=false;host.querySelector('[data-transport="open"]').textContent=window.MyEventMusic?.metadata(track.title)||track.title;return same;
+    if(items.length)queue=items;host.hidden=false;const cover=host.querySelector('[data-mini-cover]');cover.src=track.thumbnail_url||'';cover.hidden=!track.thumbnail_url;host.querySelector('[data-mini-title]').textContent=window.MyEventMusic?.metadata(track.title)||track.title;host.querySelector('[data-mini-artist]').textContent=window.MyEventMusic?.metadata(track.artist)||track.artist||'';return same;
   }
   async function play(track,items=[]){
     if(track)select(track,items);if(!current)return;
@@ -42,7 +42,7 @@
   function stop(){remember();generation++;player?.destroy();player=null;ready=false;playing=false;current=null;host.hidden=true;host.querySelector('#musicVideoHost').innerHTML='<div id="musicVideo"></div>';}
   host.addEventListener('click',e=>{const action=e.target.closest('[data-transport]')?.dataset.transport;if(action==='open')window.MyEventMusic?.openPlayer(current,queue);if(action==='previous')step(-1);if(action==='next')step(1);if(action==='toggle')playing?player.pauseVideo():play();if(action==='stop')stop();});
   host.querySelector('input').addEventListener('change',e=>{if(ready){player.seekTo(Number(e.target.value),true);remember();}});
-  setInterval(()=>{session.get();if(!ready)return;const range=host.querySelector('input');range.max=player.getDuration()||0;range.value=player.getCurrentTime()||0;remember();},1000);
+  const clock=n=>{n=Math.max(0,Math.floor(Number(n)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};setInterval(()=>{session.get();if(!ready)return;const range=host.querySelector('input'),duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;range.max=duration;range.value=currentTime;host.querySelector('[data-mini-time]').textContent=clock(currentTime)+' / '+clock(duration);remember();},1000);
   window.addEventListener('pagehide',remember);
   window.addEventListener('music-user-change',()=>{generation++;player?.destroy();player=null;ready=false;playing=false;current=null;queue=[];host.hidden=true;});
   const camera=document.getElementById('myeventCameraModal');
