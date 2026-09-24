@@ -31,7 +31,9 @@
       player?.destroy();host.querySelector('#musicVideoHost').innerHTML='<div id="musicVideo"></div>';
       player=new YT.Player('musicVideo',{host:'https://www.youtube-nocookie.com',width:'100%',height:'200',videoId:current.provider_track_id,playerVars:{playsinline:1,origin:location.origin,start:Math.floor(session.get().position),autoplay:0},events:{
         onReady(e){if(token!==generation)return;ready=true;e.target.playVideo();message('Sur iPhone, touche la vidéo si nécessaire.');},
-        onStateChange(e){if(token!==generation)return;playing=e.data===1;host.querySelector('[data-transport="toggle"]').textContent=playing?'⏸':'▶';if(playing){const s=session.get();s.recent=[current,...s.recent.filter(t=>session.key(t)!==session.key(current))].slice(0,50);\n          if(s.artContext&&current.thumbnail_url){s.artwork[s.artContext]={thumbnail_url:current.thumbnail_url,track:current,updated_at:Date.now()};window.dispatchEvent(new CustomEvent('music-artwork-change',{detail:{key:s.artContext,track:current}}));}\n          session.save();window.dispatchEvent(new CustomEvent('music-recent-change'));}remember();},
+        onStateChange(e){if(token!==generation)return;playing=e.data===1;host.querySelector('[data-transport="toggle"]').textContent=playing?'⏸':'▶';if(playing){const s=session.get();s.recent=[current,...s.recent.filter(t=>session.key(t)!==session.key(current))].slice(0,50);
+          if(s.artContext&&current.thumbnail_url){s.artwork[s.artContext]={thumbnail_url:current.thumbnail_url,track:current,updated_at:Date.now()};window.dispatchEvent(new CustomEvent('music-artwork-change',{detail:{key:s.artContext,track:current}}));}
+          session.save();window.dispatchEvent(new CustomEvent('music-recent-change'));}remember();},
         onError(){message('Cette vidéo ne peut pas être lue ici. Choisis un autre morceau.');},onAutoplayBlocked(){message('Touche Lecture dans la vidéo pour démarrer.');}
       }});
     }catch(e){message(e.message);}
