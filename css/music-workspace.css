@@ -21,3 +21,42 @@
 #musicHome .musicTrackOpen,#musicHome .musicListRow>button,#musicGenres button{background:#171c24;border:1px solid #454b54;color:white;border-radius:12px;padding:10px;min-height:44px}#musicGenres{display:flex;flex-wrap:wrap;gap:6px}#musicHome .musicTile{background:linear-gradient(140deg,rgba(var(--myevent-accent-rgb),.25),#11151b)!important}
 .musicIllustrated,.musicChips button,.musicHome .musicTile{background-image:linear-gradient(0deg,#080b10ee,transparent),url(../assets/music-vinyl.svg)!important;background-size:cover!important;background-position:center!important}.musicIllustrated:nth-child(even),.musicChips button:nth-child(even),.musicHome .musicTile:nth-child(even){background-image:linear-gradient(0deg,#080b10ee,transparent),url(../assets/music-wave.svg)!important}.musicChips button{display:flex;align-items:flex-end}.musicIllustrated{box-shadow:inset 0 0 80px rgba(var(--myevent-accent-rgb),var(--myevent-intensity))}
 #musicHome{background:#080b10}.musicCards{scrollbar-width:none}.musicCards::-webkit-scrollbar{display:none}#musicHome .musicTrackOpen,#musicHome .musicListRow>button,#musicScreen button{background:rgba(23,28,36,var(--myevent-surface-opacity))}
+
+
+/* Music V1.5 — illustrated dark visual system */
+#musicHome .musicTabs button:not(.active),#musicHome .musicChips button,#musicScreen button:not(.musicPrimary):not([aria-pressed="true"]){
+  background:#11161d!important;border-color:#343b46!important;color:#eef1f5!important;box-shadow:none!important
+}
+#musicHome .musicTabs button.active{background:var(--myevent-accent)!important;border-color:var(--myevent-accent)!important}
+#musicHomeExtras .musicIllustrated{background-size:cover!important;background-position:center!important;border-color:rgba(255,255,255,.18)!important;box-shadow:inset 0 -90px 80px rgba(0,0,0,.68),0 10px 28px rgba(0,0,0,.28)!important}
+#musicHomeExtras .musicIllustrated[data-go="discover"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.05) 72%),url(../assets/music-discover.svg)!important}
+#musicHomeExtras .musicIllustrated[data-go="ai"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.05) 72%),url(../assets/music-ai.svg)!important}
+#musicHomeExtras .musicIllustrated[data-go="library"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.05) 72%),url(../assets/music-library.svg)!important}
+#musicHomeExtras .musicIllustrated::after{display:none!important}
+#musicHome .musicTile{background-size:cover!important;background-position:center!important;border-color:rgba(255,255,255,.16)!important;box-shadow:inset 0 -80px 70px rgba(0,0,0,.72)!important}
+#musicHome .musicTile[data-music-action="event"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-discover.svg)!important}
+#musicHome .musicTile[data-music-action="dj"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-dj.svg)!important}
+#musicHome .musicTile[data-music-action="favorites"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-library.svg)!important}
+#musicGenres button,#musicHome .musicChips button{background-image:linear-gradient(0deg,rgba(3,7,12,.72),rgba(3,7,12,.12)),url(../assets/music-genre.svg)!important;background-size:cover!important;background-position:center!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important;text-shadow:0 1px 5px #000!important}
+#musicHome .musicSearchResult,#musicScreen .musicListRow{background:#10151c!important;border:1px solid #2d3540!important;border-radius:15px!important;color:#fff!important}
+#musicHome .musicSearchResult button,#musicScreen .musicListRow>button:not(.musicTrackOpen){background:#171d25!important;border:1px solid #3a424e!important;color:#fff!important}
+#musicHome .musicSearchResult button:active,#musicScreen .musicListRow>button:active{border-color:var(--myevent-accent)!important;color:var(--myevent-accent)!important}
+#musicScreen{color:#f5f7fa}
+#musicScreen .musicScreenHead button{background:#11161d!important;border:1px solid #343b46!important;color:#fff!important}
+#musicScreenBody>.musicEventPanel,#musicScreenBody>section,#musicScreenBody>.musicLibraryPanel{background:#0d1218!important;border-color:#29313b!important}
+#musicScreenBody button{box-shadow:none!important}
+#musicScreenBody button:disabled{background:#14181e!important;color:#707782!important;border-color:#252b34!important}
+#musicScreenBody .musicPrimary,#musicScreenBody button[data-primary="true"]{background:var(--myevent-accent)!important;border-color:var(--myevent-accent)!important;color:#fff!important}
+#musicScreenBody .musicListRow .musicTrackOpen{background:transparent!important;border:0!important;padding:6px!important}
+#musicScreenBody .musicListRow .musicTrackOpen img{width:58px;height:58px;border-radius:11px}
+#musicPlayback{background:rgba(12,16,22,.96)!important;border-color:#343d49!important;border-radius:15px!important;box-shadow:0 10px 28px rgba(0,0,0,.42)!important}
+#musicPlayback .musicTransport{min-height:50px!important}
+#musicPlayback .musicTransport [data-transport="toggle"]{background:var(--myevent-accent)!important}
+#musicPlayback .musicTransport [data-transport="previous"],#musicPlayback .musicTransport [data-transport="next"],#musicPlayback .musicTransport [data-transport="stop"]{background:transparent!important;border:0!important}
+@media(max-width:430px){
+  #musicHomeExtras>.musicCards{grid-template-columns:1.18fr .92fr .92fr!important}
+  #musicHomeExtras .musicIllustrated{height:132px!important;padding:11px!important}
+  #musicHomeExtras .musicIllustrated>b{font-size:14px!important}
+  #musicHomeExtras .musicIllustrated>small{font-size:9.5px!important}
+  #musicPlayback{width:calc(100% - 20px)!important}
+}
