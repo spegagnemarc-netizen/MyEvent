@@ -95,6 +95,10 @@
     const state=S.get(),norm=v=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
     const rankedGenres=genres.map((genre,index)=>{const g=norm(genre);let plays=0;for(const track of state.recent){const hay=norm((track.title||'')+' '+(track.artist||''));if(hay.includes(g))plays+=Number(state.playCounts[S.key(track)]||0);}return{genre,index,plays};}).sort((a,b)=>b.plays-a.plays||a.index-b.index).slice(0,10);
     for(const {genre} of rankedGenres){const key='genre:'+norm(genre);const b=button(genre,()=>{go('discover');search(genre,key);},$('musicGenres'));b.classList.add('musicGenreCard');b.dataset.artKey=key;const art=state.artwork[key]?.thumbnail_url;if(art)b.style.setProperty('background-image','linear-gradient(180deg,rgba(5,8,12,.06),rgba(5,8,12,.78)),url("'+art.replace(/"/g,'%22')+'")','important');}
+    // Home order: recent -> genres -> trends -> ambiances -> MyEvent playlists.
+    const moodSection=home.querySelector('.musicChips')?.closest('.musicSection');
+    const playlistSection=home.querySelector('[data-music-action="event"]')?.closest('.musicSection');
+    if(moodSection&&playlistSection)home.insertBefore(moodSection,playlistSection);
     loadHomeTrends();
   }
   async function loadHomeTrends(){
@@ -148,7 +152,7 @@
   home.querySelector('.musicSectionTitle button:not([id])')?.addEventListener('click',()=>{go('discover');search('musique tendances France');});
   home.querySelector('[data-music-action="dj"] small')?.replaceChildren(document.createTextNode('File · Manuel'));
   $('musicProviderStatus').textContent='Recherche YouTube · lecture à la demande';
-  window.MyEventMusicWorkspace={go,back};renderHome();$('musicSearchInput').value=S.get().query;
+  window.MyEventMusicWorkspace={go,back,openSearch(q){go('discover');search(q);}};renderHome();$('musicSearchInput').value=S.get().query;
   let eventId=ctx().event?.id;
   setInterval(()=>{const next=ctx().event?.id;if(next===eventId)return;eventId=next;eventData=null;$('musicEventPanel')?.remove();if(screen==='event'&&root.classList.contains('open'))go('event',false);},750);
   document.querySelector('[data-bottom-tab="music"]')?.addEventListener('click',()=>go(S.get().screen,false),true);
