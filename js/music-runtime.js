@@ -75,8 +75,17 @@
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab="music"]');if(b){e.preventDefault();e.stopImmediatePropagation();openMusic()}},true);
   $('musicBackBtn')?.addEventListener('click',closeMusic);
   document.querySelectorAll('[data-music-filter]').forEach(b=>b.addEventListener('click',()=>document.querySelectorAll('[data-music-filter]').forEach(x=>x.classList.toggle('active',x===b))));
-  let searchTimer=null;
-  $('musicSearchInput')?.addEventListener('input',e=>{clearTimeout(searchTimer);const q=e.target.value.trim();if(q.length<2){status('Fournisseur : YouTube');return}searchTimer=setTimeout(()=>searchMusic(q).catch(err=>status(err.message)),450)});
+  const searchInput=$('musicSearchInput');
+  async function runSearch(){
+    const q=searchInput?.value.trim()||'';
+    if(q.length<2){status('Écris au moins 2 caractères.');return}
+    try{await searchMusic(q)}catch(err){status('Recherche : '+err.message)}
+  }
+  searchInput?.addEventListener('search',runSearch);
+  searchInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchInput.blur();runSearch()}});
+  $('musicSearchBtn')?.addEventListener('click',runSearch);
+  music.querySelectorAll('.musicChips button').forEach(b=>b.addEventListener('click',()=>{if(searchInput)searchInput.value=b.textContent.trim();runSearch()}));
+  music.querySelector('[data-music-filter="trends"]')?.addEventListener('click',()=>{if(searchInput)searchInput.value='musique tendances France';runSearch()});
   music.querySelector('[data-music-action="event"]')?.addEventListener('click',loadEventPlaylist);
   $('musicEventPlaylistsBtn')?.addEventListener('click',loadEventPlaylist);
   music.querySelector('[data-music-action="dj"]')?.addEventListener('click',()=>status('Mode DJ : prochaine étape'));
