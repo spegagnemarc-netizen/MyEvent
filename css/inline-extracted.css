@@ -2790,3 +2790,19 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome .musicMoodElectro{background-image:linear-gradient(145deg,rgba(12,24,72,.08),rgba(32,7,48,.28)),url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=500&q=80")}
 #musicHome .musicMoodVariete{background-image:linear-gradient(145deg,rgba(60,25,20,.08),rgba(20,12,25,.28)),url("https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=500&q=80")}
 #musicHome .musicMoodCards button:active,#musicHome .musicMoodCards button.active{border-color:var(--myevent-accent,#ff6a00)}
+
+/* Music adaptive artwork — defaults on first use, latest listened cover afterwards */
+#musicHome #musicGenres .musicGenreCard{
+  position:relative;flex:0 0 152px!important;height:126px!important;padding:0 14px 12px!important;
+  display:flex;align-items:flex-end;background-position:center!important;background-size:cover!important;
+  border:1px solid rgba(255,255,255,.14)!important;border-radius:20px!important;
+  color:#fff!important;font-size:17px;font-weight:800;text-shadow:0 2px 7px #000;
+}
+#musicHome #musicGenres .musicGenreCard::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,7,12,.02) 34%,rgba(4,7,12,.84) 100%);pointer-events:none}
+#musicHome #musicGenres .musicGenreCard::after{display:none!important}
+#musicHome #musicGenres .musicGenreCard:nth-child(1){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=500&q=80")!important}
+#musicHome #musicGenres .musicGenreCard:nth-child(2){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?auto=format&fit=crop&w=500&q=80")!important}
+#musicHome #musicGenres .musicGenreCard:nth-child(3){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=500&q=80")!important}
+#musicHome #musicGenres .musicGenreCard:nth-child(4){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=500&q=80")!important}
+#musicHome #musicGenres .musicGenreCard:nth-child(5){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=500&q=80")!important}
+#musicHome #musicGenres .musicGenreCard[style]{background-size:cover!important;background-position:center!important}
