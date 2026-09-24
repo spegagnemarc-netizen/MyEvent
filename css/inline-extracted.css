@@ -2806,3 +2806,70 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome #musicGenres .musicGenreCard:nth-child(4){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=500&q=80")!important}
 #musicHome #musicGenres .musicGenreCard:nth-child(5){background-image:linear-gradient(180deg,rgba(4,7,12,.02),rgba(4,7,12,.82)),url("https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=500&q=80")!important}
 #musicHome #musicGenres .musicGenreCard[style]{background-size:cover!important;background-position:center!important}
+
+
+/* Music V1.8 — recent listening uses artwork, never solid accent cards */
+#musicHome #musicRecent{
+  display:grid;
+  gap:10px;
+}
+#musicHome #musicRecent .musicListRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 42px;
+  align-items:center;
+  gap:8px;
+  padding:7px;
+  border:1px solid #282e38;
+  border-radius:16px;
+  background:#11151b !important;
+  overflow:hidden;
+}
+#musicHome #musicRecent .musicTrackOpen{
+  min-width:0;
+  display:grid;
+  grid-template-columns:64px minmax(0,1fr);
+  align-items:center;
+  gap:11px;
+  padding:0;
+  border:0;
+  background:transparent !important;
+  color:#fff;
+  text-align:left;
+}
+#musicHome #musicRecent .musicTrackOpen img{
+  width:64px;
+  height:64px;
+  display:block;
+  object-fit:cover;
+  border-radius:11px;
+}
+#musicHome #musicRecent .musicTrackOpen span,
+#musicHome #musicRecent .musicTrackOpen strong,
+#musicHome #musicRecent .musicTrackOpen small{
+  min-width:0;
+  display:block;
+}
+#musicHome #musicRecent .musicTrackOpen strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:14px;
+}
+#musicHome #musicRecent .musicTrackOpen small{
+  margin-top:4px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#929aa6;
+  font-size:12px;
+}
+#musicHome #musicRecent .musicListRow>button:last-child{
+  width:36px;
+  height:36px;
+  padding:0;
+  border:1px solid #303742;
+  border-radius:50%;
+  background:#151a21 !important;
+  color:#d8dce3;
+  font-size:20px;
+}
