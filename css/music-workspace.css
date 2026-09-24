@@ -1,0 +1,19 @@
+:root{--myevent-accent:#ff6a34;--myevent-accent-rgb:255,106,52;--myevent-intensity:.18;--myevent-surface-opacity:.94}
+[hidden]{display:none!important}
+#musicHome{background:rgba(8,11,16,var(--myevent-surface-opacity));color:#fff}
+#musicScreen{max-width:900px;margin:auto;padding-bottom:340px}
+.musicScreenHead{display:flex;align-items:center;gap:16px}.musicScreenHead h2{font-size:24px}
+#musicScreen button,#musicTrackMenu button,.musicChoose button,#musicPlayback button{border:1px solid #454b54;border-radius:12px;padding:10px;background:#171c24;color:white;cursor:pointer;min-height:44px}
+#musicScreen button:disabled,#musicTrackMenu button:disabled{opacity:.5;cursor:default}
+#musicScreen input,#musicScreen textarea,.musicChoose input{width:100%;box-sizing:border-box;background:#121720;color:white;border:1px solid #596171;border-radius:10px;padding:12px}
+#musicScreen form{display:flex;gap:8px;align-items:end}#musicScreen form label{flex:1}
+.musicListRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #303642}.musicListRow .musicTrackOpen{display:flex;align-items:center;gap:12px;flex:1;min-width:190px;text-align:left}.musicTrackOpen img{width:48px;height:48px;object-fit:cover;border-radius:8px}.musicTrackOpen strong,.musicTrackOpen small{display:block;overflow-wrap:anywhere}.musicTrackOpen small{color:#b5bdcb;font-size:12px}
+#musicTrackMenu,.musicChoose{background:#10151e;color:white;border:1px solid #555;border-radius:18px;max-width:520px;width:calc(100% - 48px);max-height:80vh;overflow:auto}#musicTrackMenu button{display:block;width:100%;margin:6px 0}dialog::backdrop{background:#000a}
+.musicIllustrated,.musicChips button{background:radial-gradient(circle at 75% 20%,rgba(var(--myevent-accent-rgb),.65),transparent 55%),linear-gradient(140deg,#253754,#10141d)!important;min-width:130px;min-height:110px;color:white;border:1px solid #465063;border-radius:16px;padding:14px!important;text-align:left}.musicIllustrated b,.musicIllustrated small{display:block;margin-top:8px}.musicIllustrated small{font-size:11px;color:#d2d6df}.musicChips{overflow-x:auto;flex-wrap:nowrap!important}.musicChips button{min-width:112px;min-height:96px}
+#musicScreen .musicEventPanel{display:block;border:0;margin:0}#musicScreen .musicSectionTitle h3{font-size:18px}
+#musicPlayback{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));right:12px;width:340px;max-width:calc(100vw - 24px);z-index:2170;background:#10151e;border:1px solid #48536a;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px #0008}
+#musicVideoHost:has(#musicVideo:empty){display:none}#musicVideoHost iframe{display:block;min-height:200px;width:100%;border:0}.musicTransport{display:flex;flex-wrap:wrap;gap:4px;padding:6px}.musicTransport [data-transport=open]{flex:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.musicTransport input{width:100%;accent-color:var(--myevent-accent)}.musicTransport small{font-size:11px}
+.musicPlayer{padding-bottom:400px}.musicPlayerActions button[aria-pressed=true]{color:var(--myevent-accent)}.musicTabs button.active,.musicSearch #musicSearchBtn{background:var(--myevent-accent)!important}
+#musicHome button:focus-visible,#musicPlayback button:focus-visible{outline:2px solid var(--myevent-accent);outline-offset:2px}
+#musicHomeExtras{margin-top:18px}#musicScreenBody>button{margin:4px}#musicScreenStatus{color:#d0d6df;min-height:20px}
+.musicIllustrated{box-shadow:inset 0 0 80px rgba(var(--myevent-accent-rgb),var(--myevent-intensity))}.myeventThemeControls{display:grid;gap:12px}.myeventThemeControls label{display:grid;gap:5px}.myeventThemeControls p{font-size:12px;color:#9ca3af}
