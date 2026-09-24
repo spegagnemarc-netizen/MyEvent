@@ -3093,3 +3093,16 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
   background:#fff!important;
   border-color:var(--myevent-accent,#ff6a00)!important;
 }
+
+
+/* Music home final mobile layout: 4 ambience cards before MyEvent playlists. */
+#musicHome .musicMoodCards{gap:8px!important;overflow-x:auto!important}
+#musicHome .musicMoodCards button{flex:0 0 calc((100% - 24px)/4)!important;height:92px!important;border-radius:15px!important}
+#musicHome .musicMoodCards button b{left:8px!important;bottom:8px!important;font-size:13px!important;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#socialBottomNav{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+#socialBottomNav .bottomIcon{display:block}
+#socialBottomNav .bottomLabel{display:block}
+@media(max-width:390px){
+  #musicHome .musicMoodCards button{height:86px!important}
+  #musicHome .musicMoodCards button b{font-size:12px!important}
+}
