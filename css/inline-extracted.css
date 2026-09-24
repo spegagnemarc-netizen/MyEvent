@@ -2612,3 +2612,8 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 
 
 #socialBottomCreate img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+
+/* Music is nested in socialHome: render it as a full-screen layer without hiding its parent. */
+.musicHome.open{display:block;position:fixed;inset:0;z-index:2140;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:110px}
+body.musicModeOpen{overflow:hidden}
+body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
