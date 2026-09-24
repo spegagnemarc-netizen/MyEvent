@@ -1,0 +1,43 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+
+test('Music migration is idempotent and enforces event boundaries, locks and atomic ordering', {skip:!process.env.PGLITE_MODULE}, async()=>{
+  const {PGlite}=await import(pathToFileURL(process.env.PGLITE_MODULE));const db=new PGlite();
+  const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
+  await db.exec(`create schema auth;create role authenticated;create role anon;
+    create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('app.uid',true),'')::uuid $$;
+    create table events(id uuid primary key,creator_id uuid references auth.users);
+    create table event_members(event_id uuid references events,user_id uuid references auth.users);
+    insert into auth.users values('${id(1)}'),('${id(2)}');
+    insert into events values('${id(10)}','${id(1)}'),('${id(11)}','${id(1)}');
+    insert into event_members values('${id(10)}','${id(2)}');`);
+  // PGlite has core gen_random_uuid; pgcrypto extension is not needed in this harness.
+  await db.exec((await readFile(new URL('../supabase/migrations/20260923_music_v1.sql',import.meta.url),'utf8')).replace('create extension if not exists pgcrypto;',''));
+  const migration=await readFile(new URL('../supabase/migrations/20260924_music_integrity.sql',import.meta.url),'utf8');
+  await db.exec(migration);await db.exec(migration);
+  await db.exec(`grant usage on schema public,auth to authenticated;grant select,insert,update,delete on all tables in schema public to authenticated;
+    select set_config('app.uid','${id(1)}',false);
+    insert into music_tracks(id,provider,provider_track_id,title) values('${id(20)}','youtube','a','A'),('${id(21)}','youtube','b','B');
+    insert into music_playlists(id,event_id,created_by) values('${id(30)}','${id(10)}','${id(1)}'),('${id(31)}','${id(11)}','${id(1)}');
+    insert into music_playlist_items(id,event_id,playlist_id,track_id,proposed_by,position) values('${id(40)}','${id(10)}','${id(30)}','${id(20)}','${id(1)}',1),('${id(41)}','${id(10)}','${id(30)}','${id(21)}','${id(1)}',2);
+    set role authenticated;`);
+  await assert.rejects(db.exec(`insert into music_playlist_items(event_id,playlist_id,track_id,proposed_by) values('${id(10)}','${id(31)}','${id(20)}','${id(1)}')`),/foreign key/);
+  await assert.rejects(db.exec(`insert into music_votes(event_id,playlist_item_id,user_id) values('${id(11)}','${id(40)}','${id(1)}')`),/foreign key/);
+  const reorder=`select music_reorder_queue('${id(10)}','${id(30)}',array['${id(41)}','${id(40)}']::uuid[])`;
+  await db.exec(reorder);
+  assert.equal((await db.query('select id from music_playlist_items order by position')).rows[0].id,id(41));
+  await assert.rejects(db.exec(`select music_reorder_queue('${id(10)}','${id(30)}',array['${id(40)}']::uuid[])`),/Queue changed/);
+  await db.exec(`update music_playlist_items set is_locked=true where id='${id(41)}'`);
+  await assert.rejects(db.exec(`select music_reorder_queue('${id(10)}','${id(30)}',array['${id(40)}','${id(41)}']::uuid[])`),/Unlock/);
+  await db.exec(`select set_config('app.uid','${id(2)}',false)`);
+  assert.equal((await db.query(`select count(*)::int as n from music_playlists where event_id='${id(11)}'`)).rows[0].n,0);
+  await assert.rejects(db.exec(reorder),/owner required/);
+  await db.exec(`insert into music_votes(event_id,playlist_item_id,user_id) values('${id(10)}','${id(40)}','${id(2)}')`);
+  await db.exec(`select set_config('app.uid','${id(1)}',false);insert into event_music_settings(event_id,votes_enabled,updated_by) values('${id(10)}',false,'${id(1)}');update music_playlists set is_locked=true where id='${id(30)}';select set_config('app.uid','${id(2)}',false);`);
+  await assert.rejects(db.exec(`update music_votes set value=-1 where user_id='${id(2)}'`),/Votes are disabled/);
+  await assert.rejects(db.exec(`insert into music_playlist_items(event_id,playlist_id,track_id,proposed_by) values('${id(10)}','${id(30)}','${id(20)}','${id(2)}')`),/locked/);
+  await db.close();
+});
