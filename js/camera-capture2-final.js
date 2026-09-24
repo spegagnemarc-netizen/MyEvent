@@ -128,7 +128,7 @@
     // The small UI module loads on opening Apparence; MediaPipe loads on an effect.
     modal.cameraRenderAppearance=function(host){
       const request=++panelRequest;host.textContent='Ouverture d’Apparence…';
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=ai-lenses-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       appearanceLoading.then(controller=>{
         if(request===panelRequest&&modal.classList.contains('open')&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')controller.renderPanel(host);
       }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
@@ -143,7 +143,7 @@
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);
     function ensureAppearance(){
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=ai-lenses-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       return appearanceLoading;
     }
     function selectLens(button){

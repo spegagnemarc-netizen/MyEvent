@@ -185,6 +185,11 @@
         reset.addEventListener('click',()=>{modal.cameraResetRetouch?.();closePanel();openPanel('retouch',source);});
         content.appendChild(reset);return;
       }
+      if(kind==='ai'){
+        const modal=$s('myeventCameraModal');
+        content.textContent='Chargement des filtres IA…';
+        modal.cameraRenderAI?.(content);return;
+      }
       if(kind==='appearance'){$s('myeventCameraModal').cameraRenderAppearance?.(content);return;}
       if(kind==='timer'||kind==='ratio'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
@@ -198,19 +203,6 @@
         music:'Le catalogue et le module Musique MyEvent ne sont pas encore connectés.'
       };
       const note=document.createElement('p');note.textContent=descriptions[kind];content.appendChild(note);
-      if(kind==='ai'){
-        note.textContent='Amélioration automatique locale de la photo : lumière, contraste et couleurs. Aucun traitement distant n’est simulé.';
-        const action=document.createElement('button');action.type='button';action.textContent='✨ Améliorer automatiquement';
-        action.addEventListener('click',()=>{
-          const modal=$s('myeventCameraModal');
-          if(modal?.dataset.cameraState!=='preview'){note.textContent='Prends ou importe une photo avant d’utiliser l’amélioration automatique.';return;}
-          if(modal.cameraApplyAutoEnhance?.()){
-            note.textContent='✓ Amélioration appliquée. Tu peux encore modifier les retouches ou les filtres.';
-            action.textContent='✓ Amélioration appliquée';
-          }else note.textContent='Impossible d’améliorer cette photo.';
-        });
-        content.appendChild(action);
-      }
       if(kind==='stickers'){
         const note=document.createElement('p');note.textContent='Outils disponibles dans la caméra.';content.appendChild(note);
         const row=document.createElement('div');row.className='cameraPanelChoices';
@@ -341,12 +333,12 @@
   // V54.48 — caméra centrale : selfie/photo d'abord, création d'événement toujours accessible
   let myeventCameraStream=null, myeventFacingMode='user', myeventCapturedDataUrl='';
   const cameraModal=$s('myeventCameraModal'), cameraVideo=$s('myeventCameraVideo'), cameraPlaceholder=$s('cameraPlaceholder'), cameraImg=$s('myeventCapturedImage'), cameraFile=$s('cameraFileInput');
-  let cameraRevision=0,cameraSourceCanvas=null;
+  let cameraRevision=0,cameraSourceCanvas=null,cameraAISourceCanvas=null;
   function resetCameraPreview(){
     cancelCountdown();
     cameraRevision++;
     myeventCapturedDataUrl='';
-    cameraSourceCanvas=null;
+    cameraSourceCanvas=null;cameraAISourceCanvas=null;
     cameraModal.dataset.cameraState='viewfinder';
     cameraModal.dispatchEvent(new Event('camera-source-reset'));
     cameraImg.onload=null;cameraImg.onerror=null;
@@ -363,6 +355,7 @@
       cameraImg.style.filter='none';
       cameraImg.style.display='block';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';
       cameraModal.dataset.cameraState='preview';
+      cameraModal.dispatchEvent(new Event('camera-preview-ready'));
       $s('cameraCapturedActions')?.classList.add('open');
     };
     cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
@@ -400,7 +393,7 @@
   cameraModal?.addEventListener('click',e=>{if(e.target===cameraModal)closeMyEventCamera()});
   async function renderCameraPhoto(revision){
     if(!cameraSourceCanvas||revision!==cameraRevision)return;
-    const source=cameraSourceCanvas;
+    const source=cameraAISourceCanvas||cameraSourceCanvas;
     // Always render from the unfiltered source, including after changing a filter.
     myeventCapturedDataUrl='';
     cameraModal.dataset.cameraState='processing';
@@ -408,7 +401,7 @@
     $s('cameraCapturedActions')?.classList.remove('open');
     try{
       let output=cameraModal.cameraRenderPhoto?cameraModal.cameraRenderPhoto(source):source;
-      if(cameraModal.cameraComposeAppearance)output=await cameraModal.cameraComposeAppearance(source,output);
+      if(!cameraAISourceCanvas&&cameraModal.cameraComposeAppearance)output=await cameraModal.cameraComposeAppearance(source,output);
       if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
       showCameraPreview(output.toDataURL('image/jpeg',.9),revision);
     }catch(error){
@@ -416,6 +409,31 @@
       resetCameraPreview();cameraPlaceholder.textContent='Impossible de préparer la photo. Réessaie ou utilise Galerie.';cameraPlaceholder.style.display='grid';
     }
   }
+  let cameraAILensesLoading;
+  cameraModal.cameraRenderAI=function(host){
+    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
+    cameraAILensesLoading.then(ui=>{if(cameraModal.classList.contains('open')&&$s('cameraCreativePanel')?.dataset.kind==='ai')ui.render(host);}).catch(()=>{host.textContent='Impossible de charger les filtres IA. Réessaie.';});
+  };
+  cameraModal.cameraGetAIPhoto=function(){
+    if(!cameraSourceCanvas||cameraModal.dataset.cameraState!=='preview')return null;
+    const source=cameraSourceCanvas,scale=Math.min(1,1280/Math.max(source.width,source.height));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+    canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);
+    const imageData=canvas.toDataURL('image/jpeg',.85);canvas.width=canvas.height=0;
+    return {imageData,revision:cameraRevision};
+  };
+  cameraModal.cameraHasAIPhoto=()=>!!cameraAISourceCanvas;
+  cameraModal.cameraApplyAIPhoto=async function(data,revision,signal){
+    const image=new Image();image.src=data;await image.decode();
+    if(signal?.aborted||revision!==cameraRevision||!cameraModal.classList.contains('open'))return false;
+    const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+    canvas.getContext('2d').drawImage(image,0,0);cameraAISourceCanvas=canvas;
+    await renderCameraPhoto(++cameraRevision);return true;
+  };
+  cameraModal.cameraRestoreAIPhoto=function(){
+    if(!cameraSourceCanvas||!cameraAISourceCanvas)return;
+    cameraAISourceCanvas=null;renderCameraPhoto(++cameraRevision);
+  };
   cameraModal.addEventListener('camera-filter-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
   cameraModal.addEventListener('camera-appearance-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
   cameraModal.cameraDrawFrame=function(c,maxEdge=Infinity){
@@ -546,7 +564,7 @@
     if(cameraModal.dataset.cameraState!=='preview'){
       openPanel('ai',source);
       const note=panel?.querySelector('#cameraPanelContent p');
-      if(note)note.textContent='Prends une photo ou importe-en une depuis Galerie, puis l’amélioration automatique pourra être appliquée.';
+      if(note)note.textContent='Prends une photo ou importe-en une depuis Galerie, puis choisis un filtre IA.';
       return;
     }
     openPanel('ai',source);

@@ -1,5 +1,5 @@
 import {FaceEngine} from './camera-face-engine.mjs';
-import {categories,effects,hasEffects,drawAppearance,selectedWarp} from './camera-appearance-renderer.mjs';
+import {categories,effects,hasEffects,drawAppearance,selectedWarp} from './camera-appearance-renderer.mjs?v=ai-lenses-1';
 import {FaceWarpRenderer} from './camera-face-warp.mjs';
 
 export function createAppearance(modal){
@@ -76,7 +76,11 @@ export function createAppearance(modal){
     function showChoices(){
       choices.replaceChildren();
       row.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));
-      if(!effects[category]){message.textContent=category==='creative-ai'?'Créatif IA sera connecté séparément.':'Cette catégorie n’est pas encore disponible. Les effets locaux sélectionnés restent actifs.';choices.hidden=true;return;}
+      if(!effects[category]){
+        message.textContent='Les transformations IA sont disponibles après la prise dans IA photo.';choices.hidden=false;
+        const ai=document.createElement('button');ai.type='button';ai.textContent='Découvrir les filtres IA';
+        ai.addEventListener('click',()=>document.getElementById('cameraAiSide')?.click());choices.appendChild(ai);return;
+      }
       choices.hidden=false;message.textContent=status;
       for(const [id,label,glyph] of [[null,'Aucun','∅'],...effects[category]]){
         const button=document.createElement('button');button.type='button';button.className='cameraAppearanceEffect';button.setAttribute('aria-pressed',String(selection[category]===id));

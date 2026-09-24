@@ -1,0 +1,15 @@
+// Shared allowlist: the server owns the edit instructions, never a client prompt.
+export const aiLenses=[
+  {id:'natural',group:'Beauté',label:'Éclat naturel',icon:'✨',prompt:'Apply subtle professional portrait retouching, natural skin texture and flattering soft light. Preserve facial proportions and all distinguishing features.'},
+  {id:'glam',group:'Beauté',label:'Glamour',icon:'💄',prompt:'Apply realistic elegant evening makeup: softly blended eye makeup, luminous cheeks and rich rose lipstick. Preserve natural skin texture and facial proportions.'},
+  {id:'festival',group:'Beauté',label:'Festival',icon:'💎',prompt:'Add realistic iridescent festival makeup, fine glitter and small decorative face gems with believable lighting and skin texture.'},
+  {id:'toon',group:'Cartoon',label:'Cartoon 3D',icon:'🧸',prompt:'Transform the person into a polished expressive 3D animated character with dimensional materials, recognizable face and hairstyle, warm cinematic light and slightly exaggerated eyes.'},
+  {id:'anime',group:'Cartoon',label:'Anime',icon:'🌸',prompt:'Reimagine the portrait as a detailed hand-drawn anime character with clean ink lines and cel shading. Retain recognizable hairstyle, expression and clothing.'},
+  {id:'comic',group:'Cartoon',label:'Bande dessinée',icon:'💥',prompt:'Transform the portrait into a colorful comic-book illustration with confident ink outlines, halftone shading and lively expression, without text or speech bubbles.'},
+  {id:'fox',group:'Animaux',label:'Renard',icon:'🦊',prompt:'Create a playful premium animal face transformation: lifelike fox ears, fluffy orange fur blending into the temples and cheeks, small fox nose. Preserve recognizable human eyes and expression; integrate the features volumetrically, not as flat stickers.'},
+  {id:'cat',group:'Animaux',label:'Chat',icon:'🐱',prompt:'Create a cute dimensional cat transformation with soft feline ears, a small cat nose, delicate whiskers and realistic fur on the cheeks. Preserve the recognizable human face and expression. No flat stickers.'},
+  {id:'panda',group:'Animaux',label:'Panda',icon:'🐼',prompt:'Create a friendly panda face transformation with fluffy round ears, black and white fur accents and a soft panda nose, retaining recognizable eyes and expression. Make it dimensional and naturally lit.'},
+  {id:'hair',group:'Créatif',label:'Cheveux pastel',icon:'🦄',prompt:'Change only the hair to a stylish pastel pink and lavender hairstyle with realistic individual strands, highlights and natural volume. Preserve the face, skin and clothing.'},
+  {id:'space',group:'Créatif',label:'Cosmique',icon:'🌌',prompt:'Create a cinematic cosmic portrait with a glowing nebula background, subtle starlight reflections and a futuristic outfit. Keep the face recognizable and naturally detailed.'},
+  {id:'fun',group:'Créatif',label:'Caricature',icon:'🤪',prompt:'Create a cheerful high-quality 3D caricature with amusingly enlarged cheeks and eyes, playful proportions and a recognizable expression and hairstyle. Friendly, never grotesque.'}
+];

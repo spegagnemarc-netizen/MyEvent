@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/camera-ai.js": { "maxDuration": 180 }
+  },
   "rewrites": [
     {
       "source": "/",

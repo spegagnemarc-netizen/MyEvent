@@ -2714,6 +2714,7 @@ async function vote(pollId, optionId, button){
   }
 }
 
+window.myeventCameraContext=function(){return {sb,user};};
 window.myeventMusicContext=function(){return {sb,user,event};};
 
 window.myeventPublishCameraPost=async function(dataUrl){
