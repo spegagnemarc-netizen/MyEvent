@@ -2919,9 +2919,9 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHomeExtras .musicIllustrated{height:126px!important;padding:12px!important;border-radius:16px!important}
 #musicHomeExtras .musicIllustrated::before{background-position:center!important;background-size:cover!important;filter:saturate(1.12)}
 #musicHomeExtras .musicIllustrated::after{content:""!important;inset:0!important;background:linear-gradient(180deg,rgba(5,8,12,.04) 20%,rgba(5,8,12,.88) 100%)!important}
-#musicHomeExtras .musicHeroDiscover::before{background-image:url("https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=700&q=84")!important}
-#musicHomeExtras .musicHeroAI::before{background-image:url("https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=700&q=84")!important}
-#musicHomeExtras .musicHeroLibrary::before{background-image:url("https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?auto=format&fit=crop&w=700&q=84")!important}
+#musicHomeExtras .musicHeroDiscover::before{background-image:url("../assets/music-hero-discover.webp")!important}
+#musicHomeExtras .musicHeroAI::before{background-image:url("../assets/music-hero-ai.webp")!important}
+#musicHomeExtras .musicHeroLibrary::before{background-image:url("../assets/music-hero-library.webp")!important}
 #musicHomeExtras .musicIllustrated .musicHeroIcon{position:absolute;left:12px;top:12px;z-index:2;font-size:17px;color:#fff;text-shadow:0 2px 8px #000}
 #musicHomeExtras .musicIllustrated>i{position:absolute;right:10px;bottom:28px;font-style:normal;font-size:25px;line-height:1}
 #musicHomeExtras .musicIllustrated>b{z-index:2;font-size:15px!important}

@@ -96,13 +96,17 @@
   }
   function renderHome(){
     let extra=$('musicHomeExtras');if(!extra){extra=document.createElement('section');extra.id='musicHomeExtras';home.insertBefore(extra,home.querySelector('.musicSection'));}
+    // Keep Tendances outside the replaced markup during refresh, then put it before Genres.
+    const trends=home.querySelector('#musicTrending')?.closest('.musicSection');
+    if(trends?.parentElement===extra)home.insertBefore(trends,extra.nextSibling);
     extra.innerHTML='<div class="musicCards musicHeroCards"><button data-go="discover" class="musicIllustrated musicHeroDiscover"><span class="musicHeroIcon">▶</span><b>Découvrir</b><small>Explorer YouTube</small><i>›</i></button><button data-go="ai" class="musicIllustrated musicHeroAI"><span class="musicHeroIcon">✦</span><b>Music IA</b><small>Composer une proposition</small><i>›</i></button><button data-go="library" class="musicIllustrated musicHeroLibrary"><span class="musicHeroIcon">♥</span><b>Bibliothèque</b><small>Retrouver vos titres</small><i>›</i></button></div><div class="musicForYouHead"><h3>Pour vous</h3><button type="button" data-go="discover">Voir tout ›</button></div><p>Retrouvez vos écoutes et explorez vos ambiances favorites.</p><section class="musicShelf"><div class="musicShelfHead"><h3>◷ Écoutés récemment</h3><button type="button" data-go="library">›</button></div><div id="musicRecent"></div></section><section class="musicShelf musicGenreShelf"><div class="musicShelfHead"><h3>♫ Genres</h3><button type="button" data-music-filter="genres">Voir tout ›</button></div><div id="musicGenres"></div></section>';
+    if(trends)extra.querySelector('.musicGenreShelf').before(trends);
     extra.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));rows(S.get().recent.slice(0,5),$('musicRecent'));
     const genres=['Pop','Rap','Hip-Hop','R&B','Jazz','Rock','Électro','Dance','Variété française','Chanson française','Latino','Reggaeton','Reggae','Classique','K-Pop','Métal','Afro','Afrobeats','Amapiano','Country','Soul','Funk','Disco','House','Techno','Trance','Drum & Bass','Dubstep','Gospel','Blues','Folk','Indie','Alternative','Punk','Hard Rock','Musique du monde','Oriental','Raï','Zouk','Kompa','Salsa','Bachata','Années 60','Années 70','Années 80','Années 90','Années 2000','Années 2010'];
     const state=S.get(),norm=v=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');
     const rankedGenres=genres.map((genre,index)=>{const g=norm(genre);let plays=0;for(const track of state.recent){const hay=norm((track.title||'')+' '+(track.artist||''));if(hay.includes(g))plays+=Number(state.playCounts[S.key(track)]||0);}return{genre,index,plays};}).sort((a,b)=>b.plays-a.plays||a.index-b.index).slice(0,10);
     for(const {genre} of rankedGenres){const key='genre:'+norm(genre);const b=button(genre,()=>{go('discover');search(genre,key);},$('musicGenres'));b.classList.add('musicGenreCard');b.dataset.artKey=key;const art=state.artwork[key]?.thumbnail_url;if(art)b.style.setProperty('background-image','linear-gradient(180deg,rgba(5,8,12,.06),rgba(5,8,12,.78)),url("'+art.replace(/"/g,'%22')+'")','important');}
-    // Home order: recent -> genres -> trends -> ambiances -> MyEvent playlists.
+    // Home order: recent -> trends -> genres -> ambiances -> MyEvent playlists.
     const moodSection=home.querySelector('.musicChips')?.closest('.musicSection');
     const playlistSection=home.querySelector('[data-music-action="event"]')?.closest('.musicSection');
     if(moodSection&&playlistSection)home.insertBefore(moodSection,playlistSection);
