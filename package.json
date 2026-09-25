@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "test:marketplace": "node --test tests/marketplace.test.mjs && node tests/marketplace-rls.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14"
+  },
   "dependencies": {
     "stripe": "latest"
   }

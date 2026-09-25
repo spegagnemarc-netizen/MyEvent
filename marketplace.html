@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#faf8f5">
+  <title>Marketplace · MyEvent</title>
+  <link rel="stylesheet" href="css/marketplace.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="js/marketplace.mjs"></script>
+</head>
+<body>
+<div id="myeventMarketplace">
+  <header class="marketHeader">
+    <a class="brand" href="index.html" aria-label="Retour à MyEvent">My<span>Event</span><small>MARKETPLACE</small></a>
+    <nav aria-label="Navigation marketplace"><a href="index.html" class="backHome">← MyEvent</a><button class="quiet" id="myListings">Mes annonces</button><button class="quiet" id="inboxButton">Messages</button><button class="quiet" id="favoritesButton" aria-label="Mes favoris" aria-pressed="false">♡ <span>Favoris</span><b id="favoriteCount">0</b></button><button class="primary" id="createListing">＋ Déposer une annonce</button></nav>
+  </header>
+  <main>
+    <div class="demoBanner" id="connectionStatus" role="status">Connexion à votre marketplace…</div>
+    <section class="hero" aria-labelledby="marketTitle">
+      <div class="heroCopy"><p class="eyebrow">LES BONS MOMENTS COMMENCENT ICI</p><h1 id="marketTitle">Tout pour faire<br>de votre événement<br><em>un grand moment.</em></h1><p>Le matériel qu’il vous faut, pour une soirée,<br class="desktopBreak"> un mariage ou le prochain week-end entre amis.</p><a href="#catalogue" class="heroLink">Trouver mon équipement <span>↗</span></a></div>
+      <div class="heroArt" aria-hidden="true"><span class="orbit orbitOne"></span><span class="orbit orbitTwo"></span><div class="artLabels"><span>Un peu de son.</span><span>Beaucoup de souvenirs.</span></div><div id="heroEquipment"></div><div class="heroSticker">ACHETER<br><b>ou louer.</b></div><span class="spark">✳</span></div>
+    </section>
+    <section id="catalogue" aria-labelledby="catalogueTitle">
+      <div class="searchPanel">
+        <div class="transactionTabs" role="group" aria-label="Type d’annonce"><button data-mode="all" aria-pressed="true">Tout découvrir</button><button data-mode="rent" aria-pressed="false">Louer</button><button data-mode="sale" aria-pressed="false">Acheter</button></div>
+        <div class="searchFields"><label class="queryField"><span>RECHERCHER UN ÉQUIPEMENT</span><input type="search" id="marketSearch" placeholder="Enceinte, photobooth, tente…" autocomplete="off"></label><label><span>VILLE</span><select id="marketCity"><option value="">Toutes les villes</option></select></label><button class="searchButton" id="searchButton">Rechercher <span>↗</span></button></div>
+      </div>
+      <div class="categoryRow" role="group" aria-label="Catégories de matériel" id="marketCategories"></div>
+      <div class="catalogueHeading"><div><p class="eyebrow">ÉQUIPEZ VOS PROCHAINES ENVIES</p><h2 id="catalogueTitle">À découvrir pour vos événements</h2><p id="resultCount" aria-live="polite"></p></div><label class="sortLabel">Trier par<select id="marketSort"><option value="featured">Les plus récentes</option><option value="priceAsc">Prix croissant</option><option value="priceDesc">Prix décroissant</option></select></label></div>
+      <p class="priceNote">Location : prix par jour. Vente : prix total. Les deux types sont distingués sur chaque annonce.</p>
+      <div class="productGrid" id="marketGrid"></div>
+      <div id="marketEmpty" class="emptyState" hidden><span>⌕</span><h3>Aucun matériel ne correspond</h3><p>Essayez une autre recherche ou découvrez toutes les catégories.</p><button class="primary" id="clearFilters">Réinitialiser les filtres</button></div>
+    </section>
+    <section class="ownerBanner"><div><p class="eyebrow">VOTRE MATÉRIEL A ENCORE DE BELLES SOIRÉES À VIVRE</p><h2>Faites de la place.<br>Créez des possibilités.</h2><p>Vendez ou proposez votre matériel à la location aux membres MyEvent.</p></div><button id="createListingBottom" class="darkButton">Déposer mon annonce ↗</button></section>
+    <footer><a class="brand" href="index.html">My<span>Event</span></a><p>Se retrouver. S’équiper. Créer des souvenirs.</p><small>Vente et location entre membres · Contact direct · Aucun paiement sur MyEvent</small></footer>
+  </main>
+  <dialog id="listingDialog" aria-labelledby="detailTitle"><button class="dialogClose" data-close="listingDialog" aria-label="Fermer la fiche">×</button><div id="listingDetail"></div></dialog>
+  <dialog id="draftDialog" aria-labelledby="draftTitle"><button class="dialogClose" data-close="draftDialog" aria-label="Fermer le formulaire">×</button><div class="draftIntro"><p class="eyebrow">VOTRE MATÉRIEL, DE NOUVELLES HISTOIRES</p><h2 id="draftTitle">Déposer une annonce</h2><p>Ajoutez vos photos et les informations utiles. Votre annonce sera visible par les membres MyEvent.</p></div>
+    <form id="draftForm"><label>Titre de l’annonce<input name="title" required maxlength="90" placeholder="Ex. Enceinte portable pour vos soirées"></label><div class="formRow"><label>Je souhaite<select name="mode"><option value="rent">Louer mon matériel</option><option value="sale">Vendre mon matériel</option></select></label><label>Catégorie<select name="category" id="draftCategory"></select></label></div><div class="formRow"><label>Prix en euros<input name="price" type="number" min="1" max="100000" step="0.01" required placeholder="35"><small id="draftPriceUnit">Par jour de location</small></label><label>Ville<input name="city" required maxlength="60" placeholder="Ex. Lyon"></label></div><label>Description<textarea name="description" required maxlength="1800" rows="4" placeholder="Décrivez le matériel, son état et ce qui est inclus…"></textarea></label><label>Photos du matériel (1 à 4)<input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><small>JPEG, PNG ou WebP · 10 Mo maximum par photo.</small></label><label>État<select name="condition"><option value="good">Bon état</option><option value="like_new">Comme neuf</option><option value="used">État d’usage</option><option value="new">Neuf</option></select></label><p class="draftNotice">Discutez des dates, de la remise du matériel et du règlement par messagerie. MyEvent ne traite aucun paiement ni réservation à cette étape.</p><button class="primary" type="submit">Publier mon annonce</button><p id="draftStatus" role="status"></p></form>
+  </dialog>
+  <dialog id="authDialog" aria-labelledby="authTitle"><button class="dialogClose" data-close="authDialog" aria-label="Fermer la connexion">×</button><h2 id="authTitle">Votre compte MyEvent</h2><p>Connectez-vous pour découvrir les annonces et contacter les membres.</p><form id="marketLogin"><label>Email<input name="email" type="email" autocomplete="username" required></label><label>Mot de passe<input name="password" type="password" autocomplete="current-password" required></label><button type="submit" class="primary">Se connecter</button><p id="authStatus" role="status"></p></form><p><a href="index.html">Créer un compte dans MyEvent ↗</a></p></dialog>
+  <dialog id="inboxDialog" aria-labelledby="inboxTitle"><button class="dialogClose" data-close="inboxDialog" aria-label="Fermer les messages">×</button><h2 id="inboxTitle">Messages marketplace</h2><button class="quiet" id="refreshInbox">Actualiser les messages ↻</button><div id="threadList"></div><section id="conversation" hidden><h3 id="conversationTitle"></h3><div id="messageList" aria-live="polite"></div><form id="messageForm"><label>Votre message<textarea name="body" required maxlength="2000" rows="3"></textarea></label><button type="submit" class="primary">Envoyer</button><p id="messageStatus" role="status"></p></form></section></dialog>
+  <div id="marketToast" role="status" aria-live="polite"></div>
+</div>
+</body>
+</html>

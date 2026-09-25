@@ -1,0 +1,119 @@
+/* All styles belong to the standalone MyEvent marketplace. */
+#myeventMarketplace{--ink:#242b27;--muted:#71776f;--paper:#faf8f5;--green:#285b46;--line:#e6e6df;--orange:#ed8159;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+body:has(#myeventMarketplace){margin:0;background:#faf8f5}
+#myeventMarketplace *{box-sizing:border-box}
+#myeventMarketplace button,#myeventMarketplace input,#myeventMarketplace select,#myeventMarketplace textarea{font:inherit}
+#myeventMarketplace button,#myeventMarketplace a,#myeventMarketplace select{touch-action:manipulation}
+#myeventMarketplace button{cursor:pointer}
+#myeventMarketplace a{color:inherit;text-decoration:none}
+#myeventMarketplace button:focus-visible,#myeventMarketplace a:focus-visible,#myeventMarketplace input:focus-visible,#myeventMarketplace select:focus-visible,#myeventMarketplace textarea:focus-visible{outline:3px solid #db764e;outline-offset:4px}
+#myeventMarketplace [hidden]{display:none!important}
+#myeventMarketplace .marketHeader{max-width:1320px;margin:auto;padding:26px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:20px}
+#myeventMarketplace .brand{font-size:28px;font-weight:850;letter-spacing:-1.5px;white-space:nowrap}
+#myeventMarketplace .brand>span{color:var(--green)}
+#myeventMarketplace .brand small{font-size:9px;letter-spacing:2.1px;display:block;font-weight:600;margin-top:3px}
+#myeventMarketplace nav{display:flex;align-items:center;gap:24px;font-size:13px}
+#myeventMarketplace button{border:0}
+#myeventMarketplace .primary,#myeventMarketplace .darkButton{background:var(--green);color:#fff;border-radius:8px;padding:15px 21px;font-weight:650;font-size:13px;min-height:46px}
+#myeventMarketplace .primary:hover,#myeventMarketplace .searchButton:hover{background:#1b4433}
+#myeventMarketplace .quiet{background:transparent;display:flex;align-items:center;gap:7px;padding:12px 0;min-height:44px}
+#myeventMarketplace .quiet[aria-pressed=true]{color:var(--green);text-decoration:underline}
+#myeventMarketplace .quiet b{display:grid;place-items:center;border-radius:50%;background:#e8ece4;width:22px;height:22px;font-size:11px}
+#myeventMarketplace main{max-width:1240px;margin:auto;padding:0 40px}
+#myeventMarketplace .demoBanner{font-size:11px;color:#686b62;padding:17px 0;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+#myeventMarketplace .demoDot{width:6px;height:6px;border-radius:50%;background:var(--orange)}
+#myeventMarketplace .hero{display:grid;grid-template-columns:1.05fr 1fr;min-height:390px;align-items:center;background:#eeeee5;border-radius:18px;overflow:hidden}
+#myeventMarketplace .heroCopy{padding:40px 36px 43px}
+#myeventMarketplace .eyebrow{font-size:10px;font-weight:750;letter-spacing:1.7px;line-height:1.7}
+#myeventMarketplace h1{font-size:clamp(32px,3.5vw,46px);line-height:1.13;letter-spacing:-1.8px;margin:18px 0}
+#myeventMarketplace h1 em{font-style:normal;color:var(--green)}
+#myeventMarketplace .heroCopy>p:not(.eyebrow){color:#686f65;font-size:14px;line-height:1.7}
+#myeventMarketplace .heroLink{display:inline-flex;gap:28px;border-bottom:1px solid #567b65;padding:13px 0 8px;font-size:13px;font-weight:700}
+#myeventMarketplace .heroArt{position:relative;min-height:390px;height:100%;background:#e3e7da;overflow:hidden}
+#myeventMarketplace .orbit{position:absolute;border:1px solid #c1cbb6;border-radius:50%;width:400px;height:400px;left:30px;top:40px}
+#myeventMarketplace .orbitTwo{width:310px;height:310px;left:76px;top:85px}
+#myeventMarketplace .artLabels{position:absolute;top:32px;left:28px;z-index:2;display:grid;font-size:12px;color:#4f614e;line-height:1.6}
+#myeventMarketplace #heroEquipment{position:absolute;inset:35px -15px -20px}
+#myeventMarketplace #heroEquipment svg{width:100%;height:100%}
+#myeventMarketplace .heroSticker{position:absolute;right:24px;bottom:27px;transform:rotate(-9deg);background:#f2ad77;border-radius:50%;width:103px;height:103px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:12px;line-height:1.6;box-shadow:0 6px 16px #463b2015}
+#myeventMarketplace .heroSticker b{font-size:20px}
+#myeventMarketplace .spark{position:absolute;right:40px;top:37px;font-size:44px;color:var(--green)}
+#myeventMarketplace #catalogue{scroll-margin-top:18px}
+#myeventMarketplace .searchPanel{margin:26px 0 0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;box-shadow:0 5px 15px #272d2704}
+#myeventMarketplace .transactionTabs{display:flex;gap:25px;border-bottom:1px solid var(--line)}
+#myeventMarketplace .transactionTabs button{background:none;font-size:13px;padding:0 0 13px;min-height:36px;color:var(--muted);border-bottom:2px solid transparent}
+#myeventMarketplace .transactionTabs button[aria-pressed=true]{border-color:var(--green);color:var(--green);font-weight:750}
+#myeventMarketplace .searchFields{display:grid;grid-template-columns:2fr 1fr auto;gap:22px;align-items:center;padding-top:18px}
+#myeventMarketplace .searchFields label>span{display:block;font-size:9px;font-weight:750;letter-spacing:1px;margin-bottom:7px}
+#myeventMarketplace input,#myeventMarketplace select,#myeventMarketplace textarea{color:var(--ink);max-width:100%}
+#myeventMarketplace .searchFields input,#myeventMarketplace .searchFields select{background:transparent;width:100%;border:0;min-height:30px;font-size:14px}
+#myeventMarketplace .queryField{border-right:1px solid var(--line);padding-right:20px}
+#myeventMarketplace .searchButton{background:var(--green);border-radius:7px;padding:16px 22px;color:#fff;font-size:13px;display:flex;gap:24px;align-items:center}
+#myeventMarketplace .categoryRow{display:flex;gap:9px;padding:25px 0;overflow-x:auto;scrollbar-width:thin}
+#myeventMarketplace .categoryRow button{white-space:nowrap;background:transparent;border:1px solid #dedfd5;border-radius:25px;min-height:42px;padding:10px 15px;font-size:12px;display:flex;align-items:center;gap:7px}
+#myeventMarketplace .categoryRow button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+#myeventMarketplace .catalogueHeading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-top:14px}
+#myeventMarketplace h2{font-size:25px;letter-spacing:-.8px;margin:7px 0 10px;line-height:1.25}
+#myeventMarketplace #resultCount{font-size:12px;color:var(--muted);margin:0}
+#myeventMarketplace .sortLabel{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;white-space:nowrap}
+#myeventMarketplace .sortLabel select{border:1px solid var(--line);border-radius:7px;background:white;font-size:12px;padding:11px 8px}
+#myeventMarketplace .priceNote{font-size:11px;color:var(--muted);margin:17px 0}
+#myeventMarketplace .productGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px 18px}
+#myeventMarketplace .productCard{min-width:0}
+#myeventMarketplace .productVisual{position:relative;aspect-ratio:1.16;background:var(--card-bg,#eae9e4);border-radius:12px;overflow:hidden}
+#myeventMarketplace .productVisual svg{width:100%;height:100%;transition:transform .2s}
+#myeventMarketplace .productCard:hover .productVisual svg{transform:scale(1.035)}
+#myeventMarketplace .openProduct{position:absolute;inset:0;background:transparent;width:100%;height:100%}
+#myeventMarketplace .productBadge{position:absolute;top:12px;left:12px;background:#fffffff0;border-radius:5px;padding:5px 8px;font-size:10px;font-weight:700;pointer-events:none}
+#myeventMarketplace .saveProduct{position:absolute;right:9px;top:7px;border-radius:50%;background:#fffffff0;width:38px;height:38px;font-size:24px;color:#3c473c}
+#myeventMarketplace .saveProduct[aria-pressed=true]{color:#b45434}
+#myeventMarketplace .productCategory{font-size:9px;letter-spacing:1.3px;font-weight:650;color:var(--muted);margin:14px 0 6px;text-transform:uppercase}
+#myeventMarketplace .productCard h3{font-size:14px;font-weight:650;margin:0 0 8px;line-height:1.4}
+#myeventMarketplace .titleButton{background:transparent;text-align:left;padding:0;color:inherit;font-weight:inherit;line-height:inherit}
+#myeventMarketplace .productFooter{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#myeventMarketplace .price{font-size:18px;font-weight:750;letter-spacing:-.5px}
+#myeventMarketplace .price small{font-size:11px;font-weight:400;letter-spacing:0;color:var(--muted)}
+#myeventMarketplace .city{font-size:11px;color:var(--muted)}
+#myeventMarketplace .ownerBanner{display:flex;justify-content:space-between;align-items:center;gap:25px;background:#efe4d8;border-radius:12px;padding:32px;margin:48px 0}
+#myeventMarketplace .ownerBanner h2{font-size:30px}
+#myeventMarketplace .ownerBanner p:not(.eyebrow){font-size:13px;color:#766c60;max-width:430px;line-height:1.6}
+#myeventMarketplace .darkButton{background:var(--ink);white-space:nowrap}
+#myeventMarketplace footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:15px;border-top:1px solid var(--line);padding:25px 0 32px}
+#myeventMarketplace footer p,#myeventMarketplace footer small{font-size:11px;color:var(--muted)}
+#myeventMarketplace .emptyState{text-align:center;padding:40px 16px}
+#myeventMarketplace .emptyState>span{font-size:40px}
+#myeventMarketplace .emptyState p{color:var(--muted);font-size:14px}
+#myeventMarketplace dialog{border:1px solid var(--line);border-radius:18px;padding:30px;width:min(720px,calc(100vw - 28px));max-height:90dvh;overflow:auto;color:var(--ink);background:var(--paper)}
+#myeventMarketplace dialog::backdrop{background:#1c2929a6;backdrop-filter:blur(3px)}
+#myeventMarketplace .dialogClose{position:absolute;right:12px;top:10px;background:#fff;border-radius:50%;width:40px;height:40px;font-size:27px;z-index:2}
+#myeventMarketplace .detailArt{height:260px;background:var(--card-bg);border-radius:10px;text-align:center}
+#myeventMarketplace .detailArt svg{height:100%;max-width:100%}
+#myeventMarketplace .detailDescription{line-height:1.7;color:#626a60;font-size:14px}
+#myeventMarketplace .detailFacts{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+#myeventMarketplace .detailFacts span{font-size:12px;background:#e9ede5;padding:8px 12px;border-radius:5px}
+#myeventMarketplace .detailNotice,#myeventMarketplace .draftNotice{font-size:12px;line-height:1.6;color:#706958;background:#f0eadf;padding:14px;border-radius:7px}
+#myeventMarketplace .draftIntro>p:not(.eyebrow){font-size:13px;color:var(--muted);line-height:1.6}
+#myeventMarketplace form{display:grid;gap:16px;margin-top:24px}
+#myeventMarketplace form label{display:grid;gap:7px;font-size:12px;font-weight:600}
+#myeventMarketplace form input,#myeventMarketplace form select,#myeventMarketplace form textarea{width:100%;border:1px solid #d6d9d0;border-radius:7px;background:#fff;padding:12px;font-size:16px}
+#myeventMarketplace form small{font-size:10px;font-weight:400;color:var(--muted)}
+#myeventMarketplace .formRow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#myeventMarketplace #draftStatus{font-size:13px;margin:0;color:var(--green)}
+#myeventMarketplace #marketToast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#263e30;color:white;padding:13px 20px;border-radius:8px;font-size:13px;z-index:10;max-width:90vw;box-shadow:0 5px 20px #0002;pointer-events:none}
+#myeventMarketplace #marketToast:empty{display:none}
+#myeventMarketplace .productPhoto{width:100%;height:100%;object-fit:cover}
+#myeventMarketplace .photoPlaceholder{display:grid;place-items:center;height:100%;font-size:12px;color:var(--muted)}
+#myeventMarketplace .detailGallery{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory}
+#myeventMarketplace .detailGallery img{width:100%;height:300px;object-fit:contain;background:#eaece4;border-radius:10px;flex-shrink:0;scroll-snap-align:start}
+#myeventMarketplace .detailDescription{white-space:pre-wrap;overflow-wrap:anywhere}
+#myeventMarketplace .threadButton{display:block;width:100%;text-align:left;background:#e9ede5;border-radius:8px;padding:14px;margin:8px 0;color:var(--ink)}
+#myeventMarketplace #messageList{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px 0}
+#myeventMarketplace .messageBubble{background:#e9ede5;border-radius:10px;padding:10px 13px;max-width:88%;align-self:flex-start;font-size:13px;overflow-wrap:anywhere}
+#myeventMarketplace .messageBubble.mine{background:#d7e5d9;align-self:flex-end}
+#myeventMarketplace .messageBubble p{white-space:pre-wrap;margin:0 0 6px;line-height:1.5}
+#myeventMarketplace .messageBubble small{font-size:9px;color:var(--muted)}
+#myeventMarketplace button:disabled{opacity:.55;cursor:wait}
+@media(max-width:1000px){#myeventMarketplace .productGrid{grid-template-columns:repeat(3,minmax(0,1fr))}#myeventMarketplace .heroCopy{padding:30px 25px}#myeventMarketplace nav{gap:15px}#myeventMarketplace .backHome{display:none}}
+@media(max-width:700px){#myeventMarketplace .marketHeader{padding:18px 18px 16px}#myeventMarketplace main{padding:0 18px}#myeventMarketplace .brand{font-size:24px}#myeventMarketplace .brand small{font-size:8px}#myeventMarketplace nav{gap:12px}#myeventMarketplace .quiet>span{display:none}#myeventMarketplace #createListing{font-size:11px;padding:10px;min-height:42px}#myeventMarketplace .demoBanner{font-size:10px;line-height:1.4;padding:14px 0;gap:5px}#myeventMarketplace .demoBanner>span:last-child{flex-basis:100%}#myeventMarketplace .hero{grid-template-columns:1fr}#myeventMarketplace .heroCopy{padding:28px 25px}#myeventMarketplace h1{font-size:35px}#myeventMarketplace .heroArt{min-height:215px;max-height:215px}#myeventMarketplace #heroEquipment{inset:-30px 0 -35px 75px}#myeventMarketplace .heroSticker{width:75px;height:75px;right:17px;bottom:17px;font-size:9px}#myeventMarketplace .heroSticker b{font-size:16px}#myeventMarketplace .spark{font-size:30px;top:17px;right:22px}#myeventMarketplace .artLabels{top:20px;left:22px;font-size:10px}#myeventMarketplace .searchPanel{padding:16px;margin-top:18px}#myeventMarketplace .searchFields{grid-template-columns:1fr auto;gap:14px}#myeventMarketplace .queryField{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px}#myeventMarketplace .searchFields input,#myeventMarketplace .searchFields select{font-size:16px}#myeventMarketplace .searchButton{padding:13px;font-size:12px;gap:12px}#myeventMarketplace .categoryRow{margin-right:-18px;padding-right:18px}#myeventMarketplace .catalogueHeading{align-items:flex-start;flex-direction:column;gap:14px}#myeventMarketplace h2{font-size:23px}#myeventMarketplace .catalogueHeading .eyebrow{font-size:9px}#myeventMarketplace .productGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}#myeventMarketplace .productCard h3{font-size:12px}#myeventMarketplace .productFooter{align-items:flex-start;flex-direction:column;gap:4px}#myeventMarketplace .price{font-size:17px}#myeventMarketplace .productCategory{font-size:8px;letter-spacing:.8px}#myeventMarketplace .productBadge{top:8px;left:8px;font-size:9px;padding:4px 6px}#myeventMarketplace .saveProduct{right:5px;top:3px;width:36px;height:36px;font-size:22px}#myeventMarketplace .ownerBanner{padding:24px;align-items:flex-start;flex-direction:column;margin:36px 0}#myeventMarketplace .ownerBanner .eyebrow{font-size:9px}#myeventMarketplace footer{flex-direction:column;align-items:flex-start;gap:4px}#myeventMarketplace dialog{padding:22px 18px}#myeventMarketplace .detailArt{height:200px}#myeventMarketplace .formRow{gap:10px}}
+@media(prefers-reduced-motion:reduce){#myeventMarketplace .productVisual svg{transition:none}}
+@media(max-width:700px){#myeventMarketplace .marketHeader{flex-wrap:wrap}#myeventMarketplace nav{width:100%;justify-content:space-between;gap:8px;font-size:11px}#myeventMarketplace .detailGallery img{height:220px}}

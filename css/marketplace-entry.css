@@ -1,0 +1,6 @@
+#socialHome .myeventMarketplaceEntry{display:flex;align-items:center;gap:12px;margin:12px 0;padding:14px 16px;border:1px solid #466956;border-radius:14px;background:#19362b;color:#fff;text-decoration:none;min-height:64px;box-sizing:border-box}
+#socialHome .myeventMarketplaceEntry>span:first-child{font-size:25px}
+#socialHome .myeventMarketplaceEntry>span:nth-child(2){flex:1;min-width:0}
+#socialHome .myeventMarketplaceEntry strong{display:block;font-size:15px}
+#socialHome .myeventMarketplaceEntry small{display:block;margin-top:4px;font-size:11px;line-height:1.4;color:#d4e6da}
+#socialHome .myeventMarketplaceEntry:focus-visible{outline:3px solid #efab73;outline-offset:3px}
