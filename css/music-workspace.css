@@ -34,9 +34,6 @@
 #musicHomeExtras .musicIllustrated[data-go="library"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.05) 72%),url(../assets/music-library.svg)!important}
 #musicHomeExtras .musicIllustrated::after{display:none!important}
 #musicHome .musicTile{background-size:cover!important;background-position:center!important;border-color:rgba(255,255,255,.16)!important;box-shadow:inset 0 -80px 70px rgba(0,0,0,.72)!important}
-#musicHome .musicTile[data-music-action="event"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-discover.svg)!important}
-#musicHome .musicTile[data-music-action="dj"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-dj.svg)!important}
-#musicHome .musicTile[data-music-action="favorites"]{background-image:linear-gradient(0deg,rgba(3,7,12,.78),rgba(3,7,12,.08)),url(../assets/music-library.svg)!important}
 #musicGenres button,#musicHome .musicChips button{background-image:linear-gradient(0deg,rgba(3,7,12,.72),rgba(3,7,12,.12)),url(../assets/music-genre.svg)!important;background-size:cover!important;background-position:center!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important;text-shadow:0 1px 5px #000!important}
 #musicHome .musicSearchResult,#musicScreen .musicListRow{background:#10151c!important;border:1px solid #2d3540!important;border-radius:15px!important;color:#fff!important}
 #musicHome .musicSearchResult button,#musicScreen .musicListRow>button:not(.musicTrackOpen){background:#171d25!important;border:1px solid #3a424e!important;color:#fff!important}
@@ -86,4 +83,48 @@
  #musicScreen:has(#musicDiscoverForm) .musicScreenHead button{width:42px;height:42px;min-height:42px!important;padding:0!important;border-radius:50%!important;font-size:0}
  #musicScreen:has(#musicDiscoverForm) .musicScreenHead button::after{content:"‹";font-size:30px;line-height:1}
  #musicDiscoverResults{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 9px}
+}
+
+/* Music home: the social theme excludes Music controls, so these surfaces own their colors. */
+#musicTrending{display:flex!important;gap:9px!important;overflow-x:auto!important;scroll-snap-type:x proximity;scrollbar-width:none}
+#musicTrending .musicTrendCard{flex:0 0 27.5%!important;min-width:0;scroll-snap-align:start;background:#0b0e13;border-radius:12px;overflow:hidden}
+#musicTrending .musicTrendOpen{position:relative;display:block;width:100%;padding:0;border:0;background:#0b0e13;color:#fff;box-shadow:none}
+#musicTrending .musicTrendOpen img{display:block;width:100%;box-sizing:border-box;aspect-ratio:1.28/1;object-fit:cover;background:#11151b;border:1px solid #282e38;border-radius:12px}
+#musicTrending .musicTrendRank{background:rgba(8,11,16,.88)!important;border:1px solid rgba(255,255,255,.3)!important;color:#fff!important}
+#musicTrending .musicTrendPlay{top:auto;bottom:6px;background:rgba(7,10,15,.86)}
+#musicTrending .musicTrendMeta{display:block;padding:6px 2px 8px;background:#0b0e13;color:#f7f8fa}
+#musicTrending .musicTrendMeta strong,#musicTrending .musicTrendMeta small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:transparent}
+#musicTrending .musicTrendMeta strong{font-size:10px;color:#f7f8fa}
+#musicTrending .musicTrendMeta small{font-size:8px;color:#929aa6;margin-top:2px}
+
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{
+  position:relative;isolation:isolate;overflow:hidden;min-width:0!important;width:100%!important;
+  min-height:140px!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;
+  padding:9px!important;border:1px solid rgba(255,255,255,.18)!important;
+  background-color:#10151d!important;background-size:cover!important;background-position:center!important;
+  background-repeat:no-repeat!important;box-shadow:none!important;color:#fff!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,8,14,.03) 18%,rgba(5,8,14,.38) 51%,rgba(5,8,14,.94) 100%);
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="event"]{background-image:url(../assets/music-playlist-event.webp)!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="dj"]{background-image:url(../assets/music-playlist-dj.webp)!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="favorites"]{background-image:url(../assets/music-playlist-favorites.webp)!important}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile span{color:#fff!important;font-size:17px!important;margin:0 0 auto!important;text-shadow:0 2px 7px #000}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile b{font-size:12px!important;line-height:1.15;text-shadow:0 2px 7px #000}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{font-size:9px!important;color:#e4e6ed!important;text-shadow:0 2px 7px #000}
+
+/* The navigation uses the existing shared DOM, with Music's five labels only while Music is open. */
+#socialBottomNav .musicOnlyNav{display:none!important}
+body.musicModeOpen #socialBottomNav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;z-index:2150!important}
+body.musicModeOpen #socialBottomNav #socialBottomCreate{display:none!important}
+body.musicModeOpen #socialBottomNav .musicOnlyNav{display:block!important}
+
+/* Keep the last card scrollable clear of the fixed nav, mini-player and iPhone home indicator. */
+body.musicModeOpen #musicHome{
+  box-sizing:border-box;padding-bottom:calc(116px + env(safe-area-inset-bottom))!important;
+}
+body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
+  padding-bottom:calc(212px + env(safe-area-inset-bottom))!important;
 }
