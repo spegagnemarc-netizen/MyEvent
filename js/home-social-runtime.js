@@ -768,16 +768,26 @@
       const o=$(id); if(o)o.addEventListener('click',e=>{if(e.target===o)closeOverlay(id);});
     });
 
-    // INVITER DES CONTACTS : feuille de partage iPhone/Android quand disponible.
+    // INVITER DES CONTACTS : toujours partager l'URL publique, jamais la Preview refactor-final.
+    const publicInviteUrl=()=>{
+      const configured=document.querySelector('meta[name="myevent-public-url"]')?.content?.trim();
+      if(configured)return configured;
+      const host=location.hostname;
+      if(/\\.vercel\\.app$/i.test(host)&&host.includes('-git-refactor-final-')){
+        return location.protocol+'//'+host.replace('-git-refactor-final-','-')+'/';
+      }
+      return location.origin+'/';
+    };
     bind('invitePhoneContactsBtn',async()=>{
       const data={
         title:'Rejoins-moi sur MyEvent',
         text:'Viens rejoindre mes amis sur MyEvent pour organiser et partager nos événements.',
-        url:location.href
+        url:publicInviteUrl()
       };
       try{
         if(navigator.share) await navigator.share(data);
-        else alert('Utilise le bouton Partager de ton téléphone pour inviter tes contacts.');
+        else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);alert('Lien MyEvent copié.');}
+        else alert('Ouvre '+data.url+' pour rejoindre MyEvent.');
       }catch(e){}
     });
   }
