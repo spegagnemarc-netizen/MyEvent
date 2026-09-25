@@ -4,10 +4,11 @@
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0;
-  const myStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
-  const defaultMyStoryContent = [...(myStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
+  const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
+  const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
   function showMyStoryThumbnail(userId) {
+    const myStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
     if (!myStoryBubble) return;
     clearTimeout(thumbnailExpiryTimer);
     const latest = storyRows.filter(r => r.author_id === userId && Date.parse(r.expires_at) > Date.now())
