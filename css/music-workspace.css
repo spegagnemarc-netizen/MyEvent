@@ -203,3 +203,14 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 }
 #musicHome #musicAmbiancesSection{margin-top:14px}
 #musicHome #musicTrending{margin-top:2px}
+
+
+/* Music IA V1 */
+#musicScreen .musicAIIntro{margin:4px 0 16px;padding:16px;border:1px solid #303844;border-radius:16px;background:linear-gradient(135deg,rgba(var(--myevent-accent-rgb),.14),#10151d)}
+#musicScreen .musicAIIntro strong{font-size:20px}
+#musicScreen .musicAIIntro p{margin:7px 0 0;color:#b8c0cc}
+#musicScreen #musicPrompt{min-height:108px;resize:vertical;margin-top:7px}
+#musicScreen #musicDraftActions{display:flex;gap:8px;overflow-x:auto;padding:10px 0 6px;scrollbar-width:none}
+#musicScreen #musicDraftActions::-webkit-scrollbar{display:none}
+#musicScreen #musicDraftActions button{flex:0 0 auto}
+#musicScreen #musicAISummary{padding:0 2px;color:#c9d0da;font-size:13px}
