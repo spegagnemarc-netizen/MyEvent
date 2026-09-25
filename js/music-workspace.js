@@ -5,7 +5,7 @@
   const esc=M.escape,meta=v=>esc(M.metadata(v)),ctx=()=>window.myeventMusicContext?.()||{};
   const home=document.createElement('div');home.id='musicLanding';while(root.firstChild)home.appendChild(root.firstChild);root.appendChild(home);
   const page=document.createElement('section');page.id='musicScreen';page.hidden=true;root.appendChild(page);
-  let screen='home',history=[],results=[],eventData=null,revision=0,nextPageToken=null,activeQuery='';
+  let screen='home',history=[],results=[],eventData=null,revision=0,nextPageToken=null,activeQuery='',aiController=null;
   const titles={library:'Bibliothèque',event:'Playlist d’événement',dj:'Mode DJ',discover:'Découvrir',ai:'Music IA',player:'Lecteur'};
   const notice=t=>{const el=$('musicScreenStatus')||$('musicProviderStatus');if(el)el.textContent=t;};
   // Shared starter selection: the home carousel remains usable when search is unavailable.
@@ -19,6 +19,7 @@
   function back(){go(history.pop()||'home',false);}
   function shell(name){page.innerHTML='<header class="musicScreenHead"><button data-back aria-label="Retour">‹ Retour</button><h2>'+titles[name]+'</h2></header><p id="musicScreenStatus" role="status" aria-live="polite"></p><div id="musicScreenBody"></div>';page.querySelector('[data-back]').onclick=back;return $('musicScreenBody');}
   function go(name,push=true){
+    if(name!=='ai')aiController?.abort();
     if(!titles[name]&&name!=='home')name='home';S.get();if(push&&name!==screen)history.push(screen);screen=name;revision++;
     M.openMusic();home.hidden=name!=='home';page.hidden=name==='home';S.update({screen:name});
     for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.classList.remove('open');
@@ -77,33 +78,55 @@
     const dialog=document.createElement('dialog');dialog.className='musicChoose';dialog.innerHTML='<h3>'+ (track?'Remplacer le morceau':'Ajouter un morceau')+'</h3><form><input aria-label="Titre ou artiste" required minlength="2"><button>Rechercher</button></form><p role="status"></p><div></div>';document.body.appendChild(dialog);
     let version=0;dialog.querySelector('form').onsubmit=async e=>{e.preventDefault();const token=++version;const msg=dialog.querySelector('p');msg.textContent='Recherche…';try{const r=await fetch('/api/search-music?q='+encodeURIComponent(dialog.querySelector('input').value));const data=await r.json();if(!r.ok)throw Error(data.error||'Recherche indisponible');if(token!==version||!dialog.open)return;const box=dialog.querySelector('div');box.replaceChildren();(data.items||[]).forEach(t=>button(M.metadata(t.title),()=>{const list=S.get().draft;if(track){if(list[index]!==track||track.locked)return;list[index]=t;}else list.push(t);S.save();dialog.close();go('ai',false);},box));msg.textContent=(data.items||[]).length+' résultat(s)';}catch(e){msg.textContent=e.message;}};button('Fermer',()=>dialog.close(),dialog);dialog.onclose=()=>dialog.remove();dialog.showModal();
   }
-  async function aiPlaylist(mode='generate'){
-    const s=S.get(),request=String(s.prompt||'').trim();
-    if(!request&&mode!=='regenerate'){notice('Décris d’abord la playlist souhaitée.');return;}
+  async function aiPlaylist(mode='generate',extra=''){
+    const s=S.get(),baseRequest=String(s.prompt||'').trim(),request=[baseRequest,extra&&'Ajoute aussi : '+extra].filter(Boolean).join('. ');
+    if(!request){notice('Décris d’abord la playlist souhaitée.');return;}
+    if(aiController)return;
+    const controller=new AbortController();aiController=controller;
+    const owner=ctx().user?.id,view=revision,original=s.draft.map(t=>({...t})),keys=original.map(S.key);
+    const current=()=>!controller.signal.aborted&&screen==='ai'&&revision===view&&ctx().user?.id===owner&&S.get()===s&&String(s.prompt||'').trim()===baseRequest&&s.draft.length===keys.length&&s.draft.every((t,i)=>S.key(t)===keys[i]&&!!t.locked===!!original[i].locked);
+    const actions=$('musicDraftActions');actions?.querySelectorAll('button').forEach(b=>b.disabled=true);
     const locked=s.draft.filter(t=>t.locked).map(t=>({title:t.title,artist:t.artist}));
     notice(mode==='generate'?'Music IA prépare la playlist…':mode==='add'?'Music IA cherche des morceaux à ajouter…':'Music IA refait les morceaux non verrouillés…');
     try{
-      const ai=await fetch('/api/generate-music-playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,request,locked_tracks:locked,current_tracks:s.draft})});
+      const ai=await fetch('/api/generate-music-playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,request,locked_tracks:locked,current_tracks:original}),signal:controller.signal});
       const plan=await ai.json();if(!ai.ok)throw Error(plan.error||'Music IA indisponible');
-      const found=[],seen=new Set((mode==='add'?s.draft:locked).map(S.key));
-      for(const suggestion of (plan.searches||[])){
-        if(found.length>=16)break;
-        const r=await fetch('/api/search-music?q='+encodeURIComponent(suggestion.query),{cache:'no-store'}),data=await r.json();
-        if(!r.ok){if(/quota|Search Queries/i.test(data.error||''))throw Error('Le quota de recherche musicale est atteint. La proposition IA est prête, mais les morceaux ne peuvent pas être vérifiés pour le moment.');continue;}
-        const track=(data.items||[]).find(t=>t.provider_track_id&&!seen.has(S.key(t)));if(track){track.ai_reason=suggestion.reason||'';found.push(track);seen.add(S.key(track));}
-      }
-      if(!found.length)throw Error('Aucun morceau disponible n’a pu être vérifié pour cette proposition.');
-      const next=mode==='add'?[...s.draft,...found]:[...s.draft.filter(t=>t.locked),...found];
-      S.update({draft:next,aiTitle:plan.title||'',aiSummary:plan.summary||''});notice((plan.title?plan.title+' · ':'')+found.length+' morceau(x) proposé(s).');go('ai',false);
-    }catch(e){notice(e.message||'Music IA temporairement indisponible.');}
+      if(!current())return;
+      const target=Math.min(40,Math.max(0,Number(plan.count)||0)),found=[],seen=new Set(original.map(S.key));
+      if(!target){notice('Tous les morceaux sont déjà conservés. Déverrouille un titre pour le remplacer.');return;}
+      const suggestions=(plan.searches||[]).slice(0,48);
+      let offset=0,quotaError=false;
+      // Bound concurrent searches and stop as soon as the requested number is verified.
+      async function worker(){while(offset<suggestions.length&&found.length<target&&!quotaError&&current()){
+        const index=offset++,suggestion=suggestions[index];
+        try{const r=await fetch('/api/search-music?q='+encodeURIComponent(suggestion.query),{cache:'no-store',signal:controller.signal});const data=await r.json();
+          if(!r.ok){if(r.status===503||/quota|Search Queries/i.test(data.error||''))quotaError=true;continue;}
+          if(!current())return;
+          const track=(data.items||[]).find(t=>t.provider_track_id&&!seen.has(S.key(t)));
+          if(track&&found.length<target){track.ai_reason=suggestion.reason||'';found.push({index,track});seen.add(S.key(track));}
+        }catch(e){if(e.name==='AbortError')return;}
+      }}
+      await Promise.all(Array.from({length:Math.min(4,suggestions.length)},()=>worker()));
+      if(!current())return;
+      if(!found.length)throw Error(quotaError?'La recherche musicale est indisponible ou son quota est atteint. Vérifie la configuration YouTube puis réessaie.':'Aucun morceau disponible n’a pu être vérifié pour cette proposition.');
+      const generated=found.length,verified=found.sort((a,b)=>a.index-b.index).map(x=>x.track);
+      const next=mode==='add'?[...original,...verified]:mode==='regenerate'
+        ?original.map(t=>t.locked?t:verified.shift()||t):verified;
+      // If the user requested more than the existing unlocked slots, append the remaining tracks.
+      if(mode==='regenerate')next.push(...verified);
+      S.update({draft:next,aiTitle:plan.title||'',aiSummary:plan.summary||''});
+      go('ai',false);notice((plan.title?plan.title+' · ':'')+generated+' nouveau(x) morceau(x) vérifié(s).'+(generated<target?' Certains titres n’ont pas pu être trouvés.':'')+(quotaError?' Recherche interrompue par le fournisseur.':''));
+    }catch(e){if(e.name!=='AbortError'&&current())notice(e.message||'Music IA temporairement indisponible.');}
+    finally{if(aiController===controller)aiController=null;if(screen==='ai'&&ctx().user?.id===owner)$('musicDraftActions')?.querySelectorAll('button').forEach(b=>b.disabled=false);}
   }
   function draft(body){
     const s=S.get();
     body.innerHTML='<div class="musicAIIntro"><strong>✦ MyEvent Music IA</strong><p>Décris l’ambiance, l’occasion, la durée ou les styles souhaités. L’IA propose, tu gardes le contrôle.</p></div><label>Ma demande<textarea id="musicPrompt" placeholder="Ex. Anniversaire de 30 personnes, années 2000, début tranquille puis dansant…"></textarea></label><div id="musicDraftActions"></div><p id="musicAISummary"></p><div id="musicDraftTracks"></div>';
     $('musicPrompt').value=s.prompt||'';$('musicPrompt').oninput=e=>S.update({prompt:e.target.value});
     const actions=$('musicDraftActions');
-    button(s.draft.length?'Refaire avec l’IA':'✦ Générer avec l’IA',()=>aiPlaylist(s.draft.length?'regenerate':'generate'),actions).classList.add('musicPrimary');
-    button('Ajouter plus avec l’IA',()=>aiPlaylist('add'),actions);
+    button('Proposer avec l’IA',()=>aiPlaylist('generate'),actions).classList.add('musicPrimary');
+    button('Ajoute plus de…',()=>{const detail=prompt('Quels morceaux souhaites-tu ajouter ?','');if(detail===null)return;if(!detail.trim()){notice('Décris les morceaux à ajouter.');return;}aiPlaylist('add',detail.trim());},actions);
+    button('Garde ceux-là et refais le reste',()=>aiPlaylist('regenerate'),actions).disabled=!s.draft.length;
     button('Ajouter un morceau',()=>choose(),actions);
     const summary=$('musicAISummary');if(s.aiTitle||s.aiSummary)summary.textContent=[s.aiTitle,s.aiSummary].filter(Boolean).join(' — ');
     editable('draft',$('musicDraftTracks'));
@@ -183,7 +206,7 @@
   async function participants(){const {sb,event}=ctx();const token=revision;try{const r=await sb.from('event_members').select('user_id').eq('event_id',event.id);if(r.error)throw r.error;const ids=[...new Set([event.creator_id,...(r.data||[]).map(x=>x.user_id)].filter(Boolean))];let profiles=[];if(ids.length){const names=await sb.from('profiles').select('id,display_name').in('id',ids);if(names.error)throw names.error;profiles=names.data||[];}if(token!==revision)return;const p=document.createElement('p');p.dataset.musicParticipants='';p.textContent=ids.length+' participant(s) : '+ids.map(id=>profiles.find(p=>p.id===id)?.display_name||'Participant').join(', ');$('musicScreenBody').querySelector('[data-music-participants]')?.remove();$('musicScreenBody').appendChild(p);}catch(e){if(token===revision)notice('Participants : '+e.message);}}
   window.addEventListener('music-recent-change',()=>{if(screen==='home')renderHome();});
   window.addEventListener('music-artwork-change',()=>{if(screen==='home')renderHome();});
-  window.addEventListener('music-user-change',()=>{history=[];results=[];nextPageToken=null;activeQuery='';eventData=null;revision++;page.replaceChildren();page.hidden=true;home.hidden=false;screen='home';for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.remove();M.closePlayer();$('musicTrending').replaceChildren();$('musicSearchInput').value=S.get().query;renderHome();});
+  window.addEventListener('music-user-change',()=>{aiController?.abort();history=[];results=[];nextPageToken=null;activeQuery='';eventData=null;revision++;page.replaceChildren();page.hidden=true;home.hidden=false;screen='home';for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.remove();M.closePlayer();$('musicTrending').replaceChildren();$('musicSearchInput').value=S.get().query;renderHome();});
   window.addEventListener('music-player-open',()=>{const panel=$('musicPlayer');if(panel&&!panel.querySelector('[data-full-menu]'))button('⋮ Actions du morceau',()=>menu(P.current),panel).dataset.fullMenu='true';});
   window.addEventListener('music-track-change',e=>{if($('musicPlayer')?.classList.contains('open'))M.openPlayer(e.detail);});
   window.addEventListener('music-storage-error',()=>notice('Stockage local indisponible : les changements restent valables pour cette session.'));

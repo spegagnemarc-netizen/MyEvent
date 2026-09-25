@@ -18,12 +18,18 @@ export default async function handler(req,res){
   const request=clean(body.request).slice(0,1200);
   const locked=(Array.isArray(body.locked_tracks)?body.locked_tracks:[]).slice(0,40).map(t=>({title:clean(t.title).slice(0,180),artist:clean(t.artist).slice(0,180)})).filter(t=>t.title);
   const current=(Array.isArray(body.current_tracks)?body.current_tracks:[]).slice(0,60).map(t=>({title:clean(t.title).slice(0,180),artist:clean(t.artist).slice(0,180),locked:!!t.locked})).filter(t=>t.title);
-  if(!request && mode!=='regenerate') return res.status(400).json({error:'Décris la playlist souhaitée.'});
+  if(!request) return res.status(400).json({error:'Décris la playlist souhaitée.'});
+  // The requested size belongs to the whole playlist, including tracks the user kept.
+  const requested=Number(request.match(/\b(\d{1,2})\s*(?:morceaux|titres|chansons|sons)\b/i)?.[1]);
+  const total=Math.min(40,Math.max(1,requested||current.length||16));
+  const count=mode==='add'?Math.min(12,Math.max(5,requested||8)):
+    mode==='regenerate'?Math.max(0,total-locked.length):total;
+  if(!count) return res.status(200).json({title:'',summary:'Tous les morceaux sont conservés.',searches:[],count:0});
   const instruction=mode==='add'
-    ? 'Propose 8 recherches supplémentaires cohérentes avec la demande, sans répéter les morceaux actuels.'
+    ? `Ajoute ${count} morceaux différents à la playlist existante.`
     : mode==='regenerate'
-      ? 'Recompose la partie non verrouillée de la playlist. Conserve impérativement les morceaux verrouillés et propose 16 recherches pour compléter la playlist.'
-      : 'Propose 16 recherches de morceaux correspondant à la demande.';
+      ? `Remplace ${count} morceaux non verrouillés. Les morceaux verrouillés restent en place.`
+      : `Propose une playlist de ${count} morceaux.`;
   const prompt=`Tu es MyEvent Music IA. Tu prépares une playlist, mais tu ne fournis jamais de fichier audio et tu ne prétends pas qu'un morceau est disponible. Les résultats seront ensuite vérifiés dans le fournisseur musical réel.
 
 Demande utilisateur : ${request || 'Refaire la playlist en conservant les titres verrouillés.'}
@@ -34,14 +40,14 @@ Morceaux verrouillés à préserver : ${JSON.stringify(locked)}
 
 Retourne UNIQUEMENT ce JSON :
 {"title":"nom court de playlist","summary":"une phrase","searches":[{"query":"artiste titre","reason":"raison courte"}]}
-Les recherches doivent être concrètes (artiste + titre si possible), variées, sans doublons, et adaptées à la demande. N'invente pas de disponibilité chez YouTube.`;
+Donne ${Math.min(48,count+Math.max(4,Math.ceil(count/4)))} recherches de chansons réelles et distinctes (artiste + titre), en commençant par les meilleures. Évite les morceaux actuels pour les remplacements et ajouts. Respecte le style et l'époque demandés. N'invente pas de disponibilité chez YouTube.`;
   try{
-    const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:clean(process.env.OPENAI_MATERIAL_MODEL)||'gpt-5.6-luna',input:prompt,max_output_tokens:3500})});
+    const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:clean(process.env.OPENAI_MATERIAL_MODEL)||'gpt-5.6-luna',input:prompt,max_output_tokens:8000})});
     const data=await r.json();
     if(!r.ok) return res.status(r.status).json({error:data?.error?.message||'Music IA temporairement indisponible.'});
     const parsed=parseJson(outputText(data));
-    const searches=(Array.isArray(parsed.searches)?parsed.searches:[]).slice(0,24).map(x=>({query:clean(x.query).slice(0,240),reason:clean(x.reason).slice(0,240)})).filter(x=>x.query);
+    const searches=(Array.isArray(parsed.searches)?parsed.searches:[]).slice(0,48).map(x=>({query:clean(x.query).slice(0,240),reason:clean(x.reason).slice(0,240)})).filter(x=>x.query);
     if(!searches.length) return res.status(502).json({error:'Music IA n’a proposé aucun morceau exploitable.'});
-    return res.status(200).json({title:clean(parsed.title).slice(0,120),summary:clean(parsed.summary).slice(0,500),searches});
+    return res.status(200).json({title:clean(parsed.title).slice(0,120),summary:clean(parsed.summary).slice(0,500),searches,count});
   }catch(e){return res.status(500).json({error:e?.message||'Impossible de générer la playlist.'});}
 }
