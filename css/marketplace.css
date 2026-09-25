@@ -117,3 +117,48 @@ body:has(#myeventMarketplace){margin:0;background:#faf8f5}
 @media(max-width:700px){#myeventMarketplace .marketHeader{padding:18px 18px 16px}#myeventMarketplace main{padding:0 18px}#myeventMarketplace .brand{font-size:24px}#myeventMarketplace .brand small{font-size:8px}#myeventMarketplace nav{gap:12px}#myeventMarketplace .quiet>span{display:none}#myeventMarketplace #createListing{font-size:11px;padding:10px;min-height:42px}#myeventMarketplace .demoBanner{font-size:10px;line-height:1.4;padding:14px 0;gap:5px}#myeventMarketplace .demoBanner>span:last-child{flex-basis:100%}#myeventMarketplace .hero{grid-template-columns:1fr}#myeventMarketplace .heroCopy{padding:28px 25px}#myeventMarketplace h1{font-size:35px}#myeventMarketplace .heroArt{min-height:215px;max-height:215px}#myeventMarketplace #heroEquipment{inset:-30px 0 -35px 75px}#myeventMarketplace .heroSticker{width:75px;height:75px;right:17px;bottom:17px;font-size:9px}#myeventMarketplace .heroSticker b{font-size:16px}#myeventMarketplace .spark{font-size:30px;top:17px;right:22px}#myeventMarketplace .artLabels{top:20px;left:22px;font-size:10px}#myeventMarketplace .searchPanel{padding:16px;margin-top:18px}#myeventMarketplace .searchFields{grid-template-columns:1fr auto;gap:14px}#myeventMarketplace .queryField{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px}#myeventMarketplace .searchFields input,#myeventMarketplace .searchFields select{font-size:16px}#myeventMarketplace .searchButton{padding:13px;font-size:12px;gap:12px}#myeventMarketplace .categoryRow{margin-right:-18px;padding-right:18px}#myeventMarketplace .catalogueHeading{align-items:flex-start;flex-direction:column;gap:14px}#myeventMarketplace h2{font-size:23px}#myeventMarketplace .catalogueHeading .eyebrow{font-size:9px}#myeventMarketplace .productGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px}#myeventMarketplace .productCard h3{font-size:12px}#myeventMarketplace .productFooter{align-items:flex-start;flex-direction:column;gap:4px}#myeventMarketplace .price{font-size:17px}#myeventMarketplace .productCategory{font-size:8px;letter-spacing:.8px}#myeventMarketplace .productBadge{top:8px;left:8px;font-size:9px;padding:4px 6px}#myeventMarketplace .saveProduct{right:5px;top:3px;width:36px;height:36px;font-size:22px}#myeventMarketplace .ownerBanner{padding:24px;align-items:flex-start;flex-direction:column;margin:36px 0}#myeventMarketplace .ownerBanner .eyebrow{font-size:9px}#myeventMarketplace footer{flex-direction:column;align-items:flex-start;gap:4px}#myeventMarketplace dialog{padding:22px 18px}#myeventMarketplace .detailArt{height:200px}#myeventMarketplace .formRow{gap:10px}}
 @media(prefers-reduced-motion:reduce){#myeventMarketplace .productVisual svg{transition:none}}
 @media(max-width:700px){#myeventMarketplace .marketHeader{flex-wrap:wrap}#myeventMarketplace nav{width:100%;justify-content:space-between;gap:8px;font-size:11px}#myeventMarketplace .detailGallery img{height:220px}}
+
+
+/* Marketplace dark theme V2 — dark by default, light remains user-selectable */
+#myeventMarketplace[data-theme="dark"]{--ink:#f5f7f8;--muted:#9aa4ad;--paper:#071016;--green:#2d7b5b;--line:#26323b;--orange:#ff6435;background:var(--paper);color:var(--ink);color-scheme:dark}
+body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
+#myeventMarketplace .themeToggle{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:transparent;color:var(--ink);font-size:19px}
+#myeventMarketplace[data-theme="dark"] .brand>span{color:var(--orange)}
+#myeventMarketplace[data-theme="dark"] .primary,#myeventMarketplace[data-theme="dark"] .searchButton{background:var(--orange);color:#fff;box-shadow:0 8px 24px #ff64352b}
+#myeventMarketplace[data-theme="dark"] .primary:hover,#myeventMarketplace[data-theme="dark"] .searchButton:hover{background:#ff744b}
+#myeventMarketplace[data-theme="dark"] .quiet[aria-pressed=true]{color:var(--orange)}
+#myeventMarketplace[data-theme="dark"] .quiet b{background:#172129;color:#fff}
+#myeventMarketplace[data-theme="dark"] .demoBanner{color:#9aa4ad}
+#myeventMarketplace[data-theme="dark"] .hero{background:linear-gradient(135deg,#101820,#0a1117);border:1px solid #29343c}
+#myeventMarketplace[data-theme="dark"] h1 em{color:var(--orange)}
+#myeventMarketplace[data-theme="dark"] .heroCopy>p:not(.eyebrow){color:#a8b0b7}
+#myeventMarketplace[data-theme="dark"] .heroLink{border-color:#ff6435;color:#fff}
+#myeventMarketplace[data-theme="dark"] .heroArt{background:radial-gradient(circle at 70% 35%,#462014 0,#17201f 38%,#0c1419 72%)}
+#myeventMarketplace[data-theme="dark"] .orbit{border-color:#46534b}
+#myeventMarketplace[data-theme="dark"] .artLabels{color:#aab5ad}
+#myeventMarketplace[data-theme="dark"] .spark{color:var(--orange)}
+#myeventMarketplace[data-theme="dark"] .searchPanel{background:#0e171d;border-color:#29353e;box-shadow:0 8px 28px #0005}
+#myeventMarketplace[data-theme="dark"] .transactionTabs button[aria-pressed=true]{border-color:var(--orange);color:var(--orange)}
+#myeventMarketplace[data-theme="dark"] input,#myeventMarketplace[data-theme="dark"] select,#myeventMarketplace[data-theme="dark"] textarea{color:#f5f7f8}
+#myeventMarketplace[data-theme="dark"] .categoryRow button{border-color:#3a4650;color:#e7ebee;background:#0c141a}
+#myeventMarketplace[data-theme="dark"] .categoryRow button[aria-pressed=true]{background:#ff6435;border-color:#ff6435;color:#fff;box-shadow:0 0 18px #ff643533}
+#myeventMarketplace[data-theme="dark"] .sortLabel select{background:#111a21;border-color:#33404a;color:#fff}
+#myeventMarketplace[data-theme="dark"] .productCard{background:#0d161c;border:1px solid #26323b;border-radius:14px;padding:0 0 12px;overflow:hidden}
+#myeventMarketplace[data-theme="dark"] .productCard .productCategory,#myeventMarketplace[data-theme="dark"] .productCard h3,#myeventMarketplace[data-theme="dark"] .productCard .productFooter{margin-left:12px;margin-right:12px}
+#myeventMarketplace[data-theme="dark"] .productVisual{border-radius:13px 13px 0 0;background:#111b21}
+#myeventMarketplace[data-theme="dark"] .productBadge{background:#176f3a;color:#fff}
+#myeventMarketplace[data-theme="dark"] .saveProduct{background:#0b1218dd;color:#fff;border:1px solid #43505a}
+#myeventMarketplace[data-theme="dark"] .saveProduct[aria-pressed=true]{color:#ff6435}
+#myeventMarketplace[data-theme="dark"] .ownerBanner{background:linear-gradient(135deg,#161d1d,#10171b);border:1px solid #334039}
+#myeventMarketplace[data-theme="dark"] .ownerBanner p:not(.eyebrow){color:#a8aea8}
+#myeventMarketplace[data-theme="dark"] .ownerBanner h2{color:#fff}
+#myeventMarketplace[data-theme="dark"] .darkButton{background:transparent;color:#fff;border:1px solid var(--orange)}
+#myeventMarketplace[data-theme="dark"] dialog{background:#0d161c;color:#f5f7f8;border-color:#33404a;color-scheme:dark}
+#myeventMarketplace[data-theme="dark"] .dialogClose{background:#172129;color:#fff}
+#myeventMarketplace[data-theme="dark"] form input,#myeventMarketplace[data-theme="dark"] form select,#myeventMarketplace[data-theme="dark"] form textarea{background:#111b22;border-color:#34414a;color:#fff}
+#myeventMarketplace[data-theme="dark"] .detailFacts span,#myeventMarketplace[data-theme="dark"] .threadButton,#myeventMarketplace[data-theme="dark"] .messageBubble{background:#172129;color:#eef2f4}
+#myeventMarketplace[data-theme="dark"] .messageBubble.mine{background:#18392c}
+#myeventMarketplace[data-theme="dark"] .detailDescription{color:#aeb6bc}
+#myeventMarketplace[data-theme="dark"] .detailNotice,#myeventMarketplace[data-theme="dark"] .draftNotice{background:#172019;color:#b8c0b7}
+#myeventMarketplace[data-theme="dark"] footer{border-color:#26323b}
+@media(max-width:700px){#myeventMarketplace .themeToggle{width:38px;height:38px;border-radius:12px;font-size:17px}#myeventMarketplace[data-theme="dark"] .productGrid{gap:12px}#myeventMarketplace[data-theme="dark"] .productCard h3{font-size:13px}}
