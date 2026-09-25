@@ -508,3 +508,65 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
    width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important;
  }
 }
+
+
+/* Music IA V1.6 — same validated card geometry as Mode DJ */
+#musicScreen #musicDraftTracks .musicListRow{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 40px 40px!important;
+  grid-template-rows:40px 40px 40px!important;
+  min-height:150px!important;height:150px!important;
+  padding:8px!important;gap:6px!important;align-items:center!important;overflow:hidden!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen{
+  grid-column:1!important;grid-row:1 / 4!important;
+  display:block!important;position:relative!important;
+  width:100%!important;height:134px!important;min-height:134px!important;
+  padding:0!important;overflow:hidden!important;border-radius:13px!important;background:#0a0e13!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen img{
+  display:block!important;position:absolute!important;inset:0!important;
+  width:100%!important;min-width:100%!important;max-width:none!important;height:100%!important;
+  object-fit:cover!important;object-position:center!important;border-radius:13px!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen::after{
+  content:""!important;position:absolute!important;inset:48% 0 0!important;
+  background:linear-gradient(transparent,rgba(3,6,10,.94))!important;pointer-events:none!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen span{
+  display:block!important;position:absolute!important;z-index:2!important;
+  left:10px!important;right:10px!important;bottom:8px!important;
+  width:auto!important;max-width:none!important;min-width:0!important;padding:0!important;
+  color:#fff!important;text-shadow:0 1px 4px #000!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen strong{
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  overflow:hidden!important;font-size:12px!important;line-height:1.15!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen small{
+  display:block!important;margin-top:4px!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;color:#d7dce3!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button:not(.musicTrackOpen){
+  width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;border-radius:12px!important;overflow:hidden!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Actions pour"]{
+  grid-column:3!important;grid-row:3!important;font-size:18px!important;justify-self:center!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Monter"]{
+  grid-column:2!important;grid-row:2!important;font-size:15px!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Descendre"]{
+  grid-column:3!important;grid-row:2!important;font-size:15px!important;
+}
+@media(max-width:390px){
+ #musicScreen #musicDraftTracks .musicListRow{
+   grid-template-columns:minmax(0,1fr) 38px 38px!important;
+   grid-template-rows:38px 38px 38px!important;height:144px!important;min-height:144px!important;
+ }
+ #musicScreen #musicDraftTracks .musicTrackOpen{height:128px!important;min-height:128px!important}
+ #musicScreen #musicDraftTracks .musicListRow>button:not(.musicTrackOpen){
+   width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important;
+ }
+}
