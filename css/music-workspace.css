@@ -629,3 +629,19 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 #musicHome .musicShelfHead>button::before{
   color:#dfe4eb!important;
 }
+
+
+/* Music home V2.0 — align shelf action pills with section titles */
+#musicHome .musicShelfHead{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+#musicHome .musicShelfHead>h3{
+  margin:0!important;
+}
+#musicHome .musicShelfHead>button{
+  flex:0 0 auto!important;
+  margin:0!important;
+}
