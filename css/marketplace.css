@@ -248,3 +248,14 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
  #myeventMarketplace .marketHeader nav #inboxButton,
  #myeventMarketplace .marketHeader nav #createListing{min-height:58px;padding:8px 5px;font-size:13px}
 }
+
+/* Keep the theme toggle clear of the MyEvent logo */
+#myeventMarketplace .marketHeader{position:relative}
+@media(max-width:700px){
+ #myeventMarketplace .marketHeader nav .themeToggle{
+   position:absolute!important;
+   top:28px!important;
+   right:35px!important;
+   left:auto!important;
+ }
+}
