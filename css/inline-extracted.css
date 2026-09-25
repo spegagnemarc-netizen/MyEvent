@@ -3228,3 +3228,37 @@ body.musicModeOpen #socialBottomNav .musicOnlyNav{display:block!important}
 #musicTrending .musicTrendMeta small{font-size:8px!important;color:#929aa6!important;margin-top:2px!important}
 
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[style]{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+
+
+/* Music V1.19 — final iPhone spacing + remove residual trend accent */
+#musicTrending .musicTrendMeta,
+#musicTrending .musicTrendMeta strong,
+#musicTrending .musicTrendMeta small{
+  background:#080b10!important;
+  background-color:#080b10!important;
+  background-image:none!important;
+}
+#musicTrending .musicTrendOpen,
+#musicTrending .musicTrendOpen img{
+  background:#080b10!important;
+  background-color:#080b10!important;
+  box-shadow:none!important;
+}
+#musicTrending .musicTrendOpen img{border-color:#282e38!important}
+#musicTrending .musicTrendRank{
+  background:#0a0e14!important;
+  background-color:#0a0e14!important;
+  border-color:rgba(255,255,255,.30)!important;
+  color:#fff!important;
+}
+
+/* Keep the final MyEvent playlist cards completely above the persistent bottom nav. */
+body.musicModeOpen #musicHome{
+  padding-bottom:calc(235px + env(safe-area-inset-bottom))!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn){
+  margin-bottom:38px!important;
+}
+#musicHome>.musicSection:has(#musicEventPlaylistsBtn)>.musicCards{
+  padding-bottom:8px!important;
+}
