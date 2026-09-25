@@ -210,3 +210,41 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
   border:1.5px solid var(--orange)!important;
   border-radius:14px;
 }
+
+/* Three equal Marketplace header action buttons */
+#myeventMarketplace .marketHeader nav{
+  display:grid;
+  grid-template-columns:auto repeat(3,minmax(0,1fr));
+  align-items:center;
+  gap:10px;
+}
+#myeventMarketplace .marketHeader nav #favoritesButton{display:none}
+#myeventMarketplace .marketHeader nav #myListings,
+#myeventMarketplace .marketHeader nav #inboxButton,
+#myeventMarketplace .marketHeader nav #createListing{
+  min-width:0;
+  width:100%;
+  min-height:54px;
+  padding:10px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border:1.5px solid var(--orange)!important;
+  border-radius:14px;
+  background:transparent!important;
+  color:var(--ink)!important;
+  font:inherit;
+  font-weight:700;
+  line-height:1.15;
+}
+#myeventMarketplace[data-theme="dark"] .marketHeader nav #myListings,
+#myeventMarketplace[data-theme="dark"] .marketHeader nav #inboxButton,
+#myeventMarketplace[data-theme="dark"] .marketHeader nav #createListing{color:#f5f7f8!important}
+@media(max-width:700px){
+ #myeventMarketplace .marketHeader nav{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:8px}
+ #myeventMarketplace .marketHeader nav .themeToggle{position:absolute;top:0;left:0}
+ #myeventMarketplace .marketHeader nav #myListings,
+ #myeventMarketplace .marketHeader nav #inboxButton,
+ #myeventMarketplace .marketHeader nav #createListing{min-height:58px;padding:8px 5px;font-size:13px}
+}
