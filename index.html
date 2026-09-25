@@ -111,8 +111,8 @@
   </div>
 
   <div class="socialStories" aria-label="Raccourcis">
+    <div class="socialStory me" id="socialMyStory"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
     <div class="socialStory create" id="socialCreateStory"><div class="socialStoryBubble">＋</div><div>Créer</div></div>
-    <div class="socialStory me"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
     <div class="socialStory"><div class="socialStoryBubble">👥</div><div>Amis</div></div>
     <div class="socialStory"><div class="socialStoryBubble">📍</div><div>À proximité</div></div>
     <div class="socialStory"><div class="socialStoryBubble">🔥</div><div>Populaire</div></div>
@@ -181,28 +181,11 @@
 
   <div id="socialFriendsView" class="socialPeople">
     <div class="socialSearch"><input placeholder="🔎 Rechercher un ami…"><button type="button">Rechercher</button></div>
-    <div class="socialFriendCarousel" aria-label="Suggestions d’amis, faire défiler horizontalement">
-      <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
-      <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">🍴 Restaurants · 🎵 Sorties</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
-      <div class="socialPerson"><div class="socialPostAvatar">🥾</div><div class="grow"><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature</div></div><button type="button" class="secondary socialFollowBtn">Ajouter</button></div>
-    </div>
-    <div class="socialFriendRequests">
-      <div class="socialFriendRequestsHead"><h4>👥 Demandes d’amis</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div>
-      <div class="socialFriendRequestsCarousel" aria-label="Demandes d’amis, faire défiler horizontalement">
-        <div class="socialFriendRequestCard">
-          <div class="socialPostAvatar">👩</div><b>Julie</b><div class="muted">🎿 Ski · 🏔️ Montagne<br>Souhaite rejoindre tes amis.</div>
-          <div class="socialFriendRequestActions"><button type="button" class="socialAcceptFriendBtn">✓ Accepter</button><button type="button" class="secondary socialDeclineFriendBtn">✕ Refuser</button></div>
-        </div>
-        <div class="socialFriendRequestCard">
-          <div class="socialPostAvatar">👨</div><b>Thomas</b><div class="muted">🍴 Restaurants · 🎵 Sorties<br>Vous avez des activités en commun.</div>
-          <div class="socialFriendRequestActions"><button type="button" class="socialAcceptFriendBtn">✓ Accepter</button><button type="button" class="secondary socialDeclineFriendBtn">✕ Refuser</button></div>
-        </div>
-        <div class="socialFriendRequestCard">
-          <div class="socialPostAvatar">🥾</div><b>Camille</b><div class="muted">🥾 Randonnée · 🌲 Nature<br>Souhaite rejoindre tes amis.</div>
-          <div class="socialFriendRequestActions"><button type="button" class="socialAcceptFriendBtn">✓ Accepter</button><button type="button" class="secondary socialDeclineFriendBtn">✕ Refuser</button></div>
-        </div>
-      </div>
-    </div>
+    <div id="socialFriendStatus" role="status" class="muted"></div>
+    <h4>Utilisateurs MyEvent</h4><div class="socialFriendCarousel" id="socialFriendResults"></div>
+    <div class="socialFriendRequests"><div class="socialFriendRequestsHead"><h4>Demandes reçues</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div><div class="socialFriendRequestsCarousel" id="socialFriendIncoming"></div></div>
+    <h4>Demandes envoyées</h4><div class="socialFriendCarousel" id="socialFriendOutgoing"></div>
+    <h4>Mes amis</h4><div class="socialFriendCarousel" id="socialFriendList"></div>
   </div>
 
   <div id="socialMessagesView" class="socialPeople">
@@ -1185,6 +1168,8 @@
 
 
 <script src="js/home-social-runtime.js?v=camera-ai-lenses-1"></script>
+<link rel="stylesheet" href="css/social-friends-stories.css?v=1">
+<script src="js/social-friends-stories.js?v=1"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>

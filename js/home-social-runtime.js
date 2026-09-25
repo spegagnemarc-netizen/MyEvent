@@ -12,7 +12,7 @@
   $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>tab('notifications'));
   $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>tab('messages'));
   $s('socialHeaderSearchBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>{$s('socialSearchInput')?.focus();},50);});
-  $s('socialCreateStory')?.addEventListener('click',()=>{$s('socialCreateEventBtn')?.click()});
+  // Story creation is handled by social-friends-stories.js.
   $s('socialBottomCreate')?.addEventListener('click',()=>openMyEventCamera());
   $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='music')return;if(t==='profile'){$s('profileAvatar')?.click();return}if(t==='events'){tab('feed');const el=$s('eventsCard');if(el){el.open=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),20);} $s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));return;}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
   document.querySelectorAll('.socialFilter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.socialFilter').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));
@@ -993,17 +993,6 @@
   }
 
   function activateSocialShortcuts(){
-    // Ma story : ouvre la création de story/photo existante.
-    const story=$('socialCreateStory')?.parentElement?.querySelector('.socialStory.me');
-    if(story){
-      story.addEventListener('click',e=>{
-        e.preventDefault();e.stopPropagation();
-        const camera=$('socialOpenComposer');
-        if(camera)camera.click();
-        else if(typeof window.openMyEventCamera==='function')window.openMyEventCamera();
-      });
-    }
-
     // Amis : navigation amis.
     document.querySelectorAll('#socialHome .socialStory').forEach(x=>{
       const label=x.textContent.trim();

@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const db=new PGlite();
+const A='11111111-1111-4111-8111-111111111111', B='22222222-2222-4222-8222-222222222222', C='33333333-3333-4333-8333-333333333333';
+const as=(id,fn)=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[id]);return fn(tx);});
+const rows=(id,sql,args=[])=>as(id,tx=>tx.query(sql,args)).then(x=>x.rows);
+const denied=async(id,sql,args=[])=>assert.rejects(rows(id,sql,args),undefined,sql);
+try {
+  await db.exec(`create role authenticated;create role anon;create schema auth;create schema storage;
+    create table auth.users(id uuid primary key);create table public.profiles(id uuid primary key,display_name text,username text,avatar text);
+    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+    grant usage on schema auth,storage to authenticated;
+    create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+    create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);
+    alter table storage.objects enable row level security;grant select,insert,delete on storage.objects to authenticated;
+    create function storage.foldername(text) returns text[] language sql immutable as $$ select (string_to_array($1,'/'))[1:array_length(string_to_array($1,'/'),1)-1] $$;`);
+  for(const [id,name] of [[A,'Alice'],[B,'Benoît'],[C,'Camille']]) {
+    await db.query('insert into auth.users values($1)',[id]);
+    await db.query('insert into public.profiles values($1,$2,$2,null)',[id,name]);
+  }
+  await db.exec(await readFile(new URL('../supabase/migrations/202609250002_friends_stories.sql',import.meta.url),'utf8'));
+  const action=(id,other,act)=>rows(id,'select public.friend_action($1,$2)',[other,act]);
+  const visible=id=>rows(id,'select author_id from public.social_stories');
+  await denied(A,'select public.friend_action($1,$2)',[A,'send']);
+  await action(A,B,'send');await denied(A,'select public.friend_action($1,$2)',[B,'send']);
+  assert.equal((await rows(B,'select * from public.friendships')).length,1);
+  assert.equal((await rows(C,'select * from public.friendships')).length,0);
+  await denied(A,'select public.friend_action($1,$2)',[B,'accept']);
+  await action(A,B,'cancel');assert.equal((await rows(B,'select * from public.friendships')).length,0);
+  await action(A,B,'send');await action(B,A,'decline');await action(A,B,'send');
+  await action(B,A,'accept');assert.equal((await rows(A,'select status from public.friendships'))[0].status,'accepted');
+  await denied(C,'delete from public.friendships where user_low=$1',[A]);
+  const path=`${A}/story.jpg`;
+  await as(A,tx=>tx.query('insert into storage.objects(bucket_id,name) values($1,$2)',['story-media',path]));
+  await as(A,tx=>tx.query("insert into public.social_stories(author_id,media_path,media_type) values($1,$2,'image')",[A,path]));
+  assert.equal((await visible(B)).length,1);assert.equal((await visible(C)).length,0);
+  assert.equal((await rows(B,'select name from storage.objects')).length,1);
+  assert.equal((await rows(C,'select name from storage.objects')).length,0);
+  await as(C,tx=>tx.query('delete from public.social_stories where author_id=$1',[A]));
+  assert.equal((await visible(A)).length,1);
+  await action(B,A,'remove');assert.equal((await visible(B)).length,0);
+  assert.equal((await rows(B,'select name from storage.objects')).length,0);
+  await db.query("update public.social_stories set expires_at=now()-interval '1 second' where author_id=$1",[A]);
+  assert.equal((await visible(A)).length,0);
+  assert.equal((await rows(B,'select name from storage.objects')).length,0);
+  await as(A,tx=>tx.query('delete from public.social_stories where author_id=$1',[A]));
+  assert.equal((await visible(A)).length,0);
+  console.log('PASS: friendship transitions, direct mutation protection, story privacy and deletion');
+} finally {await db.close();}

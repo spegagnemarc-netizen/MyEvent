@@ -1,0 +1,14 @@
+#socialHome .socialStories{display:flex!important;overflow-x:auto!important;gap:6px!important;scrollbar-width:none}
+#socialHome .socialStory{flex:0 0 16%;min-width:0;text-align:center;cursor:pointer;background:none;border:0;color:inherit}
+#socialHome .socialStory.hasStory .socialStoryBubble{border:2px solid #ff6a34!important;outline:2px solid #f3a777!important;outline-offset:2px!important}
+.socialStoryBubble .socialPostAvatar{width:100%;height:100%;overflow:hidden;border-radius:inherit}.socialStoryBubble img,.socialPostAvatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.socialStoryViewer[hidden],.storyCreateSheet[hidden]{display:none!important}
+.socialStoryViewer{position:fixed;inset:0;z-index:100000;background:#07090b;color:#fff;touch-action:pan-y}
+.socialStoryViewer .storyMedia{position:absolute;inset:8% 0 9%;display:flex;align-items:center;justify-content:center}
+.socialStoryViewer img,.socialStoryViewer video{max-width:100%;max-height:100%;object-fit:contain}
+.storyHeader,.storyProgress,.storyCaption,.storyPrevious,.storyNext,.storyDelete{position:absolute;z-index:2}
+.storyProgress{top:max(10px,env(safe-area-inset-top));left:5%;width:90%;height:3px;background:#888}.storyProgress span{display:block;height:100%;background:#fff}
+.storyHeader{top:max(18px,env(safe-area-inset-top));left:5%;right:5%;display:flex;justify-content:space-between}.storyHeader button{color:#fff;background:transparent;border:0;font-size:24px}
+.storyCaption{bottom:7%;width:100%;text-align:center;padding:0 35px;box-sizing:border-box}
+.storyPrevious,.storyNext{top:30%;height:45%;width:25%;background:transparent;border:0;color:#fff;font-size:32px}.storyPrevious{left:0}.storyNext{right:0}
+.storyDelete{bottom:20px;right:20px}.storyCreateSheet{position:fixed;inset:0;z-index:100001;background:#000b;display:grid;place-items:center}.storyCreateSheet>div{background:#18212b;color:white;padding:24px;border-radius:18px;display:grid;gap:12px;max-width:90vw}
