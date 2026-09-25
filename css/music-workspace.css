@@ -238,3 +238,39 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 #musicDJQueue .musicListRow>button[aria-label^="Monter"],#musicDJQueue .musicListRow>button[aria-label^="Descendre"]{width:38px!important;padding:0!important}
 .musicDJSettings details{border:1px solid #29313b;border-radius:16px;padding:13px;background:#0c1117}.musicDJSettings summary{font-weight:800;cursor:pointer}
 .musicDJSettingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.musicDJSettingsGrid button{font-size:11px!important}
+
+
+/* DJ V1.1 — strict phone-width containment */
+#musicScreen,#musicScreen *{box-sizing:border-box}
+#musicScreen{max-width:100%;overflow-x:hidden}
+#musicScreen .musicDJHero,#musicScreen .musicDJNow,#musicScreen .musicDJQuick,#musicScreen .musicDJPanel,#musicScreen .musicDJSettings{width:100%;max-width:100%;min-width:0}
+#musicScreen .musicDJMode{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);width:100%;min-width:0}
+#musicScreen .musicDJMode button{width:100%;min-width:0;padding-left:8px!important;padding-right:8px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#musicScreen #musicDJNowTrack{width:100%;min-width:0}
+#musicScreen #musicDJNowTrack span{min-width:0;max-width:100%}
+#musicScreen #musicDJNowTrack strong,#musicScreen #musicDJNowTrack em{max-width:100%}
+#musicScreen #musicDJMoods{width:100%;max-width:100%;padding-bottom:3px}
+#musicScreen .musicDJPanelHead{display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;min-width:0}
+#musicScreen .musicDJPanelHead>div{min-width:0}
+#musicScreen .musicDJPanelHead>button{max-width:145px;min-width:0;padding:8px 10px!important;white-space:normal;line-height:1.1}
+#musicScreen #musicDJImport,#musicScreen #musicDJQueue{width:100%;max-width:100%;min-width:0}
+#musicScreen #musicDJQueue .musicListRow{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden}
+#musicScreen #musicDJQueue .musicTrackOpen{overflow:hidden!important}
+#musicScreen #musicDJQueue .musicTrackOpen span{min-width:0!important;overflow:hidden!important}
+#musicScreen #musicDJQueue .musicTrackOpen strong,#musicScreen #musicDJQueue .musicTrackOpen small{display:block!important;max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+@media(max-width:430px){
+ #musicScreen .musicDJHero{padding:16px}
+ #musicScreen .musicDJMode{gap:6px}
+ #musicScreen .musicDJMode button{font-size:14px!important}
+ #musicScreen .musicDJNow{padding:12px}
+ #musicScreen #musicDJNowTrack img{width:58px;height:58px;flex:0 0 58px}
+ #musicScreen #musicDJTransport{gap:8px}
+ #musicScreen #musicDJTransport button{width:44px;height:44px}
+ #musicScreen #musicDJTransport .musicDJPlay{width:54px;height:54px}
+ #musicScreen .musicDJPanel{padding:12px}
+ #musicScreen .musicDJPanelHead>button{max-width:126px;font-size:11px!important}
+ #musicScreen #musicDJQueue .musicListRow{grid-template-columns:minmax(0,1fr) 36px 36px!important}
+ #musicScreen #musicDJQueue .musicListRow>button{width:36px!important;max-width:36px!important;padding:0!important;overflow:hidden!important;font-size:0!important}
+ #musicScreen #musicDJQueue .musicListRow>button::first-letter{font-size:15px}
+ #musicScreen .musicDJSettingsGrid{grid-template-columns:1fr}
+}
