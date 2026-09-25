@@ -163,3 +163,43 @@ body.musicModeOpen #musicHome{
 body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
   padding-bottom:calc(212px + env(safe-area-inset-bottom))!important;
 }
+
+
+/* Music V27 — final home shelves */
+#musicHome #musicRecent{
+  display:flex!important;gap:8px!important;overflow-x:auto!important;overflow-y:hidden!important;
+  scroll-snap-type:x proximity;scrollbar-width:none;padding:2px 0 4px;
+}
+#musicHome #musicRecent::-webkit-scrollbar{display:none}
+#musicHome #musicRecent .musicListRow{
+  flex:0 0 18.5%!important;min-width:0!important;display:block!important;padding:0!important;
+  border:0!important;background:transparent!important;scroll-snap-align:start;position:relative;
+}
+#musicHome #musicRecent .musicTrackOpen{
+  display:block!important;width:100%!important;min-width:0!important;padding:0!important;
+  background:transparent!important;border:0!important;text-align:left!important;
+}
+#musicHome #musicRecent .musicTrackOpen img{
+  display:block!important;width:100%!important;height:auto!important;aspect-ratio:1/1!important;
+  object-fit:cover!important;border-radius:10px!important;border:1px solid #282e38!important;
+}
+#musicHome #musicRecent .musicTrackOpen span{display:block!important;padding:5px 1px 0!important;min-width:0}
+#musicHome #musicRecent .musicTrackOpen strong,
+#musicHome #musicRecent .musicTrackOpen small{
+  display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+#musicHome #musicRecent .musicTrackOpen strong{font-size:9px!important;line-height:1.2}
+#musicHome #musicRecent .musicTrackOpen small{font-size:8px!important;line-height:1.2;margin-top:2px;color:#929aa6!important}
+#musicHome #musicRecent .musicListRow>button:not(.musicTrackOpen){
+  position:absolute!important;right:4px!important;top:4px!important;width:25px!important;height:25px!important;
+  min-height:25px!important;padding:0!important;border-radius:50%!important;background:rgba(7,10,15,.82)!important;
+  border:1px solid rgba(255,255,255,.2)!important;font-size:14px!important;
+}
+#musicHome .musicSectionTitle>button,
+#musicHome .musicShelfHead>button,
+#musicHome .musicForYouHead>button{
+  width:auto!important;min-height:28px!important;padding:4px 9px!important;border-radius:999px!important;
+  background:#11161d!important;border:1px solid #343b46!important;color:#dfe4eb!important;font-size:10px!important;
+}
+#musicHome #musicAmbiancesSection{margin-top:14px}
+#musicHome #musicTrending{margin-top:2px}
