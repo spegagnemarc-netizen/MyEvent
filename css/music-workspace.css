@@ -117,23 +117,23 @@
 
 /* The artwork is an actual image element, independent of background-image cascade. */
 #musicHome #musicPlaylistsSection{width:100%;min-width:0;box-sizing:border-box}
-#musicHome #musicPlaylistsSection>.musicCards{
+#musicHome > #musicPlaylistsSection.musicSection>.musicCards{
   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:8px!important;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
   overflow:hidden!important;
 }
-#musicHome #musicPlaylistsSection .musicTile{
+#musicHome > #musicPlaylistsSection.musicSection .musicTile{
   position:relative;box-sizing:border-box;min-width:0!important;max-width:100%;width:100%!important;
   height:140px;min-height:140px!important;overflow:hidden!important;background-image:none!important;
 }
-#musicHome #musicPlaylistsSection .musicTile .musicTileArtwork{
+#musicHome > #musicPlaylistsSection.musicSection .musicTile .musicTileArtwork{
   position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;object-fit:cover;
   object-position:center;pointer-events:none;
 }
-#musicHome #musicPlaylistsSection .musicTile::before{z-index:1}
-#musicHome #musicPlaylistsSection .musicTile span,
-#musicHome #musicPlaylistsSection .musicTile b,
-#musicHome #musicPlaylistsSection .musicTile small{position:relative;z-index:2;min-width:0;overflow-wrap:anywhere}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile::before{z-index:1}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile span,
+#musicHome > #musicPlaylistsSection.musicSection .musicTile b,
+#musicHome > #musicPlaylistsSection.musicSection .musicTile small{position:relative;z-index:2;min-width:0;overflow-wrap:anywhere}
 
 /* All six Ambiances use local, full-bleed photo artwork. */
 #musicHome #musicAmbiancesSection .musicMoodCards button{
