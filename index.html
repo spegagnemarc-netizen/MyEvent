@@ -42,7 +42,7 @@
 
 <script src="js/camera-capture2-final.js?v=camera-ai-lenses-1"></script>
 
-  <link rel="stylesheet" href="css/inline-extracted.css?v=music-v17">
+  <link rel="stylesheet" href="css/inline-extracted.css?v=music-v18">
   <link rel="stylesheet" href="css/camera.css?v=settings-overlay-fix-2">
 <link rel="stylesheet" href="css/music-workspace.css?v=1">
 </head>
@@ -364,7 +364,7 @@
   <div class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" enterkeyhint="search" placeholder="Titre, artiste, playlist…"><button type="button" id="musicSearchBtn" aria-label="Rechercher">Rechercher</button></div>
   <div class="musicTabs"><button class="active" data-music-filter="for-you">Pour vous</button><button data-music-filter="trends">Tendances</button><button data-music-filter="moods">Ambiances</button><button data-music-filter="genres">Genres</button></div>
   <div class="musicSection"><div class="musicSectionTitle"><h3>Tendances</h3><button type="button">Voir tout ›</button></div><div class="musicCards" id="musicTrending"><div class="musicEmpty">Le catalogue sera alimenté par les fournisseurs Musique.</div></div></div>
-  <div class="musicSection"><div class="musicSectionTitle"><h3>Playlists MyEvent</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards"><button class="musicTile" data-music-action="event"><span>🎉</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj"><span>🎧</span><b>Mode DJ</b><small>Manuel · Auto</small></button><button class="musicTile" data-music-action="favorites"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
+  <div class="musicSection"><div class="musicSectionTitle"><h3>Playlists MyEvent</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards"><button class="musicTile" data-music-action="event" style="background-image:url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=90')"><span>👥</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj" style="background-image:url('https://images.unsplash.com/photo-1571266028243-d220c9c3b2d2?auto=format&fit=crop&w=900&q=90')"><span>🎧</span><b>Mode DJ</b><small>File · Manuel</small></button><button class="musicTile" data-music-action="favorites" style="background-image:url('https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=90')"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
   <div class="musicSection"><div class="musicSectionTitle"><h3>Ambiances</h3></div><div class="musicChips musicMoodCards"><button data-mood="chill"><span class="musicMoodArt musicMoodChill" aria-hidden="true"></span><b>Chill</b></button><button data-mood="soiree"><span class="musicMoodArt musicMoodParty" aria-hidden="true"></span><b>Soirée</b></button><button data-mood="80s"><span class="musicMoodArt musicMood80s" aria-hidden="true"></span><b>Années 80</b></button><button data-mood="rap"><span class="musicMoodArt musicMoodRap" aria-hidden="true"></span><b>Rap</b></button><button data-mood="electro"><span class="musicMoodArt musicMoodElectro" aria-hidden="true"></span><b>Électro</b></button><button data-mood="variete"><span class="musicMoodArt musicMoodVariete" aria-hidden="true"></span><b>Variété</b></button></div></div>
   <div class="musicProvider"><b>MyEvent Music</b><span id="musicProviderStatus">Fournisseur : non connecté</span></div>
 </section>
@@ -372,8 +372,9 @@
 <div class="socialBottomNav" id="socialBottomNav">
     <button type="button" class="active" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
     <button type="button" data-bottom-tab="discover"><span class="bottomIcon">⌕</span><span class="bottomLabel">Explorer</span></button>
+    <button type="button" class="createBottom" id="socialBottomCreate" title="Créer" aria-label="Ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
     <button type="button" data-bottom-tab="music"><span class="bottomIcon">♫</span><span class="bottomLabel">Musique</span></button>
-    <button type="button" data-bottom-tab="events"><span class="bottomIcon">▣</span><span class="bottomLabel">Événements</span></button>
+    <button type="button" class="musicOnlyNav" data-bottom-tab="events"><span class="bottomIcon">▣</span><span class="bottomLabel">Événements</span></button>
     <button type="button" data-bottom-tab="profile"><span class="bottomIcon">♙</span><span class="bottomLabel">Profil</span></button>
   </div>
 </section>
@@ -1185,7 +1186,7 @@
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
-<script src="js/music-workspace.js?v=1"></script>
+<script src="js/music-workspace.js?v=music-v18"></script>
 <script src="js/theme-runtime.js?v=1"></script>
 
 
