@@ -89,7 +89,7 @@
     const locked=s.draft.filter(t=>t.locked).map(t=>({title:t.title,artist:t.artist}));
     notice(mode==='generate'?'Music IA prépare la playlist…':mode==='add'?'Music IA cherche des morceaux à ajouter…':'Music IA refait les morceaux non verrouillés…');
     try{
-      const ai=await fetch('/api/generate-music-playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,request,locked_tracks:locked,current_tracks:original}),signal:controller.signal});
+      const ai=await fetch('/api/search-music',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,request,locked_tracks:locked,current_tracks:original}),signal:controller.signal});
       const plan=await ai.json();if(!ai.ok)throw Error(plan.error||'Music IA indisponible');
       if(!current())return;
       const target=Math.min(40,Math.max(0,Number(plan.count)||0)),found=[],seen=new Set(original.map(S.key));
