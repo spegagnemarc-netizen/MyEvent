@@ -268,3 +268,9 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace .marketBottomCreate{width:66px;height:66px;align-self:center;justify-self:center;border:3px solid var(--orange);border-radius:50%;overflow:hidden;background:#111;transform:translateY(-10px);box-shadow:0 0 0 2px #080c10}
 #myeventMarketplace .marketBottomCreate img{display:block;width:100%;height:100%;object-fit:cover}
 @media(min-width:701px){#myeventMarketplace .marketBottomNav{max-width:760px;left:50%;right:auto;width:100%;transform:translateX(-50%);border:1px solid #202a31;border-bottom:0;border-radius:18px 18px 0 0}}
+
+/* Bottom nav matches Music: Marketplace is the active center tab */
+#myeventMarketplace .marketBottomNav{grid-template-columns:repeat(5,minmax(0,1fr));align-items:center}
+#myeventMarketplace .marketBottomMarketplace{height:58px!important;transform:none!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#myeventMarketplace .marketBottomMarketplace.active{color:var(--orange)!important}
+#myeventMarketplace .marketBottomMarketplace span{font-size:22px;line-height:1}
