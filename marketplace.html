@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#faf8f5">
+  <meta name="theme-color" content="#071016">
   <title>Marketplace · MyEvent</title>
   <link rel="stylesheet" href="css/marketplace.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,7 +13,7 @@
 <div id="myeventMarketplace">
   <header class="marketHeader">
     <a class="brand" href="index.html" aria-label="Retour à MyEvent">My<span>Event</span><small>MARKETPLACE</small></a>
-    <nav aria-label="Navigation marketplace"><a href="index.html" class="backHome">← MyEvent</a><button class="quiet" id="myListings">Mes annonces</button><button class="quiet" id="inboxButton">Messages</button><button class="quiet" id="favoritesButton" aria-label="Mes favoris" aria-pressed="false">♡ <span>Favoris</span><b id="favoriteCount">0</b></button><button class="primary" id="createListing">＋ Déposer une annonce</button></nav>
+    <nav aria-label="Navigation marketplace"><button class="themeToggle" id="marketThemeToggle" type="button" aria-label="Afficher le Marketplace en clair" title="Afficher en clair">☀️</button><a href="index.html" class="backHome">← MyEvent</a><button class="quiet" id="myListings">Mes annonces</button><button class="quiet" id="inboxButton">Messages</button><button class="quiet" id="favoritesButton" aria-label="Mes favoris" aria-pressed="false">♡ <span>Favoris</span><b id="favoriteCount">0</b></button><button class="primary" id="createListing">＋ Déposer une annonce</button></nav>
   </header>
   <main>
     <div class="demoBanner" id="connectionStatus" role="status">Connexion à votre marketplace…</div>
