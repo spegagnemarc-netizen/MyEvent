@@ -3279,6 +3279,22 @@ async function refreshNotifications(showSummary=false){
     }
 
     items.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
+    // Keep the social-home event shortcuts synchronized with the real unread state.
+    const homeMsgBadge=document.getElementById('socialEventMessagesBadge');
+    if(homeMsgBadge){
+      homeMsgBadge.textContent=unreadMessages>99?'99+':String(unreadMessages);
+      homeMsgBadge.classList.toggle('hidden',unreadMessages===0);
+    }
+    const homeNotifBadge=document.getElementById('socialEventNotificationsBadge');
+    if(homeNotifBadge){
+      const notificationCount=items.reduce((total,item)=>{
+        if(item.tab==='discussion') return total;
+        const match=String(item.title||'').match(/^(\d+)/);
+        return total+(match?Number(match[1]):1);
+      },0);
+      homeNotifBadge.textContent=notificationCount>99?'99+':String(notificationCount);
+      homeNotifBadge.classList.toggle('hidden',notificationCount===0);
+    }
     renderNotificationList(items);
     if(showSummary) await generateMissedAiSummary(context);
   }catch(e){console.warn('Notifications:',e.message||e);renderNotificationList([]);}
