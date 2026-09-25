@@ -494,3 +494,17 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
  #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{height:128px!important;min-height:128px!important}
  #musicScreen #musicDJQueue .musicDJQueueCard>button[aria-label^="Actions"]{width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important}
 }
+
+
+/* DJ V1.7 — place the generic track menu in the right control rail */
+#musicScreen #musicDJQueue .musicDJQueueCard>button[aria-label^="Actions pour"]{
+  grid-column:3!important;grid-row:3!important;
+  justify-self:center!important;align-self:center!important;
+  width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;font-size:18px!important;
+}
+@media(max-width:390px){
+ #musicScreen #musicDJQueue .musicDJQueueCard>button[aria-label^="Actions pour"]{
+   width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important;
+ }
+}
