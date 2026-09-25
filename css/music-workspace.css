@@ -375,3 +375,92 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
  #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:minmax(0,1fr) 40px 40px!important;grid-template-rows:146px 40px!important}
  #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{min-height:195px!important}
 }
+
+
+/* Music mobile cards V1.5 — scoped to Music IA and Mode DJ only */
+#musicScreen #musicDraftActions{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;overflow:visible!important;width:100%!important;
+}
+#musicScreen #musicDraftActions button{
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  min-height:40px!important;padding:7px 8px!important;font-size:11px!important;
+  line-height:1.15!important;white-space:normal!important;
+}
+#musicScreen #musicDraftTracks{
+  display:grid!important;gap:9px!important;margin-top:8px!important;
+}
+#musicScreen #musicDraftTracks .musicListRow{
+  display:grid!important;
+  grid-template-columns:88px minmax(0,1fr) 34px 34px!important;
+  grid-template-rows:44px 34px!important;
+  gap:6px!important;align-items:center!important;
+  min-height:100px!important;padding:6px!important;overflow:hidden!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen{
+  grid-column:1 / 3!important;grid-row:1 / 3!important;
+  display:grid!important;grid-template-columns:88px minmax(0,1fr)!important;
+  gap:9px!important;width:100%!important;height:88px!important;min-width:0!important;
+  padding:0!important;overflow:hidden!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen img{
+  width:88px!important;height:88px!important;min-width:88px!important;
+  border-radius:11px!important;object-fit:cover!important;object-position:center!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen span{min-width:0!important;padding-right:4px!important}
+#musicScreen #musicDraftTracks .musicTrackOpen strong{
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  overflow:hidden!important;font-size:12px!important;line-height:1.2!important;overflow-wrap:normal!important;
+}
+#musicScreen #musicDraftTracks .musicTrackOpen small{
+  display:block!important;margin-top:4px!important;white-space:nowrap!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;font-size:10px!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button:not(.musicTrackOpen){
+  width:34px!important;max-width:34px!important;height:34px!important;min-height:34px!important;
+  padding:0!important;border-radius:10px!important;overflow:hidden!important;
+  white-space:nowrap!important;font-size:0!important;
+}
+#musicScreen #musicDraftTracks .musicListRow>button:not(.musicTrackOpen)::first-letter{font-size:14px!important}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Actions"]{grid-column:3!important;grid-row:1!important;font-size:18px!important}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Monter"]{grid-column:4!important;grid-row:1!important;font-size:15px!important}
+#musicScreen #musicDraftTracks .musicListRow>button[aria-label^="Descendre"]{grid-column:4!important;grid-row:2!important;font-size:15px!important}
+
+/* Keep the DJ artwork broad: controls occupy a compact fixed rail, never the cover column. */
+#musicScreen #musicDJQueue .musicDJQueueCard{
+  grid-template-columns:minmax(0,1fr) 40px 40px!important;
+  grid-template-rows:92px 40px!important;
+  min-height:150px!important;padding:8px!important;gap:6px!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{
+  grid-column:1!important;grid-row:1 / 3!important;
+  width:100%!important;height:138px!important;min-height:138px!important;
+  border-radius:13px!important;overflow:hidden!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  min-width:100%!important;max-width:none!important;object-fit:cover!important;object-position:center!important;
+  border-radius:13px!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen::after{inset:48% 0 0!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen span{left:10px!important;right:10px!important;bottom:8px!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen strong{
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;
+  overflow:hidden!important;font-size:12px!important;line-height:1.15!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen small{
+  display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard>button{
+  width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;
+}
+@media(max-width:390px){
+ #musicScreen #musicDraftTracks .musicListRow{grid-template-columns:80px minmax(0,1fr) 32px 32px!important;grid-template-rows:42px 32px!important}
+ #musicScreen #musicDraftTracks .musicTrackOpen{grid-template-columns:80px minmax(0,1fr)!important;height:80px!important}
+ #musicScreen #musicDraftTracks .musicTrackOpen img{width:80px!important;height:80px!important;min-width:80px!important}
+ #musicScreen #musicDraftTracks .musicListRow>button:not(.musicTrackOpen){width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important}
+ #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:minmax(0,1fr) 38px 38px!important;grid-template-rows:88px 38px!important}
+ #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{height:132px!important;min-height:132px!important}
+ #musicScreen #musicDJQueue .musicDJQueueCard>button{width:38px!important;height:38px!important;min-height:38px!important}
+}
