@@ -464,3 +464,33 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
  #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{height:132px!important;min-height:132px!important}
  #musicScreen #musicDJQueue .musicDJQueueCard>button{width:38px!important;height:38px!important;min-height:38px!important}
 }
+
+
+/* DJ V1.6 — compact control rail matching the validated iPhone sketch */
+#musicScreen #musicDJQueue .musicDJQueueCard{
+  grid-template-columns:minmax(0,1fr) 40px 40px!important;
+  grid-template-rows:40px 40px 40px!important;
+  min-height:150px!important;height:150px!important;
+  padding:8px!important;gap:6px!important;align-items:center!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{
+  grid-column:1!important;grid-row:1 / 4!important;
+  height:134px!important;min-height:134px!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJApprove{grid-column:2!important;grid-row:1!important;align-self:center!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJReject{grid-column:3!important;grid-row:1!important;align-self:center!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Monter"]{grid-column:2!important;grid-row:2!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Descendre"]{grid-column:3!important;grid-row:2!important}
+#musicScreen #musicDJQueue .musicDJQueueCard>button[aria-label^="Actions"]{
+  grid-column:3!important;grid-row:3!important;justify-self:center!important;
+  width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;
+  padding:0!important;font-size:18px!important;
+}
+@media(max-width:390px){
+ #musicScreen #musicDJQueue .musicDJQueueCard{
+   grid-template-columns:minmax(0,1fr) 38px 38px!important;
+   grid-template-rows:38px 38px 38px!important;height:144px!important;min-height:144px!important;
+ }
+ #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{height:128px!important;min-height:128px!important}
+ #musicScreen #musicDJQueue .musicDJQueueCard>button[aria-label^="Actions"]{width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important}
+}
