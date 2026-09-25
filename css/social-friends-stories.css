@@ -12,3 +12,21 @@
 .storyCaption{bottom:7%;width:100%;text-align:center;padding:0 35px;box-sizing:border-box}
 .storyPrevious,.storyNext{top:30%;height:45%;width:25%;background:transparent;border:0;color:#fff;font-size:32px}.storyPrevious{left:0}.storyNext{right:0}
 .storyDelete{bottom:20px;right:20px}.storyCreateSheet{position:fixed;inset:0;z-index:100001;background:#000b;display:grid;place-items:center}.storyCreateSheet>div{background:#18212b;color:white;padding:24px;border-radius:18px;display:grid;gap:12px;max-width:90vw}
+/* Six compact shortcuts remain visible; additional friend Stories scroll horizontally. */
+#socialHome .socialStories{display:flex!important;overflow-x:auto!important;overflow-y:hidden!important;align-items:flex-start!important}
+#socialHome .socialStories .socialStory,
+#socialHome .socialStories .socialStory.me{
+  flex:0 0 calc((100% - 35px)/6)!important;
+  width:calc((100% - 35px)/6)!important;
+  min-width:0!important;
+  max-width:68px!important;
+  box-sizing:border-box!important;
+}
+#socialHome .socialStories .socialStoryBubble,
+#socialHome .socialStories .socialStory.me .socialStoryBubble{
+  width:100%!important;
+  max-width:68px!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  box-sizing:border-box!important;
+}
