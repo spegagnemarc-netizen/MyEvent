@@ -4,3 +4,83 @@
 #socialHome .myeventMarketplaceEntry strong{display:block;font-size:15px}
 #socialHome .myeventMarketplaceEntry small{display:block;margin-top:4px;font-size:11px;line-height:1.4;color:#d4e6da}
 #socialHome .myeventMarketplaceEntry:focus-visible{outline:3px solid #efab73;outline-offset:3px}
+
+
+/* Accueil — raccourcis événements compacts + Marketplace sur la même ligne */
+#socialHome .myeventMarketplaceEntry{
+  margin:0!important;
+  min-height:52px!important;
+  padding:8px 10px!important;
+  gap:7px!important;
+  border-radius:15px!important;
+}
+#socialHome .myeventMarketplaceEntry>span:first-child{font-size:20px!important}
+#socialHome .myeventMarketplaceEntry strong{font-size:12px!important}
+#socialHome .myeventMarketplaceEntry small{font-size:8px!important;margin-top:2px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#socialHome .socialMyEventsBox{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:5px 0 10px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.9fr) minmax(150px,.9fr)!important;
+  gap:8px!important;
+  align-items:stretch!important;
+}
+#socialHome .socialMyEventsActions{
+  grid-column:1!important;
+  grid-row:1!important;
+  gap:4px!important;
+}
+#socialHome .socialMyEventsActions button{
+  height:52px!important;
+  border:2px solid #1687ff!important;
+  border-radius:15px!important;
+  background:linear-gradient(180deg,rgba(22,135,255,.15),rgba(22,135,255,.055))!important;
+  color:#fff!important;
+  box-shadow:0 0 14px rgba(22,135,255,.10)!important;
+  font-size:16px!important;
+  padding:3px!important;
+}
+#socialHome .socialMyEventsActions button span{
+  color:#dcecff!important;
+  font-size:7.5px!important;
+  font-weight:800!important;
+}
+#socialHome .socialMyEventsTitle{display:none!important}
+#socialHome .socialMyEventsBox::after{
+  content:'';
+  grid-column:2;
+  grid-row:1;
+  display:block;
+}
+#socialHome .socialMyEventsBox + .socialStories{margin-top:0!important}
+
+/* Déplace visuellement le Marketplace dans la ligne des 4 raccourcis */
+#socialHome .myeventMarketplaceEntry{
+  position:absolute!important;
+  z-index:1;
+}
+#socialHome{position:relative!important}
+#socialHome .socialMyEventsBox{position:relative!important}
+#socialHome .socialMyEventsBox::before{
+  content:'🛍️  Marketplace\A Achat et location   ›';
+  white-space:pre;
+  grid-column:2;
+  grid-row:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:left;
+  padding:7px 9px;
+  border:1px solid #466956;
+  border-radius:15px;
+  background:#19362b;
+  color:#fff;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.45;
+  pointer-events:none;
+}
