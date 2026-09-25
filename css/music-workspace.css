@@ -97,43 +97,44 @@
 #musicTrending .musicTrendMeta strong{font-size:10px;color:#f7f8fa}
 #musicTrending .musicTrendMeta small{font-size:8px;color:#929aa6;margin-top:2px}
 
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{
-  position:relative;isolation:isolate;overflow:hidden;min-width:0!important;width:100%!important;
-  min-height:140px!important;display:flex!important;flex-direction:column!important;justify-content:flex-end!important;
-  padding:9px!important;border:1px solid rgba(255,255,255,.18)!important;
-  background-color:#10151d!important;background-size:cover!important;background-position:center!important;
-  background-repeat:no-repeat!important;box-shadow:none!important;color:#fff!important;
-}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:linear-gradient(180deg,rgba(5,8,14,.03) 18%,rgba(5,8,14,.38) 51%,rgba(5,8,14,.94) 100%);
-}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="event"]{background-image:url(../assets/music-playlist-event.webp)!important}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="dj"]{background-image:url(../assets/music-playlist-dj.webp)!important}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile[data-music-action="favorites"]{background-image:url(../assets/music-playlist-favorites.webp)!important}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile span{color:#fff!important;font-size:17px!important;margin:0 0 auto!important;text-shadow:0 2px 7px #000}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile b{font-size:12px!important;line-height:1.15;text-shadow:0 2px 7px #000}
-#musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{font-size:9px!important;color:#e4e6ed!important;text-shadow:0 2px 7px #000}
-
-/* The artwork is an actual image element, independent of background-image cascade. */
+/* Three compact, shared playlist illustrations with labels over the image. */
 #musicHome #musicPlaylistsSection{width:100%;min-width:0;box-sizing:border-box}
-#musicHome > #musicPlaylistsSection.musicSection>.musicCards{
+#musicHome > #musicPlaylistsSection.musicSection > .musicCards{
   display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:8px!important;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
-  overflow:hidden!important;
+  gap:8px!important;width:100%;min-width:0;overflow:hidden!important;
 }
 #musicHome > #musicPlaylistsSection.musicSection .musicTile{
-  position:relative;box-sizing:border-box;min-width:0!important;max-width:100%;width:100%!important;
-  height:140px;min-height:140px!important;overflow:hidden!important;background-image:none!important;
+  position:relative!important;box-sizing:border-box!important;min-width:0!important;width:100%!important;
+  height:88px!important;min-height:88px!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;justify-content:flex-end!important;
+  padding:7px!important;text-align:left;border:1px solid rgba(255,255,255,.23)!important;
+  border-radius:12px!important;background-color:#10151d!important;
+  background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;
+  box-shadow:none!important;color:#fff!important;
 }
-#musicHome > #musicPlaylistsSection.musicSection .musicTile .musicTileArtwork{
-  position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;object-fit:cover;
-  object-position:center;pointer-events:none;
+#musicHome > #musicPlaylistsSection.musicSection .musicTile[data-music-action="event"]{
+  background-image:linear-gradient(180deg,rgba(4,7,12,.04) 12%,rgba(4,7,12,.89) 100%),url(../assets/music-playlist-event.webp)!important;
 }
-#musicHome > #musicPlaylistsSection.musicSection .musicTile::before{z-index:1}
-#musicHome > #musicPlaylistsSection.musicSection .musicTile span,
+#musicHome > #musicPlaylistsSection.musicSection .musicTile[data-music-action="dj"]{
+  background-image:linear-gradient(180deg,rgba(4,7,12,.04) 12%,rgba(4,7,12,.89) 100%),url(../assets/music-playlist-dj.webp)!important;
+}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile[data-music-action="favorites"]{
+  background-image:linear-gradient(180deg,rgba(4,7,12,.04) 12%,rgba(4,7,12,.89) 100%),url(../assets/music-playlist-favorites.webp)!important;
+}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile::before{content:none!important}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile span{
+  position:absolute!important;top:5px;left:7px;z-index:2;
+  display:block!important;margin:0!important;color:#fff!important;font-size:15px!important;
+  line-height:1;text-shadow:0 2px 7px #000;
+}
 #musicHome > #musicPlaylistsSection.musicSection .musicTile b,
-#musicHome > #musicPlaylistsSection.musicSection .musicTile small{position:relative;z-index:2;min-width:0;overflow-wrap:anywhere}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile small{
+  position:relative!important;z-index:2;display:block!important;width:100%;
+  margin:0!important;overflow:visible!important;white-space:normal!important;
+  overflow-wrap:normal;color:#fff!important;text-shadow:0 2px 7px #000;
+}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile b{font-size:12px!important;line-height:1.08!important}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile small{font-size:9px!important;line-height:1.1!important;color:#e4e6ed!important;margin-top:3px!important}
 
 /* All six Ambiances use local, full-bleed photo artwork. */
 #musicHome #musicAmbiancesSection .musicMoodCards button{

@@ -8,6 +8,13 @@
   let screen='home',history=[],results=[],eventData=null,revision=0,nextPageToken=null,activeQuery='';
   const titles={library:'Bibliothèque',event:'Playlist d’événement',dj:'Mode DJ',discover:'Découvrir',ai:'Music IA',player:'Lecteur'};
   const notice=t=>{const el=$('musicScreenStatus')||$('musicProviderStatus');if(el)el.textContent=t;};
+  // Shared starter selection: the home carousel remains usable when search is unavailable.
+  const defaultTrends=[
+    ['7CGKeID7nRc','PARISIENNE','GIMS & La Mano 1.9'],
+    ['XyYkPM2THAg','Adriano','Niska'],
+    ['j5iOQ9qgThg','Tour du monde','Soolking ft. L2B'],
+    ['AzaTyxMduH4',"Pour que tu m’aimes encore",'Céline Dion']
+  ].map(([id,title,artist])=>({provider:'youtube',provider_track_id:id,title,artist,thumbnail_url:'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'}));
   const button=(label,fn,parent=page)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);parent.appendChild(b);return b;};
   function back(){go(history.pop()||'home',false);}
   function shell(name){page.innerHTML='<header class="musicScreenHead"><button data-back aria-label="Retour">‹ Retour</button><h2>'+titles[name]+'</h2></header><p id="musicScreenStatus" role="status" aria-live="polite"></p><div id="musicScreenBody"></div>';page.querySelector('[data-back]').onclick=back;return $('musicScreenBody');}
@@ -101,18 +108,22 @@
     if(moodSection&&playlistSection)home.insertBefore(moodSection,playlistSection);
     loadHomeTrends();
   }
+  function showHomeTrends(box,tracks){
+    box.replaceChildren();
+    tracks.forEach((track,index)=>{const card=document.createElement('article');card.className='musicTrendCard';
+      card.innerHTML='<button class="musicTrendOpen" aria-label="Lire '+meta(track.title)+'"><span class="musicTrendRank">'+(index+1)+'</span><img alt="" loading="lazy" src="'+esc(track.thumbnail_url||'')+'"><span class="musicTrendPlay">▶</span></button><div class="musicTrendMeta"><strong>'+meta(track.title)+'</strong><small>'+meta(track.artist)+'</small></div>';
+      card.querySelector('button').onclick=()=>{M.openPlayer(track,tracks);P.play(track,tracks);};box.appendChild(card);
+    });
+  }
   async function loadHomeTrends(){
     const box=$('musicTrending');if(!box)return;const token=revision;
-    box.innerHTML='<div class="musicEmpty">Chargement des tendances…</div>';
+    showHomeTrends(box,defaultTrends);
     try{
       const r=await fetch('/api/search-music?q='+encodeURIComponent('musique tendances France'),{cache:'no-store'}),data=await r.json();
       if(!r.ok)throw Error(data.error||'Tendances indisponibles');if(token!==revision||screen!=='home')return;
-      const tracks=(data.items||[]).slice(0,8);box.replaceChildren();
-      tracks.forEach((track,index)=>{const card=document.createElement('article');card.className='musicTrendCard';
-        card.innerHTML='<button class="musicTrendOpen" aria-label="Lire '+meta(track.title)+'"><span class="musicTrendRank">'+(index+1)+'</span><img alt="" loading="lazy" src="'+esc(track.thumbnail_url||'')+'"><span class="musicTrendPlay">▶</span></button><div class="musicTrendMeta"><strong>'+meta(track.title)+'</strong><small>'+meta(track.artist)+'</small></div>';
-        card.querySelector('button').onclick=()=>{M.openPlayer(track,tracks);P.play(track,tracks);};box.appendChild(card);
-      });
-    }catch(e){if(token===revision&&screen==='home')box.innerHTML='<div class="musicEmpty">Tendances momentanément indisponibles.</div>';}
+      const tracks=(data.items||[]).filter(track=>track.provider_track_id).slice(0,8);
+      if(tracks.length)showHomeTrends(box,tracks);
+    }catch(e){/* Keep the shared starter selection when the provider cannot be reached. */}
   }
   root.addEventListener('click',e=>{const b=e.target.closest('[data-music-action],#musicFavoritesBtn,#musicEventPlaylistsBtn,[data-music-filter],.musicChips button');if(!b)return;
     const action=b.dataset.musicAction,filter=b.dataset.musicFilter;
