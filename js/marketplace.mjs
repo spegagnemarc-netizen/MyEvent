@@ -4,7 +4,7 @@ import {projectUrl,publishableKey} from './marketplace-config.mjs';
 const root=document.getElementById('myeventMarketplace'),$=id=>root.querySelector('#'+id);
 let client,store,user=null,items=[],favorites=new Set(),photos=new Map(),editing=null,thread=null;
 let own=false,onlyFavorites=false,loading=false,generation=0,toastTimer=0,messageTimer=0,formBusy=false,threadRevision=0;
-const filters={mode:'all',category:'all',query:'',city:'',sort:'featured'};
+const filters={mode:'all',category:'all',query:'',city:'',sort:'featured',center:null,radiusKm:25};
 const THEME_FALLBACK_KEY='myevent-marketplace-theme';
 const themeKey=()=>user?.id?'myevent-marketplace-theme:'+user.id:THEME_FALLBACK_KEY;
 function savedTheme(){try{return localStorage.getItem(themeKey())||localStorage.getItem(THEME_FALLBACK_KEY)||'dark';}catch{return 'dark';}}
@@ -60,9 +60,7 @@ async function load(){
     const paths=[...new Set(rows.flatMap(item=>item.image_paths))];const urls=await store.imageUrls(paths);
     if(revision!==generation)return;
     items=rows;favorites=new Set(saved.map(f=>f.listing_id));photos=new Map(urls.filter(p=>p.signedUrl).map(p=>[p.path,p.signedUrl]));
-    const currentCity=filters.city;$('marketCity').replaceChildren(new Option('Toutes les villes',''));
-    [...new Set(rows.map(i=>i.city))].sort((a,b)=>a.localeCompare(b,'fr')).forEach(city=>$('marketCity').append(new Option(city,city)));
-    if([...$('marketCity').options].some(o=>o.value===currentCity))$('marketCity').value=currentCity;else filters.city='';
+    // Sector is searched as free text and converted to coordinates.
     status('Entre membres MyEvent · Vente et location · Contact direct, sans paiement en ligne');render();
   }catch(error){if(revision===generation){status(errorMessage(error));empty('Les annonces ne sont pas disponibles');}}
   finally{if(revision===generation)loading=false;}
@@ -123,7 +121,7 @@ function openDetail(item){
 }
 function openForm(item=null){
   if(!requireUser())return;editing=item;$('draftForm').reset();$('draftStatus').textContent='';$('draftTitle').textContent=item?'Modifier mon annonce':'Déposer une annonce';
-  if(item){for(const name of ['title','description','mode','category','city','condition'])$('draftForm').elements[name].value=item[name];$('draftForm').elements.price.value=item.price_cents/100;}
+  if(item){for(const name of ['title','description','mode','category','city','condition'])$('draftForm').elements[name].value=item[name];$('draftForm').elements.latitude.value=item.latitude??'';$('draftForm').elements.longitude.value=item.longitude??'';$('draftForm').elements.price.value=item.price_cents/100;}
   $('draftForm').elements.photos.required=!item?.image_paths?.length;
   $('draftForm').querySelector('button[type=submit]').textContent=item?'Enregistrer et publier':'Publier mon annonce';updateUnit();showDialog('draftDialog');
 }
@@ -143,7 +141,9 @@ $('draftForm').addEventListener('submit',async e=>{
   e.preventDefault();if(formBusy||!requireUser())return;const form=e.currentTarget,submit=form.querySelector('button[type=submit]');
   let newPaths=[],publicationAttempted=false;formBusy=true;submit.disabled=true;
   try{
-    const fields=validateListing(Object.fromEntries(new FormData(form))),files=[...form.elements.photos.files];
+    const rawFields=Object.fromEntries(new FormData(form));
+    if(!rawFields.latitude||!rawFields.longitude){$('draftStatus').textContent='Localisation du secteur…';const point=await geocodeSector(rawFields.city);rawFields.latitude=point.latitude;rawFields.longitude=point.longitude;form.elements.latitude.value=point.latitude;form.elements.longitude.value=point.longitude;}
+    const fields=validateListing(rawFields),files=[...form.elements.photos.files];
     if(files.length>4||(!files.length&&!editing?.image_paths?.length))throw new Error('Ajoutez entre 1 et 4 photos.');
     $('draftStatus').textContent='Préparation des photos…';const blobs=[];for(const file of files)blobs.push(await jpeg(file));
     if(!editing)editing=await store.create({...fields,owner_id:user.id});
@@ -202,10 +202,17 @@ $('draftForm').elements.mode.addEventListener('change',updateUnit);
 root.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.close==='draftDialog'&&formBusy)return;$(b.dataset.close).close();}));
 root.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{filters.mode=b.dataset.mode;render();}));
 $('marketSearch').addEventListener('input',e=>{filters.query=e.target.value;render();});
-$('marketCity').addEventListener('change',e=>{filters.city=e.target.value;render();});
+$('marketRadius').addEventListener('change',e=>{filters.radiusKm=e.target.value==='all'?null:Number(e.target.value);if(filters.center)render();});
 $('marketSort').addEventListener('change',e=>{filters.sort=e.target.value;render();});
-$('searchButton').addEventListener('click',()=>{if(!requireUser())return;if(!items.length&&!loading)load();else render();$('catalogueTitle').scrollIntoView({behavior:'smooth',block:'start'});});
-$('clearFilters').addEventListener('click',()=>{Object.assign(filters,{mode:'all',category:'all',query:'',city:'',sort:'featured'});$('marketSearch').value='';$('marketCity').value='';$('marketSort').value='featured';onlyFavorites=false;if(requireUser())load();});
+async function geocodeSector(value){
+  const q=String(value||'').trim();if(!q)return null;
+  const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&q='+encodeURIComponent(q+', France');
+  const response=await fetch(url,{headers:{'Accept-Language':'fr'}});if(!response.ok)throw new Error('Recherche du secteur indisponible.');
+  const rows=await response.json();if(!rows.length)throw new Error('Secteur introuvable. Essayez une ville ou un code postal.');
+  return {latitude:Number(rows[0].lat),longitude:Number(rows[0].lon),label:String(rows[0].display_name||q)};
+}
+$('searchButton').addEventListener('click',async()=>{if(!requireUser())return;const sector=$('marketSector').value.trim();try{filters.city='';filters.center=sector?await geocodeSector(sector):null;filters.radiusKm=$('marketRadius').value==='all'?null:Number($('marketRadius').value);if(!items.length&&!loading)await load();else render();$('catalogueTitle').scrollIntoView({behavior:'smooth',block:'start'});}catch(error){toast(errorMessage(error));}});
+$('clearFilters').addEventListener('click',()=>{Object.assign(filters,{mode:'all',category:'all',query:'',city:'',sort:'featured',center:null,radiusKm:25});$('marketSearch').value='';$('marketSector').value='';$('marketRadius').value='25';$('marketSort').value='featured';onlyFavorites=false;if(requireUser())load();});
 $('favoritesButton').addEventListener('click',()=>{if(!requireUser())return;onlyFavorites=!onlyFavorites;own=false;load();});
 $('myListings').addEventListener('click',()=>{if(!requireUser())return;own=!own;onlyFavorites=false;load();});
 $('marketLogin').addEventListener('submit',async e=>{
