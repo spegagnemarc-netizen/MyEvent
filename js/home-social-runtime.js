@@ -998,7 +998,7 @@
       const label=x.textContent.trim();
       if(label==='Amis')x.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();
-        const b=document.querySelector('[data-bottom-tab="friends"]'); if(b)b.click();
+        tab('friends');
       });
     });
 
