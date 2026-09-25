@@ -185,3 +185,14 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
   #myeventMarketplace .categoryGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   #myeventMarketplace .categoryGridButton{min-height:58px;padding:10px;font-size:13px}
 }
+
+#myeventMarketplace .searchFields .sectorField{min-width:190px}
+#myeventMarketplace .searchFields .radiusField{min-width:120px}
+#myeventMarketplace .locationHint{display:block;margin-top:7px;color:var(--muted);font-weight:400}
+@media(max-width:700px){
+ #myeventMarketplace .searchFields{grid-template-columns:1fr 118px}
+ #myeventMarketplace .searchFields .queryField{grid-column:1/-1}
+ #myeventMarketplace .searchFields .sectorField{min-width:0}
+ #myeventMarketplace .searchFields .radiusField{min-width:0}
+ #myeventMarketplace .searchButton{grid-column:1/-1;width:100%}
+}
