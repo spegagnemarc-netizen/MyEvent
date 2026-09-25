@@ -6,7 +6,7 @@
   const home=document.createElement('div');home.id='musicLanding';while(root.firstChild)home.appendChild(root.firstChild);root.appendChild(home);
   const page=document.createElement('section');page.id='musicScreen';page.hidden=true;root.appendChild(page);
   let screen='home',history=[],results=[],eventData=null,revision=0,nextPageToken=null,activeQuery='',aiController=null;
-  const titles={library:'Bibliothèque',event:'Playlist d’événement',dj:'Mode DJ',discover:'Découvrir',ai:'Music IA',player:'Lecteur'};
+  const titles={library:'Bibliothèque',playlists:'Mes playlists',event:'Playlist d’événement',dj:'Mode DJ',discover:'Découvrir',ai:'Music IA',player:'Lecteur'};
   const notice=t=>{const el=$('musicScreenStatus')||$('musicProviderStatus');if(el)el.textContent=t;};
   // Shared starter selection: the home carousel remains usable when search is unavailable.
   const defaultTrends=[
@@ -26,6 +26,7 @@
     if(name==='home'){renderHome();return;}
     const body=shell(name);
     if(name==='library')library(body);
+    if(name==='playlists')personalPlaylists(body);
     if(name==='event'){button('Ajouter des morceaux',()=>go('discover'),body);button('Actualiser',()=>M.loadEventPlaylist(),body);M.loadEventPlaylist();}
     if(name==='discover')discover(body);
     if(name==='ai')draft(body);
@@ -54,11 +55,21 @@
     button('Fermer',()=>dialog.close(),dialog);dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();
   }
   async function library(body){
-    body.innerHTML='<p>Playlists, artistes et historique sont conservés sur cet appareil, séparément pour chaque compte. Les favoris sont synchronisés avec Supabase.</p><h3>Morceaux likés</h3><div id="musicLiked"></div><h3>Mes playlists</h3><div id="musicPersonal"></div><h3>Artistes suivis</h3><div id="musicArtists"></div><h3>Écoutés récemment</h3><div id="musicHistory"></div>';
+    body.innerHTML='<p>Favoris, artistes suivis et historique personnel.</p><h3>Morceaux likés</h3><div id="musicLiked"></div><h3>Artistes suivis</h3><div id="musicArtists"></div><h3>Écoutés récemment</h3><div id="musicHistory"></div>';
     const s=S.get();rows(s.recent,$('musicHistory'));
-    s.playlists.forEach((list,i)=>{const section=document.createElement('details');const summary=document.createElement('summary');summary.textContent=list.name;section.appendChild(summary);rows(list.tracks,section,(row,t,n)=>button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('library',false);},row));button('Supprimer la playlist',()=>{s.playlists.splice(i,1);S.save();go('library',false);},section);$('musicPersonal').appendChild(section);});
     s.artists.forEach((artist,i)=>{button(artist,()=>{go('discover');search(artist);},$('musicArtists'));button('Ne plus suivre '+artist,()=>{s.artists.splice(i,1);S.save();go('library',false);},$('musicArtists'));});
     await M.loadFavorites();
+  }
+  function personalPlaylists(body){
+    body.innerHTML='<p>Vos playlists personnelles sont séparées des files de groupe de vos événements.</p><div id="musicPersonal"></div>';
+    const s=S.get(),box=$('musicPersonal');
+    if(!s.playlists.length){const p=document.createElement('p');p.className='musicEmpty';p.textContent='Aucune playlist personnelle pour le moment.';box.appendChild(p);return;}
+    s.playlists.forEach((list,i)=>{const section=document.createElement('details');const summary=document.createElement('summary');summary.textContent=list.name;section.appendChild(summary);
+      rows(list.tracks,section,(row,t,n)=>button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('playlists',false);},row));
+      const actions=document.createElement('div');actions.className='musicPersonalActions';section.appendChild(actions);
+      const send=button('Envoyer à l’événement',async()=>{if(!list.tracks.length)return notice('Cette playlist est vide.');for(const track of list.tracks)await M.addTrackToEvent(track);notice('Playlist envoyée à l’événement.');},actions);send.disabled=!ctx().event?.id;
+      button('Supprimer la playlist',()=>{s.playlists.splice(i,1);S.save();go('playlists',false);},actions);box.appendChild(section);
+    });
   }
   function discover(body){body.innerHTML='<form id="musicDiscoverForm"><label>Rechercher sur YouTube<input id="musicDiscoverQuery" type="search" minlength="2" required></label><button>Rechercher</button></form><div id="musicDiscoverResults"></div><button type="button" id="musicLoadMore" hidden>Afficher plus de résultats</button>';$('musicDiscoverQuery').value=S.get().query;rows(results,$('musicDiscoverResults'));const more=$('musicLoadMore');more.hidden=!nextPageToken;more.onclick=()=>search(activeQuery,null,true);
     $('musicDiscoverForm').onsubmit=e=>{e.preventDefault();search($('musicDiscoverQuery').value);};
@@ -162,7 +173,7 @@
     // Keep Tendances outside the replaced markup during refresh, then put it before Genres.
     const trends=home.querySelector('#musicTrending')?.closest('.musicSection');
     if(trends?.parentElement===extra)home.insertBefore(trends,extra.nextSibling);
-    extra.innerHTML='<div class="musicCards musicHeroCards"><button data-go="discover" class="musicIllustrated musicHeroDiscover"><span class="musicHeroIcon">▶</span><b>Découvrir</b><small>Explorer YouTube</small><i>›</i></button><button data-go="ai" class="musicIllustrated musicHeroAI"><span class="musicHeroIcon">✦</span><b>Music IA</b><small>Composer une proposition</small><i>›</i></button><button data-go="library" class="musicIllustrated musicHeroLibrary"><span class="musicHeroIcon">♥</span><b>Bibliothèque</b><small>Retrouver vos titres</small><i>›</i></button></div><div class="musicForYouHead"><h3>Pour vous</h3><button type="button" data-go="discover">Voir tout ›</button></div><p>Retrouvez vos écoutes et explorez vos ambiances favorites.</p><section class="musicShelf"><div class="musicShelfHead"><h3>◷ Écoutés récemment</h3><button type="button" data-go="library">Voir tout ›</button></div><div id="musicRecent"></div></section><section class="musicShelf musicGenreShelf"><div class="musicShelfHead"><h3>♫ Genres</h3><button type="button" data-music-filter="genres">Voir tout ›</button></div><div id="musicGenres"></div></section>';
+    extra.innerHTML='<div class="musicCards musicHeroCards"><button data-go="discover" class="musicIllustrated musicHeroDiscover"><span class="musicHeroIcon">▶</span><b>Découvrir</b><small>Explorer YouTube</small><i>›</i></button><button data-go="ai" class="musicIllustrated musicHeroAI"><span class="musicHeroIcon">✦</span><b>Music IA</b><small>Composer une proposition</small><i>›</i></button><button data-go="playlists" class="musicIllustrated musicHeroPlaylists"><span class="musicHeroIcon">♫</span><b>Mes playlists</b><small>Vos playlists personnelles</small><i>›</i></button><button data-go="library" class="musicIllustrated musicHeroLibrary"><span class="musicHeroIcon">♥</span><b>Bibliothèque</b><small>Favoris et historique</small><i>›</i></button></div><div class="musicForYouHead"><h3>Pour vous</h3><button type="button" data-go="discover">Voir tout ›</button></div><p>Retrouvez vos écoutes et explorez vos ambiances favorites.</p><section class="musicShelf"><div class="musicShelfHead"><h3>◷ Écoutés récemment</h3><button type="button" data-go="library">Voir tout ›</button></div><div id="musicRecent"></div></section><section class="musicShelf musicGenreShelf"><div class="musicShelfHead"><h3>♫ Genres</h3><button type="button" data-music-filter="genres">Voir tout ›</button></div><div id="musicGenres"></div></section>';
     if(trends)extra.querySelector('.musicGenreShelf').before(trends);
     extra.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));rows(S.get().recent.slice(0,10),$('musicRecent'));
     const genres=['Pop','Rap','Hip-Hop','R&B','Jazz','Rock','Électro','Dance','Variété française','Chanson française','Latino','Reggaeton','Reggae','Classique','K-Pop','Métal','Afro','Afrobeats','Amapiano','Country','Soul','Funk','Disco','House','Techno','Trance','Drum & Bass','Dubstep','Gospel','Blues','Folk','Indie','Alternative','Punk','Hard Rock','Musique du monde','Oriental','Raï','Zouk','Kompa','Salsa','Bachata','Années 60','Années 70','Années 80','Années 90','Années 2000','Années 2010'];
