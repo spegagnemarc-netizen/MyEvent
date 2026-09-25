@@ -37,9 +37,19 @@ function empty(text){$('marketGrid').replaceChildren();$('marketEmpty').hidden=f
 // Decorative equipment illustration; listings always use their owners' photographs.
 $('heroEquipment').innerHTML=`<svg viewBox="0 0 480 380" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="speaker" x2="1" y2="1"><stop stop-color="#3a4b43"/><stop offset="1" stop-color="#142920"/></linearGradient><pattern id="mesh" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".7" fill="#97aa92" opacity=".3"/></pattern></defs><ellipse cx="230" cy="333" rx="160" ry="19" fill="#4c5e3b" opacity=".12"/><g transform="translate(117 72) rotate(-9 90 120)"><rect x="27" y="-14" width="75" height="24" rx="10" fill="none" stroke="#253b2c" stroke-width="8"/><rect width="137" height="241" rx="18" fill="url(#speaker)"/><rect x="9" y="9" width="119" height="223" rx="12" fill="url(#mesh)"/><circle cx="68" cy="71" r="33" fill="#182d22" stroke="#5d7060" stroke-width="3"/><circle cx="68" cy="71" r="17" fill="#354b3c"/><circle cx="68" cy="166" r="47" fill="#15291f" stroke="#69816b" stroke-width="3"/><circle cx="68" cy="166" r="28" fill="#293f30" stroke="#344f3b" stroke-width="6"/><rect x="57" y="217" width="24" height="4" rx="2" fill="#d99865"/></g><g transform="translate(280 207) rotate(12)"><path d="M27 12l8-16h35l8 16" fill="#b6734b"/><rect y="7" width="114" height="77" rx="12" fill="#d59263"/><rect y="24" width="114" height="46" fill="#292f28"/><circle cx="61" cy="46" r="33" fill="#465342" stroke="#d6b48e" stroke-width="6"/><circle cx="61" cy="46" r="23" fill="#142821"/><circle cx="61" cy="46" r="13" fill="#385946"/><circle cx="55" cy="39" r="5" fill="#a6c0a4"/><rect x="10" y="13" width="15" height="8" rx="2" fill="#f7e4c4"/></g><path d="M328 71c-6 23 15 39 39 28" fill="none" stroke="#b2bf9e" stroke-width="3"/><path d="M340 78c-2 9 4 15 14 13" fill="none" stroke="#b2bf9e" stroke-width="3"/></svg>`;
 
-for(const [id,label,icon] of [['all','Tout le matériel','⊞'],...categories]){
-  const b=button(icon+'  '+label,'',()=>{filters.category=id;render();});b.dataset.category=id;b.setAttribute('aria-pressed',String(id==='all'));$('marketCategories').append(b);
+const featuredCategoryIds=new Set(['all','sound','lights','photo','tents','decoration']);
+function chooseCategory(id){
+  filters.category=id;
+  if($('categoriesDialog')?.open)$('categoriesDialog').close();
+  render();
 }
+for(const [id,label,icon] of [['all','Tout le matériel','⊞'],...categories]){
+  if(featuredCategoryIds.has(id)){
+    const b=button(icon+'  '+label,'',()=>chooseCategory(id));b.dataset.category=id;b.setAttribute('aria-pressed',String(id==='all'));$('marketCategories').append(b);
+  }
+  const gridButton=button(icon+'  '+label,'categoryGridButton',()=>chooseCategory(id));gridButton.dataset.category=id;gridButton.setAttribute('aria-pressed',String(id==='all'));$('marketCategoryGrid').append(gridButton);
+}
+$('allCategoriesButton')?.addEventListener('click',()=>showDialog('categoriesDialog'));
 for(const [id,label] of categories){const o=el('option','',label);o.value=id;$('draftCategory').append(o);}
 
 async function load(){
@@ -58,7 +68,11 @@ async function load(){
   finally{if(revision===generation)loading=false;}
 }
 function render(){
-  $('marketCategories').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===filters.category)));
+  root.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===filters.category)));
+  const selectedCategory=filters.category==='all'?'Toutes les catégories':labelCategory(filters.category);
+  $('allCategoriesButton').classList.toggle('active',filters.category!=='all'&&!featuredCategoryIds.has(filters.category));
+  $('allCategoriesButton').querySelector('span').textContent=filters.category!=='all'&&!featuredCategoryIds.has(filters.category)?'✓':'⌄';
+  $('allCategoriesButton').setAttribute('aria-label','Catégorie actuelle : '+selectedCategory);
   root.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===filters.mode)));
   $('favoritesButton').setAttribute('aria-pressed',String(onlyFavorites));$('myListings').setAttribute('aria-pressed',String(own));$('favoriteCount').textContent=favorites.size;
   if(!user){
