@@ -77,13 +77,37 @@
     const dialog=document.createElement('dialog');dialog.className='musicChoose';dialog.innerHTML='<h3>'+ (track?'Remplacer le morceau':'Ajouter un morceau')+'</h3><form><input aria-label="Titre ou artiste" required minlength="2"><button>Rechercher</button></form><p role="status"></p><div></div>';document.body.appendChild(dialog);
     let version=0;dialog.querySelector('form').onsubmit=async e=>{e.preventDefault();const token=++version;const msg=dialog.querySelector('p');msg.textContent='Recherche…';try{const r=await fetch('/api/search-music?q='+encodeURIComponent(dialog.querySelector('input').value));const data=await r.json();if(!r.ok)throw Error(data.error||'Recherche indisponible');if(token!==version||!dialog.open)return;const box=dialog.querySelector('div');box.replaceChildren();(data.items||[]).forEach(t=>button(M.metadata(t.title),()=>{const list=S.get().draft;if(track){if(list[index]!==track||track.locked)return;list[index]=t;}else list.push(t);S.save();dialog.close();go('ai',false);},box));msg.textContent=(data.items||[]).length+' résultat(s)';}catch(e){msg.textContent=e.message;}};button('Fermer',()=>dialog.close(),dialog);dialog.onclose=()=>dialog.remove();dialog.showModal();
   }
+  async function aiPlaylist(mode='generate'){
+    const s=S.get(),request=String(s.prompt||'').trim();
+    if(!request&&mode!=='regenerate'){notice('Décris d’abord la playlist souhaitée.');return;}
+    const locked=s.draft.filter(t=>t.locked).map(t=>({title:t.title,artist:t.artist}));
+    notice(mode==='generate'?'Music IA prépare la playlist…':mode==='add'?'Music IA cherche des morceaux à ajouter…':'Music IA refait les morceaux non verrouillés…');
+    try{
+      const ai=await fetch('/api/generate-music-playlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,request,locked_tracks:locked,current_tracks:s.draft})});
+      const plan=await ai.json();if(!ai.ok)throw Error(plan.error||'Music IA indisponible');
+      const found=[],seen=new Set((mode==='add'?s.draft:locked).map(S.key));
+      for(const suggestion of (plan.searches||[])){
+        if(found.length>=16)break;
+        const r=await fetch('/api/search-music?q='+encodeURIComponent(suggestion.query),{cache:'no-store'}),data=await r.json();
+        if(!r.ok){if(/quota|Search Queries/i.test(data.error||''))throw Error('Le quota de recherche musicale est atteint. La proposition IA est prête, mais les morceaux ne peuvent pas être vérifiés pour le moment.');continue;}
+        const track=(data.items||[]).find(t=>t.provider_track_id&&!seen.has(S.key(t)));if(track){track.ai_reason=suggestion.reason||'';found.push(track);seen.add(S.key(track));}
+      }
+      if(!found.length)throw Error('Aucun morceau disponible n’a pu être vérifié pour cette proposition.');
+      const next=mode==='add'?[...s.draft,...found]:[...s.draft.filter(t=>t.locked),...found];
+      S.update({draft:next,aiTitle:plan.title||'',aiSummary:plan.summary||''});notice((plan.title?plan.title+' · ':'')+found.length+' morceau(x) proposé(s).');go('ai',false);
+    }catch(e){notice(e.message||'Music IA temporairement indisponible.');}
+  }
   function draft(body){
-    body.innerHTML='<label>Décris ta playlist<textarea id="musicPrompt" placeholder="Anniversaire, années 2000, route…"></textarea></label><p>La génération IA n’est pas encore connectée. Compose et modifie librement ta proposition avec la recherche réelle.</p><div id="musicDraftActions"></div><div id="musicDraftTracks"></div>';
-    $('musicPrompt').value=S.get().prompt||'';$('musicPrompt').oninput=e=>S.update({prompt:e.target.value});
-    button('Ajouter un morceau',()=>choose(),$('musicDraftActions'));
-    for(const label of ['Proposer avec l’IA','Ajoute plus de…','Garde ceux-là et refais le reste'])button(label+' — à venir',()=>{},$('musicDraftActions')).disabled=true;
+    const s=S.get();
+    body.innerHTML='<div class="musicAIIntro"><strong>✦ MyEvent Music IA</strong><p>Décris l’ambiance, l’occasion, la durée ou les styles souhaités. L’IA propose, tu gardes le contrôle.</p></div><label>Ma demande<textarea id="musicPrompt" placeholder="Ex. Anniversaire de 30 personnes, années 2000, début tranquille puis dansant…"></textarea></label><div id="musicDraftActions"></div><p id="musicAISummary"></p><div id="musicDraftTracks"></div>';
+    $('musicPrompt').value=s.prompt||'';$('musicPrompt').oninput=e=>S.update({prompt:e.target.value});
+    const actions=$('musicDraftActions');
+    button(s.draft.length?'Refaire avec l’IA':'✦ Générer avec l’IA',()=>aiPlaylist(s.draft.length?'regenerate':'generate'),actions).classList.add('musicPrimary');
+    button('Ajouter plus avec l’IA',()=>aiPlaylist('add'),actions);
+    button('Ajouter un morceau',()=>choose(),actions);
+    const summary=$('musicAISummary');if(s.aiTitle||s.aiSummary)summary.textContent=[s.aiTitle,s.aiSummary].filter(Boolean).join(' — ');
     editable('draft',$('musicDraftTracks'));
-    button('Enregistrer comme playlist',()=>{const name=prompt('Nom de la playlist');if(!name?.trim()||!S.get().draft.length)return;S.get().playlists.push({name:name.trim(),tracks:S.get().draft.map(t=>({...t}))});S.save();notice('Playlist enregistrée sur cet appareil.');},body);
+    button('Enregistrer comme playlist',()=>{const name=prompt('Nom de la playlist',S.get().aiTitle||'');if(!name?.trim()||!S.get().draft.length)return;S.get().playlists.push({name:name.trim(),tracks:S.get().draft.map(t=>({...t}))});S.save();notice('Playlist enregistrée sur cet appareil.');},body);
     button('Ajouter à l’événement',async e=>{const eventId=ctx().event?.id,userId=ctx().user?.id;const tracks=[...S.get().draft];let count=0;e.currentTarget.disabled=true;for(const t of tracks){if(ctx().event?.id!==eventId||ctx().user?.id!==userId)break;if(await M.addTrackToEvent(t))count++;else break;}notice(count+' / '+tracks.length+' morceau(x) ajouté(s).'+(count<tracks.length?' Consulte le statut de la playlist pour le dernier échec.':''));e.target.disabled=false;},body);
     button('Envoyer au Mode DJ',()=>{S.update({dj:S.get().draft.map(t=>({...t}))});go('dj');},body);
   }
