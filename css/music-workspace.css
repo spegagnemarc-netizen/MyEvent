@@ -600,3 +600,22 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
   border-color:#35c978!important;
   box-shadow:inset 0 0 0 1px #35c978!important;
 }
+
+
+/* Music home V1.8 — final section action buttons */
+#musicHome .musicSectionTitle>button,
+#musicHome .musicShelfHead>button,
+#musicHome .musicForYouHead>button{
+  border-color:#ff6a3d!important;
+  box-shadow:inset 0 0 0 1px #ff6a3d!important;
+}
+/* Force one visible label on dynamic shelf actions (prevents duplicated label on iOS). */
+#musicHome .musicShelfHead>button{
+  font-size:0!important;
+}
+#musicHome .musicShelfHead>button::before{
+  content:"Voir tout ›"!important;
+  font-size:10px!important;
+  line-height:1.2!important;
+  color:#dfe4eb!important;
+}
