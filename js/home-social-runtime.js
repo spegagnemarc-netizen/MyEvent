@@ -769,15 +769,7 @@
     });
 
     // INVITER DES CONTACTS : toujours partager l'URL publique, jamais la Preview refactor-final.
-    const publicInviteUrl=()=>{
-      const configured=document.querySelector('meta[name="myevent-public-url"]')?.content?.trim();
-      if(configured)return configured;
-      const host=location.hostname;
-      if(/\\.vercel\\.app$/i.test(host)&&host.includes('-git-refactor-final-')){
-        return location.protocol+'//'+host.replace('-git-refactor-final-','-')+'/';
-      }
-      return location.origin+'/';
-    };
+    const publicInviteUrl=()=> 'https://my-event-eosin.vercel.app/';
     bind('invitePhoneContactsBtn',async()=>{
       const data={
         title:'Rejoins-moi sur MyEvent',
