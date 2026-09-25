@@ -27,8 +27,8 @@
         <div class="searchFields"><label class="queryField"><span>RECHERCHER UN ÉQUIPEMENT</span><input type="search" id="marketSearch" placeholder="Enceinte, photobooth, tente…" autocomplete="off"></label><label class="sectorField"><span>SECTEUR</span><input type="search" id="marketSector" placeholder="Ville ou code postal" autocomplete="off"></label><label class="radiusField"><span>RAYON</span><select id="marketRadius"><option value="5">5 km</option><option value="10">10 km</option><option value="25" selected>25 km</option><option value="50">50 km</option><option value="100">100 km</option><option value="all">Toute la France</option></select></label><button class="searchButton" id="searchButton">Rechercher <span>↗</span></button></div>
       </div>
       <div class="categoryBrowse">
-  <div class="categoryRow" role="group" aria-label="Catégories principales" id="marketCategories"></div>
   <button class="allCategoriesButton" id="allCategoriesButton" type="button">Toutes les catégories <span>⌄</span></button>
+  <div class="categoryRow" role="group" aria-label="Catégories principales" id="marketCategories" hidden></div>
 </div>
 <dialog id="categoriesDialog" class="categoriesDialog" aria-labelledby="categoriesTitle"><button class="dialogClose" data-close="categoriesDialog" aria-label="Fermer les catégories">×</button><p class="eyebrow">MARKETPLACE</p><h2 id="categoriesTitle">Toutes les catégories</h2><div class="categoryGrid" id="marketCategoryGrid"></div></dialog>
       <div class="catalogueHeading"><div><p class="eyebrow">ÉQUIPEZ VOS PROCHAINES ENVIES</p><h2 id="catalogueTitle">À découvrir pour vos événements</h2><p id="resultCount" aria-live="polite"></p></div><label class="sortLabel">Trier par<select id="marketSort"><option value="featured">Les plus récentes</option><option value="priceAsc">Prix croissant</option><option value="priceDesc">Prix décroissant</option></select></label></div>
