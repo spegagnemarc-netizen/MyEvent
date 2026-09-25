@@ -307,3 +307,40 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
  #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen img{width:78px!important;height:78px!important}
  #musicScreen #musicDJQueue .musicDJQueueCard>button{width:38px!important;height:38px!important;min-height:38px!important}
 }
+
+
+/* DJ V1.3 — artwork-led queue cards */
+#musicScreen #musicDJQueue .musicDJQueueCard{
+  grid-template-columns:minmax(0,1fr) 44px 44px!important;
+  grid-template-rows:136px 44px!important;
+  min-height:204px!important;
+  gap:9px!important;padding:12px!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{
+  grid-column:1!important;grid-row:1 / 3!important;
+  display:block!important;width:100%!important;height:100%!important;position:relative!important;
+  overflow:hidden!important;border-radius:16px!important;background:#0a0e13!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen img{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  max-width:none!important;object-fit:cover!important;border-radius:16px!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen::after{
+  content:""!important;position:absolute!important;inset:42% 0 0!important;
+  background:linear-gradient(transparent,rgba(3,6,10,.94))!important;pointer-events:none!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen span{
+  position:absolute!important;z-index:2!important;left:12px!important;right:12px!important;bottom:10px!important;
+  padding:0!important;color:#fff!important;text-shadow:0 1px 4px #000!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen strong{
+  font-size:14px!important;line-height:1.2!important;-webkit-line-clamp:2!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen small{font-size:10px!important;color:#d7dce3!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJApprove{grid-column:2!important;grid-row:1!important;align-self:start!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJReject{grid-column:3!important;grid-row:1!important;align-self:start!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Monter"]{grid-column:2!important;grid-row:2!important}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Descendre"]{grid-column:3!important;grid-row:2!important}
+@media(max-width:390px){
+ #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:minmax(0,1fr) 40px 40px!important;grid-template-rows:124px 40px!important;min-height:190px!important}
+}
