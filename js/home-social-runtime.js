@@ -12,6 +12,7 @@
   $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>tab('notifications'));
   $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>tab('messages'));
   $s('socialHeaderSearchBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>{$s('socialSearchInput')?.focus();},50);});
+  $s('socialFriendsShortcut')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();tab('friends');setTimeout(()=>views.friends?.scrollIntoView({block:'start'}),20);});
   // Story creation is handled by social-friends-stories.js.
   $s('socialBottomCreate')?.addEventListener('click',()=>openMyEventCamera());
   $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='music')return;if(t==='profile'){$s('profileAvatar')?.click();return}if(t==='events'){tab('feed');const el=$s('eventsCard');if(el){el.open=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),20);} $s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));return;}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
