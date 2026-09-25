@@ -75,10 +75,10 @@
         for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];S.save();go(screen,false);},row);b.classList.add('musicDJMove');b.disabled=!list[i+delta];b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
         return;
       }
-      button(t.locked?'🔒 Déverrouiller':'Verrouiller',()=>{t.locked=!t.locked;S.save();go(screen,false);},row);
+      const lockDraft=button(t.locked?'🔒':'🔓',()=>{t.locked=!t.locked;S.save();go(screen,false);},row);lockDraft.title=t.locked?'Déverrouiller le morceau':'Verrouiller le morceau';lockDraft.setAttribute('aria-label',lockDraft.title);
       for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length||t.locked||list[j].locked)return;[list[i],list[j]]=[list[j],list[i]];S.save();go(screen,false);},row);b.disabled=t.locked||!list[i+delta]||list[i+delta]?.locked;b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
-      button('Retirer',()=>{list.splice(i,1);S.save();go(screen,false);},row).disabled=!!t.locked;
-      if(key==='draft')button('Remplacer',()=>choose(t,i),row).disabled=!!t.locked;
+      const removeDraft=button('✕',()=>{list.splice(i,1);S.save();go(screen,false);},row);removeDraft.disabled=!!t.locked;removeDraft.title='Retirer le morceau';removeDraft.setAttribute('aria-label','Retirer le morceau');
+      if(key==='draft'){const replaceDraft=button('↻',()=>choose(t,i),row);replaceDraft.disabled=!!t.locked;replaceDraft.title='Remplacer le morceau';replaceDraft.setAttribute('aria-label','Remplacer le morceau');}
     });
   }
   function choose(track,index){
