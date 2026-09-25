@@ -202,3 +202,11 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace .categoryBrowse{display:block}
 #myeventMarketplace .allCategoriesButton{width:100%;border-color:var(--orange)!important}
 #myeventMarketplace[data-theme="dark"] .allCategoriesButton{border-color:var(--orange)!important}
+
+/* Marketplace header actions: orange outline only */
+#myeventMarketplace .marketHeader nav #myListings,
+#myeventMarketplace .marketHeader nav #inboxButton,
+#myeventMarketplace .marketHeader nav #createListing{
+  border:1.5px solid var(--orange)!important;
+  border-radius:14px;
+}
