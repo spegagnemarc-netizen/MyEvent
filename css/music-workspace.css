@@ -570,3 +570,22 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
    width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important;
  }
 }
+
+
+/* Music home V1.7 — personal playlists first, illustrated horizontal carousel */
+#musicHomeExtras>.musicCards.musicHeroCards{
+  display:flex!important;grid-template-columns:none!important;
+  gap:10px!important;overflow-x:auto!important;overflow-y:hidden!important;
+  scroll-snap-type:x proximity!important;-webkit-overflow-scrolling:touch!important;
+  padding-right:18px!important;
+}
+#musicHomeExtras>.musicCards.musicHeroCards .musicIllustrated{
+  flex:0 0 31.5%!important;min-width:0!important;scroll-snap-align:start!important;
+}
+#musicHomeExtras .musicHeroPlaylists{
+  background-image:linear-gradient(180deg,rgba(7,10,15,.08),rgba(7,10,15,.82)),url("../assets/music-playlist-favorites.webp")!important;
+  background-size:cover!important;background-position:center!important;
+}
+@media(max-width:430px){
+ #musicHomeExtras>.musicCards.musicHeroCards .musicIllustrated{flex-basis:31.5%!important}
+}
