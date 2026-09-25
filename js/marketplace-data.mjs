@@ -1,4 +1,4 @@
-export const categories=[['sound','Sonorisation','♫'],['lights','Éclairage','✧'],['photo','Photo & vidéo','▣'],['furniture','Mobilier','▤'],['decoration','Décoration','✿'],['outdoor','Plein air','△']];
+export const categories=[['sound','Sonorisation','♫'],['lights','Éclairage','✧'],['photo','Photo & vidéo','▣'],['furniture','Mobilier','▤'],['decoration','Décoration','✿'],['tents','Tentes & barnums','⌂'],['tableware','Vaisselle & réception','◉'],['catering','Cuisine & restauration','♨'],['games','Jeux & animations','★'],['kids','Matériel enfant','♟'],['outdoor','Plein air','△'],['power','Électricité & énergie','⚡'],['climate','Chauffage & climatisation','☼'],['stage','Scène & spectacle','♪'],['transport','Transport & manutention','↔'],['costumes','Déguisements & costumes','♛'],['safety','Sécurité & barriérage','◇'],['other','Autre matériel','＋']];
 export const conditions={new:'Neuf',like_new:'Comme neuf',good:'Bon état',used:'État d’usage'};
 export const money=cents=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:cents%100?2:0}).format(cents/100);
 export function validateListing(fields){
