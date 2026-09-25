@@ -5,9 +5,23 @@ const root=document.getElementById('myeventMarketplace'),$=id=>root.querySelecto
 let client,store,user=null,items=[],favorites=new Set(),photos=new Map(),editing=null,thread=null;
 let own=false,onlyFavorites=false,loading=false,generation=0,toastTimer=0,messageTimer=0,formBusy=false,threadRevision=0;
 const filters={mode:'all',category:'all',query:'',city:'',sort:'featured'};
+const THEME_FALLBACK_KEY='myevent-marketplace-theme';
+const themeKey=()=>user?.id?'myevent-marketplace-theme:'+user.id:THEME_FALLBACK_KEY;
+function savedTheme(){try{return localStorage.getItem(themeKey())||localStorage.getItem(THEME_FALLBACK_KEY)||'dark';}catch{return 'dark';}}
+function applyTheme(theme,persist=false){
+  const next=theme==='light'?'light':'dark';
+  root.dataset.theme=next;
+  const toggle=$('marketThemeToggle');
+  if(toggle){const light=next==='light';toggle.textContent=light?'🌙':'☀️';toggle.setAttribute('aria-label',light?'Afficher le Marketplace en sombre':'Afficher le Marketplace en clair');toggle.title=light?'Afficher en sombre':'Afficher en clair';}
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',next==='dark'?'#071016':'#faf8f5');
+  if(persist){try{localStorage.setItem(themeKey(),next);localStorage.setItem(THEME_FALLBACK_KEY,next);}catch{}}
+}
+applyTheme(savedTheme());
+
 const labelCategory=id=>categories.find(c=>c[0]===id)?.[1]||'Matériel';
 const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;};
 const button=(text,className,action)=>{const node=el('button',className,text);node.type='button';node.addEventListener('click',action);return node;};
+$('marketThemeToggle')?.addEventListener('click',()=>applyTheme(root.dataset.theme==='dark'?'light':'dark',true));
 function toast(text){$('marketToast').textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('marketToast').textContent='',5000);}
 function errorMessage(error){
   if(['42P01','PGRST205','PGRST202'].includes(error?.code)||/bucket not found/i.test(error?.message||''))return 'La marketplace doit encore être activée par l’équipe MyEvent. Réessayez après son activation.';
@@ -195,7 +209,7 @@ try{
   client=window.supabase.createClient(projectUrl,publishableKey);store=createMarketplaceStore(client);
   client.auth.onAuthStateChange((_event,session)=>{
     // Schedule work outside the auth callback (avoid SDK auth-lock deadlocks).
-    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;load();}},0);
+    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;applyTheme(savedTheme());load();}},0);
   });
 }catch(error){status(errorMessage(error));empty('Connexion indisponible');}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(messageTimer);else if($('inboxDialog').open)refreshMessages();});
