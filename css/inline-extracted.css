@@ -3128,3 +3128,11 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{
   font-size:10px!important;color:#d8dbe2!important;text-shadow:0 2px 7px #000;
 }
+
+/* Music artwork is contained inside fixed-size playlist cards on iPhone. */
+#musicHome #musicPlaylistsSection{min-width:0;width:100%;box-sizing:border-box}
+#musicHome #musicPlaylistsSection>.musicCards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:hidden!important}
+#musicHome #musicPlaylistsSection .musicTile{position:relative!important;box-sizing:border-box!important;min-width:0!important;width:100%!important;height:140px!important;min-height:140px!important;overflow:hidden!important;background-image:none!important}
+#musicHome #musicPlaylistsSection .musicTileArtwork{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;object-fit:cover!important}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile::before{content:"";position:absolute;inset:0;z-index:1!important;background:linear-gradient(180deg,rgba(4,7,12,.04) 20%,rgba(4,7,12,.88) 100%)}
+#musicHome > #musicPlaylistsSection.musicSection .musicTile span,#musicHome > #musicPlaylistsSection.musicSection .musicTile b,#musicHome > #musicPlaylistsSection.musicSection .musicTile small{position:relative;z-index:2!important}
