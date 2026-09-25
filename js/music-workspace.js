@@ -135,10 +135,19 @@
     button('Envoyer au Mode DJ',()=>{S.update({dj:S.get().draft.map(t=>({...t}))});go('dj');},body);
   }
   function dj(body){
-    body.innerHTML='<p>File manuelle de cet appareil. La playlist événement reste la file commune avec votes.</p><div id="musicDJControls"></div><h3>File d’attente</h3><div id="musicDJQueue"></div><details><summary>Paramètres DJ</summary><p>Mode manuel. Auto/IA, transitions, normalisation et effets nécessitent un moteur compatible et ne sont pas activés.</p></details>';
-    const controls=$('musicDJControls');button('Précédent',()=>P.previous(),controls);button('Lire la file',()=>{const tracks=S.get().dj;if(tracks.length){M.openPlayer(tracks[0],tracks);P.play(tracks[0],tracks);}},controls);button('Suivant',()=>P.next(),controls);
-    button('Playlist commune et votes',()=>go('event'),controls);
-    button('Importer la file de l’événement',async()=>{try{const {sb,event}=ctx(),playlist=await M.ensureEventPlaylist();const r=await sb.from('music_playlist_items').select('position,is_locked,track:music_tracks(*)').eq('event_id',event.id).eq('playlist_id',playlist.id).order('position',{ascending:true});if(r.error)throw r.error;S.update({dj:(r.data||[]).filter(x=>x.track).map(x=>({...x.track,locked:x.is_locked}))});go('dj',false);}catch(e){notice(e.message);}},controls);
+    const state=S.get(),queue=state.dj||[],current=queue[0]||null;
+    body.innerHTML='<section class="musicDJHero"><div><span class="musicDJEyebrow">MYEVENT DJ</span><h2>Mode DJ</h2><p>Anime la soirée et garde la main sur la file.</p></div><div class="musicDJMode"><button type="button" class="active">Manuel</button><button type="button" disabled title="DJ Auto sera activé avec le moteur IA">Auto · bientôt</button></div></section><section class="musicDJNow"><div id="musicDJNowTrack"></div><div id="musicDJTransport"></div></section><section class="musicDJQuick"><h3>Ambiance</h3><div id="musicDJMoods"></div></section><section class="musicDJPanel"><div class="musicDJPanelHead"><div><span class="musicDJEyebrow">FILE COMMUNE</span><h3>File d’attente</h3></div><button type="button" id="musicDJEvent">Votes du groupe</button></div><div id="musicDJImport"></div><div id="musicDJQueue"></div></section><section class="musicDJSettings"><details><summary>⚙ Paramètres DJ</summary><div class="musicDJSettingsGrid"><button type="button" disabled>Transitions · bientôt</button><button type="button" disabled>Normalisation · bientôt</button><button type="button" disabled>Effets · bientôt</button><button type="button" disabled>DJ IA · bientôt</button></div></details></section>';
+    const now=$('musicDJNowTrack');
+    if(current)now.innerHTML='<img alt="" src="'+esc(current.thumbnail_url||'')+'"><span><small>PRÊT À LIRE</small><strong>'+meta(current.title)+'</strong><em>'+meta(current.artist)+'</em></span>';
+    else now.innerHTML='<div class="musicDJEmptyNow"><strong>Aucun morceau dans la file</strong><small>Importe la playlist de l’événement ou envoie une playlist depuis Music IA.</small></div>';
+    const transport=$('musicDJTransport');
+    button('⏮',()=>P.previous(),transport).setAttribute('aria-label','Précédent');
+    const play=button(queue.length?'▶ Lire':'▶',()=>{if(queue.length){M.openPlayer(queue[0],queue);P.play(queue[0],queue);}},transport);play.classList.add('musicDJPlay');play.disabled=!queue.length;
+    button('⏭',()=>P.next(),transport).setAttribute('aria-label','Suivant');
+    const moods=['Chill','Soirée','Années 80','Rap','Électro','Variété'];
+    moods.forEach((m,i)=>{const x=button(m,()=>{S.update({djMood:m});go('dj',false);},$('musicDJMoods'));if((state.djMood||'Soirée')===m)x.classList.add('active');});
+    $('musicDJEvent').onclick=()=>go('event');
+    button('＋ Importer la file de l’événement',async()=>{try{const {sb,event}=ctx(),playlist=await M.ensureEventPlaylist();const r=await sb.from('music_playlist_items').select('position,is_locked,track:music_tracks(*)').eq('event_id',event.id).eq('playlist_id',playlist.id).order('position',{ascending:true});if(r.error)throw r.error;S.update({dj:(r.data||[]).filter(x=>x.track).map(x=>({...x.track,locked:x.is_locked}))});go('dj',false);}catch(e){notice(e.message);}},$('musicDJImport'));
     editable('dj',$('musicDJQueue'));
   }
   function renderHome(){
