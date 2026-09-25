@@ -109,7 +109,7 @@
       if(!r.ok)throw Error(data.error||'Tendances indisponibles');if(token!==revision||screen!=='home')return;
       const tracks=(data.items||[]).slice(0,8);box.replaceChildren();
       tracks.forEach((track,index)=>{const card=document.createElement('article');card.className='musicTrendCard';
-        card.innerHTML='<button class="musicTrendOpen"><span class="musicTrendRank">'+(index+1)+'</span><img alt="" loading="lazy" src="'+esc(track.thumbnail_url||'')+'"><strong>'+meta(track.title)+'</strong><small>'+meta(track.artist)+'</small><span class="musicTrendPlay">▶</span></button>';
+        card.innerHTML='<button class="musicTrendOpen" aria-label="Lire '+meta(track.title)+'"><span class="musicTrendRank">'+(index+1)+'</span><img alt="" loading="lazy" src="'+esc(track.thumbnail_url||'')+'"><span class="musicTrendPlay">▶</span></button><div class="musicTrendMeta"><strong>'+meta(track.title)+'</strong><small>'+meta(track.artist)+'</small></div>';
         card.querySelector('button').onclick=()=>{M.openPlayer(track,tracks);P.play(track,tracks);};box.appendChild(card);
       });
     }catch(e){if(token===revision&&screen==='home')box.innerHTML='<div class="musicEmpty">Tendances momentanément indisponibles.</div>';}
