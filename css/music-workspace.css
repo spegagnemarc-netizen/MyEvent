@@ -344,3 +344,34 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 @media(max-width:390px){
  #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:minmax(0,1fr) 40px 40px!important;grid-template-rows:124px 40px!important;min-height:190px!important}
 }
+
+
+/* DJ V1.4 — fix artwork column collapse on iPhone */
+#musicScreen #musicDJQueue .musicDJQueueCard{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 44px 44px!important;
+  grid-template-rows:minmax(150px,auto) 44px!important;
+  width:100%!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{
+  grid-column:1!important;grid-row:1 / span 2!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  height:100%!important;min-height:203px!important;
+  display:block!important;position:relative!important;
+  padding:0!important;margin:0!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen img{
+  display:block!important;position:absolute!important;
+  inset:0!important;width:100%!important;max-width:none!important;height:100%!important;
+  aspect-ratio:auto!important;object-fit:cover!important;object-position:center!important;
+  margin:0!important;padding:0!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen span{
+  display:block!important;width:auto!important;max-width:none!important;min-width:0!important;
+}
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen strong,
+#musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen small{width:100%!important}
+@media(max-width:430px){
+ #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:minmax(0,1fr) 40px 40px!important;grid-template-rows:146px 40px!important}
+ #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{min-height:195px!important}
+}
