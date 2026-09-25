@@ -4,6 +4,49 @@
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0;
+  const myStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
+  const defaultMyStoryContent = [...(myStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
+  let thumbnailExpiryTimer = null;
+  function showMyStoryThumbnail(userId) {
+    if (!myStoryBubble) return;
+    clearTimeout(thumbnailExpiryTimer);
+    const latest = storyRows.filter(r => r.author_id === userId && Date.parse(r.expires_at) > Date.now())
+      .reduce((best, r) => !best || Date.parse(r.created_at) > Date.parse(best.created_at) ? r : best, null);
+    const me = $('socialMyStory');
+    me.classList.toggle('hasStory', !!latest);
+    if (!latest) {
+      myStoryBubble.replaceChildren(...defaultMyStoryContent.map(node => node.cloneNode(true)));
+      return;
+    }
+    const preview = document.createElement(latest.media_type === 'video' ? 'video' : 'img');
+    preview.className = 'myStoryThumbnail';
+    preview.src = latest.url;
+    preview.setAttribute('aria-hidden', 'true');
+    if (latest.media_type === 'video') {
+      preview.muted = true;
+      preview.playsInline = true;
+      preview.preload = 'auto';
+      preview.addEventListener('loadedmetadata', () => {
+        if (preview.isConnected && preview.duration) preview.currentTime = Math.min(0.1, preview.duration / 2);
+      }, {once:true});
+      preview.addEventListener('seeked', () => {
+        if (!preview.isConnected || !preview.videoWidth || !preview.videoHeight) return;
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 160;
+          canvas.height = Math.round(160 * preview.videoHeight / preview.videoWidth);
+          canvas.getContext('2d').drawImage(preview, 0, 0, canvas.width, canvas.height);
+          const frame = document.createElement('img');
+          frame.className = 'myStoryThumbnail'; frame.alt = '';
+          frame.src = canvas.toDataURL('image/jpeg', 0.75);
+          preview.replaceWith(frame);
+        } catch (_) { /* Keep the video frame when canvas capture is unavailable. */ }
+      }, {once:true});
+    } else preview.alt = '';
+    myStoryBubble.replaceChildren(preview);
+    thumbnailExpiryTimer = setTimeout(() => showMyStoryThumbnail(userId),
+      Math.min(Date.parse(latest.expires_at) - Date.now() + 50, 2147483647));
+  }
   const status = text => { if ($('socialFriendStatus')) $('socialFriendStatus').textContent = text; };
   const check = result => { if (result.error) throw result.error; return result.data; };
   const profileName = p => p?.display_name || p?.username || 'Membre MyEvent';
@@ -122,7 +165,8 @@
       previous.forEach(r=>URL.revokeObjectURL(r.url));
       const strip=document.querySelector('#socialHome .socialStories');
       strip.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
-      const me=$('socialMyStory'); me.classList.toggle('hasStory',storyRows.some(r=>r.author_id===user.id));
+      showMyStoryThumbnail(user.id);
+      const me=$('socialMyStory');
       me.onclick=()=>{const i=storyRows.findIndex(r=>r.author_id===user.id);if(i>=0)showStory(i);else createStory();};
       const seen=new Set(); storyRows.forEach((r,i)=>{
         if(r.author_id===user.id||seen.has(r.author_id))return; seen.add(r.author_id);
@@ -183,7 +227,7 @@
   setupCreation(); initializeViewer();
   document.querySelector('#socialFriendsView .socialSearch button')?.addEventListener('click',searchUsers);
   document.querySelector('#socialFriendsView .socialSearch input')?.addEventListener('keydown',e=>{if(e.key==='Enter')searchUsers();});
-  setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];closeViewer();}
+  setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
     if(user)start();},1000);
   setInterval(()=>{if(activeId){loadFriends();loadStories();}},60000);
 })();
