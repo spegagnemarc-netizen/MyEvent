@@ -196,3 +196,9 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
  #myeventMarketplace .searchFields .radiusField{min-width:0}
  #myeventMarketplace .searchButton{grid-column:1/-1;width:100%}
 }
+
+/* Marketplace: category picker is the single category entry point */
+#myeventMarketplace .categoryBrowse .categoryRow[hidden]{display:none!important}
+#myeventMarketplace .categoryBrowse{display:block}
+#myeventMarketplace .allCategoriesButton{width:100%;border-color:var(--orange)!important}
+#myeventMarketplace[data-theme="dark"] .allCategoriesButton{border-color:var(--orange)!important}
