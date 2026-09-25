@@ -619,3 +619,13 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
   line-height:1.2!important;
   color:#dfe4eb!important;
 }
+
+
+/* Music home V1.9 — iOS shelf label de-duplication */
+#musicHome .musicShelfHead>button{
+  color:transparent!important;
+  white-space:nowrap!important;
+}
+#musicHome .musicShelfHead>button::before{
+  color:#dfe4eb!important;
+}
