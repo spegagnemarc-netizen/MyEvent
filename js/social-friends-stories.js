@@ -117,11 +117,11 @@
   }
   function initializeViewer() {
     const el = document.createElement('div'); el.id = 'socialStoryViewer'; el.className = 'socialStoryViewer'; el.hidden = true;
-    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button>';
+    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><div class="storyOwnerActions"><button type="button" class="storyAddNew" data-story="add">＋ Nouvelle story</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button></div>';
     document.body.append(el);
     el.addEventListener('click', e => { const action = e.target.closest('[data-story]')?.dataset.story;
       if(action === 'close') closeViewer(); if(action === 'previous') showStory(viewerIndex - 1);
-      if(action === 'next') showStory(viewerIndex + 1); if(action === 'delete') deleteStory(); });
+      if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory(); });
     let touchX = 0; el.addEventListener('touchstart',e => { touchX=e.changedTouches[0].clientX; },{passive:true});
     el.addEventListener('touchend',e => {const diff=e.changedTouches[0].clientX-touchX;
       if(Math.abs(diff)>60) showStory(viewerIndex+(diff<0?1:-1));},{passive:true});
@@ -136,7 +136,7 @@
     const item=storyRows[index], el=$('socialStoryViewer'); el.hidden=false; document.body.style.overflow='hidden';
     el.querySelector('.storyHeader b').textContent=profileName(item.profile);
     el.querySelector('.storyCaption').textContent=item.caption || '';
-    el.querySelector('.storyDelete').hidden=item.author_id!==context().user?.id;
+    const own=item.author_id===context().user?.id; el.querySelector('.storyDelete').hidden=!own; el.querySelector('.storyAddNew').hidden=!own;
     const media=document.createElement(item.media_type==='video'?'video':'img'); media.src=item.url;
     if(item.media_type==='video') { media.autoplay=true; media.playsInline=true; media.addEventListener('ended',()=>showStory(viewerIndex+1),{once:true}); }
     el.querySelector('.storyMedia').replaceChildren(media);
