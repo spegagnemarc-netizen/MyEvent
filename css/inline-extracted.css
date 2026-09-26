@@ -3128,3 +3128,29 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile small{
   font-size:10px!important;color:#d8dbe2!important;text-shadow:0 2px 7px #000;
 }
+
+/* MyEvent global theme */
+:root{--myevent-accent:#ff6a34;--myevent-accent-rgb:255,106,52;--myevent-button-opacity:.90;--myevent-surface-opacity:.94;--myevent-bg:#080b10;--myevent-surface:14,19,24;--myevent-text:#f3f6f8;--myevent-muted:#9da7b0}
+:root[data-myevent-theme="light"]{--myevent-bg:#f5f6f8;--myevent-surface:255,255,255;--myevent-text:#171a1f;--myevent-muted:#66707a}
+body{background:var(--myevent-bg)!important;color:var(--myevent-text)!important}
+#main,.app{color:var(--myevent-text)}
+#socialHome{background:var(--myevent-bg)!important;color:var(--myevent-text)!important}
+:root[data-myevent-theme="light"] #socialHome,:root[data-myevent-theme="light"] .musicHome{color:#171a1f!important}
+:root[data-myevent-theme="light"] #socialHome .socialPost,
+:root[data-myevent-theme="light"] #socialHome .socialComposer,
+:root[data-myevent-theme="light"] #socialHome .socialPeople,
+:root[data-myevent-theme="light"] .card:not(#myeventCameraModal *),
+:root[data-myevent-theme="light"] .musicHome .musicSearch,
+:root[data-myevent-theme="light"] .musicHome .musicTile{background:rgba(255,255,255,var(--myevent-surface-opacity))!important;color:#171a1f!important;border-color:#d8dde3!important}
+:root[data-myevent-theme="dark"] .card:not(#myeventCameraModal *){background:rgba(var(--myevent-surface),var(--myevent-surface-opacity))}
+button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){--myevent-button-bg:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))}
+#socialHome .socialFilter.active,#socialHome .socialInterestBtn,#socialHome .socialBottomNav [data-bottom-tab].active{border-color:var(--myevent-accent)!important;color:var(--myevent-accent)!important}
+#socialHome .socialFilter.active,#socialHome .socialInterestBtn{background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;color:#fff!important}
+.myeventAppearanceCard{color:var(--myevent-text)!important;background:rgba(var(--myevent-surface),var(--myevent-surface-opacity))!important}
+.myeventColorPicker{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px;border:1px solid #34404a;border-radius:14px;margin:8px 0 14px}
+.myeventColorPicker span{display:grid;gap:3px}.myeventColorPicker small{color:var(--myevent-muted);font-size:11px}
+.myeventColorPicker input[type="color"]{width:58px;height:44px;padding:3px;border:2px solid var(--myevent-accent);border-radius:12px;background:transparent}
+.myeventThemeSlider{display:grid;gap:7px;margin:12px 0}.myeventThemeSlider>span{display:flex;justify-content:space-between;font-size:12px;font-weight:750}
+.myeventThemeSlider input{width:100%;accent-color:var(--myevent-accent)}.myeventThemeSlider output{color:var(--myevent-accent)}
+.myeventThemeReset{width:100%;margin-top:8px!important;border:1px solid var(--myevent-accent)!important;background:transparent!important;color:var(--myevent-text)!important}
+.myeventThemeNote{font-size:11px;color:var(--myevent-muted);margin:9px 0 0}
