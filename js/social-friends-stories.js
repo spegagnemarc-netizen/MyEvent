@@ -7,26 +7,29 @@
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
+  function latestOwnStory(userId) {
+    return storyRows.filter(r => r.author_id === userId && Date.parse(r.expires_at) > Date.now())
+      .reduce((best, r) => !best || Date.parse(r.created_at) > Date.parse(best.created_at) ? r : best, null);
+  }
   function showMyStoryThumbnail(userId) {
     const myStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
     if (!myStoryBubble) return;
     clearTimeout(thumbnailExpiryTimer);
-    const latest = storyRows.filter(r => r.author_id === userId && Date.parse(r.expires_at) > Date.now())
-      .reduce((best, r) => !best || Date.parse(r.created_at) > Date.parse(best.created_at) ? r : best, null);
+    const latest = latestOwnStory(userId);
     const me = $('socialMyStory');
     me.classList.toggle('hasStory', !!latest);
     if (!latest) {
-      myStoryBubble.style.removeProperty('background-image');
       myStoryBubble.replaceChildren(...defaultMyStoryContent.map(node => node.cloneNode(true)));
+      const profileImage = document.querySelector('#profileAvatar img');
+      if(profileImage && myStoryBubble.textContent.trim() === '👤') {
+        const photo=profileImage.cloneNode(true);photo.alt='';myStoryBubble.replaceChildren(photo);
+      }
       return;
     }
     const preview = document.createElement(latest.media_type === 'video' ? 'video' : 'img');
     preview.className = 'myStoryThumbnail';
     preview.src = latest.url;
     preview.setAttribute('aria-hidden', 'true');
-    myStoryBubble.style.setProperty('background-image', latest.media_type === 'image' ? 'url("' + latest.url + '")' : 'none', 'important');
-    myStoryBubble.style.setProperty('background-size','cover','important');
-    myStoryBubble.style.setProperty('background-position','center','important');
     if (latest.media_type === 'video') {
       preview.muted = true;
       preview.playsInline = true;
@@ -169,31 +172,38 @@
       storyRows=media.filter(Boolean).sort((a,b)=>a.author_id.localeCompare(b.author_id)||a.created_at.localeCompare(b.created_at));
       previous.forEach(r=>URL.revokeObjectURL(r.url));
       const strip=document.querySelector('#socialHome .socialStories');
-      strip.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
+      strip?.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
       showMyStoryThumbnail(user.id);
       const me=$('socialMyStory');
       me.onclick=null;
-      const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip'); if(friendStrip)friendStrip.replaceChildren();
-      const seen=new Set(); storyRows.forEach((r,i)=>{
-        if(r.author_id===user.id||seen.has(r.author_id))return; seen.add(r.author_id);
-        const bubble=document.createElement('button'); bubble.type='button'; bubble.className='socialStory hasStory';
-        bubble.dataset.storyAuthor=r.author_id; const a=document.createElement('div'); a.className='socialStoryBubble'; a.append(avatar(r.profile));
-        const label=document.createElement('div'); label.textContent=profileName(r.profile); bubble.append(a,label);
-        bubble.onclick=()=>showStory(i); if(strip)strip.append(bubble);
-        if(friendStrip){
-          const mini=document.createElement('button');mini.type='button';mini.className='friendStoryMini';
-          const ring=document.createElement('div');ring.className='miniRing';const inside=document.createElement('div');inside.append(avatar(r.profile));ring.append(inside);
-          const labelMini=document.createElement('span');labelMini.textContent=profileName(r.profile);mini.append(ring,labelMini);mini.onclick=()=>showStory(i);friendStrip.append(mini);
-        }
-      });
-      if(friendSection){
-        friendSection.classList.toggle('hidden',!friendStrip?.children.length);
-        if(friendStrip?.children.length){
-          friendSection.style.display='block';
-          friendStrip.style.display='flex';
-        } else friendSection.style.display='';
+      const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip');
+      if(friendStrip){
+        friendStrip.replaceChildren();
+        const own=latestOwnStory(user.id);
+        const mine=document.createElement('button');mine.type='button';mine.className='friendStoryMini ownStoryMini';
+        const ring=document.createElement('div');ring.className='miniRing';
+        const inside=document.createElement('div');
+        if(own){const image=document.createElement(own.media_type==='video'?'video':'img');image.src=own.url;image.alt='';
+          if(own.media_type==='video'){image.muted=true;image.playsInline=true;image.preload='metadata';image.addEventListener('loadedmetadata',()=>{image.currentTime=.1},{once:true});}
+          inside.append(image);
+        }else{const profileImage=document.querySelector('#profileAvatar img');if(profileImage)inside.append(profileImage.cloneNode(true));else inside.textContent='👤';}
+        ring.append(inside);const add=document.createElement('span');add.className='friendStoryAdd';add.textContent='+';ring.append(add);
+        const name=document.createElement('span');name.textContent='Votre story';mine.append(ring,name);
+        mine.addEventListener('click',e=>{if(e.target.closest('.friendStoryAdd')||!own){createStory();return;}
+          const i=storyRows.findIndex(r=>r.id===own.id);if(i>=0)showStory(i);});
+        friendStrip.append(mine);
       }
-      const preview=$('homeFriendsPreview');if(preview){const count=seen.size;preview.textContent=count?('👥 +'+count):'👥';}
+      const seen=new Set();storyRows.forEach((r,i)=>{
+        if(r.author_id===user.id||seen.has(r.author_id))return;seen.add(r.author_id);
+        if(!friendStrip)return;
+        const mini=document.createElement('button');mini.type='button';mini.className='friendStoryMini';
+        const ring=document.createElement('div');ring.className='miniRing';const inside=document.createElement('div');
+        inside.append(avatar(r.profile));ring.append(inside);
+        const label=document.createElement('span');label.textContent=profileName(r.profile).split(/\s+/)[0];
+        mini.append(ring,label);mini.onclick=()=>showStory(i);friendStrip.append(mini);
+      });
+      friendSection?.classList.remove('hidden');
+      if(friendSection)friendSection.style.display='block';
     } catch(e) { console.warn('Stories indisponibles',e); }
   }
   async function publishStory(file) {
@@ -253,6 +263,9 @@
     if(mine.length)showStory(mine[mine.length-1].i);else createStory();
   });
 
+  $('friendStoriesSeeAll')?.addEventListener('click',()=>{
+    $('socialFriendsShortcut')?.click();
+  });
   document.querySelector('#socialFriendsView .socialSearch button')?.addEventListener('click',searchUsers);
   document.querySelector('#socialFriendsView .socialSearch input')?.addEventListener('keydown',e=>{if(e.key==='Enter')searchUsers();});
   setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}

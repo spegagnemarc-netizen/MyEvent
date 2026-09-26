@@ -92,11 +92,11 @@
   <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
   <div class="homeFeatureCarousel" aria-label="Raccourcis MyEvent">
     <div class="homeFeatureCard storyCard" id="socialMyStory"><div class="socialStoryBubble">👤</div><b>Ma story</b><span class="storyAddBadge">＋</span></div>
-    <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview"><span>👩🏻</span><span>👨🏻</span><span>👩🏽</span><em>+5</em></div><b>Amis</b></button>
-    <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><div class="homeFeatureIcon featureArt featureCalendar">📅<i>★</i></div><b>Événements</b></button>
-    <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><div class="homeFeatureIcon featureArt featureGame">🎮</div><b>Jeux</b></button>
-    <a href="marketplace.html" class="homeFeatureCard marketCard"><div class="homeFeatureIcon featureArt featureMarket">🛍️</div><b>Marketplace</b></a>
-    <button type="button" id="socialGpsWeatherCard" class="homeFeatureCard weatherCard"><div class="homeFeatureIcon" id="socialGpsWeatherIcon">🌤️</div><b>Ma météo</b><small id="socialGpsWeatherTemp">--°</small></button>
+    <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview">👥</div><b>Amis</b></button>
+    <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><img class="homeFeatureArt" src="assets/ui/calendar-star.svg" alt=""><b>Événements</b></button>
+    <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><img class="homeFeatureArt" src="assets/ui/games-purple.svg" alt=""><b>Jeux</b></button>
+    <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
+    <button type="button" id="socialGpsWeatherCard" class="homeFeatureCard weatherCard"><img class="homeFeatureArt" id="socialGpsWeatherIcon" src="assets/ui/weather-sun-cloud.svg" alt=""><b>Ma météo</b><small id="socialGpsWeatherTemp">--°</small></button>
     <button type="button" id="socialNearbyShareBtn" class="homeFeatureCard nearbyCard"><div class="homeFeatureIcon">📍</div><b>À proximité</b></button>
     <button type="button" class="homeFeatureCard popularCard"><div class="homeFeatureIcon">🔥</div><b>Populaire</b></button>
   </div>
@@ -356,13 +356,13 @@
 </section>
 
 <div class="socialBottomNav homeNavV2" id="socialBottomNav">
-    <button type="button" class="active navHome" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
-    <button type="button" class="navMarket" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon">🛍️</span><span class="bottomLabel">Marketplace</span></button>
-    <button type="button" class="navGames" data-bottom-tab="games"><span class="bottomIcon">🎮</span><span class="bottomLabel">Jeux</span></button>
+    <button type="button" class="active navHome" data-bottom-tab="feed"><span class="bottomIcon"><img src="assets/ui/home-orange.svg" alt=""></span><span class="bottomLabel">Accueil</span></button>
+    <button type="button" class="navMarket" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon"><img src="assets/ui/market-bags.svg" alt=""></span><span class="bottomLabel">Marketplace</span></button>
+    <button type="button" class="navGames" data-bottom-tab="games"><span class="bottomIcon"><img src="assets/ui/games-purple.svg" alt=""></span><span class="bottomLabel">Jeux</span></button>
     <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Caméra MyEvent" aria-label="Ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
-    <button type="button" class="navEvents" data-bottom-tab="events"><span class="bottomIcon">▣</span><span class="bottomLabel">Événements</span></button>
-    <button type="button" class="navMusic" data-bottom-tab="music"><span class="bottomIcon">♫</span><span class="bottomLabel">Musique</span></button>
-    <button type="button" class="navProfile" data-bottom-tab="profile"><span class="bottomIcon">♙</span><span class="bottomLabel">Profil</span></button>
+    <button type="button" class="navEvents" data-bottom-tab="events"><span class="bottomIcon"><img src="assets/ui/calendar-star.svg" alt=""></span><span class="bottomLabel">Événements</span></button>
+    <button type="button" class="navMusic" data-bottom-tab="music"><span class="bottomIcon"><img src="assets/ui/music-pink.svg" alt=""></span><span class="bottomLabel">Musique</span></button>
+    <button type="button" class="navProfile" data-bottom-tab="profile"><span class="bottomIcon"><img src="assets/ui/profile-white.svg" alt=""></span><span class="bottomLabel">Profil</span></button>
   </div>
 </section>
 
@@ -1169,12 +1169,15 @@
 
 <script src="js/home-social-runtime.js?v=camera-ai-lenses-1"></script>
 <link rel="stylesheet" href="css/social-friends-stories.css?v=3">
-<script src="js/social-friends-stories.js?v=2"></script>
+<script src="js/social-friends-stories.js?v=4"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
 <script src="js/music-workspace.js?v=dj-v12"></script>
-<script src="js/theme-runtime.js?v=global-theme-1"></script>\n<link rel="stylesheet" href="css/entertainment-lounge.css?v=1">\n
+<script src="js/theme-runtime.js?v=global-theme-2"></script>
+<link rel="stylesheet" href="css/entertainment-lounge.css?v=1">
+<link rel="stylesheet" href="css/theme-accent.css?v=1">
+
 <section id="entertainmentLounge" aria-hidden="true">
   <div id="entertainmentHub" class="entertainmentView active">
     <div class="entertainmentHead"><button type="button" class="entertainmentBack" id="entertainmentBackBtn">‹</button><div><h2>Divertissement & Jeux</h2><p>Jouez ensemble pendant vos événements</p></div></div>

@@ -3328,12 +3328,6 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .friendStoriesStrip{display:flex!important;gap:11px!important;min-height:68px!important}
 #socialHome .friendStoryMini{flex:0 0 58px!important}
 #socialHome .friendStoryMini .miniRing{width:54px!important;height:54px!important}
-#socialBottomNav.homeNavV2 .navHome .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navHome .bottomIcon:after{content:"⌂";font-size:28px;color:#ff4d32;text-shadow:0 0 9px rgba(255,77,50,.65)}
-#socialBottomNav.homeNavV2 .navMarket .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navMarket .bottomIcon:after{content:"🛍️";font-size:27px;filter:saturate(1.5) drop-shadow(0 0 5px rgba(40,215,111,.55))}
-#socialBottomNav.homeNavV2 .navGames .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navGames .bottomIcon:after{content:"🎮";font-size:27px;filter:saturate(1.45) drop-shadow(0 0 5px rgba(170,76,255,.55))}
-#socialBottomNav.homeNavV2 .navEvents .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navEvents .bottomIcon:after{content:"📅";font-size:27px;filter:saturate(1.5) drop-shadow(0 0 5px rgba(45,156,255,.55))}
-#socialBottomNav.homeNavV2 .navMusic .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navMusic .bottomIcon:after{content:"♫";font-size:31px;font-weight:900;color:#f23de3;text-shadow:0 0 8px rgba(242,61,227,.55)}
-#socialBottomNav.homeNavV2 .navProfile .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navProfile .bottomIcon:after{content:"♙";font-size:29px;color:#eef2f8}
 #socialBottomNav.homeNavV2 .bottomLabel{color:#fff!important;font-weight:700!important}
 @media(max-width:390px){#socialHome .homeFeatureCard{flex-basis:calc((100% - 30px)/6)!important;height:100px!important}#socialHome .homeFeatureCard b{font-size:8.5px!important}}
 
@@ -3362,12 +3356,6 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .featureArt{position:relative;font-size:33px!important;filter:drop-shadow(0 0 7px currentColor)}
 #socialHome .featureCalendar{color:#2e77ff}#socialHome .featureCalendar i{position:absolute;right:2px;bottom:2px;color:#ff4b32;font:900 11px/1 system-ui;font-style:normal}
 #socialHome .featureGame{color:#c43cff}#socialHome .featureMarket{color:#24d86c}
-#socialBottomNav.homeNavV2 .navHome .bottomIcon:after{content:"⌂"!important;font-size:31px!important;color:#ff4b32!important;text-shadow:0 0 10px #ff4b32!important}
-#socialBottomNav.homeNavV2 .navMarket .bottomIcon:after{content:"🛍️"!important;font-size:30px!important;filter:saturate(1.8) drop-shadow(0 0 6px #20d86b)!important}
-#socialBottomNav.homeNavV2 .navGames .bottomIcon:after{content:"🎮"!important;font-size:29px!important;filter:saturate(1.7) drop-shadow(0 0 6px #a842ff)!important}
-#socialBottomNav.homeNavV2 .navEvents .bottomIcon:after{content:"📅"!important;font-size:29px!important;filter:saturate(1.8) drop-shadow(0 0 6px #268cff)!important}
-#socialBottomNav.homeNavV2 .navMusic .bottomIcon:after{content:"♫"!important;font-size:34px!important;color:#f03cdd!important;text-shadow:0 0 9px #f03cdd!important}
-#socialBottomNav.homeNavV2 .navProfile .bottomIcon:after{content:"♙"!important;font-size:31px!important;color:#edf2fb!important;text-shadow:0 0 5px #8791a3!important}
 
 /* MyEvent Home V55.7 — restore Nearby shortcut in carousel */
 #socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid #ff4b32!important;background:linear-gradient(145deg,#351411,#11161e)!important;box-shadow:0 0 9px rgba(255,75,50,.28)!important;color:#fff!important}
@@ -3387,20 +3375,6 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome #socialFriendsShortcut .homeFriendsArt span:nth-child(3){right:-8px!important;top:4px!important}
 #socialHome #socialFriendsShortcut .homeFriendsArt em{right:6px!important;bottom:25px!important;opacity:1!important;background:#332b08!important}
 #socialHome #socialFriendsShortcut>b{position:relative!important;z-index:5!important;margin-top:auto!important;text-shadow:0 2px 5px #000!important}
-
-/* MyEvent Home V55.10 — force active Story thumbnail inside top shortcut */
-#socialHome #socialMyStory.homeFeatureCard .socialStoryBubble{position:relative!important;width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;border-radius:16px!important;overflow:hidden!important;padding:0!important;background:#18222d!important}
-#socialHome #socialMyStory.homeFeatureCard.hasStory .socialStoryBubble{border:2px solid #ff6034!important;box-shadow:0 0 8px rgba(255,96,52,.5)!important}
-#socialHome #socialMyStory.homeFeatureCard .socialStoryBubble>.myStoryThumbnail{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:13px!important;object-fit:cover!important;object-position:center!important;opacity:1!important;visibility:visible!important;pointer-events:none!important}
-#socialHome #socialMyStory.homeFeatureCard .storyAddBadge{z-index:6!important}
-
-/* MyEvent Home V55.11 — Story thumbnail + viewer create action */
-#socialHome #socialMyStory .socialStoryBubble{background-size:cover!important;background-position:center!important}
-#socialHome #socialMyStory.hasStory .socialStoryBubble{color:transparent!important}
-#socialHome #socialMyStory.hasStory .socialStoryBubble .myStoryThumbnail{display:block!important;z-index:4!important}
-#socialStoryViewer .storyOwnerActions{display:flex;justify-content:flex-end;gap:10px;padding:10px 18px 18px}
-#socialStoryViewer .storyOwnerActions button{position:static!important;width:auto!important}
-#socialStoryViewer .storyAddNew{background:#ff6333!important;color:#fff!important;border:1px solid #ff7b55!important}
 
 /* MyEvent V55.12 — Music is a real overlay page, never part of Home scroll */
 #musicHome{display:none!important;position:fixed!important;inset:0!important;z-index:12000!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;background:#090b0f!important;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(92px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important}

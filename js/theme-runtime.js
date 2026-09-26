@@ -1,11 +1,11 @@
 /* MyEvent global appearance settings. Camera and semantic status colors stay isolated. */
 (function(){
   const defaults={mode:'dark',accent:'#ff6a34',buttonOpacity:.90,surfaceOpacity:.94};
-  let owner='',theme={...defaults};
+  let owner='',theme={...defaults},externalUserId='';
   const card=document.getElementById('myeventAppearanceCard');
   const hexToRgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)).join(',');
   function userKey(){
-    const id=window.myeventMusicContext?.().user?.id||window.currentUser?.id||'guest';
+    const id=externalUserId||window.myeventMusicContext?.().user?.id||window.currentUser?.id||'guest';
     return 'myevent.theme.'+id;
   }
   function normalize(saved){
@@ -24,6 +24,7 @@
     root.style.setProperty('--myevent-accent',theme.accent);
     root.style.setProperty('--myevent-accent-rgb',hexToRgb(theme.accent));
     root.style.setProperty('--myevent-button-opacity',theme.buttonOpacity);
+    root.style.setProperty('--myevent-accent-fill',`rgba(${hexToRgb(theme.accent)},${theme.buttonOpacity})`);
     root.style.setProperty('--myevent-surface-opacity',theme.surfaceOpacity);
     root.style.setProperty('--myevent-accent-global',theme.accent);
     root.style.setProperty('--myevent-accent-rgb-global',hexToRgb(theme.accent));
@@ -48,6 +49,7 @@
     const k=e.target.dataset.theme;if(!k)return;read();
     theme[k]=k==='accent'?e.target.value:Number(e.target.value);save();
   });
+  window.myeventThemeSetUser=id=>{externalUserId=id||'';owner='';read()};
   read();
   window.addEventListener('storage',e=>{if(e.key===owner){owner='';read()}});
   setInterval(read,1000);

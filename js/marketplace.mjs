@@ -221,6 +221,7 @@ $('marketLogin').addEventListener('submit',async e=>{
   catch(error){$('authStatus').textContent=errorMessage(error);}finally{b.disabled=false;}
 });
 function signedOut(){
+  window.myeventThemeSetUser?.(null);
   generation++;threadRevision++;clearTimeout(messageTimer);user=null;items=[];photos.clear();favorites.clear();thread=null;editing=null;pendingMessage=null;onlyFavorites=own=false;
   for(const dialog of root.querySelectorAll('dialog[open]'))dialog.close();$('messageList').replaceChildren();$('threadList').replaceChildren();$('conversation').hidden=true;$('draftForm').reset();render();
   status('Connectez-vous à votre compte MyEvent pour accéder aux annonces.');
@@ -230,7 +231,7 @@ try{
   client=window.supabase.createClient(projectUrl,publishableKey);store=createMarketplaceStore(client);
   client.auth.onAuthStateChange((_event,session)=>{
     // Schedule work outside the auth callback (avoid SDK auth-lock deadlocks).
-    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;applyTheme(savedTheme());load();}},0);
+    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());load();}},0);
   });
 }catch(error){status(errorMessage(error));empty('Connexion indisponible');}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(messageTimer);else if($('inboxDialog').open)refreshMessages();});

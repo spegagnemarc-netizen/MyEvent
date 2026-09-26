@@ -55,3 +55,16 @@
   outline:none!important;
   box-shadow:none!important;
 }
+/* Always show the owner's real Story first, followed by accessible friends. */
+#socialHome #friendStoriesSection.friendStoriesSection{display:block!important;min-height:84px}
+#socialHome #friendStoriesStrip{display:flex!important;gap:11px;overflow-x:auto!important;scrollbar-width:none}
+#socialHome .ownStoryMini .miniRing{position:relative;background:var(--myevent-accent,#ff6a34)!important}
+#socialHome .friendStoryMini .miniRing img,
+#socialHome .friendStoryMini .miniRing video{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+#socialHome .friendStoryAdd{position:absolute;right:-3px;bottom:-2px;margin:0!important;width:18px;height:18px;border-radius:50%;background:var(--myevent-accent,#ff6a34);border:1.5px solid #fff;color:#fff;font-size:16px;line-height:16px;font-weight:900}
+#socialHome .homeFriendsArt img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+#socialHome #socialMyStory .socialStoryBubble{position:relative;display:block;width:54px!important;height:54px!important;overflow:hidden;border-radius:16px;padding:0}
+#socialHome #socialMyStory .myStoryThumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+#socialHome #socialMyStory .storyAddBadge{z-index:2}
+#socialStoryViewer .storyOwnerActions{display:flex;justify-content:flex-end;gap:10px;padding:10px 18px 18px}
+#socialStoryViewer .storyOwnerActions button{position:static!important;width:auto!important}
