@@ -168,14 +168,22 @@
       strip.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
       showMyStoryThumbnail(user.id);
       const me=$('socialMyStory');
-      me.onclick=()=>{const i=storyRows.findIndex(r=>r.author_id===user.id);if(i>=0)showStory(i);else createStory();};
+      me.onclick=e=>{if(e.target.closest('.storyAddBadge')){createStory();return}const i=storyRows.findIndex(r=>r.author_id===user.id);if(i>=0)showStory(i);else createStory();};
+      const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip'); if(friendStrip)friendStrip.replaceChildren();
       const seen=new Set(); storyRows.forEach((r,i)=>{
         if(r.author_id===user.id||seen.has(r.author_id))return; seen.add(r.author_id);
         const bubble=document.createElement('button'); bubble.type='button'; bubble.className='socialStory hasStory';
         bubble.dataset.storyAuthor=r.author_id; const a=document.createElement('div'); a.className='socialStoryBubble'; a.append(avatar(r.profile));
         const label=document.createElement('div'); label.textContent=profileName(r.profile); bubble.append(a,label);
-        bubble.onclick=()=>showStory(i); strip.insertBefore(bubble,strip.children[2]);
+        bubble.onclick=()=>showStory(i); if(strip)strip.append(bubble);
+        if(friendStrip){
+          const mini=document.createElement('button');mini.type='button';mini.className='friendStoryMini';
+          const ring=document.createElement('div');ring.className='miniRing';const inside=document.createElement('div');inside.append(avatar(r.profile));ring.append(inside);
+          const labelMini=document.createElement('span');labelMini.textContent=profileName(r.profile);mini.append(ring,labelMini);mini.onclick=()=>showStory(i);friendStrip.append(mini);
+        }
       });
+      if(friendSection)friendSection.classList.toggle('hidden',!friendStrip?.children.length);
+      const preview=$('homeFriendsPreview');if(preview){const count=seen.size;preview.textContent=count?('👥 +'+count):'👥';}
     } catch(e) { console.warn('Stories indisponibles',e); }
   }
   async function publishStory(file) {
