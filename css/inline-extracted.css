@@ -3353,3 +3353,18 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome #friendStoriesSection.friendStoriesSection.hidden{display:none!important}
 #socialHome #friendStoriesSection .friendStoriesHead{display:flex!important}
 #socialHome #friendStoriesStrip.friendStoriesStrip{display:flex!important;overflow-x:auto!important}
+
+/* MyEvent Home V55.6 — richer validated shortcut/nav illustrations */
+#socialHome .homeFriendsArt{position:relative;width:46px;height:43px;font-size:21px!important;display:flex;align-items:center;justify-content:center}
+#socialHome .homeFriendsArt span{position:absolute;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#1b2634;border:1.5px solid #ffd22e;box-shadow:0 2px 5px #0008}
+#socialHome .homeFriendsArt span:nth-child(1){left:0;top:9px}#socialHome .homeFriendsArt span:nth-child(2){left:10px;top:0;z-index:2}#socialHome .homeFriendsArt span:nth-child(3){right:0;top:10px;z-index:3}
+#socialHome .homeFriendsArt em{position:absolute;right:-4px;bottom:-2px;z-index:5;background:#202936;border:1px solid #ffd22e;border-radius:12px;color:#fff;font:700 8px/15px system-ui;width:21px;height:15px}
+#socialHome .featureArt{position:relative;font-size:33px!important;filter:drop-shadow(0 0 7px currentColor)}
+#socialHome .featureCalendar{color:#2e77ff}#socialHome .featureCalendar i{position:absolute;right:2px;bottom:2px;color:#ff4b32;font:900 11px/1 system-ui;font-style:normal}
+#socialHome .featureGame{color:#c43cff}#socialHome .featureMarket{color:#24d86c}
+#socialBottomNav.homeNavV2 .navHome .bottomIcon:after{content:"⌂"!important;font-size:31px!important;color:#ff4b32!important;text-shadow:0 0 10px #ff4b32!important}
+#socialBottomNav.homeNavV2 .navMarket .bottomIcon:after{content:"🛍️"!important;font-size:30px!important;filter:saturate(1.8) drop-shadow(0 0 6px #20d86b)!important}
+#socialBottomNav.homeNavV2 .navGames .bottomIcon:after{content:"🎮"!important;font-size:29px!important;filter:saturate(1.7) drop-shadow(0 0 6px #a842ff)!important}
+#socialBottomNav.homeNavV2 .navEvents .bottomIcon:after{content:"📅"!important;font-size:29px!important;filter:saturate(1.8) drop-shadow(0 0 6px #268cff)!important}
+#socialBottomNav.homeNavV2 .navMusic .bottomIcon:after{content:"♫"!important;font-size:34px!important;color:#f03cdd!important;text-shadow:0 0 9px #f03cdd!important}
+#socialBottomNav.homeNavV2 .navProfile .bottomIcon:after{content:"♙"!important;font-size:31px!important;color:#edf2fb!important;text-shadow:0 0 5px #8791a3!important}
