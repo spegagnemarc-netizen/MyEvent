@@ -3,7 +3,7 @@
 #socialHome .myeventMarketplaceEntry>span:nth-child(2){flex:1;min-width:0}
 #socialHome .myeventMarketplaceEntry strong{display:block;font-size:15px}
 #socialHome .myeventMarketplaceEntry small{display:block;margin-top:4px;font-size:11px;line-height:1.4;color:#d4e6da}
-#socialHome .myeventMarketplaceEntry:focus-visible{outline:3px solid #efab73;outline-offset:3px}
+#socialHome .myeventMarketplaceEntry:focus-visible{outline:3px solid var(--myevent-accent);outline-offset:3px}
 
 
 

@@ -1,4 +1,4 @@
-:root{--myevent-accent:#ff6a34;--myevent-accent-rgb:255,106,52;--myevent-intensity:.18;--myevent-surface-opacity:.94}
+:root{--myevent-intensity:.18}
 #musicHome [hidden],#musicPlayback[hidden]{display:none!important}
 #musicHome{background:rgba(8,11,16,var(--myevent-surface-opacity));color:#fff}
 #musicScreen{max-width:900px;margin:auto;padding-bottom:340px}
@@ -593,8 +593,8 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 
 /* Music IA V1.7 — visible lock state */
 #musicScreen #musicDraftTracks .musicDraftLock[aria-pressed="true"]{
-  border-color:#ff6a3d!important;
-  box-shadow:inset 0 0 0 1px #ff6a3d!important;
+  border-color:var(--myevent-accent)!important;
+  box-shadow:inset 0 0 0 1px var(--myevent-accent)!important;
 }
 #musicScreen #musicDraftTracks .musicDraftLock[aria-pressed="false"]{
   border-color:#35c978!important;
@@ -606,8 +606,8 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 #musicHome .musicSectionTitle>button,
 #musicHome .musicShelfHead>button,
 #musicHome .musicForYouHead>button{
-  border-color:#ff6a3d!important;
-  box-shadow:inset 0 0 0 1px #ff6a3d!important;
+  border-color:var(--myevent-accent)!important;
+  box-shadow:inset 0 0 0 1px var(--myevent-accent)!important;
 }
 /* Force one visible label on dynamic shelf actions (prevents duplicated label on iOS). */
 #musicHome .musicShelfHead>button{

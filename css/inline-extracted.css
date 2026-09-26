@@ -740,32 +740,29 @@ body.discussionFullScreen #discussionPanel.active{
 .socialHome{margin:0 -20px 24px;padding:0 16px 110px;background:radial-gradient(circle at 50% -10%,rgba(255,102,45,.10),transparent 34%),#07090b;color:#fff;min-height:calc(100vh - 20px)}
 .socialTop{padding:18px 4px 10px;display:flex;align-items:center;gap:10px}
 .socialProfileHead{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
-.socialProfileAvatar{width:58px;height:58px;border-radius:50%;background:#111820;border:2px solid #313b45;display:grid;place-items:center;overflow:hidden;flex:none;font-size:25px;box-shadow:0 0 0 3px rgba(255,106,52,.05)}
+.socialProfileAvatar{width:58px;height:58px;border-radius:50%;background:#111820;border:2px solid #313b45;display:grid;place-items:center;overflow:hidden;flex:none;font-size:25px;box-shadow:0 0 0 3px rgba(var(--myevent-accent-rgb),.05)}
 .socialProfileAvatar img{width:100%;height:100%;object-fit:cover}.socialProfileText{min-width:0}.socialProfileText b{display:block;font-size:21px;line-height:1.05}.socialProfileText span{display:block;color:#9da5ad;font-size:13px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.socialTopTools{display:flex;align-items:center;gap:6px;flex:none}.socialToolBtn{width:42px;height:42px;border-radius:50%;padding:0!important;margin:0!important;background:#10151a!important;border:1px solid #293139!important;color:#fff!important;box-shadow:none!important;position:relative}.socialBadge{position:absolute;right:-2px;top:-3px;min-width:18px;height:18px;border-radius:999px;background:#ff6334;color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;border:2px solid #07090b}
-.socialMyEventsBox{border:1px solid #ff6a34;border-radius:22px;padding:7px 8px 6px;margin:4px 0 12px;background:linear-gradient(180deg,rgba(255,106,52,.08),rgba(255,106,52,.015));box-shadow:0 0 22px rgba(255,106,52,.07)}
-.socialMyEventsTitle{display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;font-weight:850;font-size:12px;margin-top:2px}.socialMyEventsTitle:after{content:'›';color:#ff6a34;font-size:20px;line-height:10px}
-.socialMyEventsActions{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.socialMyEventsActions button{min-width:0;height:48px;padding:4px!important;margin:0!important;background:transparent!important;border:0!important;color:#e8edf1!important;box-shadow:none!important;font-size:20px!important;position:relative}.socialMyEventsActions button span{display:block;font-size:9px;color:#a9b1b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.socialMyEventsActions button:hover{background:rgba(255,255,255,.04)!important}.socialMyEventsActions .eventShortcutBadge{position:absolute;top:1px;right:12px;background:#ff6334;color:#fff;border-radius:99px;min-width:16px;height:16px;font-size:9px;display:grid;place-items:center}
-.socialStories{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:3px 0 10px}.socialStories::-webkit-scrollbar{display:none}.socialStory{flex:0 0 74px;text-align:center;color:#d9dfe4;font-size:10px;font-weight:700}.socialStoryBubble{width:68px;height:68px;margin:0 auto 5px;border-radius:22px;background:linear-gradient(145deg,#151c23,#0d1217);border:2px solid #5b6874;display:grid;place-items:center;font-size:28px;box-shadow:inset 0 0 18px rgba(255,255,255,.04)}.socialStory.create .socialStoryBubble{border-color:#ff6a34;color:#ff6a34;font-size:34px}.socialStory.me .socialStoryBubble{border-color:#ff8c61}
-.socialFilters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px 0 16px}.socialFilters::-webkit-scrollbar{display:none}.socialFilter{white-space:nowrap;border:1px solid #2b3239!important;background:#11161b!important;color:#b8c0c7!important;border-radius:999px!important;padding:10px 15px!important;margin:0!important;box-shadow:none!important;font-size:13px!important}.socialFilter.active{background:#ff6a34!important;border-color:#ff6a34!important;color:#fff!important;box-shadow:0 5px 18px rgba(255,106,52,.24)!important}
-.socialSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:3px 4px 10px}.socialSectionHead h3{margin:0;font-size:20px}.socialSectionHead button{background:transparent!important;border:0!important;color:#ff7546!important;box-shadow:none!important;padding:4px!important;margin:0!important;font-weight:800}
-.socialFeed{display:flex;flex-direction:column;gap:14px}.socialPost{background:#15181b!important;border:1px solid #2a3035!important;border-radius:24px!important;padding:0!important;overflow:hidden!important;box-shadow:0 10px 28px rgba(0,0,0,.24)!important}.socialPostHead{display:flex;align-items:center;gap:10px;padding:14px 14px 7px}.socialPostAvatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#22282e;font-size:21px;flex:none;border:1px solid #394149}.socialPostMeta b{color:#fff}.socialPostMeta span{color:#8e98a2!important}.socialPostText{margin:8px 14px 12px!important;color:#e3e8ec;line-height:1.45}.socialEventCard{margin:0 12px 12px!important;border:1px solid #313940!important;border-radius:18px!important;padding:0!important;background:#101316!important;overflow:hidden}.socialEventCover{height:160px;background:linear-gradient(135deg,#23384b,#0d1720);position:relative;background-size:cover;background-position:center}.socialEventCover:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.7))}.socialEventBadges{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:7px}.socialBadgeChip{background:rgba(13,19,24,.84);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:850}.socialBadgeChip.hot{background:#ff6a34;border-color:#ff6a34}.socialEventInfo{padding:13px 13px 12px}.socialEventTitle{font-weight:850;font-size:18px;color:#fff}.socialEventMeta{font-size:13px;color:#aeb7bf;margin-top:6px}.socialEventBottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px}.socialAvatars{display:flex;align-items:center}.socialAvatarDot{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#283038;border:2px solid #101316;margin-right:-6px;font-size:13px}.socialEventBottom .socialInterestBtn,.socialEventBottom button{margin:0!important}.socialInterestBtn{background:#ff6a34!important;border-color:#ff6a34!important;color:#fff!important;border-radius:14px!important;box-shadow:0 5px 18px rgba(255,106,52,.18)!important;font-weight:850!important}.socialActions{display:flex!important;gap:2px;border-top:1px solid #2a3035!important;padding:5px 9px!important;margin:0!important}.socialActions button{background:transparent!important;border:0!important;box-shadow:none!important;color:#929ba4!important;padding:8px 5px!important;margin:0!important;flex:1}.socialActions button.active{color:#ff7040!important}
+.socialTopTools{display:flex;align-items:center;gap:6px;flex:none}.socialToolBtn{width:42px;height:42px;border-radius:50%;padding:0!important;margin:0!important;background:#10151a!important;border:1px solid #293139!important;color:#fff!important;box-shadow:none!important;position:relative}.socialBadge{position:absolute;right:-2px;top:-3px;min-width:18px;height:18px;border-radius:999px;background:var(--myevent-accent);color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;border:2px solid #07090b}
+.socialMyEventsBox{border:1px solid var(--myevent-accent);border-radius:22px;padding:7px 8px 6px;margin:4px 0 12px;background:linear-gradient(180deg,rgba(var(--myevent-accent-rgb),.08),rgba(var(--myevent-accent-rgb),.015));box-shadow:0 0 22px rgba(var(--myevent-accent-rgb),.07)}
+.socialMyEventsTitle{display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;font-weight:850;font-size:12px;margin-top:2px}.socialMyEventsTitle:after{content:'›';color:var(--myevent-accent);font-size:20px;line-height:10px}
+.socialMyEventsActions{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.socialMyEventsActions button{min-width:0;height:48px;padding:4px!important;margin:0!important;background:transparent!important;border:0!important;color:#e8edf1!important;box-shadow:none!important;font-size:20px!important;position:relative}.socialMyEventsActions button span{display:block;font-size:9px;color:#a9b1b8;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.socialMyEventsActions button:hover{background:rgba(255,255,255,.04)!important}.socialMyEventsActions .eventShortcutBadge{position:absolute;top:1px;right:12px;background:var(--myevent-accent);color:#fff;border-radius:99px;min-width:16px;height:16px;font-size:9px;display:grid;place-items:center}
+.socialStories{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:3px 0 10px}.socialStories::-webkit-scrollbar{display:none}.socialStory{flex:0 0 74px;text-align:center;color:#d9dfe4;font-size:10px;font-weight:700}.socialStoryBubble{width:68px;height:68px;margin:0 auto 5px;border-radius:22px;background:linear-gradient(145deg,#151c23,#0d1217);border:2px solid #5b6874;display:grid;place-items:center;font-size:28px;box-shadow:inset 0 0 18px rgba(255,255,255,.04)}.socialStory.create .socialStoryBubble{border-color:var(--myevent-accent);color:var(--myevent-accent);font-size:34px}.socialStory.me .socialStoryBubble{border-color:#ff8c61}
+.socialFilters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:7px 0 16px}.socialFilters::-webkit-scrollbar{display:none}.socialFilter{white-space:nowrap;border:1px solid #2b3239!important;background:#11161b!important;color:#b8c0c7!important;border-radius:999px!important;padding:10px 15px!important;margin:0!important;box-shadow:none!important;font-size:13px!important}.socialFilter.active{background:var(--myevent-accent-fill)!important;border-color:var(--myevent-accent)!important;color:#fff!important;box-shadow:0 5px 18px rgba(var(--myevent-accent-rgb),.24)!important}
+.socialSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:3px 4px 10px}.socialSectionHead h3{margin:0;font-size:20px}.socialSectionHead button{background:transparent!important;border:0!important;color:var(--myevent-accent)!important;box-shadow:none!important;padding:4px!important;margin:0!important;font-weight:800}
+.socialFeed{display:flex;flex-direction:column;gap:14px}.socialPost{background:#15181b!important;border:1px solid #2a3035!important;border-radius:24px!important;padding:0!important;overflow:hidden!important;box-shadow:0 10px 28px rgba(0,0,0,.24)!important}.socialPostHead{display:flex;align-items:center;gap:10px;padding:14px 14px 7px}.socialPostAvatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#22282e;font-size:21px;flex:none;border:1px solid #394149}.socialPostMeta b{color:#fff}.socialPostMeta span{color:#8e98a2!important}.socialPostText{margin:8px 14px 12px!important;color:#e3e8ec;line-height:1.45}.socialEventCard{margin:0 12px 12px!important;border:1px solid #313940!important;border-radius:18px!important;padding:0!important;background:#101316!important;overflow:hidden}.socialEventCover{height:160px;background:linear-gradient(135deg,#23384b,#0d1720);position:relative;background-size:cover;background-position:center}.socialEventCover:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.7))}.socialEventBadges{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:7px}.socialBadgeChip{background:rgba(13,19,24,.84);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:850}.socialBadgeChip.hot{background:var(--myevent-accent);border-color:var(--myevent-accent)}.socialEventInfo{padding:13px 13px 12px}.socialEventTitle{font-weight:850;font-size:18px;color:#fff}.socialEventMeta{font-size:13px;color:#aeb7bf;margin-top:6px}.socialEventBottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px}.socialAvatars{display:flex;align-items:center}.socialAvatarDot{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#283038;border:2px solid #101316;margin-right:-6px;font-size:13px}.socialEventBottom .socialInterestBtn,.socialEventBottom button{margin:0!important}.socialInterestBtn{background:var(--myevent-accent-fill)!important;border-color:var(--myevent-accent)!important;color:#fff!important;border-radius:14px!important;box-shadow:0 5px 18px rgba(var(--myevent-accent-rgb),.18)!important;font-weight:850!important}.socialActions{display:flex!important;gap:2px;border-top:1px solid #2a3035!important;padding:5px 9px!important;margin:0!important}.socialActions button{background:transparent!important;border:0!important;box-shadow:none!important;color:#929ba4!important;padding:8px 5px!important;margin:0!important;flex:1}.socialActions button.active{color:var(--myevent-accent)!important}
 .socialPeople{background:#15181b!important;border:1px solid #2a3035!important;border-radius:20px!important;padding:4px 14px}.socialPerson{border-bottom:1px solid #293037!important}.socialPerson .muted{color:#909aa4!important}.socialSearch input{background:#11161b!important;border-color:#2a3239!important;color:#fff!important}.socialComposer{margin:0 0 13px}.socialMiniAvatar{background:#151b20!important;border-color:#313940!important;color:#fff}.socialComposerInput{background:#11161b!important;border-color:#2a3239!important;color:#9ca5ad!important}.socialComposerPanel{background:#11161b!important;border-color:#2a3239!important}.socialComposerPanel textarea{background:#0c1014!important;border-color:#2a3239!important;color:#fff!important}
-.socialBottomNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100vw);height:78px;z-index:80;background:rgba(9,11,13,.96);backdrop-filter:blur(16px);border-top:1px solid #272d32;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding-bottom:max(8px,env(safe-area-inset-bottom))}.socialBottomNav button{background:transparent!important;border:0!important;box-shadow:none!important;color:#8f979f!important;padding:7px 2px!important;margin:0!important;border-radius:0!important;font-size:11px!important}.socialBottomNav button.active{color:#ff7040!important}.socialBottomNav .bottomIcon{display:block;font-size:22px;line-height:28px}.socialBottomNav .createBottom{width:58px;height:58px;border-radius:50%!important;background:#ff6a34!important;color:#fff!important;margin:-15px auto 0!important;font-size:31px!important;box-shadow:0 8px 25px rgba(255,106,52,.35)!important}.socialBottomNav .createBottom .bottomLabel{display:none}
+.socialBottomNav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(430px,100vw);height:78px;z-index:80;background:rgba(9,11,13,.96);backdrop-filter:blur(16px);border-top:1px solid #272d32;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding-bottom:max(8px,env(safe-area-inset-bottom))}.socialBottomNav button{background:transparent!important;border:0!important;box-shadow:none!important;color:#8f979f!important;padding:7px 2px!important;margin:0!important;border-radius:0!important;font-size:11px!important}.socialBottomNav button.active{color:var(--myevent-accent)!important}.socialBottomNav .bottomIcon{display:block;font-size:22px;line-height:28px}.socialBottomNav .createBottom{width:58px;height:58px;border-radius:50%!important;background:var(--myevent-accent-fill)!important;color:#fff!important;margin:-15px auto 0!important;font-size:31px!important;box-shadow:0 8px 25px rgba(var(--myevent-accent-rgb),.35)!important}.socialBottomNav .createBottom .bottomLabel{display:none}
 @media(max-width:600px){.socialHome{margin-left:-20px;margin-right:-20px;padding-left:14px;padding-right:14px}.socialProfileText b{font-size:19px}.socialTopTools{gap:3px}.socialToolBtn{width:39px;height:39px}.socialEventCover{height:145px}.socialBottomNav{height:74px}.socialMyEventsActions button{font-size:19px!important}.socialMyEventsActions button span{font-size:8px}}
 
-/* V54.48 — Accueil 100% orange + caméra centrale MyEvent */
-/* The camera modal lives inside #socialHome, but is intentionally outside its orange theme. */
-#socialHome button:not(.secondary):not(:where(#myeventCameraModal button, #musicHome button)), #socialHome .socialInterestBtn, #socialHome .socialSearch button, #socialHome .socialComposerPanel button, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; box-shadow:0 5px 18px rgba(255,106,52,.16)!important; }
-#socialHome button.secondary:not(:where(#myeventCameraModal button)), #socialHome .socialFilter:not(:where(#myeventCameraModal *)) { background:#11161b!important; border-color:#ff6a34!important; color:#f4f7fa!important; box-shadow:none!important; }
-#socialHome .socialFilter.active { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
+/* Accents explicites : les contrôles neutres et les modules gardent leurs couleurs. */
+#socialHome .socialFilter.active { background:var(--myevent-accent-fill)!important; border-color:var(--myevent-accent)!important; color:#fff!important; }
 #socialHome .socialActions button { background:transparent!important; border-color:transparent!important; color:#aeb7bf!important; box-shadow:none!important; }
-#socialHome .socialActions button.active { color:#ff7040!important; }
-#socialHome .socialFollowBtn.active, #socialHome .socialMessageBtn { background:#ff6a34!important; border-color:#ff6a34!important; color:#fff!important; }
+#socialHome .socialActions button.active { color:var(--myevent-accent)!important; }
+#socialHome .socialFollowBtn.active, #socialHome .socialMessageBtn { background:var(--myevent-accent-fill)!important; border-color:var(--myevent-accent)!important; color:#fff!important; }
 #socialHome .socialBottomNav button { background:transparent!important; border:0!important; color:#8f979f!important; box-shadow:none!important; }
-#socialHome .socialBottomNav button.active { color:#ff7040!important; }
-#socialHome .socialBottomNav .createBottom { background:#ff6a34!important; color:#fff!important; border:0!important; }
-#socialHome .socialSectionHead button { background:transparent!important; border:0!important; color:#ff7546!important; box-shadow:none!important; }
+#socialHome .socialBottomNav button.active { color:var(--myevent-accent)!important; }
+#socialHome .socialBottomNav .createBottom { background:var(--myevent-accent-fill)!important; color:#fff!important; border:0!important; }
+#socialHome .socialSectionHead button { background:transparent!important; border:0!important; color:var(--myevent-accent)!important; box-shadow:none!important; }
 
 .cameraModal{position:fixed;inset:0;z-index:300;background:rgba(3,5,7,.97);display:none;align-items:flex-end;justify-content:center}
 .cameraModal.open{display:flex}
@@ -778,7 +775,7 @@ body.discussionFullScreen #discussionPanel.active{
 body:has(#socialHome) .app > h1{display:none!important}
 #socialHome{padding-top:6px!important;background:#07090b!important}
 #socialHome .socialBrand{display:block!important;font-size:30px!important;font-weight:900!important;letter-spacing:-1.2px!important;line-height:1!important;margin:2px 6px 7px!important;color:#fff!important}
-#socialHome .socialBrand span{color:#ff6a34!important}
+#socialHome .socialBrand span{color:var(--myevent-accent)!important}
 #socialHome .socialTop{padding:4px 4px 5px!important;min-height:52px!important}
 #socialHome .socialProfileAvatar{width:48px!important;height:48px!important}
 #socialHome .socialProfileText b{font-size:17px!important}
@@ -973,7 +970,7 @@ body:has(#socialHome) .app > h1{display:none!important}
 .socialFriendRequestCard .muted{font-size:11px!important;line-height:1.25!important;min-height:28px!important}
 .socialFriendRequestActions{display:flex!important;gap:6px!important;margin-top:9px!important}
 .socialFriendRequestActions button{flex:1!important;min-width:0!important;padding:8px 5px!important;font-size:11px!important;margin:0!important}
-.socialFriendRequestActions .secondary{border-color:#ff6a34!important;color:#fff!important;background:#11161b!important}
+.socialFriendRequestActions .secondary{border-color:var(--myevent-accent)!important;color:#fff!important;background:#11161b!important}
 @media(max-width:430px){.socialFriendRequestCard{flex-basis:calc(50% - 5px)!important}}
 
 /* ===== extracted style block 14 ===== */
@@ -1348,7 +1345,7 @@ body.discussionFullScreen{overflow:hidden!important;}
 /* ===== extracted style block 31 ===== */
 /* V54.49 — Accueil social : thème personnalisable + sélection unique */
 #socialHome{
-  --social-accent:#ff6a34;
+  --social-accent:var(--myevent-accent);
   --social-bg:#080b0f;
   --social-panel:#11161b;
   --social-panel-2:#15181b;
@@ -1365,7 +1362,7 @@ body.discussionFullScreen{overflow:hidden!important;}
   color:#b8c0c7!important;
 }
 #socialHome .socialFilter.active{
-  background:var(--social-accent)!important;
+  background:var(--myevent-accent-fill)!important;
   border-color:var(--social-accent)!important;
   color:#fff!important;
   box-shadow:0 5px 18px color-mix(in srgb,var(--social-accent) 24%,transparent)!important;
@@ -1378,7 +1375,7 @@ body.discussionFullScreen{overflow:hidden!important;}
 }
 #socialHome .socialMyEventsActions button span{color:#aeb7bf!important}
 #socialHome .socialMyEventsActions button.active{
-  background:var(--social-accent)!important;
+  background:var(--myevent-accent-fill)!important;
   border-color:var(--social-accent)!important;
   color:#fff!important;
 }
@@ -1401,13 +1398,13 @@ body.discussionFullScreen{overflow:hidden!important;}
 #socialHome .socialMessageBtn,
 #socialHome .socialComposerPanel button:not(.secondary),
 #socialHome .socialCommentBox button{
-  background:var(--social-accent)!important;
+  background:var(--myevent-accent-fill)!important;
   border-color:var(--social-accent)!important;
 }
 #socialHome .socialBottomNav [data-bottom-tab].active{color:var(--social-accent)!important}
-#socialHome .socialBottomCreate{background:var(--social-accent)!important}
+#socialHome .socialBottomCreate{background:var(--myevent-accent-fill)!important}
 #socialHome .socialHeaderBadge,
-#socialHome .eventShortcutBadge{background:var(--social-accent)!important}
+#socialHome .eventShortcutBadge{background:var(--myevent-accent-fill)!important}
 
 /* Réglages d'apparence dans Profil */
 .myeventAppearanceCard{
@@ -1430,15 +1427,15 @@ body.discussionFullScreen{overflow:hidden!important;}
   box-shadow:none!important;
 }
 .myeventAppearanceChoice.active{
-  background:var(--social-accent,#ff6a34)!important;
-  border-color:var(--social-accent,#ff6a34)!important;
+  background:var(--myevent-accent-fill)!important;
+  border-color:var(--myevent-accent)!important;
   color:#fff!important;
 }
 .myeventAccent{
   width:34px!important;height:34px!important;padding:0!important;border-radius:50%!important;
   border:3px solid #303943!important;margin:0!important;
 }
-.myeventAccent.active{border-color:#fff!important;box-shadow:0 0 0 2px var(--social-accent,#ff6a34)!important}
+.myeventAccent.active{border-color:#fff!important;box-shadow:0 0 0 2px var(--myevent-accent)!important}
 #socialHome.socialLight{
   --social-bg:#f4f5f7;
   --social-panel:#ffffff;
@@ -1685,10 +1682,10 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
   box-shadow:none!important;
 }
 #socialHome button.socialFilter.active{
-  background:var(--social-accent,#ff6a34)!important;
-  border-color:var(--social-accent,#ff6a34)!important;
+  background:var(--myevent-accent-fill)!important;
+  border-color:var(--myevent-accent)!important;
   color:#fff!important;
-  box-shadow:0 5px 18px color-mix(in srgb,var(--social-accent,#ff6a34) 24%,transparent)!important;
+  box-shadow:0 5px 18px rgba(var(--myevent-accent-rgb),.24)!important;
 }
 /* Réduction légère de l'encombrement sur téléphone, sans modifier les écrans d'événement. */
 @media(max-width:600px){
@@ -1808,7 +1805,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 .myeventSwitch input{opacity:0;width:0;height:0}
 .myeventSwitch span{position:absolute;inset:0;border-radius:999px;background:#303840;transition:.2s}
 .myeventSwitch span:before{content:'';position:absolute;width:25px;height:25px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}
-.myeventSwitch input:checked+span{background:#ff6a34}
+.myeventSwitch input:checked+span{background:var(--myevent-accent)}
 .myeventSwitch input:checked+span:before{transform:translateX(21px)}
 .myeventNearbyInfo{font-size:11px;line-height:1.4;color:#8e9aa4;margin:10px 2px}
 #myeventNearbyLocateBtn{width:100%;margin-top:4px}
@@ -1883,11 +1880,11 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 .myeventNearbyMapTools{position:absolute;left:12px;right:12px;top:120px;z-index:500;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
 .myeventNearbyMapTools::-webkit-scrollbar{display:none}
 .myeventNearbyMapTools button{flex:0 0 auto;background:rgba(255,255,255,.94)!important;color:#171b1f!important;border:0!important;border-radius:999px!important;padding:9px 13px!important;font-size:12px!important;font-weight:800!important;box-shadow:0 3px 12px rgba(0,0,0,.25)!important}
-.myeventNearbyMapTools button.active{background:#ff6a34!important;color:#fff!important}
+.myeventNearbyMapTools button.active{background:var(--myevent-accent)!important;color:#fff!important}
 .myeventMapAvatarMarker{width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:#111;box-shadow:0 3px 12px rgba(0,0,0,.45);overflow:hidden}
 .myeventMapAvatarMarker img{width:100%;height:100%;object-fit:cover;display:block}
 .myeventMapAvatarMarker span{width:100%;height:100%;display:grid;place-items:center;font-size:23px;background:#fff}
-.myeventLeisureMarker{min-width:34px;height:34px;padding:0 7px;border-radius:18px;background:#fff;border:2px solid #ff6a34;display:grid;place-items:center;box-shadow:0 3px 12px rgba(0,0,0,.3);font-size:17px}
+.myeventLeisureMarker{min-width:34px;height:34px;padding:0 7px;border-radius:18px;background:#fff;border:2px solid var(--myevent-accent);display:grid;place-items:center;box-shadow:0 3px 12px rgba(0,0,0,.3);font-size:17px}
 
 /* ===== extracted style block 47 ===== */
 #myeventNearbyPanel{display:none!important}
@@ -2315,7 +2312,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 }
 .myeventCityLabel .dot{
   width:11px;height:11px;border-radius:50%;
-  background:#ff6a34;border:2px solid #fff;
+  background:var(--myevent-accent);border:2px solid #fff;
   box-shadow:0 2px 7px rgba(0,0,0,.45);
 }
 .myeventCityLabel .name{
@@ -2332,13 +2329,13 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 .myeventInterestLabel .pin{
   width:28px;height:28px;border-radius:50%;
   display:grid;place-items:center;background:#fff;
-  border:2px solid #ff6a34;
+  border:2px solid var(--myevent-accent);
   box-shadow:0 2px 9px rgba(0,0,0,.45);font-size:14px;
 }
 .myeventInterestLabel .name{
   max-width:155px;overflow:hidden;text-overflow:ellipsis;
   padding:4px 7px;border-radius:7px;
-  background:rgba(255,106,52,.92);color:#fff;
+  background:var(--myevent-accent-fill);color:#fff;
   font-size:10px;font-weight:900;line-height:1.15;
   text-shadow:0 1px 2px rgba(0,0,0,.35);
 }
@@ -2422,7 +2419,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 }
 .myeventNearbyMap .myeventCityLabel .name{
   display:inline-block!important;
-  background:rgba(255,106,52,.94)!important;
+  background:var(--myevent-accent-fill)!important;
   color:#fff!important;
   border:1px solid rgba(255,255,255,.75)!important;
   font-size:12px!important;
@@ -2430,7 +2427,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 }
 .myeventNearbyMap .myeventInterestLabel .name{
   display:inline-block!important;
-  background:rgba(255,106,52,.94)!important;
+  background:var(--myevent-accent-fill)!important;
   color:#fff!important;
   border:1px solid rgba(255,255,255,.72)!important;
   font-size:10px!important;
@@ -2499,7 +2496,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
   border-radius:50%!important;
   display:grid!important;
   place-items:center!important;
-  background:#ff6a34!important;
+  background:var(--myevent-accent)!important;
   color:#fff!important;
   border:1.5px solid #fff!important;
   box-shadow:0 1px 4px rgba(0,0,0,.65)!important;
@@ -2514,7 +2511,7 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
   border:0!important;
   border-radius:0!important;
   background:transparent!important;
-  color:#ff8a5b!important;
+  color:var(--myevent-accent)!important;
   font-size:12px!important;
   font-weight:900!important;
   line-height:1.05!important;
@@ -2602,13 +2599,13 @@ details.uniformToggle:not(.tabPanel) > div[style*="margin-top"]{
 
 
 /* MyEvent Music V1 */
-.musicHome{display:none;min-height:100vh;padding:18px 14px 96px;background:#080b10;color:#f7f8fa}.musicHome.open{display:block}.musicHead{display:flex;align-items:center;gap:12px}.musicHead>div{flex:1}.musicHead h2{font-size:30px;margin:0}.musicHead p{margin:3px 0 0;color:#9ca3af}.musicHead button{width:42px;height:42px;border-radius:50%;background:#12161d;border:1px solid #29313d;color:#fff;font-size:25px}.musicSearch{display:flex;align-items:center;gap:9px;margin:18px 0 12px;padding:0 14px;border:1px solid #303640;background:#151920;border-radius:16px}.musicSearch input{border:0!important;background:transparent!important;color:#fff!important;padding:13px 0!important;margin:0!important;width:100%}.musicTabs,.musicChips{display:flex;gap:8px;overflow:auto;padding-bottom:3px}.musicTabs button,.musicChips button{white-space:nowrap;border-radius:999px;background:#171b22;border:1px solid #2c323c;color:#fff;padding:9px 14px}.musicTabs button.active{background:#ff6b2c;border-color:#ff6b2c}.musicSection{margin-top:23px}.musicSectionTitle{display:flex;align-items:center;justify-content:space-between}.musicSectionTitle h3{margin:0 0 11px;font-size:19px}.musicSectionTitle button{background:none;border:0;color:#c5c8ce;padding:0}.musicCards{display:flex;gap:11px;overflow:auto}.musicTile{min-width:145px;text-align:left;padding:14px;border-radius:15px;border:1px solid #252b34;background:#11151b;color:#fff}.musicTile span{display:block;font-size:32px;margin-bottom:16px}.musicTile b,.musicTile small{display:block}.musicTile small{color:#9ca3af;margin-top:4px}.musicEmpty{min-width:100%;padding:24px;border-radius:15px;background:#11151b;border:1px solid #252b34;color:#8f97a3}.musicProvider{display:flex;justify-content:space-between;gap:12px;margin-top:26px;padding:14px;border:1px solid #252b34;border-radius:14px;background:#10141a}.musicProvider span{color:#9ca3af;font-size:13px;text-align:right}
+.musicHome{display:none;min-height:100vh;padding:18px 14px 96px;background:#080b10;color:#f7f8fa}.musicHome.open{display:block}.musicHead{display:flex;align-items:center;gap:12px}.musicHead>div{flex:1}.musicHead h2{font-size:30px;margin:0}.musicHead p{margin:3px 0 0;color:#9ca3af}.musicHead button{width:42px;height:42px;border-radius:50%;background:#12161d;border:1px solid #29313d;color:#fff;font-size:25px}.musicSearch{display:flex;align-items:center;gap:9px;margin:18px 0 12px;padding:0 14px;border:1px solid #303640;background:#151920;border-radius:16px}.musicSearch input{border:0!important;background:transparent!important;color:#fff!important;padding:13px 0!important;margin:0!important;width:100%}.musicTabs,.musicChips{display:flex;gap:8px;overflow:auto;padding-bottom:3px}.musicTabs button,.musicChips button{white-space:nowrap;border-radius:999px;background:#171b22;border:1px solid #2c323c;color:#fff;padding:9px 14px}.musicTabs button.active{background:var(--myevent-accent);border-color:var(--myevent-accent)}.musicSection{margin-top:23px}.musicSectionTitle{display:flex;align-items:center;justify-content:space-between}.musicSectionTitle h3{margin:0 0 11px;font-size:19px}.musicSectionTitle button{background:none;border:0;color:#c5c8ce;padding:0}.musicCards{display:flex;gap:11px;overflow:auto}.musicTile{min-width:145px;text-align:left;padding:14px;border-radius:15px;border:1px solid #252b34;background:#11151b;color:#fff}.musicTile span{display:block;font-size:32px;margin-bottom:16px}.musicTile b,.musicTile small{display:block}.musicTile small{color:#9ca3af;margin-top:4px}.musicEmpty{min-width:100%;padding:24px;border-radius:15px;background:#11151b;border:1px solid #252b34;color:#8f97a3}.musicProvider{display:flex;justify-content:space-between;gap:12px;margin-top:26px;padding:14px;border:1px solid #252b34;border-radius:14px;background:#10141a}.musicProvider span{color:#9ca3af;font-size:13px;text-align:right}
 
 
 .musicEventPanel{display:none;margin-top:22px;padding:16px;border:1px solid #292f38;border-radius:18px;background:#0e1218}.musicEventPanel.open{display:block}.musicQueueRow{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #202630}.musicQueueRow:last-child{border-bottom:0}.musicQueueRow>div{min-width:0}.musicQueueRow strong,.musicQueueRow small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicQueueRow small{margin-top:3px;color:#929aa6}.musicQueueRow button{border:1px solid #333b46;border-radius:999px;background:#171c23;color:#fff;padding:8px 10px}
 
 
-.musicSearchResult{min-width:270px;max-width:320px;display:grid;grid-template-columns:72px 1fr 42px;align-items:center;gap:10px;padding:9px;border:1px solid #252b34;border-radius:15px;background:#11151b}.musicSearchResult img{width:72px;height:72px;object-fit:cover;border-radius:10px}.musicSearchResult>div{min-width:0}.musicSearchResult strong,.musicSearchResult small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicSearchResult small{color:#969eaa;margin-top:5px}.musicSearchResult button{width:38px;height:38px;border:0;border-radius:50%;background:#ff6b2c;color:#fff;font-size:23px}.musicSearchResult button:disabled{opacity:.65}
+.musicSearchResult{min-width:270px;max-width:320px;display:grid;grid-template-columns:72px 1fr 42px;align-items:center;gap:10px;padding:9px;border:1px solid #252b34;border-radius:15px;background:#11151b}.musicSearchResult img{width:72px;height:72px;object-fit:cover;border-radius:10px}.musicSearchResult>div{min-width:0}.musicSearchResult strong,.musicSearchResult small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicSearchResult small{color:#969eaa;margin-top:5px}.musicSearchResult button{width:38px;height:38px;border:0;border-radius:50%;background:var(--myevent-accent);color:#fff;font-size:23px}.musicSearchResult button:disabled{opacity:.65}
 
 
 #socialBottomCreate img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
@@ -2624,10 +2621,10 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 .musicHead button{width:34px!important;height:34px!important;font-size:20px!important;background:transparent!important;border-color:#303640!important}
 .musicSearch{margin:14px 0 10px!important;padding:0 6px 0 12px!important;border-radius:13px!important}
 .musicSearch input{font-size:14px!important;padding:11px 0!important}
-.musicSearch #musicSearchBtn{flex:0 0 auto;border:0;border-radius:10px;background:#ff6b2c;color:#fff;font-weight:800;font-size:12px;padding:9px 11px}
+.musicSearch #musicSearchBtn{flex:0 0 auto;border:0;border-radius:10px;background:var(--myevent-accent);color:#fff;font-weight:800;font-size:12px;padding:9px 11px}
 .musicTabs,.musicChips{gap:7px!important}
 .musicTabs button,.musicChips button{padding:7px 11px!important;font-size:12px!important;background:#15191f!important}
-.musicTabs button.active{background:#ff6b2c!important}
+.musicTabs button.active{background:var(--myevent-accent)!important}
 .musicSection{margin-top:18px!important}.musicSectionTitle h3{font-size:17px!important;margin-bottom:9px!important}
 .musicSectionTitle button{font-size:12px!important;color:#d5d8dd!important}
 .musicTile{min-width:116px!important;padding:11px!important;border-radius:13px!important;background:#11151b!important}
@@ -2662,8 +2659,8 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 .musicRelatedCard{flex:0 0 150px;padding:0;border:0;background:transparent;color:#fff;text-align:left}
 .musicRelatedCard img{width:150px;height:105px;object-fit:cover;border-radius:12px;display:block}
 .musicRelatedCard span,.musicRelatedCard b,.musicRelatedCard small{display:block}.musicRelatedCard b{font-size:12px;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.musicRelatedCard small{font-size:10px;color:#929aa6;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.musicPlayerActions button[aria-pressed="true"]{color:#ff9955;border-color:#8f5735}
-.musicPlayer button:focus-visible,.musicFavoriteRow:focus-visible{outline:2px solid #ff9955;outline-offset:3px}
+.musicPlayerActions button[aria-pressed="true"]{color:var(--myevent-accent);border-color:var(--myevent-accent)}
+.musicPlayer button:focus-visible,.musicFavoriteRow:focus-visible{outline:2px solid var(--myevent-accent);outline-offset:3px}
 .musicPlayer button:disabled{opacity:.55;cursor:default}
 #musicPlayerStatus{min-height:18px;text-align:center;color:#c7cbd1;font-size:12px;margin:8px auto 16px;max-width:520px}
 .musicFavoriteRow{display:block;width:100%;padding:14px 4px;text-align:left;color:#fff;background:transparent;border:0;border-bottom:1px solid #252b34;cursor:pointer}
@@ -3106,7 +3103,7 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicHome>.musicSection:has(#musicEventPlaylistsBtn) .musicTile{
   min-height:122px!important;
   padding:10px!important;
-  border:1px solid rgba(255,106,44,.78)!important;
+  border:1px solid rgba(var(--myevent-accent-rgb),.78)!important;
   background-size:cover!important;
   background-position:center!important;
   background-repeat:no-repeat!important;
@@ -3185,102 +3182,20 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 :root[data-myevent-theme="light"] #socialHome .socialFilter:not(.active),
 :root[data-myevent-theme="light"] #socialHome .socialToolBtn{color:#171a1f!important}
 
-/* Global theme V2.2 — opacity only for controls that are already accent-colored.
-   Neutral, blue event, green marketplace and semantic controls keep their own colors. */
-#socialHome .socialFilter.active,
-#socialHome .socialInterestBtn,
-#socialHome .socialFollowBtn.active,
-#socialHome .socialMessageBtn,
-#socialHome .socialComposerPanel button:not(.secondary),
-#socialHome .socialCommentBox button,
-#socialHome .socialSearch button,
-#socialHome .socialBottomCreate,
-.musicHome .musicTabs button.active,
-.musicHome .musicSearchResult button,
-#musicPlayback .musicTransport [data-transport="toggle"],
-.myeventAppearanceChoice.active{
-  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
-  border-color:var(--myevent-accent)!important;
-}
-/* Accent-colored text/outline follows the selected color but does not receive a fill. */
-#socialHome .socialBottomNav [data-bottom-tab].active,
-#socialHome .socialSectionHead button,
-.musicPlayerActions button[aria-pressed="true"]{color:var(--myevent-accent)!important}
-#musicHome .musicSectionTitle button,
-#musicHomeExtras .musicShelfHead button,
-#musicHomeExtras .musicForYouHead button{border-color:var(--myevent-accent)!important}
-
-/* Global theme V2.3 — force the user's opacity on EXISTING orange accent fills only.
-   Kept intentionally narrow: no neutral buttons, blue event shortcuts, green Marketplace,
-   bottom navigation, semantic success/error controls, or camera controls. */
-#socialHome button.socialFilter.active,
-#socialHome .socialInterestBtn,
-#socialHome .socialFollowBtn.active,
-#socialHome .socialMessageBtn,
-#socialHome .socialComposerPanel button:not(.secondary),
-#socialHome .socialCommentBox button,
-#socialHome .socialSearch button,
-#musicHome .musicSearch button,
-#musicHome .musicTabs button.active,
-#musicHome .musicChips button.active,
-#musicHome .musicSearchResult button,
-#musicPlayback .musicTransport [data-transport="toggle"]{
-  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
-  border-color:var(--myevent-accent)!important;
-  box-shadow:none!important;
-}
-
-/* Global theme V2.4 — keep a crisp accent outline when the accent fill is transparent. */
-#socialHome button.socialFilter.active,
-#socialHome .socialInterestBtn,
-#socialHome .socialFollowBtn.active,
-#socialHome .socialMessageBtn,
-#socialHome .socialComposerPanel button:not(.secondary),
-#socialHome .socialCommentBox button,
-#socialHome .socialSearch button,
-#musicHome .musicSearch button,
-#musicHome .musicTabs button.active,
-#musicHome .musicChips button.active,
-#musicHome .musicSearchResult button,
-#musicPlayback .musicTransport [data-transport="toggle"],
-.myeventAppearanceChoice.active{
-  border:1.5px solid var(--myevent-accent)!important;
-  box-shadow:inset 0 0 0 .5px var(--myevent-accent)!important;
-}
-
-/* Global theme V2.5 — FINAL accent-button allowlist.
-   Only these existing orange controls follow user accent + opacity. */
-#socialHome button.socialFilter.active,
-#socialHome .socialInterestBtn,
-#socialHome [class*="Interest"] button,
-#socialHome [class*="interest"] button,
-#musicHome .musicSearch #musicSearchBtn,
-#musicHome .musicTabs button.active,
-#musicHome .musicChips button.active,
-.myeventAppearanceChoice.active{
-  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
-  border:1.5px solid var(--myevent-accent)!important;
-  box-shadow:inset 0 0 0 .5px var(--myevent-accent)!important;
-  color:#fff!important;
-}
-
 /* MyEvent Home V55 — validated carousel + colored navigation */
 #socialHome .socialTopTools .socialToolBtn{border:1px solid rgba(255,255,255,.12)!important;color:#fff!important}
-#socialHome .socialTopTools .socialToolBtn:nth-child(1){background:#ff4d25!important}
-#socialHome .socialTopTools .socialToolBtn:nth-child(2){background:#ff642c!important}
-#socialHome .socialTopTools .socialToolBtn:nth-child(3){background:#f58a18!important}
+#socialHome .socialTopTools .socialToolBtn{background:var(--myevent-accent-fill)!important;border-color:var(--myevent-accent)!important}
 .homeFeatureCarousel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:5px 1px 8px;scrollbar-width:none}.homeFeatureCarousel::-webkit-scrollbar{display:none}
 .homeFeatureCard{position:relative;flex:0 0 calc((100% - 40px)/6);min-width:58px;height:102px;box-sizing:border-box;border-radius:17px;border:1.5px solid #354052;background:#11161e;color:#fff!important;text-decoration:none!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:7px 3px;text-align:center;scroll-snap-align:start;overflow:hidden}
 .homeFeatureCard b{font-size:10px;line-height:1.05;color:#fff}.homeFeatureIcon{font-size:29px;line-height:1}.homeFeatureCard small{font-size:9px;color:#fff}
-.homeFeatureCard.storyCard{border-color:#ff5a2a;background:linear-gradient(145deg,#341710,#14151a)}.homeFeatureCard.friendsCard{border-color:#168cff;background:linear-gradient(145deg,#102d4d,#11151d)}.homeFeatureCard.eventsCard{border-color:#2388ff;background:linear-gradient(145deg,#11284b,#11151d)}.homeFeatureCard.gamesCard{border-color:#a33cff;background:linear-gradient(145deg,#2a1250,#11151d)}.homeFeatureCard.marketCard{border-color:#20c768;background:linear-gradient(145deg,#0b3a23,#11151d)}.homeFeatureCard.weatherCard{border-color:#2d9cff;background:linear-gradient(145deg,#102b45,#11151d)}
-.homeFeatureCard .socialStoryBubble{width:45px;height:45px;margin:0;border-radius:50%;overflow:hidden;display:grid;place-items:center;border:2px solid #ff6233}.homeFeatureCard .socialStoryBubble img,.homeFeatureCard .socialStoryBubble video{width:100%;height:100%;object-fit:cover}.storyAddBadge{position:absolute;right:5px;top:43px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#ff5a2a;color:#fff;font-weight:900;font-size:14px}
-.homeCarouselDots{display:flex;justify-content:center;gap:6px;margin:3px 0 8px}.homeCarouselDots i{width:6px;height:6px;border-radius:9px;background:#46505d}.homeCarouselDots i:first-child{width:18px;background:#ff5a2a}
-.friendStoriesSection{margin:8px 0 12px}.friendStoriesSection.hidden{display:none}.friendStoriesHead{display:flex;align-items:center;justify-content:space-between;margin:5px 2px 8px}.friendStoriesHead b{font-size:15px}.friendStoriesHead button{background:none!important;border:0!important;color:#c9d0da!important;padding:4px!important}
+.homeFeatureCard.storyCard{border-color:var(--myevent-accent);background:linear-gradient(145deg,rgba(var(--myevent-accent-rgb),.22),#14151a)}.homeFeatureCard.friendsCard{border-color:#168cff;background:linear-gradient(145deg,#102d4d,#11151d)}.homeFeatureCard.eventsCard{border-color:#2388ff;background:linear-gradient(145deg,#11284b,#11151d)}.homeFeatureCard.gamesCard{border-color:#a33cff;background:linear-gradient(145deg,#2a1250,#11151d)}.homeFeatureCard.marketCard{border-color:#20c768;background:linear-gradient(145deg,#0b3a23,#11151d)}.homeFeatureCard.weatherCard{border-color:#2d9cff;background:linear-gradient(145deg,#102b45,#11151d)}
+.homeFeatureCard .socialStoryBubble{width:45px;height:45px;margin:0;border-radius:50%;overflow:hidden;display:grid;place-items:center;border:2px solid var(--myevent-accent)}.homeFeatureCard .socialStoryBubble img,.homeFeatureCard .socialStoryBubble video{width:100%;height:100%;object-fit:cover}.storyAddBadge{position:absolute;right:5px;top:43px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--myevent-accent-fill);border:1.5px solid var(--myevent-accent);color:#fff;font-weight:900;font-size:14px}
+.homeCarouselDots{display:flex;justify-content:center;gap:6px;margin:3px 0 8px}.homeCarouselDots i{width:6px;height:6px;border-radius:9px;background:#46505d}.homeCarouselDots i:first-child{width:18px;background:var(--myevent-accent)}
+.friendStoriesSection{margin:8px 0 12px}.friendStoriesSection.hidden{display:none}.friendStoriesHead{display:flex;align-items:center;justify-content:space-between;margin:5px 2px 8px}.friendStoriesHead b{font-size:15px}.friendStoriesHead button{background:none!important;border:0!important;color:var(--myevent-accent)!important;padding:4px!important}
 .friendStoriesStrip{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 5px}.friendStoriesStrip::-webkit-scrollbar{display:none}.friendStoryMini{flex:0 0 58px;background:none!important;border:0!important;padding:0!important;color:#fff!important;text-align:center}.friendStoryMini .miniRing{width:52px;height:52px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#168cff,#c43cff);box-sizing:border-box;margin:auto}.friendStoryMini .miniRing>div{width:100%;height:100%;border-radius:50%;overflow:hidden;background:#141a23;border:2px solid #0b0e13;box-sizing:border-box;display:grid;place-items:center}.friendStoryMini img{width:100%;height:100%;object-fit:cover}.friendStoryMini span{display:block;margin-top:4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #socialHome .socialMyEventsBox,#socialHome>.socialStories,#socialHome>.myeventHomeUtilityRow{display:none!important}
-.socialBottomNav.homeNavV2{grid-template-columns:repeat(7,1fr)!important;padding-left:3px!important;padding-right:3px!important;gap:0!important}.homeNavV2>button{min-width:0!important;padding-left:1px!important;padding-right:1px!important}.homeNavV2 .bottomLabel{font-size:9px!important;color:#fff!important}.homeNavV2 .bottomIcon{font-size:23px!important}.homeNavV2 .navHome .bottomIcon{color:#ff4b32!important}.homeNavV2 .navMarket .bottomIcon{filter:saturate(1.4);color:#28d76f!important}.homeNavV2 .navGames .bottomIcon{filter:saturate(1.4);color:#aa4cff!important}.homeNavV2 .navEvents .bottomIcon{color:#2d9cff!important}.homeNavV2 .navMusic .bottomIcon{color:#ed42d9!important}.homeNavV2 .navProfile .bottomIcon{color:#d9dee8!important}
-.homeNavV2 .navCamera{width:58px!important;height:58px!important;align-self:start!important;transform:translateY(-15px);border:2px solid #ff6333!important;background:rgba(18,18,20,.76)!important;box-shadow:0 0 15px rgba(255,92,45,.42)!important;overflow:hidden}.homeNavV2 .navCamera img{width:100%!important;height:100%!important;object-fit:cover!important;opacity:.72!important;mix-blend-mode:screen}
-#socialHome .socialInterestBtn,#socialHome [class*="Interest"] button,#socialHome [class*="interest"] button{background:rgba(var(--myevent-accent-rgb,255,106,52),var(--myevent-button-opacity,.9))!important;border:1.5px solid var(--myevent-accent,#ff6a34)!important}
+.socialBottomNav.homeNavV2{grid-template-columns:repeat(7,1fr)!important;padding-left:3px!important;padding-right:3px!important;gap:0!important}.homeNavV2>button{min-width:0!important;padding-left:1px!important;padding-right:1px!important}.homeNavV2 .bottomLabel{font-size:9px!important;color:#fff!important}.homeNavV2 .bottomIcon{font-size:23px!important}.homeNavV2 .navHome .bottomIcon{color:var(--myevent-accent)!important}.homeNavV2 .navMarket .bottomIcon{filter:saturate(1.4);color:#28d76f!important}.homeNavV2 .navGames .bottomIcon{filter:saturate(1.4);color:#aa4cff!important}.homeNavV2 .navEvents .bottomIcon{color:#2d9cff!important}.homeNavV2 .navMusic .bottomIcon{color:#ed42d9!important}.homeNavV2 .navProfile .bottomIcon{color:#d9dee8!important}
+.homeNavV2 .navCamera{width:58px!important;height:58px!important;align-self:start!important;transform:translateY(-15px);border:2px solid var(--myevent-accent)!important;background:rgba(18,18,20,.76)!important;box-shadow:0 0 15px rgba(var(--myevent-accent-rgb),.42)!important;overflow:hidden}.homeNavV2 .navCamera img{width:100%!important;height:100%!important;object-fit:cover!important;opacity:.72!important;mix-blend-mode:screen}
 @media(max-width:390px){.homeFeatureCard{flex-basis:calc((100% - 35px)/6);min-width:53px}.homeFeatureCard b{font-size:9px}.homeNavV2 .bottomLabel{font-size:8px!important}.homeNavV2 .bottomIcon{font-size:21px!important}}
 
 /* MyEvent Home V55.1 — 4 cards + one-line bottom nav */
@@ -3288,7 +3203,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard{flex:0 0 calc((100% - 30px)/4)!important;min-width:0!important;height:112px!important;border-width:1.5px!important;background:#11161e!important}
 #socialHome .homeFeatureCard b{font-size:11px!important;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 #socialHome .homeFeatureCard .homeFeatureIcon{font-size:32px!important}
-#socialHome .homeFeatureCard.storyCard{background:linear-gradient(145deg,#26130f,#11161e)!important;border-color:#ff5a2a!important}
+#socialHome .homeFeatureCard.storyCard{background:linear-gradient(145deg,rgba(var(--myevent-accent-rgb),.2),#11161e)!important;border-color:var(--myevent-accent)!important}
 #socialHome .homeFeatureCard.friendsCard{background:linear-gradient(145deg,#10243b,#11161e)!important;border-color:#278cff!important}
 #socialHome .homeFeatureCard.eventsCard{background:linear-gradient(145deg,#10243b,#11161e)!important;border-color:#278cff!important}
 #socialHome .homeFeatureCard.gamesCard{background:linear-gradient(145deg,#26143c,#11161e)!important;border-color:#a44cff!important}
@@ -3304,12 +3219,12 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialBottomNav.homeNavV2>button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:3px!important;width:auto!important;min-width:0!important;height:58px!important;margin:0!important;padding:3px 0!important;transform:none!important}
 #socialBottomNav.homeNavV2 .bottomIcon{font-size:21px!important;line-height:25px!important;height:25px!important}
 #socialBottomNav.homeNavV2 .bottomLabel{display:block!important;font-size:8px!important;line-height:10px!important;white-space:nowrap!important;overflow:visible!important;color:#fff!important}
-#socialBottomNav.homeNavV2 .navCamera{width:52px!important;height:52px!important;justify-self:center!important;border-radius:50%!important;padding:0!important;transform:translateY(-13px)!important;border:2px solid #ff6333!important}
+#socialBottomNav.homeNavV2 .navCamera{width:52px!important;height:52px!important;justify-self:center!important;border-radius:50%!important;padding:0!important;transform:translateY(-13px)!important;border:2px solid var(--myevent-accent)!important}
 #socialBottomNav.homeNavV2 .navCamera img{width:100%!important;height:100%!important;border-radius:50%!important}
 @media(max-width:390px){#socialHome .homeFeatureCard{flex-basis:calc((100% - 27px)/4)!important;height:106px!important}#socialBottomNav.homeNavV2 .bottomLabel{font-size:7.5px!important}}
 
 /* MyEvent V55.2 — official transparent MY camera button */
-#socialBottomNav.homeNavV2 .navCamera{width:58px!important;height:58px!important;transform:translateY(-16px)!important;border:2px solid #ff6333!important;background:rgba(10,11,14,.72)!important;box-shadow:0 0 0 3px rgba(255,99,51,.14),0 0 18px rgba(255,90,40,.42)!important;overflow:hidden!important}
+#socialBottomNav.homeNavV2 .navCamera{width:58px!important;height:58px!important;transform:translateY(-16px)!important;border:2px solid var(--myevent-accent)!important;background:rgba(10,11,14,.72)!important;box-shadow:0 0 0 3px rgba(var(--myevent-accent-rgb),.14),0 0 18px rgba(var(--myevent-accent-rgb),.42)!important;overflow:hidden!important}
 #socialBottomNav.homeNavV2 .navCamera img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:50%!important;opacity:.78!important;mix-blend-mode:screen!important;filter:saturate(1.05) contrast(1.08)!important}
 
 /* MyEvent Home V55.3 — exact validated compact 6-card layout */
@@ -3317,7 +3232,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard{flex:0 0 calc((100% - 35px)/6)!important;min-width:0!important;height:104px!important;border-radius:16px!important;padding:6px 2px!important}
 #socialHome .homeFeatureCard b{font-size:9px!important;line-height:1.05!important;white-space:normal!important;overflow-wrap:normal!important}
 #socialHome .homeFeatureCard .homeFeatureIcon{font-size:29px!important}
-#socialHome .homeFeatureCard.storyCard{background:linear-gradient(145deg,#2a140f,#11161e)!important;box-shadow:0 0 10px rgba(255,90,42,.28)!important}
+#socialHome .homeFeatureCard.storyCard{background:linear-gradient(145deg,rgba(var(--myevent-accent-rgb),.2),#11161e)!important;box-shadow:0 0 10px rgba(var(--myevent-accent-rgb),.28)!important}
 #socialHome .homeFeatureCard.friendsCard{background:linear-gradient(145deg,#10263f,#11161e)!important;border-color:#18a0ff!important}
 #socialHome .homeFeatureCard.eventsCard{background:linear-gradient(145deg,#102451,#11161e)!important;border-color:#276cff!important}
 #socialHome .homeFeatureCard.gamesCard{background:linear-gradient(145deg,#2d1250,#11161e)!important;border-color:#c12cff!important}
@@ -3354,12 +3269,12 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFriendsArt span:nth-child(1){left:0;top:9px}#socialHome .homeFriendsArt span:nth-child(2){left:10px;top:0;z-index:2}#socialHome .homeFriendsArt span:nth-child(3){right:0;top:10px;z-index:3}
 #socialHome .homeFriendsArt em{position:absolute;right:-4px;bottom:-2px;z-index:5;background:#202936;border:1px solid #ffd22e;border-radius:12px;color:#fff;font:700 8px/15px system-ui;width:21px;height:15px}
 #socialHome .featureArt{position:relative;font-size:33px!important;filter:drop-shadow(0 0 7px currentColor)}
-#socialHome .featureCalendar{color:#2e77ff}#socialHome .featureCalendar i{position:absolute;right:2px;bottom:2px;color:#ff4b32;font:900 11px/1 system-ui;font-style:normal}
+#socialHome .featureCalendar{color:#2e77ff}#socialHome .featureCalendar i{position:absolute;right:2px;bottom:2px;color:var(--myevent-accent);font:900 11px/1 system-ui;font-style:normal}
 #socialHome .featureGame{color:#c43cff}#socialHome .featureMarket{color:#24d86c}
 
 /* MyEvent Home V55.7 — restore Nearby shortcut in carousel */
-#socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid #ff4b32!important;background:linear-gradient(145deg,#351411,#11161e)!important;box-shadow:0 0 9px rgba(255,75,50,.28)!important;color:#fff!important}
-#socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(255,75,50,.65))}
+#socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid var(--myevent-accent)!important;background:linear-gradient(145deg,rgba(var(--myevent-accent-rgb),.2),#11161e)!important;box-shadow:0 0 9px rgba(var(--myevent-accent-rgb),.28)!important;color:#fff!important}
+#socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(var(--myevent-accent-rgb),.65))}
 
 /* MyEvent Home V55.8 — compact photo feed cards */
 #socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{height:250px!important;max-height:250px!important;object-fit:cover!important}

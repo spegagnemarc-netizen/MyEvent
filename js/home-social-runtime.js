@@ -650,19 +650,7 @@
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));
   $s('socialGlobalFriendsBtn')?.addEventListener('click',()=>tab('friends'));
   $s('socialGlobalEventsBtn')?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
-  // Apparence de l’accueil : sauvegarde locale, sans modifier les écrans d’événement.
-  function applyHomeAppearance(){
-    const root=$s('socialHome'); if(!root)return;
-    const bg=localStorage.getItem('myeventHomeBg')||'dark';
-    const accent=localStorage.getItem('myeventHomeAccent')||'#ff6a34';
-    root.classList.toggle('socialLight',bg==='light');
-    root.style.setProperty('--social-accent',accent);
-    document.querySelectorAll('.myeventAppearanceChoice').forEach(b=>b.classList.toggle('active',b.dataset.homeBg===bg));
-    document.querySelectorAll('.myeventAccent').forEach(b=>b.classList.toggle('active',b.dataset.accent===accent));
-  }
-  document.querySelectorAll('.myeventAppearanceChoice').forEach(b=>b.addEventListener('click',()=>{localStorage.setItem('myeventHomeBg',b.dataset.homeBg);applyHomeAppearance()}));
-  document.querySelectorAll('.myeventAccent').forEach(b=>b.addEventListener('click',()=>{localStorage.setItem('myeventHomeAccent',b.dataset.accent);applyHomeAppearance()}));
-  applyHomeAppearance();
+  // Profil > Apparence est géré par theme-runtime.js pour tous les écrans.
   tab('feed');
   setInterval(()=>{try{const n=$s('who')?.textContent?.trim();if(n&&n!=='Utilisateur')$s('socialHeaderName').textContent='Bonjour '+n;const a=$s('profileAvatar');const h=$s('socialHeaderAvatar');if(a&&h&&a.querySelector('img'))h.innerHTML=a.innerHTML;else if(a&&h&&a.textContent.trim()&&a.textContent.trim()!=='?')h.textContent=a.textContent.trim()}catch(e){}},1500);
   try{const av=$s('profileAvatar')?.textContent?.trim();if(av&&av!=='?'){ $s('socialMyAvatar').textContent=av; $s('socialHeaderAvatar').textContent=av;} const n=$s('who')?.textContent?.trim(); if(n&&n!=='Utilisateur') $s('socialHeaderName').textContent='Bonjour '+n;}catch(e){}

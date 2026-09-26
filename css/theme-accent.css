@@ -1,6 +1,7 @@
 /* Shared accent controls. Module identities and semantic status colors remain separate. */
 :root{--myevent-accent-fill:rgba(var(--myevent-accent-rgb,255,106,52),var(--myevent-button-opacity,.9))}
 #socialHome .socialTopTools .socialToolBtn,
+#socialHome .socialMyEventsActions button.active,
 #socialHome .socialFilter.active,
 #socialHome .socialInterestBtn,
 #socialHome .socialFollowBtn.active,
@@ -8,6 +9,7 @@
 #socialHome .socialSearch button,
 #socialHome .socialComposerPanel button:not(.secondary),
 #socialHome .socialCommentBox button,
+#socialHome .socialBadgeChip.hot,
 #socialHome #storyPickFile,
 #socialHome #storyUseCamera,
 #socialStoryViewer .storyAddNew,
@@ -24,10 +26,8 @@
   border:1.5px solid var(--myevent-accent,#ff6a34)!important;
   color:#fff!important;
 }
-#socialHome .socialTopTools .socialToolBtn:nth-child(1),
-#socialHome .socialTopTools .socialToolBtn:nth-child(2),
-#socialHome .socialTopTools .socialToolBtn:nth-child(3){background:var(--myevent-accent-fill)!important;border-color:var(--myevent-accent)!important}
 #socialHome .socialSectionHead button,
+#socialHome .friendStoriesHead button,
 #socialHome .socialActions button.active,
 #socialHome .socialMyEventsTitle:after{color:var(--myevent-accent)!important}
 #socialHome .socialFilter.active,
@@ -37,7 +37,7 @@
 #socialHome .storyAddBadge,
 #socialHome .friendStoryMini.ownStoryMini .miniRing,
 #socialHome .friendStoryAdd{border-color:var(--myevent-accent)!important}
-#socialHome .storyAddBadge,#socialHome .friendStoryAdd{background:var(--myevent-accent)!important}
+#socialHome .storyAddBadge,#socialHome .friendStoryAdd{background:var(--myevent-accent-fill)!important}
 #socialHome .homeFeatureCard.storyCard{box-shadow:0 0 11px rgba(var(--myevent-accent-rgb),.4)!important}
 #myeventMarketplace .searchButton,
 #myeventMarketplace .categoryRow button[aria-pressed="true"],

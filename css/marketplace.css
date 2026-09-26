@@ -1,12 +1,12 @@
 /* All styles belong to the standalone MyEvent marketplace. */
-#myeventMarketplace{--ink:#242b27;--muted:#71776f;--paper:#faf8f5;--green:#285b46;--line:#e6e6df;--orange:#ed8159;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+#myeventMarketplace{--ink:#242b27;--muted:#71776f;--paper:#faf8f5;--green:#285b46;--line:#e6e6df;--orange:var(--myevent-accent);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
 body:has(#myeventMarketplace){margin:0;background:#faf8f5}
 #myeventMarketplace *{box-sizing:border-box}
 #myeventMarketplace button,#myeventMarketplace input,#myeventMarketplace select,#myeventMarketplace textarea{font:inherit}
 #myeventMarketplace button,#myeventMarketplace a,#myeventMarketplace select{touch-action:manipulation}
 #myeventMarketplace button{cursor:pointer}
 #myeventMarketplace a{color:inherit;text-decoration:none}
-#myeventMarketplace button:focus-visible,#myeventMarketplace a:focus-visible,#myeventMarketplace input:focus-visible,#myeventMarketplace select:focus-visible,#myeventMarketplace textarea:focus-visible{outline:3px solid #db764e;outline-offset:4px}
+#myeventMarketplace button:focus-visible,#myeventMarketplace a:focus-visible,#myeventMarketplace input:focus-visible,#myeventMarketplace select:focus-visible,#myeventMarketplace textarea:focus-visible{outline:3px solid var(--myevent-accent);outline-offset:4px}
 #myeventMarketplace [hidden]{display:none!important}
 #myeventMarketplace .marketHeader{max-width:1320px;margin:auto;padding:26px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:20px}
 #myeventMarketplace .brand{font-size:28px;font-weight:850;letter-spacing:-1.5px;white-space:nowrap}
@@ -120,19 +120,19 @@ body:has(#myeventMarketplace){margin:0;background:#faf8f5}
 
 
 /* Marketplace dark theme V2 — dark by default, light remains user-selectable */
-#myeventMarketplace[data-theme="dark"]{--ink:#f5f7f8;--muted:#9aa4ad;--paper:#071016;--green:#2d7b5b;--line:#26323b;--orange:#ff6435;background:var(--paper);color:var(--ink);color-scheme:dark}
+#myeventMarketplace[data-theme="dark"]{--ink:#f5f7f8;--muted:#9aa4ad;--paper:#071016;--green:#2d7b5b;--line:#26323b;background:var(--paper);color:var(--ink);color-scheme:dark}
 body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace .themeToggle{display:grid;place-items:center;flex:0 0 auto;width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:transparent;color:var(--ink);font-size:19px}
 #myeventMarketplace[data-theme="dark"] .brand>span{color:var(--orange)}
-#myeventMarketplace[data-theme="dark"] .primary,#myeventMarketplace[data-theme="dark"] .searchButton{background:var(--orange);color:#fff;box-shadow:0 8px 24px #ff64352b}
-#myeventMarketplace[data-theme="dark"] .primary:hover,#myeventMarketplace[data-theme="dark"] .searchButton:hover{background:#ff744b}
+#myeventMarketplace[data-theme="dark"] .primary,#myeventMarketplace[data-theme="dark"] .searchButton{background:var(--myevent-accent-fill);border:1.5px solid var(--myevent-accent);color:#fff;box-shadow:0 8px 24px rgba(var(--myevent-accent-rgb),.17)}
+#myeventMarketplace[data-theme="dark"] .primary:hover,#myeventMarketplace[data-theme="dark"] .searchButton:hover{background:var(--myevent-accent-fill)}
 #myeventMarketplace[data-theme="dark"] .quiet[aria-pressed=true]{color:var(--orange)}
 #myeventMarketplace[data-theme="dark"] .quiet b{background:#172129;color:#fff}
 #myeventMarketplace[data-theme="dark"] .demoBanner{color:#9aa4ad}
 #myeventMarketplace[data-theme="dark"] .hero{background:linear-gradient(135deg,#101820,#0a1117);border:1px solid #29343c}
 #myeventMarketplace[data-theme="dark"] h1 em{color:var(--orange)}
 #myeventMarketplace[data-theme="dark"] .heroCopy>p:not(.eyebrow){color:#a8b0b7}
-#myeventMarketplace[data-theme="dark"] .heroLink{border-color:#ff6435;color:#fff}
+#myeventMarketplace[data-theme="dark"] .heroLink{border-color:var(--myevent-accent);color:#fff}
 #myeventMarketplace[data-theme="dark"] .heroArt{background:radial-gradient(circle at 70% 35%,#462014 0,#17201f 38%,#0c1419 72%)}
 #myeventMarketplace[data-theme="dark"] .orbit{border-color:#46534b}
 #myeventMarketplace[data-theme="dark"] .artLabels{color:#aab5ad}
@@ -141,14 +141,14 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace[data-theme="dark"] .transactionTabs button[aria-pressed=true]{border-color:var(--orange);color:var(--orange)}
 #myeventMarketplace[data-theme="dark"] input,#myeventMarketplace[data-theme="dark"] select,#myeventMarketplace[data-theme="dark"] textarea{color:#f5f7f8}
 #myeventMarketplace[data-theme="dark"] .categoryRow button{border-color:#3a4650;color:#e7ebee;background:#0c141a}
-#myeventMarketplace[data-theme="dark"] .categoryRow button[aria-pressed=true]{background:#ff6435;border-color:#ff6435;color:#fff;box-shadow:0 0 18px #ff643533}
+#myeventMarketplace[data-theme="dark"] .categoryRow button[aria-pressed=true]{background:var(--myevent-accent-fill);border-color:var(--myevent-accent);color:#fff;box-shadow:0 0 18px rgba(var(--myevent-accent-rgb),.2)}
 #myeventMarketplace[data-theme="dark"] .sortLabel select{background:#111a21;border-color:#33404a;color:#fff}
 #myeventMarketplace[data-theme="dark"] .productCard{background:#0d161c;border:1px solid #26323b;border-radius:14px;padding:0 0 12px;overflow:hidden}
 #myeventMarketplace[data-theme="dark"] .productCard .productCategory,#myeventMarketplace[data-theme="dark"] .productCard h3,#myeventMarketplace[data-theme="dark"] .productCard .productFooter{margin-left:12px;margin-right:12px}
 #myeventMarketplace[data-theme="dark"] .productVisual{border-radius:13px 13px 0 0;background:#111b21}
 #myeventMarketplace[data-theme="dark"] .productBadge{background:#176f3a;color:#fff}
 #myeventMarketplace[data-theme="dark"] .saveProduct{background:#0b1218dd;color:#fff;border:1px solid #43505a}
-#myeventMarketplace[data-theme="dark"] .saveProduct[aria-pressed=true]{color:#ff6435}
+#myeventMarketplace[data-theme="dark"] .saveProduct[aria-pressed=true]{color:var(--myevent-accent)}
 #myeventMarketplace[data-theme="dark"] .ownerBanner{background:linear-gradient(135deg,#161d1d,#10171b);border:1px solid #334039}
 #myeventMarketplace[data-theme="dark"] .ownerBanner p:not(.eyebrow){color:#a8aea8}
 #myeventMarketplace[data-theme="dark"] .ownerBanner h2{color:#fff}
@@ -274,18 +274,3 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace .marketBottomMarketplace{height:58px!important;transform:none!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #myeventMarketplace .marketBottomMarketplace.active{color:var(--orange)!important}
 #myeventMarketplace .marketBottomMarketplace span{font-size:22px;line-height:1}
-
-/* MyEvent global accent bridge — only controls that are already orange/accent-filled. */
-#myeventMarketplace{
-  --myevent-accent:var(--myevent-accent-global,#ff6a34);
-  --myevent-accent-rgb:var(--myevent-accent-rgb-global,255,106,52);
-  --myevent-button-opacity:var(--myevent-button-opacity-global,.90);
-}
-#myeventMarketplace .searchButton,
-#myeventMarketplace .categoryRow button[aria-pressed=true],
-#myeventMarketplace .categoryGridButton[aria-pressed=true]{
-  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
-  border:1.5px solid var(--myevent-accent)!important;
-  box-shadow:inset 0 0 0 .5px var(--myevent-accent)!important;
-  color:#fff!important;
-}

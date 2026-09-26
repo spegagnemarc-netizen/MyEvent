@@ -1,6 +1,6 @@
 #socialHome .socialStories{display:flex!important;overflow-x:auto!important;gap:6px!important;scrollbar-width:none}
 #socialHome .socialStory{flex:0 0 16%;min-width:0;text-align:center;cursor:pointer;background:none;border:0;color:inherit}
-#socialHome .socialStory.hasStory .socialStoryBubble{border:2px solid #ff6a34!important;outline:2px solid #f3a777!important;outline-offset:2px!important}
+#socialHome .socialStory.hasStory .socialStoryBubble{border:2px solid var(--myevent-accent)!important;outline:2px solid var(--myevent-accent)!important;outline-offset:2px!important}
 .socialStoryBubble .socialPostAvatar{width:100%;height:100%;overflow:hidden;border-radius:inherit}.socialStoryBubble img,.socialPostAvatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .socialStoryViewer[hidden],.storyCreateSheet[hidden]{display:none!important}
 .socialStoryViewer{position:fixed;inset:0;z-index:100000;background:#07090b;color:#fff;touch-action:pan-y}
@@ -58,10 +58,10 @@
 /* Always show the owner's real Story first, followed by accessible friends. */
 #socialHome #friendStoriesSection.friendStoriesSection{display:block!important;min-height:84px}
 #socialHome #friendStoriesStrip{display:flex!important;gap:11px;overflow-x:auto!important;scrollbar-width:none}
-#socialHome .ownStoryMini .miniRing{position:relative;background:var(--myevent-accent,#ff6a34)!important}
+#socialHome .ownStoryMini .miniRing{position:relative;background:var(--myevent-accent-fill)!important;border:2px solid var(--myevent-accent)!important}
 #socialHome .friendStoryMini .miniRing img,
 #socialHome .friendStoryMini .miniRing video{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
-#socialHome .friendStoryAdd{position:absolute;right:-3px;bottom:-2px;margin:0!important;width:18px;height:18px;border-radius:50%;background:var(--myevent-accent,#ff6a34);border:1.5px solid #fff;color:#fff;font-size:16px;line-height:16px;font-weight:900}
+#socialHome .friendStoryAdd{position:absolute;right:-3px;bottom:-2px;margin:0!important;width:18px;height:18px;border-radius:50%;background:var(--myevent-accent-fill);border:1.5px solid var(--myevent-accent);color:#fff;font-size:16px;line-height:16px;font-weight:900}
 #socialHome .homeFriendsArt img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 #socialHome #socialMyStory .socialStoryBubble{position:relative;display:block;width:54px!important;height:54px!important;overflow:hidden;border-radius:16px;padding:0}
 #socialHome #socialMyStory .myStoryThumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
