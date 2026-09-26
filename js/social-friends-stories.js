@@ -58,6 +58,51 @@
   const status = text => { if ($('socialFriendStatus')) $('socialFriendStatus').textContent = text; };
   const check = result => { if (result.error) throw result.error; return result.data; };
   const profileName = p => p?.display_name || p?.username || 'Membre MyEvent';
+  const invitation = new URL(location.href).searchParams.get('friendInvite');
+  async function prepareInvitation() {
+    const {sb,user} = context(); if (!sb || !user) { status('Connecte-toi pour inviter un ami.'); return; }
+    const button = $('invitePhoneContactsBtn'); button.disabled = true;
+    try {
+      const token = check(await sb.rpc('create_friend_invite'));
+      const url = new URL('/', location.href); url.searchParams.set('friendInvite', token);
+      $('socialFriendInviteLink').value = url.href;
+      $('socialFriendInviteShare').classList.remove('hidden');
+      status('Lien prêt : partage-le pour que ton contact puisse accepter ton invitation.');
+    } catch (e) { status('Invitation indisponible : ' + (e.message || String(e))); }
+    finally { button.disabled = false; }
+  }
+  async function shareInvitation() {
+    const url = $('socialFriendInviteLink').value;
+    try {
+      if (navigator.share) await navigator.share({title:'Invitation MyEvent',text:'Accepte mon invitation d’ami sur MyEvent.',url});
+      else if (navigator.clipboard) { await navigator.clipboard.writeText(url); status('Lien d’invitation copié.'); }
+      else { $('socialFriendInviteLink').select(); status('Copie ce lien et envoie-le à ton contact.'); }
+    } catch (e) { if (e.name !== 'AbortError') status('Partage impossible : ' + e.message); }
+  }
+  async function inspectInvitation() {
+    if (!invitation) return;
+    $('socialFriendsShortcut')?.click();
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(invitation)) { status('Lien d’invitation invalide.'); return; }
+    try {
+      const {sb} = context();
+      const profiles = check(await sb.rpc('friend_invite_preview', {invitation})) || [];
+      if (!profiles.length) { status('Invitation expirée, déjà utilisée ou envoyée à toi-même.'); return; }
+      $('socialFriendInviteName').textContent = profileName(profiles[0]) + ' t’invite à devenir amis sur MyEvent.';
+      $('socialFriendInvitePrompt').classList.remove('hidden');
+    } catch (e) { status('Invitation indisponible : ' + e.message); }
+  }
+  async function acceptInvitation() {
+    const {sb} = context(), button = $('socialFriendInviteAccept'); button.disabled = true;
+    try {
+      check(await sb.rpc('accept_friend_invite', {invitation}));
+      $('socialFriendInvitePrompt').classList.add('hidden');
+      const url = new URL(location.href); url.searchParams.delete('friendInvite');
+      history.replaceState(history.state, '', url);
+      await loadFriends(); await loadStories();
+      status('Invitation acceptée : vous êtes maintenant amis.');
+    } catch (e) { status('Impossible d’accepter : ' + e.message); }
+    finally { button.disabled = false; }
+  }
   const avatar = p => {
     const el = document.createElement('div'); el.className = 'socialPostAvatar';
     if (p?.avatar && /^https:\/\//.test(p.avatar)) {
@@ -248,7 +293,7 @@
   function start() {
     const {sb,user}=context(); if(!sb || !user || activeId===user.id)return;
     if(channel)sb.removeChannel(channel); activeId=user.id;
-    loadFriends();loadStories();
+    loadFriends();loadStories();inspectInvitation();
     channel=sb.channel('social-'+user.id)
       .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},scheduleRefresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'social_stories'},scheduleRefresh).subscribe();
@@ -268,6 +313,10 @@
   });
   document.querySelector('#socialFriendsView .socialSearch button')?.addEventListener('click',searchUsers);
   document.querySelector('#socialFriendsView .socialSearch input')?.addEventListener('keydown',e=>{if(e.key==='Enter')searchUsers();});
+  $('invitePhoneContactsBtn')?.addEventListener('click',prepareInvitation);
+  $('socialFriendInviteShareBtn')?.addEventListener('click',shareInvitation);
+  $('socialFriendInviteAccept')?.addEventListener('click',acceptInvitation);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden && activeId)scheduleRefresh();});
   setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
     if(user)start();},1000);
   setInterval(()=>{if(activeId){loadFriends();loadStories();}},60000);

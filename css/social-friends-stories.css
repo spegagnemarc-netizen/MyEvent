@@ -63,6 +63,11 @@
 #socialHome .friendStoryMini .miniRing video{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
 #socialHome .friendStoryAdd{position:absolute;right:-3px;bottom:-2px;margin:0!important;width:18px;height:18px;border-radius:50%;background:var(--myevent-accent-fill);border:1.5px solid var(--myevent-accent);color:#fff;font-size:16px;line-height:16px;font-weight:900}
 #socialHome .homeFriendsArt img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.socialFriendInvitePrompt,.socialFriendInviteShare{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0;padding:10px;border:1px solid var(--myevent-accent);border-radius:12px;background:#121820}
+.socialFriendInvitePrompt.hidden,.socialFriendInviteShare.hidden{display:none!important}
+.socialFriendInvitePrompt span{flex:1 1 160px}
+.socialFriendInviteShare input{flex:1 1 180px;min-width:0;color:#fff;background:#0b1017;border:1px solid #46505d;border-radius:9px;padding:9px}
+.socialFriendInvitePrompt button,.socialFriendInviteShare button{border:1px solid var(--myevent-accent);border-radius:9px;background:var(--myevent-accent-fill);color:#fff;padding:9px 12px}
 #socialHome #socialMyStory .socialStoryBubble{position:relative;display:block;width:54px!important;height:54px!important;overflow:hidden;border-radius:16px;padding:0}
 #socialHome #socialMyStory .myStoryThumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 #socialHome #socialMyStory .storyAddBadge{z-index:2}

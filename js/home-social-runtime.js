@@ -44,9 +44,7 @@
     const like=e.target.closest('.socialLikeBtn');if(like){let n=parseInt(like.querySelector('span').textContent||'0',10);const active=like.classList.toggle('active');n+=active?1:-1;like.querySelector('span').textContent=n;like.firstChild.textContent=active?'♥ J’aime ':'♡ J’aime ';return}
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
     const interest=e.target.closest('.socialInterestBtn');if(interest){interest.textContent='✅ Intérêt enregistré';interest.classList.add('active');return}
-    const follow=e.target.closest('.socialFollowBtn');if(follow){follow.textContent=follow.textContent.includes('Ajouter')?'✓ Demande envoyée':'✓ Ami';follow.classList.add('active');return}
-    const accept=e.target.closest('.socialAcceptFriendBtn');if(accept){const card=accept.closest('.socialFriendRequestCard');if(card){card.innerHTML='<div class=\"socialPostAvatar\">🤝</div><b>Ami ajouté</b><div class=\"muted\">Vous êtes maintenant amis sur MyEvent.</div>';};return}
-    const decline=e.target.closest('.socialDeclineFriendBtn');if(decline){const card=decline.closest('.socialFriendRequestCard');if(card)card.remove();return}
+    const follow=e.target.closest('.socialFollowBtn');if(follow){$s('socialFriendsShortcut')?.click();const input=document.querySelector('#socialFriendsView .socialSearch input');if(input)input.focus();const notice=$s('socialFriendStatus');if(notice)notice.textContent='Recherche la personne dans Amis pour lui envoyer une vraie demande.';return}
     const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
     const send=e.target.closest('.socialCommentBox button');if(send){const box=send.closest('.socialCommentBox'),input=box.querySelector('input');if(input.value.trim()){send.textContent='✓ Envoyé';input.value='';setTimeout(()=>send.textContent='Envoyer',900)}return}
     const msg=e.target.closest('.socialMessageBtn');if(msg){msg.textContent='✓ Messagerie';return}
@@ -773,20 +771,6 @@
       const o=$(id); if(o)o.addEventListener('click',e=>{if(e.target===o)closeOverlay(id);});
     });
 
-    // Partager la version réellement ouverte, y compris lorsqu'elle est déployée en Preview.
-    const publicInviteUrl=()=> new URL('/',location.href).href;
-    bind('invitePhoneContactsBtn',async()=>{
-      const data={
-        title:'Rejoins-moi sur MyEvent',
-        text:'Viens rejoindre mes amis sur MyEvent pour organiser et partager nos événements.',
-        url:publicInviteUrl()
-      };
-      try{
-        if(navigator.share) await navigator.share(data);
-        else if(navigator.clipboard){await navigator.clipboard.writeText(data.url);alert('Lien MyEvent copié.');}
-        else alert('Ouvre '+data.url+' pour rejoindre MyEvent.');
-      }catch(e){}
-    });
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);

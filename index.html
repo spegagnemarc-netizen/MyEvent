@@ -168,10 +168,11 @@
   </div>
 
   <div id="socialFriendsView" class="socialPeople">
+    <div id="socialFriendInvitePrompt" class="socialFriendInvitePrompt hidden"><span id="socialFriendInviteName"></span><button type="button" id="socialFriendInviteAccept">Accepter l’invitation</button></div>
     <div class="socialSearch"><input placeholder="🔎 Rechercher un ami…"><button type="button">Rechercher</button></div>
     <div id="socialFriendStatus" role="status" class="muted"></div>
     <h4>Utilisateurs MyEvent</h4><div class="socialFriendCarousel" id="socialFriendResults"></div>
-    <div class="socialFriendRequests"><div class="socialFriendRequestsHead"><h4>Demandes reçues</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div><div class="socialFriendRequestsCarousel" id="socialFriendIncoming"></div></div>
+    <div class="socialFriendRequests"><div class="socialFriendRequestsHead"><h4>Demandes reçues</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div><div id="socialFriendInviteShare" class="socialFriendInviteShare hidden"><input id="socialFriendInviteLink" readonly aria-label="Lien d’invitation ami"><button type="button" id="socialFriendInviteShareBtn">Partager le lien</button></div><div class="socialFriendRequestsCarousel" id="socialFriendIncoming"></div></div>
     <h4>Demandes envoyées</h4><div class="socialFriendCarousel" id="socialFriendOutgoing"></div>
     <h4>Mes amis</h4><div class="socialFriendCarousel" id="socialFriendList"></div>
   </div>
@@ -1168,9 +1169,9 @@
 
 
 
-<script src="js/home-social-runtime.js?v=music-shortcut-v1"></script>
-<link rel="stylesheet" href="css/social-friends-stories.css?v=accent-v3">
-<script src="js/social-friends-stories.js?v=4"></script>
+<script src="js/home-social-runtime.js?v=invite-v1"></script>
+<link rel="stylesheet" href="css/social-friends-stories.css?v=invite-v1">
+<script src="js/social-friends-stories.js?v=invite-v1"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
