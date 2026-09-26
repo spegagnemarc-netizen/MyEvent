@@ -6,6 +6,14 @@
   function tab(name){Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';document.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-social-tab]');if(b)tab(b.dataset.socialTab)});
   // V54.46 — raccourcis du cadre Mes événements
+  const gamesHome=$s('gamesHome');
+  function openGames(){if(!gamesHome)return;gamesHome.classList.add('open');gamesHome.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
+  function closeGames(){if(!gamesHome)return;gamesHome.classList.remove('open');gamesHome.setAttribute('aria-hidden','true');$s('infiltreLobby')?.classList.add('hidden');document.body.style.overflow='';}
+  $s('socialHeaderGamesBtn')?.addEventListener('click',openGames);
+  document.querySelector('#socialBottomNav .navGames')?.addEventListener('click',openGames);
+  $s('gamesBackBtn')?.addEventListener('click',closeGames);
+  document.querySelector('#gamesHome [data-game="infiltre"]')?.addEventListener('click',()=>{$s('infiltreLobby')?.classList.remove('hidden');$s('infiltreLobby')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  $s('infiltreCloseBtn')?.addEventListener('click',()=>{$s('infiltreLobby')?.classList.add('hidden');gamesHome?.scrollTo({top:0,behavior:'smooth'});});
   const headerEvents=$s('socialHeaderEventsBtn');
   headerEvents?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
   $s('socialHeaderCallBtn')?.addEventListener('click',()=>{const el=$s('groupCallCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{if(typeof callActive!=='undefined' && !callActive)$s('startCallBtn')?.click()},250);}});
