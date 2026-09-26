@@ -3282,3 +3282,28 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 .homeNavV2 .navCamera{width:58px!important;height:58px!important;align-self:start!important;transform:translateY(-15px);border:2px solid #ff6333!important;background:rgba(18,18,20,.76)!important;box-shadow:0 0 15px rgba(255,92,45,.42)!important;overflow:hidden}.homeNavV2 .navCamera img{width:100%!important;height:100%!important;object-fit:cover!important;opacity:.72!important;mix-blend-mode:screen}
 #socialHome .socialInterestBtn,#socialHome [class*="Interest"] button,#socialHome [class*="interest"] button{background:rgba(var(--myevent-accent-rgb,255,106,52),var(--myevent-button-opacity,.9))!important;border:1.5px solid var(--myevent-accent,#ff6a34)!important}
 @media(max-width:390px){.homeFeatureCard{flex-basis:calc((100% - 35px)/6);min-width:53px}.homeFeatureCard b{font-size:9px}.homeNavV2 .bottomLabel{font-size:8px!important}.homeNavV2 .bottomIcon{font-size:21px!important}}
+
+/* MyEvent Home V55.1 — 4 cards + one-line bottom nav */
+#socialHome .homeFeatureCarousel{gap:10px!important;padding-right:10px!important}
+#socialHome .homeFeatureCard{flex:0 0 calc((100% - 30px)/4)!important;min-width:0!important;height:112px!important;border-width:1.5px!important;background:#11161e!important}
+#socialHome .homeFeatureCard b{font-size:11px!important;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#socialHome .homeFeatureCard .homeFeatureIcon{font-size:32px!important}
+#socialHome .homeFeatureCard.storyCard{background:linear-gradient(145deg,#26130f,#11161e)!important;border-color:#ff5a2a!important}
+#socialHome .homeFeatureCard.friendsCard{background:linear-gradient(145deg,#10243b,#11161e)!important;border-color:#278cff!important}
+#socialHome .homeFeatureCard.eventsCard{background:linear-gradient(145deg,#10243b,#11161e)!important;border-color:#278cff!important}
+#socialHome .homeFeatureCard.gamesCard{background:linear-gradient(145deg,#26143c,#11161e)!important;border-color:#a44cff!important}
+#socialHome .homeFeatureCard.marketCard{background:linear-gradient(145deg,#0d2c1d,#11161e)!important;border-color:#28c76f!important}
+#socialHome .homeFeatureCard.weatherCard{background:linear-gradient(145deg,#172337,#11161e)!important;border-color:#5e789d!important}
+#socialHome .homeFeatureCard.nearbyCard,#socialHome .homeFeatureCard.popularCard{background:#11161e!important;border-color:#3a4350!important}
+#socialHome .friendStoriesSection{display:block!important;min-height:86px;margin:7px 0 12px!important}
+#socialHome .friendStoriesSection.hidden{display:none!important}
+#socialHome .friendStoriesStrip{min-height:63px}
+#socialHome .friendStoryMini{flex-basis:62px!important}
+#socialHome .friendStoryMini .miniRing{width:56px!important;height:56px!important}
+#socialBottomNav.homeNavV2{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;height:78px!important;min-height:78px!important;max-height:78px!important;padding:7px 2px calc(5px + env(safe-area-inset-bottom))!important;box-sizing:content-box!important;align-items:start!important;overflow:visible!important}
+#socialBottomNav.homeNavV2>button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:3px!important;width:auto!important;min-width:0!important;height:58px!important;margin:0!important;padding:3px 0!important;transform:none!important}
+#socialBottomNav.homeNavV2 .bottomIcon{font-size:21px!important;line-height:25px!important;height:25px!important}
+#socialBottomNav.homeNavV2 .bottomLabel{display:block!important;font-size:8px!important;line-height:10px!important;white-space:nowrap!important;overflow:visible!important;color:#fff!important}
+#socialBottomNav.homeNavV2 .navCamera{width:52px!important;height:52px!important;justify-self:center!important;border-radius:50%!important;padding:0!important;transform:translateY(-13px)!important;border:2px solid #ff6333!important}
+#socialBottomNav.homeNavV2 .navCamera img{width:100%!important;height:100%!important;border-radius:50%!important}
+@media(max-width:390px){#socialHome .homeFeatureCard{flex-basis:calc((100% - 27px)/4)!important;height:106px!important}#socialBottomNav.homeNavV2 .bottomLabel{font-size:7.5px!important}}
