@@ -784,8 +784,8 @@
       const o=$(id); if(o)o.addEventListener('click',e=>{if(e.target===o)closeOverlay(id);});
     });
 
-    // INVITER DES CONTACTS : toujours partager l'URL publique, jamais la Preview refactor-final.
-    const publicInviteUrl=()=> 'https://my-event-eosin.vercel.app/';
+    // Partager la version réellement ouverte, y compris lorsqu'elle est déployée en Preview.
+    const publicInviteUrl=()=> new URL('/',location.href).href;
     bind('invitePhoneContactsBtn',async()=>{
       const data={
         title:'Rejoins-moi sur MyEvent',
