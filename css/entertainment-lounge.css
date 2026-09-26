@@ -1,0 +1,19 @@
+/* MyEvent — Salon Divertissement & Jeux V1 */
+#entertainmentLounge{position:fixed;inset:0;z-index:12500;display:none;overflow:auto;background:#0b0d10;color:#f7f8fa;padding:env(safe-area-inset-top) 14px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}
+#entertainmentLounge.open{display:block}
+.entertainmentHead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:12px 0 14px;background:linear-gradient(#0b0d10 80%,transparent)}
+.entertainmentBack{width:42px;height:42px;border-radius:50%;border:1px solid #30363d;background:#171a1f;color:#fff;font-size:28px}
+.entertainmentHead h2{margin:0;font-size:22px}.entertainmentHead p{margin:2px 0 0;color:#9ba3ad;font-size:13px}
+.entertainmentHero{padding:18px;border:1px solid #30363d;border-radius:22px;background:radial-gradient(circle at 85% 15%,rgba(var(--myevent-accent-rgb,255,106,52),.22),transparent 36%),#15181d;margin-bottom:16px}
+.entertainmentHeroTag{font-size:12px;font-weight:800;color:var(--myevent-accent,#ff6a34);text-transform:uppercase;letter-spacing:.08em}
+.entertainmentHero h3{font-size:26px;margin:7px 0}.entertainmentHero p{color:#b7bdc6;margin:0 0 15px;line-height:1.4}
+.entertainmentModes{display:flex;gap:7px;flex-wrap:wrap}.entertainmentModes span{padding:7px 10px;border:1px solid #343a42;border-radius:999px;background:#101318;font-size:12px}
+.entertainmentSectionTitle{display:flex;justify-content:space-between;align-items:end;margin:20px 2px 10px}.entertainmentSectionTitle h3{margin:0;font-size:18px}.entertainmentSectionTitle span{font-size:12px;color:#858e99}
+.entertainmentGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.entertainmentGame{position:relative;min-height:150px;padding:15px;border:1px solid #2b3037;border-radius:19px;background:#15181d;color:#fff;text-align:left;overflow:hidden}
+.entertainmentGame.primary{grid-column:1/-1;min-height:172px;border-color:var(--myevent-accent,#ff6a34);background:linear-gradient(135deg,rgba(var(--myevent-accent-rgb,255,106,52),.17),#15181d 60%)}
+.entertainmentGame .gameIcon{display:block;font-size:34px;margin-bottom:20px}.entertainmentGame b{display:block;font-size:17px;margin-bottom:5px}.entertainmentGame small{display:block;color:#aeb5bf;line-height:1.35}
+.entertainmentGame .gameBadge{position:absolute;right:10px;top:10px;padding:5px 8px;border-radius:999px;background:rgba(var(--myevent-accent-rgb,255,106,52),.16);border:1px solid var(--myevent-accent,#ff6a34);color:#fff;font-size:10px;font-weight:800}
+.entertainmentGame.coming{opacity:.72}.entertainmentGame.coming .gameBadge{border-color:#4c535d;background:#242930}
+.entertainmentInfo{margin-top:14px;padding:12px 14px;border-radius:15px;background:#111419;border:1px solid #272c33;color:#9ea6b0;font-size:12px;line-height:1.45}
+@media(max-width:390px){.entertainmentGame{min-height:142px;padding:13px}.entertainmentGame .gameIcon{margin-bottom:15px}}
