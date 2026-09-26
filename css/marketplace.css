@@ -274,3 +274,18 @@ body:has(#myeventMarketplace[data-theme="dark"]){background:#071016}
 #myeventMarketplace .marketBottomMarketplace{height:58px!important;transform:none!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #myeventMarketplace .marketBottomMarketplace.active{color:var(--orange)!important}
 #myeventMarketplace .marketBottomMarketplace span{font-size:22px;line-height:1}
+
+/* MyEvent global accent bridge — only controls that are already orange/accent-filled. */
+#myeventMarketplace{
+  --myevent-accent:var(--myevent-accent-global,#ff6a34);
+  --myevent-accent-rgb:var(--myevent-accent-rgb-global,255,106,52);
+  --myevent-button-opacity:var(--myevent-button-opacity-global,.90);
+}
+#myeventMarketplace .searchButton,
+#myeventMarketplace .categoryRow button[aria-pressed=true],
+#myeventMarketplace .categoryGridButton[aria-pressed=true]{
+  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
+  border:1.5px solid var(--myevent-accent)!important;
+  box-shadow:inset 0 0 0 .5px var(--myevent-accent)!important;
+  color:#fff!important;
+}
