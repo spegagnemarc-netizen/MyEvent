@@ -332,6 +332,20 @@
   </div>
 </div>
 
+<section id="gamesHome" class="gamesHome" aria-hidden="true">
+  <div class="gamesHead"><button type="button" id="gamesBackBtn" aria-label="Retour">‹</button><div><h2>Jeux</h2><p>Le salon divertissement MyEvent</p></div><span>🎮</span></div>
+  <div class="gamesHero"><small>À plusieurs · sur place ou à distance</small><h3>À quoi joue-t-on ?</h3><p>Lancez une partie avec les participants de votre événement.</p></div>
+  <div class="gamesGrid">
+    <button type="button" class="gameTile featured" data-game="infiltre"><span>🕵️</span><b>Infiltré MyEvent</b><small>Rôles secrets · indices · votes</small><em>Jouer</em></button>
+    <button type="button" class="gameTile" data-game="defis"><span>⚡</span><b>Défis</b><small>Défis rapides en groupe</small></button>
+    <button type="button" class="gameTile" data-game="action-verite"><span>🎭</span><b>Action ou Vérité</b><small>Questions et défis</small></button>
+    <button type="button" class="gameTile" data-game="quiz"><span>🧠</span><b>Quiz</b><small>Questions · scores</small></button>
+    <button type="button" class="gameTile" data-game="blind-test"><span>🎧</span><b>Blind Test</b><small>Devinez le morceau</small></button>
+    <button type="button" class="gameTile coming" disabled><span>🎤</span><b>Karaoké</b><small>MyEvent Karaoke</small><em>À venir</em></button>
+  </div>
+  <div id="infiltreLobby" class="infiltreLobby hidden"><div class="lobbyTop"><button type="button" id="infiltreCloseBtn">‹ Jeux</button><span>🕵️ Infiltré MyEvent</span></div><h3>Créer une partie</h3><p>Préparez un salon puis invitez les participants. La visio restera optionnelle.</p><div class="lobbyOptions"><label>Nombre de joueurs <select id="infiltrePlayers"><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>12</option></select></label><label><input type="checkbox" id="infiltreSpy"> Ajouter un Espion sans mot</label><label><input type="checkbox" id="infiltreVideo"> Partie avec visio</label></div><button type="button" id="infiltreCreateBtn" class="infiltrePrimary">Créer le salon</button><p class="muted">Le moteur multijoueur persistant sera branché à Supabase à l’étape suivante.</p></div>
+</section>
+
 <section id="musicHome" class="musicHome" aria-hidden="true">
   <div class="musicHead"><button type="button" id="musicBackBtn" aria-label="Retour">‹</button><div><h2>Musique</h2><p>La bande-son de tous vos événements</p></div><button type="button" id="musicFavoritesBtn" aria-label="Favoris">♡</button></div>
   <div class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" enterkeyhint="search" placeholder="Titre, artiste, playlist…"><button type="button" id="musicSearchBtn" aria-label="Rechercher">Rechercher</button></div>
