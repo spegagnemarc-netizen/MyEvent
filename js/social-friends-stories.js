@@ -168,7 +168,7 @@
       strip.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
       showMyStoryThumbnail(user.id);
       const me=$('socialMyStory');
-      me.onclick=e=>{if(e.target.closest('.storyAddBadge')){createStory();return}const i=storyRows.findIndex(r=>r.author_id===user.id);if(i>=0)showStory(i);else createStory();};
+      me.onclick=e=>{e.preventDefault();e.stopPropagation();const mine=storyRows.map((r,i)=>({r,i})).filter(x=>x.r.author_id===user.id&&Date.parse(x.r.expires_at)>Date.now());if(e.target.closest('.storyAddBadge')||!mine.length){createStory();return}showStory(mine[mine.length-1].i);};
       const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip'); if(friendStrip)friendStrip.replaceChildren();
       const seen=new Set(); storyRows.forEach((r,i)=>{
         if(r.author_id===user.id||seen.has(r.author_id))return; seen.add(r.author_id);
