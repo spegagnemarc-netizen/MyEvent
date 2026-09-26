@@ -13,6 +13,10 @@
 #socialStoryViewer .storyAddNew,
 .myeventAppearanceChoice.active,
 #musicHome .musicTabs button.active,
+#musicHome .musicChips button.active,
+#musicDiscoverForm button,
+#musicScreenBody button[data-primary="true"],
+.myeventNearbyMapTools button.active,
 #musicHome .musicSearch button,
 #musicScreenBody .musicPrimary,
 #musicPlayback .musicTransport [data-transport="toggle"]{
