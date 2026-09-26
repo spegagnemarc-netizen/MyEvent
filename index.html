@@ -89,35 +89,21 @@
   </div>
 
 
-  <div class="myeventHomeUtilityRow">
-    <a href="marketplace.html" class="myeventNearbyMiniBtn" aria-label="Marketplace : vente et location de matériel">🛍️ Marketplace</a>
-    <button type="button" id="socialGpsWeatherCard" class="myeventGpsWeatherCard" title="Météo de ma position GPS">
-      <span class="myeventGpsWeatherIcon" id="socialGpsWeatherIcon">🌤️</span>
-      <span class="myeventGpsWeatherTemp" id="socialGpsWeatherTemp">--°</span>
-      <span class="myeventGpsWeatherLabel">Ma météo</span>
-    </button>
-    <button type="button" id="socialNearbyShareBtn" class="myeventNearbyMiniBtn" title="Partager ma position">📍 À proximité</button>
-  </div>
-
   <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
-  <div class="socialMyEventsBox">
-    <div class="socialMyEventsActions">
-      <button type="button" id="socialHeaderEventsBtn" title="Mes événements">📋<span>Mes événements</span></button>
-      <button type="button" id="socialHeaderCallBtn" title="Appel de groupe">📞<span>Appel de groupe</span></button>\n      <button type="button" id="socialHeaderGamesBtn" title="Divertissement & Jeux">🎮<span>Jeux</span></button>
-      <button type="button" id="socialHeaderMessagesBtn" title="Messages privés">💬<span>Messages</span><i class="eventShortcutBadge hidden" id="socialEventMessagesBadge">0</i></button>
-      <button type="button" id="socialHeaderNotificationsBtn" title="Notifications">🔔<span>Notifications</span><i class="eventShortcutBadge hidden" id="socialEventNotificationsBadge">0</i></button>
-    </div>
-    <div class="socialMyEventsTitle">Mes événements</div>
-    <a href="marketplace.html" class="myeventMarketplaceEntry"><span aria-hidden="true">🛍️</span><span><strong>Marketplace</strong><small>Achat et location</small></span><span aria-hidden="true">›</span></a>
+  <div class="homeFeatureCarousel" aria-label="Raccourcis MyEvent">
+    <div class="homeFeatureCard storyCard" id="socialMyStory"><div class="socialStoryBubble">👤</div><b>Ma story</b><span class="storyAddBadge">＋</span></div>
+    <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon" id="homeFriendsPreview">👥</div><b>Amis</b></button>
+    <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><div class="homeFeatureIcon">📅</div><b>Événements</b></button>
+    <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><div class="homeFeatureIcon">🎮</div><b>Jeux</b></button>
+    <a href="marketplace.html" class="homeFeatureCard marketCard"><div class="homeFeatureIcon">🛍️</div><b>Marketplace</b></a>
+    <button type="button" id="socialGpsWeatherCard" class="homeFeatureCard weatherCard"><div class="homeFeatureIcon" id="socialGpsWeatherIcon">🌤️</div><b>Ma météo</b><small id="socialGpsWeatherTemp">--°</small></button>
+    <button type="button" id="socialNearbyShareBtn" class="homeFeatureCard nearbyCard"><div class="homeFeatureIcon">📍</div><b>À proximité</b></button>
+    <button type="button" class="homeFeatureCard popularCard"><div class="homeFeatureIcon">🔥</div><b>Populaire</b></button>
   </div>
-
-  <div class="socialStories" aria-label="Raccourcis">
-    <div class="socialStory me" id="socialMyStory"><div class="socialStoryBubble">👤</div><div>Ma story</div></div>
-    <div class="socialStory create" id="socialCreateStory"><div class="socialStoryBubble">＋</div><div>Créer</div></div>
-    <button type="button" class="socialStory" id="socialFriendsShortcut"><div class="socialStoryBubble">👥</div><div>Amis</div></button>
-    <div class="socialStory"><div class="socialStoryBubble">📍</div><div>À proximité</div></div>
-    <div class="socialStory"><div class="socialStoryBubble">🔥</div><div>Populaire</div></div>
-    <div class="socialStory weatherShortcut"><div class="socialStoryBubble">☀️</div><div><span id="socialGpsWeatherTempStory">--°</span> Ma météo</div></div>
+  <div class="homeCarouselDots" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div id="friendStoriesSection" class="friendStoriesSection hidden">
+    <div class="friendStoriesHead"><b>Stories de vos amis</b><button type="button" id="friendStoriesSeeAll">Voir tout ›</button></div>
+    <div id="friendStoriesStrip" class="friendStoriesStrip"></div>
   </div>
 
   <div class="socialFilters" aria-label="Filtres">
@@ -355,13 +341,14 @@
   <div class="musicSection" id="musicAmbiancesSection"><div class="musicSectionTitle"><h3>Ambiances</h3><button type="button" data-music-filter="moods">Voir tout ›</button></div><div class="musicChips musicMoodCards"><button data-mood="chill"><img class="musicMoodArt musicMoodChill" src="assets/music-mood-chill.webp" alt="" loading="lazy"><b>Chill</b></button><button data-mood="soiree"><img class="musicMoodArt musicMoodParty" src="assets/music-mood-party.webp" alt="" loading="lazy"><b>Soirée</b></button><button data-mood="80s"><img class="musicMoodArt musicMood80s" src="assets/music-mood-80s.webp" alt="" loading="lazy"><b>Années 80</b></button><button data-mood="rap"><img class="musicMoodArt musicMoodRap" src="assets/music-mood-rap.webp" alt="" loading="lazy"><b>Rap</b></button><button data-mood="electro"><img class="musicMoodArt musicMoodElectro" src="assets/music-mood-electro.webp" alt="" loading="lazy"><b>Électro</b></button><button data-mood="variete"><img class="musicMoodArt musicMoodVariete" src="assets/music-mood-variete.webp" alt="" loading="lazy"><b>Variété</b></button></div></div>
 </section>
 
-<div class="socialBottomNav" id="socialBottomNav">
-    <button type="button" class="active" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
-    <button type="button" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon">🛍️</span><span class="bottomLabel">Marketplace</span></button>
-    <button type="button" class="createBottom" id="socialBottomCreate" title="Créer" aria-label="Ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
-    <button type="button" data-bottom-tab="music"><span class="bottomIcon">♫</span><span class="bottomLabel">Musique</span></button>
-    <button type="button" class="musicOnlyNav" data-bottom-tab="events"><span class="bottomIcon">▣</span><span class="bottomLabel">Événements</span></button>
-    <button type="button" data-bottom-tab="profile"><span class="bottomIcon">♙</span><span class="bottomLabel">Profil</span></button>
+<div class="socialBottomNav homeNavV2" id="socialBottomNav">
+    <button type="button" class="active navHome" data-bottom-tab="feed"><span class="bottomIcon">⌂</span><span class="bottomLabel">Accueil</span></button>
+    <button type="button" class="navMarket" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon">🛍️</span><span class="bottomLabel">Marketplace</span></button>
+    <button type="button" class="navGames" data-bottom-tab="games"><span class="bottomIcon">🎮</span><span class="bottomLabel">Jeux</span></button>
+    <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Caméra MyEvent" aria-label="Ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
+    <button type="button" class="navEvents" data-bottom-tab="events"><span class="bottomIcon">▣</span><span class="bottomLabel">Événements</span></button>
+    <button type="button" class="navMusic" data-bottom-tab="music"><span class="bottomIcon">♫</span><span class="bottomLabel">Musique</span></button>
+    <button type="button" class="navProfile" data-bottom-tab="profile"><span class="bottomIcon">♙</span><span class="bottomLabel">Profil</span></button>
   </div>
 </section>
 
