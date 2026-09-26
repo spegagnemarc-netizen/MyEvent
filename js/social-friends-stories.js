@@ -168,7 +168,7 @@
       strip.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
       showMyStoryThumbnail(user.id);
       const me=$('socialMyStory');
-      me.onclick=e=>{e.preventDefault();e.stopPropagation();const mine=storyRows.map((r,i)=>({r,i})).filter(x=>x.r.author_id===user.id&&Date.parse(x.r.expires_at)>Date.now());if(e.target.closest('.storyAddBadge')||!mine.length){createStory();return}showStory(mine[mine.length-1].i);};
+      me.onclick=null;
       const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip'); if(friendStrip)friendStrip.replaceChildren();
       const seen=new Set(); storyRows.forEach((r,i)=>{
         if(r.author_id===user.id||seen.has(r.author_id))return; seen.add(r.author_id);
@@ -240,6 +240,15 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'social_stories'},scheduleRefresh).subscribe();
   }
   setupCreation(); initializeViewer();
+  const myStoryShortcut=$('socialMyStory');
+  myStoryShortcut?.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    if(e.target.closest('.storyAddBadge')){createStory();return;}
+    const userId=context().user?.id;
+    const mine=storyRows.map((r,i)=>({r,i})).filter(x=>x.r.author_id===userId&&Date.parse(x.r.expires_at)>Date.now());
+    if(mine.length)showStory(mine[mine.length-1].i);else createStory();
+  });
+
   document.querySelector('#socialFriendsView .socialSearch button')?.addEventListener('click',searchUsers);
   document.querySelector('#socialFriendsView .socialSearch input')?.addEventListener('keydown',e=>{if(e.key==='Enter')searchUsers();});
   setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
