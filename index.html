@@ -103,7 +103,7 @@
   <div class="socialMyEventsBox">
     <div class="socialMyEventsActions">
       <button type="button" id="socialHeaderEventsBtn" title="Mes événements">📋<span>Mes événements</span></button>
-      <button type="button" id="socialHeaderCallBtn" title="Appel de groupe">📞<span>Appel de groupe</span></button>
+      <button type="button" id="socialHeaderCallBtn" title="Appel de groupe">📞<span>Appel de groupe</span></button>\n      <button type="button" id="socialHeaderGamesBtn" title="Divertissement & Jeux">🎮<span>Jeux</span></button>
       <button type="button" id="socialHeaderMessagesBtn" title="Messages privés">💬<span>Messages</span><i class="eventShortcutBadge hidden" id="socialEventMessagesBadge">0</i></button>
       <button type="button" id="socialHeaderNotificationsBtn" title="Notifications">🔔<span>Notifications</span><i class="eventShortcutBadge hidden" id="socialEventNotificationsBadge">0</i></button>
     </div>
@@ -1173,7 +1173,31 @@
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
 <script src="js/music-workspace.js?v=dj-v12"></script>
-<script src="js/theme-runtime.js?v=global-theme-1"></script>
+<script src="js/theme-runtime.js?v=global-theme-1"></script>\n<link rel="stylesheet" href="css/entertainment-lounge.css?v=1">\n
+<section id="entertainmentLounge" aria-hidden="true">
+  <div class="entertainmentHead">
+    <button type="button" class="entertainmentBack" id="entertainmentBackBtn" aria-label="Retour">‹</button>
+    <div><h2>Divertissement & Jeux</h2><p>Jouez ensemble pendant vos événements</p></div>
+  </div>
+  <div class="entertainmentHero">
+    <div class="entertainmentHeroTag">Jeu phare MyEvent</div>
+    <h3>🕵️ Infiltré MyEvent</h3>
+    <p>Découvrez l’infiltré grâce aux indices, puis votez sans révéler votre mot.</p>
+    <div class="entertainmentModes"><span>🏠 Ensemble</span><span>📹 Visio</span><span>🌍 Hybride</span></div>
+  </div>
+  <div class="entertainmentSectionTitle"><h3>Choisir un jeu</h3><span>Salon MyEvent</span></div>
+  <div class="entertainmentGrid">
+    <button type="button" class="entertainmentGame primary" data-entertainment-game="infiltre"><span class="gameBadge">BIENTÔT JOUABLE</span><span class="gameIcon">🕵️</span><b>Infiltré MyEvent</b><small>Rôles secrets · indices · votes · éliminations</small></button>
+    <button type="button" class="entertainmentGame" data-entertainment-game="quiz"><span class="gameIcon">🧠</span><b>Quiz</b><small>Questions et classement du groupe</small></button>
+    <button type="button" class="entertainmentGame" data-entertainment-game="blindtest"><span class="gameIcon">🎵</span><b>Blind Test</b><small>Devinez les titres et artistes</small></button>
+    <button type="button" class="entertainmentGame" data-entertainment-game="defis"><span class="gameIcon">🎯</span><b>Défis</b><small>Défis rapides entre participants</small></button>
+    <button type="button" class="entertainmentGame" data-entertainment-game="action"><span class="gameIcon">🤫</span><b>Action ou Vérité</b><small>Questions et défis pour le groupe</small></button>
+    <button type="button" class="entertainmentGame" data-entertainment-game="likely"><span class="gameIcon">😂</span><b>Qui est le plus…</b><small>Votez pour un membre du groupe</small></button>
+    <button type="button" class="entertainmentGame coming" data-entertainment-game="karaoke"><span class="gameBadge">À VENIR</span><span class="gameIcon">🎤</span><b>Karaoké</b><small>Le futur Karaoké MyEvent</small></button>
+  </div>
+  <div class="entertainmentInfo">Les jeux multijoueurs seront liés aux participants de l’événement. Infiltré servira de première base pour les rôles privés, les tours, les votes et les modes à distance.</div>
+</section>
+<script src="js/entertainment-lounge.js?v=1"></script>
 
 
 
