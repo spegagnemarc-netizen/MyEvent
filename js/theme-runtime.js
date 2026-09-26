@@ -25,6 +25,9 @@
     root.style.setProperty('--myevent-accent-rgb',hexToRgb(theme.accent));
     root.style.setProperty('--myevent-button-opacity',theme.buttonOpacity);
     root.style.setProperty('--myevent-surface-opacity',theme.surfaceOpacity);
+    root.style.setProperty('--myevent-accent-global',theme.accent);
+    root.style.setProperty('--myevent-accent-rgb-global',hexToRgb(theme.accent));
+    root.style.setProperty('--myevent-button-opacity-global',theme.buttonOpacity);
     document.getElementById('socialHome')?.style.setProperty('--social-accent',theme.accent);
     if(!card)return;
     card.querySelectorAll('[data-theme-mode]').forEach(b=>b.classList.toggle('active',b.dataset.themeMode===theme.mode));
