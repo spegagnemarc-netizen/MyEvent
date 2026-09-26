@@ -182,7 +182,13 @@
           const labelMini=document.createElement('span');labelMini.textContent=profileName(r.profile);mini.append(ring,labelMini);mini.onclick=()=>showStory(i);friendStrip.append(mini);
         }
       });
-      if(friendSection)friendSection.classList.toggle('hidden',!friendStrip?.children.length);
+      if(friendSection){
+        friendSection.classList.toggle('hidden',!friendStrip?.children.length);
+        if(friendStrip?.children.length){
+          friendSection.style.display='block';
+          friendStrip.style.display='flex';
+        } else friendSection.style.display='';
+      }
       const preview=$('homeFriendsPreview');if(preview){const count=seen.size;preview.textContent=count?('👥 +'+count):'👥';}
     } catch(e) { console.warn('Stories indisponibles',e); }
   }
