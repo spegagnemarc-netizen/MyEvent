@@ -3155,34 +3155,26 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 .myeventThemeReset{width:100%;margin-top:8px!important;border:1px solid var(--myevent-accent)!important;background:transparent!important;color:var(--myevent-text)!important}
 .myeventThemeNote{font-size:11px;color:var(--myevent-muted);margin:9px 0 0}
 
-/* Global theme V2 — real button/surface transparency and broad accent coverage.
-   Camera stays intentionally isolated. */
-#main button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn):not(.socialLikeBtn):not(.socialCommentBtn):not(.socialShareBtn),
-#profileOverlay button:not(#myeventCameraModal button),
-#socialHome button:not(#myeventCameraModal button){
-  --theme-btn-bg:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity));
-}
-#main button:not(#myeventCameraModal button):not(.secondary):not(.danger):not(.socialLikeBtn):not(.socialCommentBtn):not(.socialShareBtn):not([aria-label*="Fermer"]):not(.cameraSideTool):not(.cameraModeBtn){
+/* Global theme V2.1 — preserve each component design; theme only components explicitly wired to it.
+   This avoids painting every button/navigation item with the accent color. */
+#socialHome .socialFilter.active,
+#socialHome .socialInterestBtn{
+  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
   border-color:var(--myevent-accent)!important;
 }
-#main button:not(#myeventCameraModal button):not(.secondary):not(.danger):not(.socialLikeBtn):not(.socialCommentBtn):not(.socialShareBtn):not(.myeventThemeReset):not(.myeventAppearanceChoice):not(.builderChoice):not(.cameraSideTool):not(.cameraModeBtn){
-  background-color:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
-}
-#main .secondary:not(#myeventCameraModal *),
 #socialHome .socialFilter:not(.active),
 #socialHome .socialToolBtn,
 #socialHome .myeventNearbyMiniBtn,
-#socialHome .myeventGpsWeatherCard{
+#socialHome .myeventGpsWeatherCard,
+.myeventAppearanceChoice:not(.active){
   background-color:rgba(var(--myevent-surface),var(--myevent-button-opacity))!important;
 }
-#main .card:not(#myeventCameraModal *),
 #socialHome .socialPost,
 #socialHome .socialComposer,
 #socialHome .socialComposerPanel,
 #socialHome .socialPeople,
 #socialHome .socialEventCard,
 #socialHome .socialMyEventsBox,
-#socialHome .myeventGpsWeatherCard,
 .myeventAppearanceCard{
   background-color:rgba(var(--myevent-surface),var(--myevent-surface-opacity))!important;
 }
@@ -3190,11 +3182,5 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
   background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
   border-color:var(--myevent-accent)!important;
 }
-.myeventAppearanceChoice:not(.active){
-  background:rgba(var(--myevent-surface),var(--myevent-button-opacity))!important;
-}
-:root[data-myevent-theme="light"] #main .secondary:not(#myeventCameraModal *),
 :root[data-myevent-theme="light"] #socialHome .socialFilter:not(.active),
-:root[data-myevent-theme="light"] #socialHome .socialToolBtn{
-  color:#171a1f!important;
-}
+:root[data-myevent-theme="light"] #socialHome .socialToolBtn{color:#171a1f!important}
