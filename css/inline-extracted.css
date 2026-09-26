@@ -3184,3 +3184,28 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 }
 :root[data-myevent-theme="light"] #socialHome .socialFilter:not(.active),
 :root[data-myevent-theme="light"] #socialHome .socialToolBtn{color:#171a1f!important}
+
+/* Global theme V2.2 — opacity only for controls that are already accent-colored.
+   Neutral, blue event, green marketplace and semantic controls keep their own colors. */
+#socialHome .socialFilter.active,
+#socialHome .socialInterestBtn,
+#socialHome .socialFollowBtn.active,
+#socialHome .socialMessageBtn,
+#socialHome .socialComposerPanel button:not(.secondary),
+#socialHome .socialCommentBox button,
+#socialHome .socialSearch button,
+#socialHome .socialBottomCreate,
+.musicHome .musicTabs button.active,
+.musicHome .musicSearchResult button,
+#musicPlayback .musicTransport [data-transport="toggle"],
+.myeventAppearanceChoice.active{
+  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
+  border-color:var(--myevent-accent)!important;
+}
+/* Accent-colored text/outline follows the selected color but does not receive a fill. */
+#socialHome .socialBottomNav [data-bottom-tab].active,
+#socialHome .socialSectionHead button,
+.musicPlayerActions button[aria-pressed="true"]{color:var(--myevent-accent)!important}
+#musicHome .musicSectionTitle button,
+#musicHomeExtras .musicShelfHead button,
+#musicHomeExtras .musicForYouHead button{border-color:var(--myevent-accent)!important}
