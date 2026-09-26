@@ -10,6 +10,7 @@
   function openGames(){if(!gamesHome)return;gamesHome.classList.add('open');gamesHome.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
   function closeGames(){if(!gamesHome)return;gamesHome.classList.remove('open');gamesHome.setAttribute('aria-hidden','true');$s('infiltreLobby')?.classList.add('hidden');document.body.style.overflow='';}
   $s('socialHeaderGamesBtn')?.addEventListener('click',openGames);
+  $s('socialHeaderMusicBtn')?.addEventListener('click',()=>document.querySelector('#socialBottomNav .navMusic')?.click());
   document.querySelector('#socialBottomNav .navGames')?.addEventListener('click',openGames);
   $s('gamesBackBtn')?.addEventListener('click',closeGames);
   document.querySelector('#gamesHome [data-game="infiltre"]')?.addEventListener('click',()=>{$s('infiltreLobby')?.classList.remove('hidden');$s('infiltreLobby')?.scrollIntoView({behavior:'smooth',block:'start'});});

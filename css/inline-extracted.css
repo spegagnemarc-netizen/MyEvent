@@ -3237,6 +3237,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard.eventsCard{background:linear-gradient(145deg,#102451,#11161e)!important;border-color:#276cff!important}
 #socialHome .homeFeatureCard.gamesCard{background:linear-gradient(145deg,#2d1250,#11161e)!important;border-color:#c12cff!important}
 #socialHome .homeFeatureCard.marketCard{background:linear-gradient(145deg,#0b321d,#11161e)!important;border-color:#16d866!important}
+#socialHome .homeFeatureCard.musicCard{background:linear-gradient(145deg,#36133e,#11161e)!important;border-color:#ed42d9!important;box-shadow:0 0 10px rgba(237,66,217,.3)!important}
 #socialHome .homeFeatureCard.weatherCard{background:linear-gradient(145deg,#112947,#11161e)!important;border-color:#238cff!important}
 #socialHome .friendStoriesSection{margin:7px 0 12px!important}
 #socialHome .friendStoriesHead{margin:3px 2px 7px!important}

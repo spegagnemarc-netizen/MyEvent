@@ -583,9 +583,17 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
   flex:0 0 31.5%!important;min-width:0!important;scroll-snap-align:start!important;
 }
 #musicHomeExtras .musicHeroPlaylists{
-  background-image:linear-gradient(180deg,rgba(7,10,15,.08),rgba(7,10,15,.82)),url("../assets/music-playlist-favorites.webp")!important;
-  background-size:cover!important;background-position:center!important;
+  padding:0!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.28)!important;
 }
+#musicHomeExtras .musicHeroPlaylists .musicPlaylistArt{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:left center;border-radius:inherit;
+}
+#musicHomeExtras .musicHeroPlaylists .musicHeroIcon,
+#musicHomeExtras .musicHeroPlaylists b,
+#musicHomeExtras .musicHeroPlaylists small,
+#musicHomeExtras .musicHeroPlaylists i{display:none!important}
 @media(max-width:430px){
  #musicHomeExtras>.musicCards.musicHeroCards .musicIllustrated{flex-basis:31.5%!important}
 }
