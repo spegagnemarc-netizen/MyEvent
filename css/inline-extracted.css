@@ -3372,3 +3372,8 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 /* MyEvent Home V55.7 — restore Nearby shortcut in carousel */
 #socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid #ff4b32!important;background:linear-gradient(145deg,#351411,#11161e)!important;box-shadow:0 0 9px rgba(255,75,50,.28)!important;color:#fff!important}
 #socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(255,75,50,.65))}
+
+/* MyEvent Home V55.8 — compact photo feed cards */
+#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{height:250px!important;max-height:250px!important;object-fit:cover!important}
+#socialHome .socialPost[data-camera-post-id] .socialPostHead{padding-top:10px!important;padding-bottom:6px!important}
+#socialHome .socialPost[data-camera-post-id] .socialPostText{padding-top:5px!important;padding-bottom:8px!important}
