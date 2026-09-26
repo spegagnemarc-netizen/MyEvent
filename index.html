@@ -1175,29 +1175,30 @@
 <script src="js/music-workspace.js?v=dj-v12"></script>
 <script src="js/theme-runtime.js?v=global-theme-1"></script>\n<link rel="stylesheet" href="css/entertainment-lounge.css?v=1">\n
 <section id="entertainmentLounge" aria-hidden="true">
-  <div class="entertainmentHead">
-    <button type="button" class="entertainmentBack" id="entertainmentBackBtn" aria-label="Retour">‹</button>
-    <div><h2>Divertissement & Jeux</h2><p>Jouez ensemble pendant vos événements</p></div>
+  <div id="entertainmentHub" class="entertainmentView active">
+    <div class="entertainmentHead"><button type="button" class="entertainmentBack" id="entertainmentBackBtn">‹</button><div><h2>Divertissement & Jeux</h2><p>Jouez ensemble pendant vos événements</p></div></div>
+    <div class="entertainmentHero"><div class="entertainmentHeroTag">Jeu phare MyEvent</div><h3>🕵️ Infiltré MyEvent</h3><p>Découvrez l’infiltré grâce aux indices, puis votez sans révéler votre mot.</p><div class="entertainmentModes"><span>🏠 Ensemble</span><span>📹 Visio</span><span>🌍 Hybride</span></div></div>
+    <div class="entertainmentSectionTitle"><h3>Choisir un jeu</h3><span>Salon MyEvent</span></div>
+    <div class="entertainmentGrid">
+      <button class="entertainmentGame primary" data-entertainment-game="infiltre"><span class="gameBadge">JOUABLE</span><span class="gameIcon">🕵️</span><b>Infiltré MyEvent</b><small>Rôles secrets · indices · votes · éliminations</small></button>
+      <button class="entertainmentGame" data-entertainment-game="quiz"><span class="gameIcon">🧠</span><b>Quiz</b><small>Questions et classement du groupe</small></button>
+      <button class="entertainmentGame" data-entertainment-game="blindtest"><span class="gameIcon">🎵</span><b>Blind Test</b><small>Devinez les titres et artistes</small></button>
+      <button class="entertainmentGame" data-entertainment-game="defis"><span class="gameIcon">🎯</span><b>Défis</b><small>Défis rapides entre participants</small></button>
+      <button class="entertainmentGame" data-entertainment-game="action"><span class="gameIcon">🤫</span><b>Action ou Vérité</b><small>Questions et défis pour le groupe</small></button>
+      <button class="entertainmentGame" data-entertainment-game="likely"><span class="gameIcon">😂</span><b>Qui est le plus…</b><small>Votez pour un membre du groupe</small></button>
+      <button class="entertainmentGame coming" data-entertainment-game="karaoke"><span class="gameBadge">À VENIR</span><span class="gameIcon">🎤</span><b>Karaoké</b><small>Le futur Karaoké MyEvent</small></button>
+    </div>
   </div>
-  <div class="entertainmentHero">
-    <div class="entertainmentHeroTag">Jeu phare MyEvent</div>
-    <h3>🕵️ Infiltré MyEvent</h3>
-    <p>Découvrez l’infiltré grâce aux indices, puis votez sans révéler votre mot.</p>
-    <div class="entertainmentModes"><span>🏠 Ensemble</span><span>📹 Visio</span><span>🌍 Hybride</span></div>
-  </div>
-  <div class="entertainmentSectionTitle"><h3>Choisir un jeu</h3><span>Salon MyEvent</span></div>
-  <div class="entertainmentGrid">
-    <button type="button" class="entertainmentGame primary" data-entertainment-game="infiltre"><span class="gameBadge">BIENTÔT JOUABLE</span><span class="gameIcon">🕵️</span><b>Infiltré MyEvent</b><small>Rôles secrets · indices · votes · éliminations</small></button>
-    <button type="button" class="entertainmentGame" data-entertainment-game="quiz"><span class="gameIcon">🧠</span><b>Quiz</b><small>Questions et classement du groupe</small></button>
-    <button type="button" class="entertainmentGame" data-entertainment-game="blindtest"><span class="gameIcon">🎵</span><b>Blind Test</b><small>Devinez les titres et artistes</small></button>
-    <button type="button" class="entertainmentGame" data-entertainment-game="defis"><span class="gameIcon">🎯</span><b>Défis</b><small>Défis rapides entre participants</small></button>
-    <button type="button" class="entertainmentGame" data-entertainment-game="action"><span class="gameIcon">🤫</span><b>Action ou Vérité</b><small>Questions et défis pour le groupe</small></button>
-    <button type="button" class="entertainmentGame" data-entertainment-game="likely"><span class="gameIcon">😂</span><b>Qui est le plus…</b><small>Votez pour un membre du groupe</small></button>
-    <button type="button" class="entertainmentGame coming" data-entertainment-game="karaoke"><span class="gameBadge">À VENIR</span><span class="gameIcon">🎤</span><b>Karaoké</b><small>Le futur Karaoké MyEvent</small></button>
-  </div>
-  <div class="entertainmentInfo">Les jeux multijoueurs seront liés aux participants de l’événement. Infiltré servira de première base pour les rôles privés, les tours, les votes et les modes à distance.</div>
+  <div id="infiltreIntro" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="entertainmentHub">‹</button><div><h2>Infiltré MyEvent</h2><p>Déduction · bluff · observation</p></div></div><div class="infiltreCover"><div class="infiltreSpy">🕵️</div><h2>Infiltré MyEvent</h2><p>Tout le monde connaît son mot… sauf ceux qui doivent se fondre dans le groupe.</p><div class="infiltreFacts"><div>◉ 3 modes de jeu</div><div>👥 À partir de 4 joueurs</div><div>📹 Présentiel, visio ou hybride</div></div><button class="gamePrimary" data-ent-back="infiltreModes">Créer une partie</button><button class="gameSecondary" data-ent-back="infiltreModes">Comment jouer ?</button></div></div>
+  <div id="infiltreModes" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="infiltreIntro">‹</button><div><h2>Choisir un mode de jeu</h2><p>La même partie, où que soient les joueurs</p></div></div><div class="modeCards"><button class="modeCard" data-game-mode="together"><span class="modeIcon">👥</span><span><b>Ensemble</b><small>Tout le monde est sur place.</small></span><span class="modeArrow">›</span></button><button class="modeCard" data-game-mode="video"><span class="modeIcon">📹</span><span><b>Visio</b><small>Jouez à distance avec l’appel MyEvent.</small></span><span class="modeArrow">›</span></button><button class="modeCard" data-game-mode="hybrid"><span class="modeIcon">🌍</span><span><b>Hybride</b><small>Certains sur place, d’autres en visio.</small></span><span class="modeArrow">›</span></button></div></div>
+  <div id="infiltreSetup" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="infiltreModes">‹</button><div><h2>Configurer la partie</h2><p>Préparez votre groupe</p></div></div><div class="setupBlock"><span class="setupLabel">Nombre de joueurs</span><div class="playerCounter"><button data-count-minus>−</button><b id="infiltrePlayerCount">6</b><button data-count-plus>＋</button></div></div><div class="setupBlock"><span class="setupLabel">Rôles</span><div class="roleChoices"><div class="roleChoice active"><span>🕵️</span><div><b>1 Infiltré</b><small>Mot légèrement différent</small></div><i>✓</i></div><button class="roleChoice" data-role-option="spy"><span>🥷</span><div><b>1 Espion</b><small>Sans mot, doit deviner le thème</small></div><i>○</i></button><button class="roleChoice" id="doubleInfiltreChoice" data-role-option="double"><span>🕵️</span><div><b>2 Infiltrés</b><small>Conseillé pour 7 joueurs ou plus</small></div><i>○</i></button></div></div><div class="setupBlock"><label>Noms des joueurs</label><div class="playerNames" id="infiltrePlayerNames"></div></div><div class="setupBlock"><label>Thème des mots</label><select class="themeSelect"><option>Aléatoire — sélection MyEvent</option></select></div><div class="gameNotice">En mode Visio/Hybride, vous pouvez ouvrir l’appel MyEvent depuis la partie. La distribution privée multi-téléphones sera ajoutée sur cette base.</div><button class="gamePrimary" id="startInfiltreGame">Lancer la partie</button></div>
+  <div id="infiltreReveal" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="infiltreSetup">‹</button><div><h2>Distribution des rôles</h2><p>Ne montrez pas votre écran</p></div></div><div id="infiltreRevealBody"></div></div>
+  <div id="infiltreTurn" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="infiltreSetup">‹</button><div><h2>Tour des indices</h2><p>30 secondes par joueur</p></div></div><div id="infiltreTurnBody"></div><button class="gameSecondary" id="infiltreVideoCall">📹 Ouvrir l’appel MyEvent</button></div>
+  <div id="infiltreVote" class="entertainmentView"><div class="entertainmentHead"><button class="entertainmentBack" data-ent-back="infiltreTurn">‹</button><div><h2>Vote</h2><p>Qui suspectez-vous ?</p></div></div><div class="gameNotice">Choisissez le joueur que le groupe souhaite éliminer.</div><div class="voteGrid" id="infiltreVoteGrid"></div><button class="gamePrimary" id="confirmInfiltreVote" disabled>Valider le vote</button></div>
+  <div id="infiltreResult" class="entertainmentView"><div class="entertainmentHead"><div><h2>Résultat du vote</h2><p>Le verdict du groupe</p></div></div><div id="infiltreResultBody"></div><button class="gamePrimary" id="infiltreContinue">Tour suivant</button></div>
+  <div id="infiltreWin" class="entertainmentView"><div class="entertainmentHead"><div><h2>Fin de partie</h2><p>Infiltré MyEvent</p></div></div><div id="infiltreWinner"></div><button class="gamePrimary" id="infiltreReplay">Rejouer</button><button class="gameSecondary" data-ent-back="entertainmentHub">Retour aux jeux</button></div>
 </section>
-<script src="js/entertainment-lounge.js?v=1"></script>
+<script src="js/entertainment-lounge.js?v=2"></script>
 
 
 
