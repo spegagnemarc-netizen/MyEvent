@@ -410,20 +410,18 @@
 </div>
 </div>
 <div class="myeventAppearanceCard" id="myeventAppearanceCard">
-  <div class="myeventAppearanceTitle">🎨 Apparence de l’accueil</div>
-  <div class="myeventAppearanceSub">Personnalise le fond et la couleur des boutons. Le bleu des écrans d’événement reste inchangé.</div>
+  <div class="myeventAppearanceTitle">🎨 Apparence de MyEvent</div>
+  <div class="myeventAppearanceSub">Ces réglages s’appliquent à toute l’application.</div>
+  <div class="myeventAppearanceSub">Fond de l’application</div>
   <div class="myeventAppearanceRow" aria-label="Fond">
-    <button type="button" class="myeventAppearanceChoice" data-home-bg="dark">🌙 Fond noir</button>
-    <button type="button" class="myeventAppearanceChoice" data-home-bg="light">☀️ Fond blanc</button>
+    <button type="button" class="myeventAppearanceChoice" data-theme-mode="dark">🌙 Sombre</button>
+    <button type="button" class="myeventAppearanceChoice" data-theme-mode="light">☀️ Clair</button>
   </div>
-  <div class="myeventAppearanceSub">Couleur des boutons</div>
-  <div class="myeventAppearanceRow" aria-label="Couleur des boutons">
-    <button type="button" class="myeventAccent" style="background:#ff6a34" data-accent="#ff6a34" aria-label="Orange"></button>
-    <button type="button" class="myeventAccent" style="background:#278cff" data-accent="#278cff" aria-label="Bleu"></button>
-    <button type="button" class="myeventAccent" style="background:#22b573" data-accent="#22b573" aria-label="Vert"></button>
-    <button type="button" class="myeventAccent" style="background:#8b5cf6" data-accent="#8b5cf6" aria-label="Violet"></button>
-    <button type="button" class="myeventAccent" style="background:#ec4899" data-accent="#ec4899" aria-label="Rose"></button>
-  </div>
+  <label class="myeventColorPicker"><span><b>Couleur de l’application</b><small>Choisis librement ta couleur</small></span><input type="color" data-theme="accent" value="#ff6a34" aria-label="Couleur de l’application"></label>
+  <label class="myeventThemeSlider"><span>Transparence des boutons <output data-theme-output="buttonOpacity">90%</output></span><input type="range" min="0.20" max="1" step="0.01" data-theme="buttonOpacity"></label>
+  <label class="myeventThemeSlider"><span>Transparence des cadres <output data-theme-output="surfaceOpacity">94%</output></span><input type="range" min="0.20" max="1" step="0.01" data-theme="surfaceOpacity"></label>
+  <button type="button" class="myeventThemeReset" data-theme-reset>↺ Réinitialiser le thème MyEvent</button>
+  <p class="myeventThemeNote">Les couleurs fonctionnelles (validation, erreur et certains repères d’événement) restent distinctes.</p>
 </div>
 <button id="saveProfileBtn">Enregistrer mon profil</button>
 <p id="profileMsg" class="muted"></p>
@@ -1175,7 +1173,7 @@
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
 <script src="js/music-workspace.js?v=dj-v12"></script>
-<script src="js/theme-runtime.js?v=1"></script>
+<script src="js/theme-runtime.js?v=global-theme-1"></script>
 
 
 
