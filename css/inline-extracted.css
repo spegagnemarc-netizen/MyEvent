@@ -3209,3 +3209,23 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #musicHome .musicSectionTitle button,
 #musicHomeExtras .musicShelfHead button,
 #musicHomeExtras .musicForYouHead button{border-color:var(--myevent-accent)!important}
+
+/* Global theme V2.3 — force the user's opacity on EXISTING orange accent fills only.
+   Kept intentionally narrow: no neutral buttons, blue event shortcuts, green Marketplace,
+   bottom navigation, semantic success/error controls, or camera controls. */
+#socialHome button.socialFilter.active,
+#socialHome .socialInterestBtn,
+#socialHome .socialFollowBtn.active,
+#socialHome .socialMessageBtn,
+#socialHome .socialComposerPanel button:not(.secondary),
+#socialHome .socialCommentBox button,
+#socialHome .socialSearch button,
+#musicHome .musicSearch button,
+#musicHome .musicTabs button.active,
+#musicHome .musicChips button.active,
+#musicHome .musicSearchResult button,
+#musicPlayback .musicTransport [data-transport="toggle"]{
+  background:rgba(var(--myevent-accent-rgb),var(--myevent-button-opacity))!important;
+  border-color:var(--myevent-accent)!important;
+  box-shadow:none!important;
+}
