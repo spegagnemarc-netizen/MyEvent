@@ -3368,3 +3368,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialBottomNav.homeNavV2 .navEvents .bottomIcon:after{content:"📅"!important;font-size:29px!important;filter:saturate(1.8) drop-shadow(0 0 6px #268cff)!important}
 #socialBottomNav.homeNavV2 .navMusic .bottomIcon:after{content:"♫"!important;font-size:34px!important;color:#f03cdd!important;text-shadow:0 0 9px #f03cdd!important}
 #socialBottomNav.homeNavV2 .navProfile .bottomIcon:after{content:"♙"!important;font-size:31px!important;color:#edf2fb!important;text-shadow:0 0 5px #8791a3!important}
+
+/* MyEvent Home V55.7 — restore Nearby shortcut in carousel */
+#socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid #ff4b32!important;background:linear-gradient(145deg,#351411,#11161e)!important;box-shadow:0 0 9px rgba(255,75,50,.28)!important;color:#fff!important}
+#socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(255,75,50,.65))}
