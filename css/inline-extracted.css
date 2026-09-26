@@ -3336,3 +3336,13 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialBottomNav.homeNavV2 .navProfile .bottomIcon{font-size:0!important}#socialBottomNav.homeNavV2 .navProfile .bottomIcon:after{content:"♙";font-size:29px;color:#eef2f8}
 #socialBottomNav.homeNavV2 .bottomLabel{color:#fff!important;font-weight:700!important}
 @media(max-width:390px){#socialHome .homeFeatureCard{flex-basis:calc((100% - 30px)/6)!important;height:100px!important}#socialHome .homeFeatureCard b{font-size:8.5px!important}}
+
+/* MyEvent Home V55.4 — tighter, wider six-card shortcut row */
+#socialHome .homeFeatureCarousel{gap:4px!important;padding:3px 0 6px!important}
+#socialHome .homeFeatureCard{flex:0 0 calc((100% - 20px)/6)!important;height:90px!important;border-radius:14px!important;padding:4px 2px!important;gap:4px!important}
+#socialHome .homeFeatureCard b{font-size:9px!important;line-height:1!important}
+#socialHome .homeFeatureCard .homeFeatureIcon{font-size:31px!important}
+#socialHome .homeFeatureCard .socialStoryBubble{width:43px!important;height:43px!important}
+#socialHome .homeFeatureCard.friendsCard{border-color:#ffd22e!important;box-shadow:0 0 8px rgba(255,210,46,.22)!important}
+#socialHome .storyAddBadge{top:36px!important;right:4px!important}
+@media(max-width:390px){#socialHome .homeFeatureCarousel{gap:3px!important}#socialHome .homeFeatureCard{flex-basis:calc((100% - 15px)/6)!important;height:88px!important;border-radius:13px!important}#socialHome .homeFeatureCard .homeFeatureIcon{font-size:29px!important}#socialHome .homeFeatureCard b{font-size:8px!important}}
