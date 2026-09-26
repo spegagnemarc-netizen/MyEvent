@@ -16,6 +16,7 @@
     const me = $('socialMyStory');
     me.classList.toggle('hasStory', !!latest);
     if (!latest) {
+      myStoryBubble.style.removeProperty('background-image');
       myStoryBubble.replaceChildren(...defaultMyStoryContent.map(node => node.cloneNode(true)));
       return;
     }
@@ -23,6 +24,9 @@
     preview.className = 'myStoryThumbnail';
     preview.src = latest.url;
     preview.setAttribute('aria-hidden', 'true');
+    myStoryBubble.style.setProperty('background-image', latest.media_type === 'image' ? 'url("' + latest.url + '")' : 'none', 'important');
+    myStoryBubble.style.setProperty('background-size','cover','important');
+    myStoryBubble.style.setProperty('background-position','center','important');
     if (latest.media_type === 'video') {
       preview.muted = true;
       preview.playsInline = true;
