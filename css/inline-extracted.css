@@ -3377,3 +3377,13 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{height:250px!important;max-height:250px!important;object-fit:cover!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostHead{padding-top:10px!important;padding-bottom:6px!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostText{padding-top:5px!important;padding-bottom:8px!important}
+
+/* MyEvent Home V55.9 — Friends preview as background bubbles */
+#socialHome #socialFriendsShortcut{position:relative!important;overflow:hidden!important}
+#socialHome #socialFriendsShortcut .homeFriendsArt{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:.34!important;pointer-events:none!important}
+#socialHome #socialFriendsShortcut .homeFriendsArt span{width:46px!important;height:46px!important;font-size:29px!important;filter:blur(.15px)}
+#socialHome #socialFriendsShortcut .homeFriendsArt span:nth-child(1){left:-8px!important;top:6px!important}
+#socialHome #socialFriendsShortcut .homeFriendsArt span:nth-child(2){left:30px!important;top:18px!important}
+#socialHome #socialFriendsShortcut .homeFriendsArt span:nth-child(3){right:-8px!important;top:4px!important}
+#socialHome #socialFriendsShortcut .homeFriendsArt em{right:6px!important;bottom:25px!important;opacity:1!important;background:#332b08!important}
+#socialHome #socialFriendsShortcut>b{position:relative!important;z-index:5!important;margin-top:auto!important;text-shadow:0 2px 5px #000!important}
