@@ -2,7 +2,9 @@
 (() => {
   const root=document.getElementById('entertainmentLounge');if(!root)return;
   const context=()=>window.myeventGameContext?.()||{};
-  const session=new window.MyEventGameSession(context);
+  const infiltreSession=new window.MyEventGameSession(context);
+  const defisSession=new window.MyEventGameSession(context,'defis');
+  let session=infiltreSession;
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const $=id=>root.querySelector('#'+id);
   let screen='hub',shown=false,secretVisible=false,choice=null,busy=false,lastRevision=-1,lastRound=null,account=context().user?.id||null,filter='all',expiredKey='',returnFocus=null,previousOverflow='';
@@ -10,23 +12,24 @@
   const powers={immunity:['🛡️','Immunité','Protège-toi au prochain vote.'],double_vote:['🗳️','Double vote','Ton prochain vote compte double.'],second_clue:['💬','Deuxième indice','Demande un nouvel indice à un autre joueur.'],protection:['🤝','Protection','Protège un autre joueur au prochain vote.'],silence:['🤐','Silence','Un autre joueur ne vote pas au prochain vote.']};
   const games=[['infiltre','🕵️','Infiltré MyEvent','Rôles secrets, indices, votes, bluff…','party'],['defis','🎯','Défis MyEvent','Des missions à vivre ensemble.','party'],['treasure','🗺️','Chasse au trésor','Explorez, trouvez, partagez.','onsite'],['truth','🎭','Action ou Vérité','Les questions qui rapprochent.','party'],['quiz','🧠','Quiz','À vous de faire la différence.','quiz'],['blind','🎵','Blind Test','Une note. Un souvenir. Un titre.','music'],['karaoke','🎤','Karaoké','Chantez vos morceaux préférés.','music']];
   const config={players:6,infiltrators:1,mode:'classic',rounds:3,category:'all'};
+  const defisConfig={players:6,challenges:8};
   const button=(text,action,extra='',disabled=false,secondary=false)=>`<button type="button" class="${secondary?'gl-secondary':'gl-primary'}" data-action="${action}" ${extra} ${disabled?'disabled':''}>${text}</button>`;
   const person=id=>session.state?.players.find(p=>p.user_id===id);
   const name=id=>esc(person(id)?.name||'Joueur');
   const avatar=p=>`<span class="gl-avatar">${/^https:\/\//i.test(p?.avatar||'')?`<img src="${esc(p.avatar)}" alt="" referrerpolicy="no-referrer">`:esc(p?.name?.slice(0,1)||'·')}</span>`;
   function notice(text){if($('gl-status'))$('gl-status').textContent=text;}
-  function shell(title,body){root.innerHTML=`<div class="gl-shell"><header class="gl-header"><button type="button" class="gl-back" data-action="back" aria-label="Retour">‹</button><h2 tabindex="-1">${title}</h2><span aria-hidden="true">${screen==='hub'?'🏆':'🕵️'}</span></header><p id="gl-status" role="status" aria-live="polite"></p><main>${body}</main><footer class="gl-footer">MYEVENT <span>Jouer, ensemble.</span></footer></div>`;root.scrollTop=0;}
+  function shell(title,body){root.innerHTML=`<div class="gl-shell"><header class="gl-header"><button type="button" class="gl-back" data-action="back" aria-label="Retour">‹</button><h2 tabindex="-1">${title}</h2><span aria-hidden="true">${screen==='hub'?'🏆':session===defisSession?'🎯':'🕵️'}</span></header><p id="gl-status" role="status" aria-live="polite"></p><main>${body}</main><footer class="gl-footer">MYEVENT <span>Jouer, ensemble.</span></footer></div>`;root.scrollTop=0;}
   async function run(fn){if(busy)return;busy=true;root.setAttribute('aria-busy','true');try{await fn();}catch(e){notice(/schema cache|does not exist|Could not find/.test(e.message||'')?'Le Salon Jeux est en cours d’activation. Réessaie un peu plus tard.':e.message||'Connexion interrompue. Réessaie.');}finally{busy=false;root.removeAttribute('aria-busy');}}
   function open(){if(!shown){returnFocus=document.activeElement;previousOverflow=document.body.style.overflow;}shown=true;root.classList.add('open');root.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';if(session.state){screen='room';renderRoom();}else showHub();root.querySelector('h2')?.focus();}
   function close(){shown=false;secretVisible=false;root.classList.remove('open');root.setAttribute('aria-hidden','true');document.body.style.overflow=previousOverflow;returnFocus?.focus();}
   async function loadRooms(){try{const rooms=await session.rpc('game_my_rooms');if(screen==='hub'&&shown&&$('gl-rooms'))$('gl-rooms').innerHTML=rooms.length?`<h3>Retrouver une partie</h3>${rooms.map(r=>button(`${r.invited?'Invitation':'Reprendre'} · ${esc(r.code)}`,'join',`data-code="${esc(r.code)}"`,false,true)).join('')}`:'';}catch(e){if(screen==='hub'&&shown)notice(e.message?.includes('Connexion')?e.message:'Le Salon Jeux est en cours d’activation.');}}
-  function showHub(){screen='hub';secretVisible=false;shell('Jeux',`
+  function showHub(){session=infiltreSession;screen='hub';secretVisible=false;shell('Jeux',`
     <div class="gl-tabs" aria-label="Catégories de jeux">${[['all','Tous'],['party','Soirée'],['onsite','Sur place'],['quiz','Quiz'],['music','Musique']].map(([id,label])=>`<button type="button" data-filter="${id}" aria-pressed="${filter===id}">${label}</button>`).join('')}</div>
-    <div class="gl-grid">${games.filter(g=>filter==='all'||filter===g[4]).map(([id,icon,title,description])=>`<button type="button" class="gl-game gl-${id}" data-action="setup" ${id==='infiltre'?'':'disabled'}><span class="gl-game-art" aria-hidden="true">${icon}</span><b>${title}</b><small>${description}</small><span class="gl-badge">${id==='infiltre'?'Jouer':id==='karaoke'?'À venir':'Prochainement'}</span></button>`).join('')}</div>
+    <div class="gl-grid">${games.filter(g=>filter==='all'||filter===g[4]).map(([id,icon,title,description])=>`<button type="button" class="gl-game gl-${id}" data-action="setup" data-game="${id}" ${['infiltre','defis'].includes(id)?'':'disabled'}><span class="gl-game-art" aria-hidden="true">${icon}</span><b>${title}</b><small>${description}</small><span class="gl-badge">${['infiltre','defis'].includes(id)?'Jouer':id==='karaoke'?'À venir':'Prochainement'}</span></button>`).join('')}</div>
     <form id="gl-join" class="gl-panel"><label for="gl-code">Tu as un code d’invitation ?</label><div class="gl-inline"><input id="gl-code" name="code" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="Code à 8 caractères" value="${esc(window.myeventInvitations?.get('game')||'')}" required pattern="[A-Za-z0-9]{8}"><button type="submit" class="gl-primary">Rejoindre</button></div></form><div id="gl-rooms"></div>`);loadRooms();}
   function modeHelp(mode){return mode==='classic'?'Mots proches, indices, discussion et vote.':mode==='missions'?'La déduction, avec une mission secrète et des points bonus.':'Le mode signature : déduction, missions secrètes et pouvoirs.';}
   function infiltratorOptions(){return Array.from({length:Math.max(1,Math.floor((config.players-1)/3))},(_,i)=>`<option value="${i+1}" ${config.infiltrators===i+1?'selected':''}>${i+1}</option>`).join('');}
-  function showSetup(){screen='setup';const event=context().event;shell('Infiltré MyEvent',`
+  function showSetup(){session=infiltreSession;screen='setup';const event=context().event;shell('Infiltré MyEvent',`
     <div class="gl-intro"><span class="gl-spy" aria-hidden="true">🕵️</span><div><h3>Un mot. Un doute.</h3><p>La majorité partage un mot. Les infiltrés en ont un autre, très proche. Qui se trahit ?</p></div></div><form id="gl-create">
     <fieldset><legend>Nombre de joueurs maximum</legend><div class="gl-choices">${[4,5,6,7,8,9,10,12].map(n=>`<label><input type="radio" name="players" value="${n}" ${config.players===n?'checked':''}><span>${n}</span></label>`).join('')}</div></fieldset>
     <fieldset><legend>Mode de jeu</legend><div class="gl-choices">${Object.entries(modes).map(([id,label])=>`<label><input type="radio" name="mode" value="${id}" ${config.mode===id?'checked':''}><span>${label}</span></label>`).join('')}</div><p id="gl-mode-help" class="gl-muted">${modeHelp(config.mode)}</p></fieldset>
@@ -38,12 +41,56 @@
     <label class="gl-field">Paires personnalisées (facultatif)<textarea name="pairs" rows="3" maxlength="8200" placeholder="Une paire par ligne : mot A / mot B"></textarea></label><p class="gl-muted">Au moins une paire différente par manche. L’auteur connaît les mots proposés, mais pas leur attribution.</p></details>
     <details class="gl-panel"><summary>Les règles, en une minute</summary><p>Chacun découvre son mot et son camp, donne oralement un indice, puis débat. Le vote est secret, définitif et ouvert 90 secondes. Pas de vote pour soi.</p><p>La personne avec le plus de voix est éliminée. En cas d’égalité ou de protection, personne ne sort. Les citoyens gagnent quand tous les infiltrés sont éliminés ; les infiltrés gagnent dès qu’ils sont aussi nombreux que les citoyens.</p><p>Chaque manche redistribue les rôles et les mots. Victoire du camp : +5, infiltré survivant : +2, vote contre un infiltré : +1, mission validée : +2. Les scores ne sont publiés qu’à la fin de la manche.</p><p>Déclare ta mission avant la fin de la manche. L’hôte la valide ensuite (un autre joueur valide celle de l’hôte). Un pouvoir par joueur et par manche, utilisable une fois pendant le débat. Protection et silence durent un vote ; au moins deux joueurs gardent le droit de voter.</p><p>Chacun utilise son compte sur son téléphone. Les indices et la discussion se font oralement, sur place ou dans votre appel habituel.</p></details>
     <button type="submit" class="gl-primary">Créer la partie</button></form>`);}
+  function showDefisSetup(){session=defisSession;screen='defis-setup';const event=context().event;shell('Défis MyEvent',`
+    <div class="gl-intro gl-defis-intro"><span class="gl-spy" aria-hidden="true">🎯</span><div><h3>Des défis. Des souvenirs.</h3><p>Défis individuels et collectifs, photos, mimes et mini-missions à réaliser ensemble.</p></div></div>
+    <form id="gl-defis-create">
+      <fieldset><legend>Nombre de joueurs maximum</legend><div class="gl-choices">${[2,4,6,8,10,12].map(n=>`<label><input type="radio" name="players" value="${n}" ${defisConfig.players===n?'checked':''}><span>${n}</span></label>`).join('')}</div></fieldset>
+      <fieldset><legend>Nombre de défis</legend><div class="gl-choices">${[5,8,10,12].map(n=>`<label><input type="radio" name="challenges" value="${n}" ${defisConfig.challenges===n?'checked':''}><span>${n}</span></label>`).join('')}</div></fieldset>
+      ${event?.id?`<label class="gl-toggle"><input type="checkbox" name="event"> Dans l’événement « ${esc(event.name||event.title||'en cours')} »</label><p class="gl-muted">Seuls ses participants pourront rejoindre.</p>`:''}
+      <div class="gl-panel"><h3>Comment ça marche ?</h3><p>MyEvent alterne des défis individuels et collectifs. Un défi individuel réussi rapporte <b>2 points</b> au joueur désigné. Un défi collectif réussi rapporte <b>1 point à chacun</b>. L’hôte valide ou passe le défi.</p></div>
+      <button type="submit" class="gl-primary">Créer la partie</button>
+    </form>`);}
   function scoreBoard(){const s=session.state;const ranked=s.players.map(p=>({...p,score:s.scores.filter(x=>x.user_id===p.user_id).reduce((a,b)=>a+b.points,0)})).sort((a,b)=>b.score-a.score);return `<div class="gl-panel"><h3>🏆 Classement de la partie</h3>${ranked.map((p,i)=>`<div class="gl-player"><span class="gl-rank">${i+1}</span>${avatar(p)}<b>${esc(p.name)}${p.left_at?' · parti':''}</b><strong>${p.score}<small> pts</small></strong></div>`).join('')}</div>`;}
   function secretCard(s){return `<div class="gl-secret ${s?.role==='infiltrator'?'gl-secret-infiltrator':''}"><small>Ton mot secret</small><strong>${esc(s?.word)}</strong><span class="gl-secret-icon">${s?.role==='infiltrator'?'🕵️':'💡'}</span><h3>${s?.role==='infiltrator'?'Tu es l’infiltré !':'Tu es citoyen.'}</h3><p>${s?.role==='infiltrator'?'Fonds-toi dans le groupe avec des indices crédibles.':'Écoute les indices et repère les différences.'}</p>${s?.mission?`<div class="gl-mission"><b>🎯 Ta mission secrète</b><p>${esc(s.mission)}</p></div>`:''}</div>`;}
   function inviteUrl(){const url=new URL(location.pathname,location.origin);url.searchParams.set('game',session.state.room.code);return url.href;}
+  function renderDefisRoom(){
+    if(!session.state||!shown||screen!=='room')return;
+    const s=session.state,{room:r,challenge:c}=s,me=person(s.me),host=r.host_id===s.me,active=s.players.filter(p=>!p.left_at);
+    let body='';
+    if(r.status==='waiting'){
+      body=`<div class="gl-panel gl-code-panel"><small>Code de la partie</small><div class="gl-room-code">${esc(r.code)}</div>${button('↗ Partager l’invitation','share')}<input id="gl-share-link" readonly aria-label="Lien de la partie" value="${esc(inviteUrl())}"></div>
+      <div class="gl-section-label"><h3>Joueurs (${active.length}/${r.settings.players})</h3><span>🎯 Défis MyEvent</span></div>
+      ${active.map(p=>`<div class="gl-player">${avatar(p)}<b>${esc(p.name)} ${p.user_id===r.host_id?'♛':''}${p.user_id===s.me?' · toi':''}<small>${p.user_id===r.host_id?'Hôte':Date.now()-Date.parse(p.last_seen)>60000?'Reconnexion…':'Dans le salon'}</small></b><span class="gl-ready ${p.ready?'yes':''}">${p.ready?'Prêt':'Pas prêt'}</span></div>`).join('')}
+      ${Array.from({length:Math.max(0,r.settings.players-active.length)},()=>'<div class="gl-player gl-empty"><span class="gl-avatar">＋</span><span>En attente d’un joueur…</span></div>').join('')}
+      ${button(me.ready?'Je ne suis plus prêt':'Je suis prêt','ready',`data-ready="${!me.ready}"`,false,true)}
+      <details class="gl-panel"><summary>${r.event_id?'Inviter des participants':'Inviter mes amis'}</summary><div id="gl-contacts">${button('Afficher les contacts','contacts','',false,true)}</div></details>
+      <p class="gl-muted">${r.settings.challenges} défis · mélange individuel et collectif · 2 joueurs minimum, tous prêts.</p>
+      ${host?button('Lancer les défis','start','',active.length<2||active.some(p=>!p.ready)):'<p class="gl-wait">L’hôte lancera la partie quand tout le monde sera prêt.</p>'}`;
+    }else if(r.status==='finished'){
+      body=`<div class="gl-win"><span>🏆</span><h3>Défis terminés !</h3><p>Bien joué. Vous avez créé quelques souvenirs au passage.</p></div>${scoreBoard()}${host?button('Rejouer','replay'):'<p class="gl-wait">L’hôte peut relancer la partie.</p>'}${button('Nouvelle partie','defis-setup','',false,true)}${button('Changer de jeu','hub','',false,true)}`;
+    }else if(r.status==='playing'&&c){
+      const target=c.target_id?person(c.target_id):null;
+      const done=Number(s.progress?.done||0),total=Number(s.progress?.total||r.settings.challenges||0);
+      body=`<div class="gl-challenge-progress"><span>Défi ${c.number}/${total}</span><progress max="${total}" value="${done}"></progress></div>
+      <div class="gl-challenge-card ${c.kind==='collective'?'collective':''}">
+        <span class="gl-challenge-icon">${c.kind==='collective'?'👥':'🎯'}</span>
+        <small>${c.kind==='collective'?'DÉFI COLLECTIF':'DÉFI INDIVIDUEL'}</small>
+        ${target?`<div class="gl-challenge-target">${avatar(target)}<b>${esc(target.name)}</b></div>`:''}
+        <h3>${esc(c.challenge)}</h3>
+        <p>${c.kind==='collective'?'Réussi : +1 point pour chaque joueur.':'Réussi : +2 points pour le joueur désigné.'}</p>
+      </div>
+      ${host?`<div class="gl-challenge-actions">${button('✓ Défi réussi','complete')}${button('Passer ce défi','skip','',false,true)}</div>`:'<p class="gl-wait">Réalisez le défi. L’hôte validera le résultat.</p>'}
+      ${scoreBoard()}`;
+    }
+    const hostPlayer=person(r.host_id);
+    if(!host&&hostPlayer&&Date.now()-Date.parse(hostPlayer.last_seen)>120000)body+=button('Reprendre le rôle d’hôte','claim_host','',false,true);
+    if(host&&['waiting','playing'].includes(r.status))body+=active.filter(p=>p.user_id!==s.me&&Date.now()-Date.parse(p.last_seen)>120000).map(p=>button(`Retirer ${esc(p.name)} (absent)`,'remove_absent',`data-target="${p.user_id}"`,false,true)).join('');
+    body+='<div class="gl-room-footer"><span id="gl-connection">Synchronisé</span><button type="button" data-action="refresh">Actualiser</button><button type="button" data-action="leave">Quitter la partie</button></div>';
+    shell(r.status==='waiting'?'Salon Défis':r.status==='finished'?'Classement final':'Défis MyEvent',body);
+  }
   function renderRoom(){
     if(!session.state||!shown||screen!=='room')return;
-    const s=session.state,{room:r,round:q,secret}=s,me=person(s.me),host=r.host_id===s.me,active=s.players.filter(p=>!p.left_at),alive=active.filter(p=>p.alive);
+    const s=session.state;if(s.room.game_key==='defis'){renderDefisRoom();return;}const {room:r,round:q,secret}=s,me=person(s.me),host=r.host_id===s.me,active=s.players.filter(p=>!p.left_at),alive=active.filter(p=>p.alive);
     if(lastRound!==r.round_no){secretVisible=false;choice=null;lastRound=r.round_no;}lastRevision=r.revision;
     const phases={reveal:'Ton mot',clues:'Tour de parole',extra_clue:'Deuxième indice',discussion:'Discussion',voting:'Phase de vote',result:'Résultat du vote',round_end:'Résultat de la manche'};
     let body='';const title=r.status==='waiting'?'Salon d’attente':r.status==='finished'?'Classement final':phases[q?.phase]||'La partie';
@@ -92,26 +139,30 @@
   root.addEventListener('click',e=>{
     const tab=e.target.closest('[data-filter]');if(tab){filter=tab.dataset.filter;showHub();return;}
     const b=e.target.closest('[data-action]');if(!b)return;const action=b.dataset.action;
-    if(action==='back'){if(screen==='hub')close();else showHub();return;}if(action==='hub'){showHub();return;}if(action==='setup'){showSetup();return;}if(action==='show-secret'){secretVisible=true;renderRoom();return;}
+    if(action==='back'){if(screen==='hub')close();else showHub();return;}if(action==='hub'){showHub();return;}if(action==='defis-setup'){showDefisSetup();return;}if(action==='setup'){if(b.dataset.game==='defis')showDefisSetup();else showSetup();return;}if(action==='show-secret'){secretVisible=true;renderRoom();return;}
     run(async()=>{
-      if(action==='join'){await session.join(b.dataset.code);screen='room';renderRoom();}
-      else if(action==='share'){const url=inviteUrl();if(navigator.share){try{await navigator.share({title:'Infiltré MyEvent',text:'Rejoins notre partie !',url});}catch(e){if(e.name!=='AbortError')throw e;}}else if(navigator.clipboard){await navigator.clipboard.writeText(url);notice('Lien copié.');}else{$('gl-share-link').select();notice('Copie le lien affiché.');}}
-      else if(action==='contacts'){const contacts=await session.rpc('game_contacts',{target_room:session.roomId});$('gl-contacts').innerHTML=contacts.length?contacts.map(p=>button(`Inviter ${esc(p.name)}`,'invite',`data-target="${p.id}"`,false,true)).join(''):'<p>Aucun contact à inviter. Tu peux partager le code.</p>';}
+      if(action==='join'){await session.join(b.dataset.code);if(session===infiltreSession&&session.state?.room?.game_key==='defis'){const rid=session.roomId;session.disconnect();session=defisSession;await session.connect(rid);}screen='room';renderRoom();}
+      else if(action==='share'){const url=inviteUrl();if(navigator.share){try{await navigator.share({title:session===defisSession?'Défis MyEvent':'Infiltré MyEvent',text:'Rejoins notre partie !',url});}catch(e){if(e.name!=='AbortError')throw e;}}else if(navigator.clipboard){await navigator.clipboard.writeText(url);notice('Lien copié.');}else{$('gl-share-link').select();notice('Copie le lien affiché.');}}
+      else if(action==='contacts'){const contacts=await session.rpc(session.endpoint('contacts'),{target_room:session.roomId});$('gl-contacts').innerHTML=contacts.length?contacts.map(p=>button(`Inviter ${esc(p.name)}`,'invite',`data-target="${p.id}"`,false,true)).join(''):'<p>Aucun contact à inviter. Tu peux partager le code.</p>';}
       else if(action==='invite'){await session.act('invite',{target:b.dataset.target});notice('Invitation disponible dans le Salon Jeux de ton contact.');}
       else if(action==='leave'){if(confirm('Quitter cette partie ? Pendant une manche, ton départ est définitif.')){await session.leave();showHub();}}
       else if(action==='refresh'){await session.refresh();renderRoom();}
       else {const data=action==='ready'?{ready:b.dataset.ready==='true'}:action==='power'?{target:$('gl-power-target')?.value||session.state.me}:b.dataset.target?{target:b.dataset.target}:{};if(action==='reveal')secretVisible=false;await session.act(action,data);}
     });
   });
-  root.addEventListener('change',e=>{if(e.target.name==='target')choice=e.target.value;if(screen==='setup'){if(e.target.name==='players'){config.players=Number(e.target.value);config.infiltrators=Math.min(config.infiltrators,Math.floor((config.players-1)/3));$('gl-infiltrators').innerHTML=infiltratorOptions();}if(e.target.name==='mode'){config.mode=e.target.value;$('gl-mode-help').textContent=modeHelp(config.mode);}if(e.target.name==='rounds')config.rounds=Number(e.target.value);if(e.target.name==='category')config.category=e.target.value;if(e.target.name==='infiltrators')config.infiltrators=Number(e.target.value);}});
+  root.addEventListener('change',e=>{if(e.target.name==='target')choice=e.target.value;if(screen==='defis-setup'){if(e.target.name==='players')defisConfig.players=Number(e.target.value);if(e.target.name==='challenges')defisConfig.challenges=Number(e.target.value);return;}if(screen==='setup'){if(e.target.name==='players'){config.players=Number(e.target.value);config.infiltrators=Math.min(config.infiltrators,Math.floor((config.players-1)/3));$('gl-infiltrators').innerHTML=infiltratorOptions();}if(e.target.name==='mode'){config.mode=e.target.value;$('gl-mode-help').textContent=modeHelp(config.mode);}if(e.target.name==='rounds')config.rounds=Number(e.target.value);if(e.target.name==='category')config.category=e.target.value;if(e.target.name==='infiltrators')config.infiltrators=Number(e.target.value);}});
   root.addEventListener('submit',e=>{e.preventDefault();const form=e.target,data=new FormData(form);run(async()=>{
     if(form.id==='gl-join'){await session.join(String(data.get('code')).trim());screen='room';renderRoom();}
+    if(form.id==='gl-defis-create'){defisConfig.players=Number(data.get('players'));defisConfig.challenges=Number(data.get('challenges'));await session.create({...defisConfig},data.has('event')?context().event?.id:null);screen='room';renderRoom();}
     if(form.id==='gl-create'){const pairs=String(data.get('pairs')||'').split('\n').filter(x=>x.trim()).map(line=>line.split('/').map(x=>x.trim()));if(pairs.some(x=>x.length!==2||x.some(w=>!w||w.length>40)))throw Error('Une paire par ligne, sous la forme mot A / mot B.');await session.create({...config,pairs,missions:data.has('missions'),powers:data.has('powers')},data.has('event')?context().event?.id:null);screen='room';renderRoom();}
     if(form.id==='gl-vote')await session.act('vote',{target:data.get('target')});
   });});
-  session.addEventListener('state',e=>{if(e.detail.room.revision!==lastRevision&&screen==='room')renderRoom();});
-  session.addEventListener('error',e=>{if(shown)notice(e.detail.message||'Connexion interrompue. Actualise pour réessayer.');});
-  session.addEventListener('connection',e=>{if($('gl-connection'))$('gl-connection').textContent=e.detail==='live'?'En direct':'Actualisation automatique';});
+  function bindSession(source){
+    source.addEventListener('state',e=>{if(source===session&&e.detail.room.revision!==lastRevision&&screen==='room')renderRoom();});
+    source.addEventListener('error',e=>{if(source===session&&shown)notice(e.detail.message||'Connexion interrompue. Actualise pour réessayer.');});
+    source.addEventListener('connection',e=>{if(source===session&&$('gl-connection'))$('gl-connection').textContent=e.detail==='live'?'En direct':'Actualisation automatique';});
+  }
+  bindSession(infiltreSession);bindSession(defisSession);
   document.getElementById('socialHeaderGamesBtn')?.addEventListener('click',open);
   window.addEventListener('myevent-open-infiltre',()=>{open();showSetup();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){secretVisible=false;root.querySelectorAll('.gl-private').forEach(x=>x.open=false);if(screen==='room'&&session.state?.round?.phase==='reveal')renderRoom();}else session.refresh();});
@@ -124,7 +175,7 @@
       else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
     }
   });setInterval(tick,1000);
-  setInterval(()=>{const id=context().user?.id||null;if(id===account)return;account=id;session.disconnect();lastRevision=-1;lastRound=null;secretVisible=false;choice=null;if(shown)showHub();if(id&&window.myeventInvitations?.get('game')){open();notice('Une invitation t’attend. Appuie sur Rejoindre.');}},1000);
+  setInterval(()=>{const id=context().user?.id||null;if(id===account)return;account=id;infiltreSession.disconnect();defisSession.disconnect();session=infiltreSession;lastRevision=-1;lastRound=null;secretVisible=false;choice=null;if(shown)showHub();if(id&&window.myeventInvitations?.get('game')){open();notice('Une invitation t’attend. Appuie sur Rejoindre.');}},1000);
   if(account&&window.myeventInvitations?.get('game'))open();
   window.myeventEntertainment={open,close};
 })();
