@@ -21,16 +21,19 @@ create table public.events(id uuid primary key,creator_id uuid references auth.u
 create table public.event_members(event_id uuid references public.events,id uuid default gen_random_uuid(),user_id uuid references auth.users,
  nickname text,role text not null default 'member',status text,joined_at timestamptz default now(),primary key(event_id,user_id));
 create table public.polls(id uuid primary key default gen_random_uuid(),event_id uuid references public.events(id),question text);
+create table public.poll_options(id uuid primary key default gen_random_uuid(),poll_id uuid references public.polls(id),option_text text);
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);
 create function storage.foldername(text) returns text[] language sql immutable as $$select string_to_array($1,'/')$$;
 alter table public.events enable row level security; alter table public.event_members enable row level security;
 alter table public.polls enable row level security;
+alter table public.poll_options enable row level security;
 create policy old_read on public.events for select to authenticated using(true);
 create policy old_write on public.events for all to authenticated using(true) with check(true);
 create policy old_members on public.event_members for all to authenticated using(true) with check(true);
 create policy old_polls on public.polls for all to authenticated using(true) with check(true);
-grant all on public.events,public.event_members,public.profiles,public.polls to authenticated;
+create policy old_poll_options on public.poll_options for all to authenticated using(true) with check(true);
+grant all on public.events,public.event_members,public.profiles,public.polls,public.poll_options to authenticated;
 alter table storage.objects enable row level security;`);
 for(const id of ids)await db.query('insert into auth.users values($1)',[id]);
 for(let i=0;i<ids.length;i++)await db.query('insert into public.profiles values($1,$2,$3,null)',[ids[i],'User '+i,'user'+i]);
@@ -51,6 +54,9 @@ assert.equal((await as(ids[0],'select role from public.event_members where event
 await as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ids[1]]);
 assert.equal((await as(ids[1],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'coorganizer');
 await as(ids[1],'insert into public.polls(event_id,question) values($1,$2)',[eid,'Question de co-organisateur']);
+const poll=(await as(ids[0],'select id from public.polls where event_id=$1',[eid])).rows[0].id;
+await as(ids[1],'insert into public.poll_options(poll_id,option_text) values($1,$2)',[poll,'Oui']);
+assert.equal((await as(ids[2],'select count(*)::int n from public.poll_options where poll_id=$1',[poll])).rows[0].n,0);
 await as(ids[0],'select public.set_event_coorganizer($1,$2,false)',[eid,ids[1]]);
 await fails(()=>as(ids[1],'insert into public.polls(event_id,question) values($1,$2)',[eid,'Question interdite']));
 await as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ids[1]]);

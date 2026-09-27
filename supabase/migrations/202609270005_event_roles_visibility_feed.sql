@@ -56,6 +56,16 @@ do $$ declare t text; begin
     end if;
   end loop;
 end $$;
+do $$ begin
+  if to_regclass('public.poll_options') is not null then
+    create policy event_poll_options_scope_v2 on public.poll_options as restrictive for select
+      using (exists(select 1 from public.polls p where p.id=poll_id and public.event_is_member(p.event_id)));
+  end if;
+  if to_regclass('public.event_outing_plan_items') is not null then
+    create policy event_plan_items_scope_v2 on public.event_outing_plan_items as restrictive for select
+      using (exists(select 1 from public.event_outing_plans p where p.id=plan_id and public.event_is_member(p.event_id)));
+  end if;
+end $$;
 create trigger event_protect_identity_v2 before update or delete on public.events for each row execute function public.event_protect_identity();
 
 -- Legacy role constraints are expanded without assuming a particular constraint name.
@@ -134,6 +144,15 @@ grant execute on function public.remove_event_participant(uuid,uuid) to authenti
 create or replace function public.event_admin_guard() returns trigger language plpgsql set search_path = '' as $$
 declare target_id uuid;
 begin
+  if tg_op='UPDATE' then
+    if tg_table_name='event_outing_plan_items' and new.plan_id is distinct from old.plan_id
+      or tg_table_name='poll_options' and new.poll_id is distinct from old.poll_id then
+      raise exception 'Le parent ne peut pas être modifié';
+    end if;
+    if tg_table_name not in ('event_outing_plan_items','poll_options') and new.event_id is distinct from old.event_id then
+      raise exception 'L’événement ne peut pas être modifié';
+    end if;
+  end if;
   if tg_table_name='event_outing_plan_items' then
     select p.event_id into target_id from public.event_outing_plans p where p.id=coalesce(new.plan_id,old.plan_id);
   elsif tg_table_name='poll_options' then
