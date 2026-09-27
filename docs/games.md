@@ -125,3 +125,22 @@ both accounts; Supabase Realtime across phones; iPhone background/foreground and
 interrupted network reconnection. A full Infiltré game needs four accounts, so use
 two additional sessions alongside the two phones. These are not claimed as live
 production tests.
+
+
+## Défis MyEvent
+
+`202609270003_defis_game.sql` extends the reusable game room infrastructure with
+`game_key='defis'`. Apply it once after `202609270002_games_engine.sql`; the two
+older migrations must not be rerun.
+
+Défis supports 2–12 players and 3–12 challenges. The UI currently offers 5, 8,
+10 or 12 challenges. A match mixes individual challenges (two points for the
+designated player) and collective challenges (one point for every present
+player). The server chooses the challenge sequence and targets, persists progress,
+awards the score ledger, handles reconnects and finishes the match. The host
+validates a successful challenge or skips it. Replay keeps the room and players
+but resets readiness, challenges and scores.
+
+The original Infiltré RPCs and rule engine remain separate. `MyEventGameSession`
+now accepts an optional RPC namespace so both games share transport, Realtime,
+polling, invitations and reconnection without mixing their rule state.
