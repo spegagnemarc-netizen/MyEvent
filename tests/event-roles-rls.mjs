@@ -1,0 +1,87 @@
+import {PGlite} from '@electric-sql/pglite';
+import {readFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+
+const db=new PGlite();
+const ids=Array.from({length:3},(_,i)=>`${i+1}`.repeat(8)+'-'+`${i+1}`.repeat(4)+'-4'+`${i+1}`.repeat(3)+'-8'+`${i+1}`.repeat(3)+'-'+`${i+1}`.repeat(12));
+const eid='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const as=async (id,sql,args=[])=>db.transaction(async tx=>{
+  await tx.exec('set local role authenticated');
+  await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[id]);
+  return tx.query(sql,args);
+});
+const fails=async fn=>assert.rejects(fn);
+await db.exec(`create role authenticated; create role anon; create schema auth; create schema storage;
+create table auth.users(id uuid primary key);
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+grant usage on schema auth,storage to authenticated;
+create table public.profiles(id uuid references auth.users primary key,display_name text,username text,avatar text);
+create table public.events(id uuid primary key,creator_id uuid references auth.users(id),name text,description text,location text,
+ event_date timestamptz,event_type text,cover_url text,invite_code text,created_at timestamptz default now());
+create table public.event_members(event_id uuid references public.events,id uuid default gen_random_uuid(),user_id uuid references auth.users,
+ nickname text,role text not null default 'member',status text,joined_at timestamptz default now(),primary key(event_id,user_id));
+create table public.polls(id uuid primary key default gen_random_uuid(),event_id uuid references public.events(id),question text);
+create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);
+create function storage.foldername(text) returns text[] language sql immutable as $$select string_to_array($1,'/')$$;
+alter table public.events enable row level security; alter table public.event_members enable row level security;
+alter table public.polls enable row level security;
+create policy old_read on public.events for select to authenticated using(true);
+create policy old_write on public.events for all to authenticated using(true) with check(true);
+create policy old_members on public.event_members for all to authenticated using(true) with check(true);
+create policy old_polls on public.polls for all to authenticated using(true) with check(true);
+grant all on public.events,public.event_members,public.profiles,public.polls to authenticated;
+alter table storage.objects enable row level security;`);
+for(const id of ids)await db.query('insert into auth.users values($1)',[id]);
+for(let i=0;i<ids.length;i++)await db.query('insert into public.profiles values($1,$2,$3,null)',[ids[i],'User '+i,'user'+i]);
+for(const name of ['202609250002_friends_stories.sql','202609270005_event_roles_visibility_feed.sql'])
+  await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+await as(ids[0],'insert into public.events(id,creator_id,name,invite_code) values($1,$2,$3,$4)',[eid,ids[0],'Sortie','secret']);
+await as(ids[0],'insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[0],'owner']);
+assert.equal((await as(ids[0],'select visibility from public.events where id=$1',[eid])).rows[0].visibility,'private');
+assert.equal((await as(ids[1],'select count(*)::int n from public.events where id=$1',[eid])).rows[0].n,0);
+await as(ids[1],'update public.events set visibility=$2 where id=$1',[eid,'public']);
+assert.equal((await as(ids[0],'select visibility from public.events where id=$1',[eid])).rows[0].visibility,'private');
+await fails(()=>as(ids[1],'insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[1],'owner']));
+await fails(()=>as(ids[1],'insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[1],'member']));
+// A private invite-code RPC runs as a definer; seed the invited member with that privilege.
+await db.query('insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[1],'member']);
+await as(ids[1],'update public.event_members set role=$3 where event_id=$1 and user_id=$2',[eid,ids[1],'coorganizer']);
+assert.equal((await as(ids[0],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'member');
+await as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ids[1]]);
+assert.equal((await as(ids[1],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'coorganizer');
+await as(ids[1],'insert into public.polls(event_id,question) values($1,$2)',[eid,'Question de co-organisateur']);
+await as(ids[0],'select public.set_event_coorganizer($1,$2,false)',[eid,ids[1]]);
+await fails(()=>as(ids[1],'insert into public.polls(event_id,question) values($1,$2)',[eid,'Question interdite']));
+await as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ids[1]]);
+await fails(()=>as(ids[1],'delete from public.event_members where event_id=$1 and user_id=$2',[eid,ids[0]]).then(async()=>{
+  if((await as(ids[0],'select count(*)::int n from public.event_members where event_id=$1 and user_id=$2',[eid,ids[0]])).rows[0].n===1)throw Error('denied');
+}));
+await fails(()=>as(ids[1],'select public.remove_event_participant($1,$2)',[eid,ids[0]]));
+await fails(()=>as(ids[1],'update public.events set creator_id=$2 where id=$1',[eid,ids[1]]));
+await fails(()=>as(ids[1],'update public.events set visibility=$2 where id=$1',[eid,'public']));
+await as(ids[0],'update public.events set visibility=$2 where id=$1',[eid,'public']);
+await as(ids[0],'insert into public.event_feed_posts(author_id,event_id) values($1,$2)',[ids[0],eid]);
+assert.equal((await as(ids[2],'select count(*)::int n from public.event_social_feed()')).rows[0].n,1);
+assert.equal((await as(ids[2],'select count(*)::int n from public.events where id=$1',[eid])).rows[0].n,0);
+await as(ids[0],'update public.events set visibility=$2 where id=$1',[eid,'private']);
+assert.equal((await as(ids[2],'select count(*)::int n from public.event_social_feed()')).rows[0].n,0);
+await fails(()=>as(ids[2],'select public.join_visible_event($1)',[eid]));
+await as(ids[0],'update public.events set visibility=$2 where id=$1',[eid,'friends']);
+assert.equal((await as(ids[2],'select count(*)::int n from public.event_social_feed()')).rows[0].n,0);
+await as(ids[0],"select public.friend_action($1,'send')",[ids[2]]);
+await as(ids[2],"select public.friend_action($1,'accept')",[ids[0]]);
+assert.equal((await as(ids[2],'select count(*)::int n from public.event_social_feed()')).rows[0].n,1);
+await as(ids[2],'select public.join_visible_event($1)',[eid]);
+assert.equal((await as(ids[2],'select count(*)::int n from public.events where id=$1',[eid])).rows[0].n,1);
+await as(ids[2],'delete from public.event_members where event_id=$1 and user_id=$2',[eid,ids[2]]);
+await as(ids[2],"select public.friend_action($1,'remove')",[ids[0]]);
+assert.equal((await as(ids[2],'select count(*)::int n from public.event_social_feed()')).rows[0].n,0);
+await as(ids[0],'update public.events set visibility=$2 where id=$1',[eid,'private']);
+await as(ids[0],'select public.set_event_coorganizer($1,$2,false)',[eid,ids[1]]);
+await fails(()=>as(ids[1],'delete from public.events where id=$1',[eid]).then(async()=>{
+  if((await as(ids[0],'select count(*)::int n from public.events where id=$1',[eid])).rows[0].n===1)throw Error('denied');
+}));
+assert.equal((await as(ids[1],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'member');
+console.log('Event permissions: owner, participant, co-organizer, private/public and social feed passed.');
+await db.close();
