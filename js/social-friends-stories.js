@@ -156,11 +156,36 @@
       relations = check(await sb.from('friendships').select('user_low,user_high,requester,status').or(`user_low.eq.${user.id},user_high.eq.${user.id}`)) || [];
       const profiles = await profilesFor(relations.map(r => r.user_low === user.id ? r.user_high : r.user_low));
       for (const id of ['socialFriendIncoming','socialFriendOutgoing','socialFriendList']) $(id)?.replaceChildren();
+      const acceptedProfiles=[];
       for (const r of relations) {
         const id = r.user_low === user.id ? r.user_high : r.user_low, p = profiles.get(id) || {id};
-        if (r.status === 'accepted') person($('socialFriendList'),p,'Supprimer','remove',{iconOnly:true,className:'remove'});
+        if (r.status === 'accepted') { acceptedProfiles.push(p); person($('socialFriendList'),p,'Supprimer','remove',{iconOnly:true,className:'remove'}); }
         else if (r.requester === user.id) person($('socialFriendOutgoing'),p,'Annuler','cancel');
         else incomingPerson($('socialFriendIncoming'),p);
+      }
+      const preview=$('homeFriendsPreview');
+      if(preview){
+        preview.replaceChildren();
+        if(acceptedProfiles.length){
+          acceptedProfiles.slice(0,3).forEach((p,index)=>{
+            const bubble=document.createElement('span');
+            bubble.className='homeFriendProfileBubble';
+            bubble.title=profileName(p);
+            if(p.avatar&&/^https:\/\//.test(p.avatar)){
+              const img=document.createElement('img');img.src=p.avatar;img.alt='';bubble.append(img);
+            }else if(p.avatar){
+              bubble.textContent=p.avatar;
+            }else{
+              bubble.textContent=(profileName(p).trim().charAt(0)||'👤').toUpperCase();
+            }
+            preview.append(bubble);
+          });
+          if(acceptedProfiles.length>3){
+            const more=document.createElement('em');more.textContent='+'+(acceptedProfiles.length-3);preview.append(more);
+          }
+        }else{
+          preview.textContent='👥';
+        }
       }
       status('');
     } catch(e) { status('Amis indisponibles : ' + e.message); }
