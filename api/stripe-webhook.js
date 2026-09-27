@@ -1,12 +1,19 @@
 const Stripe = require("stripe");
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Supabase : on retire les éventuels "/" à la fin de l'URL
-const SUPABASE_URL = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-
-const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Vercel peut contenir l'URL du projet OU l'URL de la Data API.
+// Ne jamais concaténer /rest/v1 à un chemin qui le contient déjà.
+function fundEntriesUrl(value, fundEntryId) {
+  const url = new URL(String(value || "").trim());
+  const path = url.pathname.replace(/\/+$/, "");
+  if (url.protocol !== "https:" || url.username || url.password ||
+      url.search || url.hash || !["", "/rest/v1"].includes(path)) {
+    throw new Error("Configuration SUPABASE_URL invalide");
+  }
+  url.pathname = "/rest/v1/event_fund_entries";
+  url.searchParams.set("id", `eq.${fundEntryId}`);
+  url.searchParams.set("select", "id,status");
+  return url;
+}
 
 function getRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -37,6 +44,12 @@ module.exports = async function handler(req, res) {
     return res.status(400).send("Signature Stripe manquante");
   }
 
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("Configuration Stripe webhook incomplète");
+    return res.status(500).send("Configuration du webhook incomplète");
+  }
+
+  let event;
   try {
     /*
      * Récupération du corps brut envoyé par Stripe.
@@ -44,12 +57,20 @@ module.exports = async function handler(req, res) {
      */
     const rawBody = await getRawBody(req);
 
-    const event = stripe.webhooks.constructEvent(
+    const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+    event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
+  } catch {
+    // Ne pas renvoyer de détails de signature, de corps ou de secrets au client.
+    console.warn("Signature Stripe invalide ou corps illisible");
+    return res.status(400).send("Signature Stripe invalide");
+  }
+
+  try {
     console.log("Stripe event reçu :", event.type);
 
     /*
@@ -120,22 +141,23 @@ module.exports = async function handler(req, res) {
          *
          * pending → confirmed
          */
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!supabaseKey) throw new Error("Configuration Supabase incomplète");
+        const url = fundEntriesUrl(process.env.SUPABASE_URL, fundEntryId);
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/event_fund_entries?id=eq.${encodeURIComponent(
-            fundEntryId
-          )}`,
+          url,
           {
             method: "PATCH",
 
             headers: {
               "Content-Type": "application/json",
 
-              apikey: SUPABASE_SERVICE_ROLE_KEY,
+              apikey: supabaseKey,
 
               Authorization:
-                `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                `Bearer ${supabaseKey}`,
 
-              Prefer: "return=minimal"
+              Prefer: "return=representation"
             },
 
             body: JSON.stringify({
@@ -145,16 +167,25 @@ module.exports = async function handler(req, res) {
         );
 
         if (!response.ok) {
-          const text = await response.text();
+          const failure = await response.json().catch(() => ({}));
 
           console.error(
             "Erreur Supabase :",
-            text
+            { status: response.status, code: failure.code, path: url.pathname }
           );
 
           return res.status(500).send(
             "Erreur lors de la confirmation Supabase"
           );
+        }
+
+        // Un PATCH sans ligne correspondante peut répondre 200. Ne pas
+        // acquitter le paiement tant que la participation n'est pas confirmée.
+        const entries = await response.json();
+        if (!Array.isArray(entries) || entries.length !== 1 ||
+            entries[0].id !== fundEntryId || entries[0].status !== "confirmed") {
+          console.error("Participation Stripe introuvable ou non confirmée", { fundEntryId });
+          return res.status(500).send("Participation MyEvent non confirmée");
         }
 
         console.log(
@@ -179,15 +210,14 @@ module.exports = async function handler(req, res) {
       received: true
     });
 
-  } catch (error) {
+  } catch {
 
     console.error(
-      "Stripe webhook error :",
-      error
+      "Échec de confirmation Stripe : vérifier la configuration Supabase et sa disponibilité"
     );
 
-    return res.status(400).send(
-      `Webhook Error: ${error.message}`
+    return res.status(500).send(
+      "Erreur lors de la confirmation du paiement"
     );
   }
 };
