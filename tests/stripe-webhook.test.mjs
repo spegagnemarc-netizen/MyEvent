@@ -62,6 +62,8 @@ for (const suffix of ['', '/', '///', '/rest/v1', '/rest/v1/', '/rest/v1///']) {
     assert.equal(ctx.calls[0].url.pathname, '/rest/v1/event_fund_entries');
     assert.equal(ctx.calls[0].url.searchParams.get('id'), `eq.${id}`);
     assert.equal(ctx.calls[0].headers.Prefer, 'return=representation');
+    assert.equal(ctx.calls[0].headers.apikey, 'local_service_fixture');
+    assert.equal(ctx.calls[0].headers.Authorization, undefined);
     assert.equal(ctx.rows.get(id).status, 'confirmed');
   });
 }
