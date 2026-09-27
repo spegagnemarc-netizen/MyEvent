@@ -58,13 +58,13 @@
   const status = text => { if ($('socialFriendStatus')) $('socialFriendStatus').textContent = text; };
   const check = result => { if (result.error) throw result.error; return result.data; };
   const profileName = p => p?.display_name || p?.username || 'Membre MyEvent';
-  const invitation = new URL(location.href).searchParams.get('friendInvite');
+  let invitation = window.myeventInvitations?.get('friendInvite') || new URL(location.href).searchParams.get('friendInvite');
   async function prepareInvitation() {
     const {sb,user} = context(); if (!sb || !user) { status('Connecte-toi pour inviter un ami.'); return; }
     const button = $('invitePhoneContactsBtn'); button.disabled = true;
     try {
       const token = check(await sb.rpc('create_friend_invite'));
-      const url = new URL('/', location.href); url.searchParams.set('friendInvite', token);
+      const url = new URL(location.pathname, location.origin); url.searchParams.set('friendInvite', token);
       $('socialFriendInviteLink').value = url.href;
       $('socialFriendInviteShare').classList.remove('hidden');
       status('Lien prêt : partage-le pour que ton contact puisse accepter ton invitation.');
@@ -81,6 +81,7 @@
   }
   async function inspectInvitation() {
     if (!invitation) return;
+    $('socialFriendInvitePrompt')?.classList.add('hidden');
     $('socialFriendsShortcut')?.click();
     if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(invitation)) { status('Lien d’invitation invalide.'); return; }
     try {
@@ -95,6 +96,7 @@
     const {sb} = context(), button = $('socialFriendInviteAccept'); button.disabled = true;
     try {
       check(await sb.rpc('accept_friend_invite', {invitation}));
+      window.myeventInvitations?.clear('friendInvite'); invitation = null;
       $('socialFriendInvitePrompt').classList.add('hidden');
       const url = new URL(location.href); url.searchParams.delete('friendInvite');
       history.replaceState(history.state, '', url);

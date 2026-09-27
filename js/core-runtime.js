@@ -438,7 +438,7 @@ async function connect(){
 async function signup(){
   msg('authmsg','Création du compte…');
   try{
-    const r=await sb.auth.signUp({email:$('email').value.trim(),password:$('password').value});
+    const r=await sb.auth.signUp({email:$('email').value.trim(),password:$('password').value,options:{emailRedirectTo:window.myeventInvitations?.redirect()||location.origin}});
     if(r.error) throw r.error;
     msg('authmsg','Compte créé. Vérifie ton email puis connecte-toi.','ok');
   }catch(e){msg('authmsg',e.message||String(e),'err')}
@@ -2715,6 +2715,7 @@ async function vote(pollId, optionId, button){
 }
 
 window.myeventCameraContext=function(){return {sb,user};};
+window.myeventGameContext=function(){return {sb,user,event};};
 window.myeventMusicContext=function(){return {sb,user,event};};
 
 window.myeventPublishCameraPost=async function(dataUrl){

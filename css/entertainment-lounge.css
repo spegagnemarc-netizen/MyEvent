@@ -1,18 +1,123 @@
-/* MyEvent — Salon Divertissement & Jeux V2 */
-#entertainmentLounge{position:fixed;inset:0;z-index:12500;display:none;overflow:auto;background:#080c14;color:#f7f8fa;padding:env(safe-area-inset-top) 14px calc(88px + env(safe-area-inset-bottom));box-sizing:border-box}
-#entertainmentLounge.open{display:block}.entertainmentView{display:none;max-width:620px;margin:auto}.entertainmentView.active{display:block}
-.entertainmentHead{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:12px;padding:12px 0 14px;background:linear-gradient(#080c14 82%,transparent)}
-.entertainmentBack{width:42px;height:42px;flex:0 0 42px;border-radius:50%;border:1px solid #303a4d;background:#111827;color:#fff;font-size:28px}.entertainmentHead h2{margin:0;font-size:21px}.entertainmentHead p{margin:2px 0 0;color:#94a0b4;font-size:12px}
-.entertainmentHero{padding:20px;border:1px solid #31405c;border-radius:22px;background:radial-gradient(circle at 85% 15%,rgba(var(--myevent-accent-rgb,255,106,52),.24),transparent 38%),linear-gradient(145deg,#131b2a,#0f1420);margin-bottom:16px}
-.entertainmentHeroTag{font-size:11px;font-weight:900;color:var(--myevent-accent,#ff6a34);text-transform:uppercase;letter-spacing:.1em}.entertainmentHero h3{font-size:27px;margin:7px 0}.entertainmentHero p{color:#b8c1d0;margin:0 0 15px;line-height:1.4}.entertainmentModes{display:flex;gap:7px;flex-wrap:wrap}.entertainmentModes span{padding:7px 10px;border:1px solid #344158;border-radius:999px;background:#0b1220;font-size:12px}
-.entertainmentSectionTitle{display:flex;justify-content:space-between;align-items:end;margin:20px 2px 10px}.entertainmentSectionTitle h3{margin:0;font-size:18px}.entertainmentSectionTitle span{font-size:12px;color:#858e99}
-.entertainmentGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.entertainmentGame{position:relative;min-height:150px;padding:15px;border:1px solid #29354a;border-radius:19px;background:linear-gradient(145deg,#151c2a,#101622);color:#fff;text-align:left;overflow:hidden}.entertainmentGame.primary{grid-column:1/-1;min-height:172px;border-color:#7657ff;background:radial-gradient(circle at 85% 25%,#5429a8 0,transparent 35%),linear-gradient(135deg,#12263a,#141526 65%)}.entertainmentGame .gameIcon{display:block;font-size:36px;margin-bottom:18px}.entertainmentGame b{display:block;font-size:17px;margin-bottom:5px}.entertainmentGame small{display:block;color:#aeb8c8;line-height:1.35}.entertainmentGame .gameBadge{position:absolute;right:10px;top:10px;padding:5px 8px;border-radius:999px;background:#242c3d;border:1px solid #536079;color:#fff;font-size:10px;font-weight:800}.entertainmentGame.coming{opacity:.72}
-.infiltreCover{text-align:center;padding:30px 16px 20px}.infiltreSpy{font-size:78px;filter:drop-shadow(0 0 25px rgba(239,68,68,.35))}.infiltreCover h2{font-size:30px;margin:10px 0}.infiltreCover p{color:#bac3d3;line-height:1.5}.infiltreFacts{margin:22px 0;display:grid;gap:8px}.infiltreFacts div{padding:12px;border:1px solid #26344d;background:#0e1625;border-radius:13px;color:#d6dbe5}
-.gamePrimary,.gameSecondary{width:100%;padding:14px;border-radius:14px;font-weight:800;font-size:15px}.gamePrimary{border:1px solid #9b5cff;background:linear-gradient(90deg,#643cff,#c21df1);color:#fff}.gameSecondary{margin-top:9px;border:1px solid #344158;background:#172036;color:#fff}
-.modeCards{display:grid;gap:12px;margin-top:18px}.modeCard{width:100%;display:flex;align-items:center;gap:15px;text-align:left;padding:18px;border-radius:18px;border:1px solid #2f4567;background:#101a2b;color:#fff}.modeCard:nth-child(2){background:#0d315c}.modeCard:nth-child(3){background:#2a165a}.modeIcon{font-size:34px}.modeCard b{display:block;font-size:17px}.modeCard small{display:block;color:#c0c9d8;margin-top:4px}.modeArrow{margin-left:auto;font-size:26px}
-.setupBlock{margin:16px 0}.setupBlock>label,.setupLabel{display:block;font-weight:800;margin-bottom:9px}.playerCounter{display:grid;grid-template-columns:54px 1fr 54px;border:1px solid #344158;border-radius:13px;overflow:hidden;background:#10182a}.playerCounter button{border:0;background:#1a2540;color:#fff;font-size:24px}.playerCounter b{text-align:center;padding:13px;font-size:18px}.roleChoices{display:grid;gap:9px}.roleChoice{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid #344158;border-radius:13px;background:#10182a}.roleChoice.active{border-color:#a855f7;box-shadow:0 0 0 1px #a855f7 inset}.roleChoice span{font-size:27px}.roleChoice b,.roleChoice small{display:block}.roleChoice small{color:#9faabd}.roleChoice i{margin-left:auto;font-style:normal}.playerNames{display:grid;grid-template-columns:1fr 1fr;gap:8px}.playerNames input,.themeSelect{width:100%;box-sizing:border-box;padding:12px;border:1px solid #344158;border-radius:12px;background:#0e1625;color:#fff}
-.roleReveal{text-align:center;padding:20px 0}.passPhone{padding:18px;border:1px solid #2f3d55;border-radius:18px;background:#101827}.passPhone .bigAvatar{font-size:58px}.passPhone h3{font-size:24px;margin:8px}.secretCard{margin:15px 0;padding:25px 14px;border-radius:20px;border:1px solid #344158;background:linear-gradient(145deg,#102d36,#10182a)}.secretCard.infiltrator{background:linear-gradient(145deg,#451b2e,#181528)}.secretCard.spy{background:linear-gradient(145deg,#27184c,#11182b)}.secretCard .roleIcon{font-size:55px}.secretCard .secretWord{font-size:29px;font-weight:900;margin-top:14px}.secretCard small{color:#c0c8d6}
-.turnTop{display:flex;gap:7px;overflow:auto;margin:8px 0 20px}.turnChip{min-width:48px;text-align:center;padding:7px;border-radius:12px;background:#121c2c;border:1px solid #293850;font-size:11px}.turnChip.current{border-color:#a855f7}.turnCenter{text-align:center;padding:30px 10px}.turnAvatar{font-size:64px}.turnCenter h3{font-size:27px;margin:8px}.timer{font-size:32px;font-weight:900;margin:20px}.timerBar{height:7px;background:#1c2740;border-radius:8px;overflow:hidden}.timerBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#376dff,#a855f7);transition:width 1s linear}
-.voteGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.votePlayer{padding:13px 6px;border:1px solid #31405a;border-radius:15px;background:#101827;color:#fff;text-align:center}.votePlayer.selected{border-color:#a855f7;box-shadow:0 0 0 2px #a855f7 inset}.votePlayer span{display:block;font-size:34px}.votePlayer b{display:block;margin-top:5px;font-size:12px}
-.resultCard{text-align:center;padding:28px 16px;border:1px solid #4a2636;border-radius:22px;background:radial-gradient(circle at 50% 0,rgba(239,68,68,.25),transparent 50%),#111827}.resultCard .resultAvatar{font-size:70px}.resultCard h3{font-size:26px;margin:8px}.resultRole{margin:15px 0;padding:13px;border-radius:12px;background:#172033}.gameNotice{padding:11px;border-radius:12px;background:#101827;border:1px solid #2b3850;color:#aeb8c8;font-size:12px;margin:12px 0}
-@media(max-width:390px){.entertainmentGame{min-height:142px;padding:13px}.playerNames{grid-template-columns:1fr}.voteGrid{gap:7px}.votePlayer{padding:10px 4px}}
+/* Scoped palette: the Games lounge keeps its blue identity across global themes. */
+#entertainmentLounge{position:fixed;inset:0;z-index:12500;display:none;overflow-y:auto;overscroll-behavior:contain;background:#020d16;color:#f5f8ff;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom));font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark;-webkit-overflow-scrolling:touch}
+#entertainmentLounge.open{display:block}
+#entertainmentLounge *{box-sizing:border-box}
+#entertainmentLounge .gl-shell{max-width:460px;margin:auto}
+#entertainmentLounge button,#entertainmentLounge input,#entertainmentLounge select,#entertainmentLounge textarea{font:inherit}
+#entertainmentLounge button{cursor:pointer;color:inherit;margin:0;min-height:44px;touch-action:manipulation}
+#entertainmentLounge button:disabled{cursor:default}
+#entertainmentLounge .gl-game:disabled{opacity:1;filter:none}
+#entertainmentLounge :focus-visible{outline:3px solid #69dfff;outline-offset:3px}
+#entertainmentLounge h2,#entertainmentLounge h3,#entertainmentLounge p{margin:0 0 12px}
+#entertainmentLounge h3{font-size:20px;line-height:1.3}
+#entertainmentLounge .gl-header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#020d16ed;backdrop-filter:blur(16px);padding:14px 0;z-index:5}
+#entertainmentLounge .gl-header h2{font-size:20px;text-align:center;flex:1;margin:0}
+#entertainmentLounge .gl-header>span{width:36px;text-align:center}
+#entertainmentLounge .gl-back{font-size:34px;background:none;border:0;width:36px;padding:0;text-align:left}
+#entertainmentLounge #gl-status:empty{display:none}
+#entertainmentLounge #gl-status{padding:12px;background:#102e43;border-radius:12px;color:#bcecff;overflow-wrap:anywhere}
+#entertainmentLounge .gl-tabs{display:flex;gap:6px;margin:3px 0 16px;overflow-x:auto;scrollbar-width:none}
+#entertainmentLounge .gl-tabs button{background:#0c2233;border:1px solid #17344b;border-radius:22px;padding:7px 13px;white-space:nowrap;font-size:12px;min-height:36px}
+#entertainmentLounge .gl-tabs button[aria-pressed=true]{background:#006dff;border-color:#21cfff;box-shadow:inset 0 0 12px #00cbff66}
+#entertainmentLounge .gl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#entertainmentLounge .gl-game{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:207px;width:100%;border:1px solid #298bff;border-radius:17px;background:radial-gradient(ellipse at 30% 0,#008dff,#064fce 40%,#07172f 100%);padding:16px 10px 12px;text-align:center;overflow:hidden;isolation:isolate}
+#entertainmentLounge .gl-game:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 14% 24%,#ffffff60 0 1px,transparent 2px),radial-gradient(circle at 86% 42%,#ffffff88 0 1px,transparent 2px),linear-gradient(125deg,#ffffff18,transparent 55%);z-index:-1}
+#entertainmentLounge .gl-game b{font-size:19px;line-height:1.1;max-width:135px;letter-spacing:-.4px}
+#entertainmentLounge .gl-game small{font-size:11px;line-height:1.4;margin:7px 0 8px;color:#f0ecff}
+#entertainmentLounge .gl-game-art{font-size:55px;line-height:1.1;margin-bottom:15px;filter:drop-shadow(0 8px 9px #0005)}
+#entertainmentLounge .gl-badge{font-size:10px;padding:3px 8px;border-radius:20px;background:#050f2960;color:#fff}
+#entertainmentLounge .gl-defis{background:linear-gradient(140deg,#ff8b28,#fc195b 50%,#a00080);border-color:#ff6d8a}
+#entertainmentLounge .gl-treasure{background:linear-gradient(140deg,#00bbaa,#00635f 55%,#04335a);border-color:#07d6be}
+#entertainmentLounge .gl-truth{background:linear-gradient(140deg,#d600f8,#7b00dd 60%,#380073);border-color:#d945ff}
+#entertainmentLounge .gl-quiz{background:linear-gradient(140deg,#ffb717,#f24c31 55%,#9e0078);border-color:#ffb03e}
+#entertainmentLounge .gl-blind{background:linear-gradient(140deg,#ff00b8,#ad00df 60%,#300082);border-color:#dc26ff}
+#entertainmentLounge .gl-karaoke{grid-column:1/-1;min-height:120px;display:grid;grid-template-columns:82px 1fr;column-gap:10px;text-align:left;align-items:center;background:radial-gradient(ellipse at 10% 0,#0174ef,transparent 55%),linear-gradient(110deg,#092663,#380072);border-color:#445afa}
+#entertainmentLounge .gl-karaoke .gl-game-art{grid-row:1/4;margin:0;text-align:center}
+#entertainmentLounge .gl-karaoke b{max-width:none}
+#entertainmentLounge .gl-karaoke small{margin:2px 0}
+#entertainmentLounge .gl-karaoke .gl-badge{justify-self:start;background:#ba6500}
+#entertainmentLounge .gl-panel{padding:16px;border:1px solid #22445b;border-radius:15px;background:linear-gradient(140deg,#0a2132,#071420);margin:16px 0}
+#entertainmentLounge details summary{cursor:pointer;min-height:28px;font-weight:650}
+#entertainmentLounge details[open] summary{margin-bottom:14px}
+#entertainmentLounge .gl-inline{display:flex;gap:8px;margin-top:10px}
+#entertainmentLounge input:not([type=radio]):not([type=checkbox]),#entertainmentLounge select,#entertainmentLounge textarea{min-width:0;width:100%;border:1px solid #335169;border-radius:10px;background:#0b2131;color:#fff;padding:11px;font-size:16px;min-height:44px}
+#entertainmentLounge .gl-primary,#entertainmentLounge .gl-secondary{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #13c8ff;background:linear-gradient(#008fff,#0068ed);color:#fff;font-weight:700;box-shadow:inset 0 1px 7px #00caff70;font-size:15px}
+#entertainmentLounge .gl-primary:disabled{opacity:.45}
+#entertainmentLounge .gl-secondary{background:#0b2234;border-color:#32536b;box-shadow:none;margin-top:10px}
+#entertainmentLounge .gl-inline .gl-primary{width:auto}
+#entertainmentLounge .gl-intro{display:flex;gap:14px;align-items:center;padding:14px;border:1px solid #225b84;border-radius:16px;background:linear-gradient(135deg,#082449,#081827);margin-bottom:22px}
+#entertainmentLounge .gl-intro h3{font-size:21px}
+#entertainmentLounge .gl-intro p{font-size:13px;margin:0;color:#c6d9ed}
+#entertainmentLounge .gl-spy{font-size:64px}
+#entertainmentLounge fieldset{padding:0;border:0;margin:0 0 20px;min-width:0}
+#entertainmentLounge legend{font-weight:650;margin-bottom:10px}
+#entertainmentLounge .gl-choices{display:flex;flex-wrap:wrap;gap:6px}
+#entertainmentLounge .gl-choices label{flex:1;min-width:35px;position:relative;cursor:pointer}
+#entertainmentLounge .gl-choices input{position:absolute;opacity:0;width:100%;height:100%;margin:0}
+#entertainmentLounge .gl-choices span{display:block;border:1px solid #26435c;background:#0b2031;border-radius:9px;padding:10px 6px;text-align:center;white-space:nowrap}
+#entertainmentLounge .gl-choices input:checked+span{border-color:#00ccff;background:linear-gradient(#0061ba,#004d8c);box-shadow:0 0 9px #00baff33}
+#entertainmentLounge .gl-choices input:focus-visible+span{outline:2px solid #69dfff}
+#entertainmentLounge .gl-field{display:block;margin:15px 0;font-weight:600}
+#entertainmentLounge .gl-field select,#entertainmentLounge .gl-field textarea{margin-top:8px;font-weight:400}
+#entertainmentLounge .gl-toggle{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px}
+#entertainmentLounge input[type=checkbox],#entertainmentLounge input[type=radio]{accent-color:#00aeff}
+#entertainmentLounge .gl-muted{font-size:12px;color:#a2b9cc;margin-top:10px}
+#entertainmentLounge .gl-code-panel{text-align:center;margin-top:2px}
+#entertainmentLounge .gl-room-code{font-size:29px;letter-spacing:6px;font-weight:800;margin:10px 0 16px;overflow-wrap:anywhere}
+#entertainmentLounge #gl-share-link{margin-top:10px;font-size:12px;color:#a2c0d8}
+#entertainmentLounge .gl-section-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#entertainmentLounge .gl-section-label h3{font-size:17px;margin:0}
+#entertainmentLounge .gl-section-label>span{color:#8aabc5;font-size:12px}
+#entertainmentLounge .gl-player{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #123047}
+#entertainmentLounge .gl-player>b{flex:1;min-width:0;font-size:14px;overflow-wrap:anywhere}
+#entertainmentLounge .gl-player b small{display:block;color:#90aec6;font-weight:400;font-size:11px}
+#entertainmentLounge .gl-avatar{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 38px;overflow:hidden;background:linear-gradient(135deg,#17658a,#102944);border:2px solid #79c6df;border-radius:50%;color:#e4f9ff;font-weight:750}
+#entertainmentLounge .gl-avatar img{width:100%;height:100%;object-fit:cover}
+#entertainmentLounge .gl-ready{padding:5px 10px;border-radius:10px;font-size:12px;background:#142b3c;color:#9eb6c8;white-space:nowrap}
+#entertainmentLounge .gl-ready.yes{background:#006b54;color:#dcfff2}
+#entertainmentLounge .gl-empty{color:#7395ac;font-size:13px}
+#entertainmentLounge .gl-empty .gl-avatar{border:1px dashed #376078;background:transparent;font-size:25px}
+#entertainmentLounge .gl-wait{text-align:center;padding:20px 10px;color:#a8c5dc}
+#entertainmentLounge .gl-round-label{display:flex;justify-content:center;gap:15px;align-items:center;font-size:12px;color:#c2dfed;margin:6px 0 22px}
+#entertainmentLounge .gl-round-label span{color:#769caf}
+#entertainmentLounge .gl-secret{border:2px solid #00b8ff;border-radius:21px;padding:25px 20px;text-align:center;background:radial-gradient(ellipse at 20% 80%,#086ca3,transparent 65%),linear-gradient(135deg,#052b50,#092033);margin:12px 0 22px;overflow-wrap:anywhere;box-shadow:0 0 20px #008cff17}
+#entertainmentLounge .gl-secret-infiltrator{border-color:#ff367a;background:radial-gradient(ellipse at 15% 70%,#fa754c,transparent 70%),linear-gradient(135deg,#9c003e,#410030);box-shadow:0 0 20px #ff005029}
+#entertainmentLounge .gl-secret>strong{display:block;font-size:clamp(26px,8vw,42px);line-height:1.1;text-transform:uppercase;margin:18px 0;letter-spacing:-1px}
+#entertainmentLounge .gl-secret-icon{display:block;font-size:75px;margin:20px 0}
+#entertainmentLounge .gl-secret p{color:#e5e8ff;font-size:14px}
+#entertainmentLounge .gl-secret h3{font-size:22px}
+#entertainmentLounge .gl-masked{min-height:330px;display:flex;flex-direction:column;justify-content:center;background:radial-gradient(ellipse at center,#123264,#051423 75%)}
+#entertainmentLounge .gl-mission{text-align:left;border-top:1px solid #ffffff40;padding-top:15px;margin-top:20px;font-size:13px}
+#entertainmentLounge .gl-mission p{margin:6px 0 0}
+#entertainmentLounge .gl-turns{display:flex;gap:10px;overflow:auto;padding:5px 0 15px}
+#entertainmentLounge .gl-turns>div{flex:0 0 49px;text-align:center}
+#entertainmentLounge .gl-turns small{font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis;max-width:54px}
+#entertainmentLounge .gl-turns .current .gl-avatar{border-color:#01cfff;box-shadow:0 0 10px #00cfff}
+#entertainmentLounge .gl-turn-center{text-align:center;padding:20px 0}
+#entertainmentLounge .gl-turn-center>.gl-avatar,#entertainmentLounge .gl-result>.gl-avatar{width:130px;height:130px;font-size:54px;border:3px solid #47d5ff;box-shadow:0 0 22px #008cff88;margin-bottom:20px}
+#entertainmentLounge .gl-turn-center h3{font-size:26px}
+#entertainmentLounge .gl-timer{display:flex;align-items:center;justify-content:center;width:80px;height:80px;border:5px solid #00c8ef;border-right-color:#0059df;border-radius:50%;margin:24px auto;font-weight:750;font-size:22px;font-variant-numeric:tabular-nums}
+#entertainmentLounge .gl-timer.small{width:64px;height:64px;font-size:17px;margin:12px auto 20px}
+#entertainmentLounge .gl-discussion,#entertainmentLounge .gl-win{text-align:center;padding:25px 8px}
+#entertainmentLounge .gl-discussion>span,#entertainmentLounge .gl-win>span{display:block;font-size:66px;margin-bottom:20px}
+#entertainmentLounge .gl-vote-player{display:flex;gap:12px;align-items:center;padding:12px 10px;border:1px solid #234157;margin:8px 0;border-radius:12px;cursor:pointer}
+#entertainmentLounge .gl-vote-player b{flex:1}
+#entertainmentLounge .gl-vote-player input{width:22px;height:22px}
+#entertainmentLounge .gl-vote-player:has(input:checked){background:#04395f;border-color:#00baff}
+#entertainmentLounge .gl-result{text-align:center;padding:15px 0}
+#entertainmentLounge .gl-result h3{font-size:27px}
+#entertainmentLounge .gl-result>.gl-avatar{border-color:#ff476d;box-shadow:0 0 20px #fd2e6666}
+#entertainmentLounge .gl-role-label{border:1px solid #bb2659;background:#440c23;color:#ff6693;border-radius:12px;padding:14px;font-size:23px;font-weight:750;margin:18px 0}
+#entertainmentLounge .gl-result-icon{display:block;font-size:68px;margin:20px}
+#entertainmentLounge .gl-role-row{border-top:1px solid #234157;padding:12px 0}
+#entertainmentLounge .gl-role-row b,#entertainmentLounge .gl-role-row span,#entertainmentLounge .gl-role-row small{display:block}
+#entertainmentLounge .gl-role-row small{color:#9fb9ca;margin-top:7px}
+#entertainmentLounge .gl-rank{color:#79a7c2;font-variant-numeric:tabular-nums}
+#entertainmentLounge .gl-center{text-align:center}
+#entertainmentLounge .gl-room-footer{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;margin-top:20px;color:#82a7bf;font-size:11px}
+#entertainmentLounge .gl-room-footer button{border:0;background:transparent;padding:0;color:#accbde;font-size:12px}
+#entertainmentLounge .gl-footer{display:flex;justify-content:space-between;letter-spacing:2px;font-size:9px;color:#66879d;padding:25px 0 10px}
+#entertainmentLounge .gl-footer span{letter-spacing:0}
+#entertainmentLounge .gl-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(min-width:700px){#entertainmentLounge{background:radial-gradient(ellipse at 50% 0,#08233b,#020d16 65%)}}
+@media(prefers-reduced-motion:reduce){#entertainmentLounge *{scroll-behavior:auto!important}}
