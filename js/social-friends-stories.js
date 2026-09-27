@@ -112,14 +112,31 @@
     } else el.textContent = '👤';
     return el;
   };
-  function person(container, profile, label, action) {
+  function person(container, profile, label, action, options = {}) {
     const row = document.createElement('div'); row.className = 'socialPerson'; row.append(avatar(profile));
     const name = document.createElement('b'); name.className = 'grow'; name.textContent = profileName(profile); row.append(name);
     if (action) {
-      const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = options.iconOnly ? '×' : label;
+      if (options.className) button.classList.add(options.className);
+      if (options.iconOnly) {
+        button.classList.add('socialFriendIconAction');
+        button.setAttribute('aria-label', label + ' ' + profileName(profile));
+        button.title = label;
+      }
       button.addEventListener('click', () => mutate(profile.id, action, button)); row.append(button);
     }
     container.append(row);
+    return row;
+  }
+  function incomingPerson(container, profile) {
+    const row = person(container, profile);
+    const actions = document.createElement('div'); actions.className = 'socialFriendRowActions';
+    [['Accepter','accept','accept'],['Refuser','decline','decline']].forEach(([label,action,className]) => {
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
+      button.classList.add(className);
+      button.addEventListener('click', () => mutate(profile.id, action, button)); actions.append(button);
+    });
+    row.append(actions);
   }
   async function mutate(id, action, button) {
     const {sb,user} = context(); if (!sb || !user) return;
@@ -141,12 +158,9 @@
       for (const id of ['socialFriendIncoming','socialFriendOutgoing','socialFriendList']) $(id)?.replaceChildren();
       for (const r of relations) {
         const id = r.user_low === user.id ? r.user_high : r.user_low, p = profiles.get(id) || {id};
-        if (r.status === 'accepted') person($('socialFriendList'),p,'Supprimer','remove');
+        if (r.status === 'accepted') person($('socialFriendList'),p,'Supprimer','remove',{iconOnly:true,className:'remove'});
         else if (r.requester === user.id) person($('socialFriendOutgoing'),p,'Annuler','cancel');
-        else {
-          person($('socialFriendIncoming'),p,'Accepter','accept');
-          person($('socialFriendIncoming'),p,'Refuser','decline');
-        }
+        else incomingPerson($('socialFriendIncoming'),p);
       }
       status('');
     } catch(e) { status('Amis indisponibles : ' + e.message); }
