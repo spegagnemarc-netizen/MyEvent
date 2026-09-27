@@ -1849,14 +1849,23 @@ async function loadMembers(){
     const p=pmap.get(m.user_id)||{};
     const name=m.nickname||p.display_name||p.username||'Membre';
     const avatar=p.avatar||'';
-    const initial=esc(name.charAt(0).toUpperCase());
     const badge=m.role==='owner'?'Organisateur':'Participant';
-    return '<div class="memberRow">'+
+    const own=m.user_id===user.id;
+    return '<button type="button" class="memberRow memberProfileTrigger" data-member-user-id="'+esc(m.user_id)+'" aria-label="Voir le profil de '+esc(name)+'">'+
       avatarHtml(avatar,'avatar')+
       '<div class="memberInfo"><b>'+esc(name)+'</b><span>'+badge+(m.status&&m.status!=='active'?' · '+esc(m.status):'')+'</span></div>'+
-      (m.user_id===user.id?'<span class="youBadge">Moi</span>':'')+
-      '</div>';
+      (own?'<span class="youBadge">Moi</span>':'<span class="memberProfileChevron" aria-hidden="true">›</span>')+
+      '</button>';
   }).join('');
+  $('members').querySelectorAll('.memberProfileTrigger').forEach(row=>row.addEventListener('click',()=>{
+    const memberId=row.dataset.memberUserId;
+    const member=members.find(m=>String(m.user_id)===String(memberId));
+    const profile=pmap.get(memberId)||{};
+    const name=member?.nickname||profile.display_name||profile.username||'Membre';
+    window.dispatchEvent(new CustomEvent('myevent-open-member-profile',{detail:{
+      id:memberId,name,avatar:profile.avatar||'',role:member?.role==='owner'?'Organisateur':'Participant',self:memberId===user.id
+    }}));
+  }));
 }
 
 async function loadUnreadCount(){
