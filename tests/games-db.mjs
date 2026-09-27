@@ -19,7 +19,7 @@ export async function setup(){
   await db.query('insert into auth.users values($1)',[users[i]]);
   await db.query('insert into public.profiles values($1,$2,$3,null)',[users[i],['Marc','Caroline','Lucas','Noélyne','Timéo','Victoire','Camille','Alex'][i],'test'+i]);
  }
- for(const file of ['202609250002_friends_stories.sql','202609270001_friend_invite_links.sql','202609270002_games_engine.sql']) await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['202609250002_friends_stories.sql','202609270001_friend_invite_links.sql','202609270002_games_engine.sql','202609270003_defis_game.sql']) await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  return db;
 }
 export const as=(db,id,sql,params=[],role='authenticated')=>db.transaction(async tx=>{
