@@ -1,0 +1,7 @@
+.socialEventPreview{width:min(92vw,480px);max-height:80dvh;border:1px solid var(--myevent-accent,#ff6434);border-radius:20px;background:#10151d;color:#fff;padding:22px;box-shadow:0 20px 65px #0009}
+.socialEventPreview::backdrop{background:#000b}
+.socialEventPreviewBody [data-close]{float:right;font-size:24px}
+.socialEventPreviewBody h2{clear:both;margin:12px 0}
+.socialEventPreviewBody p{line-height:1.5}
+.socialEventPreviewBody [data-status]{color:#ffb9a3}
+.socialPostAvatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}

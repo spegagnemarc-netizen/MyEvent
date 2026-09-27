@@ -363,6 +363,27 @@
     if(detail.avatar&&/^https:\/\//.test(detail.avatar)){const img=document.createElement('img');img.src=detail.avatar;img.alt='';avatarHost.append(img);}else avatarHost.textContent='👤';
     actions.replaceChildren();message.textContent='';sheet.hidden=false;
     if(detail.id===user.id||detail.self){message.textContent='C’est votre profil.';return;}
+    if(detail.eventId&&detail.ownerId===user.id&&detail.id!==detail.ownerId){
+      const promote=document.createElement('button');promote.type='button';
+      const enabled=detail.rawRole==='coorganizer';
+      promote.textContent=enabled?'Retirer le rôle de co-organisateur':'Nommer co-organisateur';
+      promote.onclick=async()=>{promote.disabled=true;
+        try{check(await sb.rpc('set_event_coorganizer',{p_event_id:detail.eventId,p_user_id:detail.id,p_enabled:!enabled}));
+          await window.myeventRefreshEventMembers?.();sheet.hidden=true;
+        }catch(error){message.textContent=error.message||String(error);promote.disabled=false;}
+      };actions.append(promote);
+    }
+    if(detail.eventId&&detail.canManage&&detail.id!==detail.ownerId
+      &&(detail.rawRole!=='coorganizer'||detail.ownerId===user.id)){
+      const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='Retirer de l’événement';
+      remove.onclick=async()=>{
+        if(!confirm('Retirer ce participant de l’événement ?'))return;
+        remove.disabled=true;
+        try{check(await sb.rpc('remove_event_participant',{p_event_id:detail.eventId,p_user_id:detail.id}));
+          await window.myeventRefreshEventMembers?.();sheet.hidden=true;
+        }catch(error){message.textContent=error.message||String(error);remove.disabled=false;}
+      };actions.append(remove);
+    }
     try{
       const result=await sb.from('friendships').select('user_low,user_high,requester,status').or(`user_low.eq.${detail.id},user_high.eq.${detail.id}`);
       if(result.error)throw result.error;

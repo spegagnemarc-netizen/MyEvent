@@ -31,7 +31,18 @@
   $s('socialSoloBtn')?.addEventListener('click',()=>{tab('feed');$s('socialOpenComposer')?.click();$s('socialPostText').value='🤝 Je cherche des participants pour une sortie !\n\n📍 Lieu :\n📅 Date :\n🎯 Activité :\n👥 Places disponibles :';$s('socialPostText').focus()});
   $s('socialOpenComposer')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.add('open');$s('socialPostText').focus()});
   $s('socialCancelPostBtn')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent=''});
-  $s('socialPublishBtn')?.addEventListener('click',()=>{const text=($s('socialPostText').value||'').trim();if(!text){$s('socialPostMsg').textContent='Écris quelque chose avant de publier.';return;}const name=$s('who')?.textContent||'Moi';const post=document.createElement('article');post.className='socialPost';post.dataset.search=text.toLowerCase();post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">👤</div><div class="socialPostMeta"><b></b><span>À l’instant · 🌍 MyEvent</span></div></div><div class="socialPostText"></div><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';post.querySelector('.socialPostMeta b').textContent=name;post.querySelector('.socialPostText').textContent=text;$s('socialFeed').prepend(post);$s('socialPostText').value='';$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent='Publié.'});
+  $s('socialPublishBtn')?.addEventListener('click',async()=>{
+    const text=($s('socialPostText').value||'').trim(),context=window.myeventCameraContext?.();
+    if(!text){$s('socialPostMsg').textContent='Écris quelque chose avant de publier.';return;}
+    if(!context?.user){$s('socialPostMsg').textContent='Connecte-toi pour publier.';return;}
+    const button=$s('socialPublishBtn');button.disabled=true;
+    try{const result=await context.sb.from('event_feed_posts').insert({author_id:context.user.id,body:text});
+      if(result.error)throw result.error;
+      $s('socialPostText').value='';$s('socialComposerPanel').classList.remove('open');
+      $s('socialPostMsg').textContent='Publié.';await window.myeventRefreshSocialFeed?.();
+    }catch(error){$s('socialPostMsg').textContent='Publication impossible : '+(error.message||String(error));}
+    finally{button.disabled=false;}
+  });
   document.addEventListener('click',e=>{
     const like=e.target.closest('.socialLikeBtn');if(like){let n=parseInt(like.querySelector('span').textContent||'0',10);const active=like.classList.toggle('active');n+=active?1:-1;like.querySelector('span').textContent=n;like.firstChild.textContent=active?'♥ J’aime ':'♡ J’aime ';return}
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
@@ -40,7 +51,7 @@
     const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
     const send=e.target.closest('.socialCommentBox button');if(send){const box=send.closest('.socialCommentBox'),input=box.querySelector('input');if(input.value.trim()){send.textContent='✓ Envoyé';input.value='';setTimeout(()=>send.textContent='Envoyer',900)}return}
     const msg=e.target.closest('.socialMessageBtn');if(msg){msg.textContent='✓ Messagerie';return}
-    const view=e.target.closest('.socialViewEventBtn');if(view){document.getElementById('eventsCard')?.scrollIntoView({behavior:'smooth'});return}
+    const view=e.target.closest('.socialViewEventBtn');if(view){window.myeventViewSocialEvent?.(view.dataset.eventId);return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
   // Camera controls reuse the existing capture and filter actions.
@@ -614,6 +625,7 @@
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
+    if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:250px;max-height:250px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
     post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';

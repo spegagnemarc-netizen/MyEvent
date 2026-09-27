@@ -131,31 +131,7 @@
       <p class="muted" id="socialPostMsg"></p>
     </div>
 
-    <div class="socialFeed" id="socialFeed">
-      <article class="socialPost" data-search="ski réallon sortie montagne expérience">
-        <div class="socialPostHead"><div class="socialPostAvatar">🎿</div><div class="socialPostMeta"><b>Julie</b><span>Il y a 2 h · 📍 Réallon</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
-        <div class="socialPostText">Super journée de ski ! Je prépare une nouvelle sortie et je cherche quelques personnes motivées pour partager la journée. ⛷️</div>
-        <div class="socialEventCard"><div class="socialEventCover" style="background-image:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35)),url(https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1200&q=80)"><div class="socialEventBadges"><span class="socialBadgeChip">🎿 SPORT</span><span class="socialBadgeChip hot">2 PLACES</span></div></div><div class="socialEventInfo"><div class="socialEventTitle">🎿 Sortie ski à Réallon</div><div class="socialEventMeta">📅 Samedi · 👥 3 participants · 2 places disponibles</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
-        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
-        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
-      </article>
-
-      <article class="socialPost" data-search="restaurant marseille amis repas événement">
-        <div class="socialPostHead"><div class="socialPostAvatar">🍽️</div><div class="socialPostMeta"><b>Thomas</b><span>Hier · 📍 Marseille</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
-        <div class="socialPostText">On a testé ce restaurant avec le groupe MyEvent. Très bonne ambiance et super moment entre participants !</div>
-        <div class="socialEventCard"><div class="socialEventTitle">🍴 Soirée restaurant + activité</div><div class="socialEventMeta">📅 Vendredi 20h · 👥 8 personnes</div><div class="socialEventActions"><button type="button" class="secondary socialViewEventBtn">Voir l'événement</button></div></div>
-        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
-        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
-      </article>
-
-      <article class="socialPost" data-search="seul rencontre participants randonnée gap événement public">
-        <div class="socialPostHead"><div class="socialPostAvatar">🥾</div><div class="socialPostMeta"><b>Marc</b><span>Cette semaine · 📍 Gap</span></div><button type="button" class="secondary socialFollowBtn">➕ Ami</button></div>
-        <div class="socialPostText">Tu es seul pour une sortie ? Ici, chacun peut proposer une activité et rencontrer d'autres personnes intéressées. 🤝</div>
-        <div class="socialEventCard"><div class="socialEventTitle">🤝 Sortie randonnée — participants recherchés</div><div class="socialEventMeta">📍 Gap · 📅 Dimanche · 👥 4 places</div><div class="socialEventActions"><button type="button" class="socialInterestBtn">🙋 Je suis intéressé</button></div></div>
-        <div class="socialActions"><button type="button" class="socialLikeBtn">♡ J'aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div>
-        <div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>
-      </article>
-    </div>
+    <div class="socialFeed" id="socialFeed"><p class="muted" id="socialFeedEmpty">Aucune publication pour le moment.</p></div>
   </div>
 
   <div id="socialDiscoverView" class="socialPeople">
@@ -178,8 +154,6 @@
   </div>
 
   <div id="socialMessagesView" class="socialPeople">
-    <div class="socialPerson"><div class="socialPostAvatar">👩</div><div class="grow"><b>Julie</b><div class="muted">« On se retrouve pour la sortie ski ? »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">👨</div><div class="grow"><b>Thomas</b><div class="muted">« J'ai trouvé une activité pour vendredi. »</div></div><button type="button" class="socialMessageBtn">💬 Ouvrir</button></div>
     <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
   </div>
 
@@ -484,9 +458,11 @@
       <div><label class="smallLabel" for="editEventPlace">Lieu</label><input id="editEventPlace" placeholder="Lieu"></div>
     </div>
     <textarea id="editEventDescription" placeholder="Description" rows="4"></textarea>
+    <label class="smallLabel" for="editEventVisibility">Visibilité</label><select id="editEventVisibility"><option value="private">Privé · invités uniquement</option><option value="friends">Amis · amis du créateur</option><option value="public">Public · découverte MyEvent</option></select>
     <label class="coverFileLabel">🖼️ Remplacer la photo de couverture<input id="editEventCoverFile" type="file" accept="image/*"></label><div id="editEventCoverFileName" class="coverFileName"></div>
     <div id="editCoverPreview" class="coverPreview hidden"></div>
     <button id="saveEventBtn">💾 Enregistrer les modifications</button>
+    <button type="button" id="shareEventFeedBtn" class="secondary hidden">↗ Partager dans le fil MyEvent</button>
     <p id="editEventMsg" class="muted"></p>
   </div>
 </details>
@@ -1159,6 +1135,8 @@
 
 
 <script src="js/home-social-runtime.js?v=games-1"></script>
+<script src="js/event-social-feed.js?v=event-roles-v1"></script>
+<link rel="stylesheet" href="css/event-social-feed.css?v=event-roles-v1">
 <link rel="stylesheet" href="css/social-friends-stories.css?v=invite-v3">
 <script src="js/social-friends-stories.js?v=invite-v3"></script>
 <script src="js/music-session.js?v=1"></script>

@@ -1,5 +1,5 @@
 /* ===== original inline script 4 ===== */
-let sb=null,user=null,event=null;
+let sb=null,user=null,event=null,activeEventRole='member';
 let realtimeChannel=null;
 let notificationPollTimer=null;
 
@@ -594,10 +594,11 @@ async function loadEvents(){
   const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
   if(owned.error) throw new Error('Événements : '+owned.error.message);
 
-  const memberships=await sb.from('event_members').select('event_id').eq('user_id',user.id);
+  const memberships=await sb.from('event_members').select('event_id,role').eq('user_id',user.id);
   if(memberships.error) throw new Error('Groupes : '+memberships.error.message);
 
   const memberIds=(memberships.data||[]).map(x=>x.event_id).filter(Boolean);
+  const roles=new Map((memberships.data||[]).map(m=>[m.event_id,m.role]));
   let memberEvents=[];
   if(memberIds.length){
     const r=await sb.from('events').select('*').in('id',memberIds);
@@ -617,11 +618,12 @@ async function loadEvents(){
     const leaveOrDelete=mine
       ? '<button type="button" class="deleteEventBtn" data-id="'+e.id+'">🗑️ Supprimer</button>'
       : '<button type="button" class="leaveEventBtn" data-id="'+e.id+'">🚪 Quitter</button>';
-    const edit=mine ? '<button type="button" class="editEventListBtn">✏️ Modifier</button>' : '';
+    const manager=mine||roles.get(e.id)==='coorganizer';
+    const edit=manager ? '<button type="button" class="editEventListBtn">✏️ Modifier</button>' : '';
     return '<div class="eventCard'+active+'" data-event-id="'+e.id+'">'+
       '<div class="eventCardTop">'+
         '<div class="eventCardTopInfo"><b>'+esc(e.name||'Événement sans nom')+'</b>'+' '+
-          '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Organisateur':'Participant')+'</span></div>'+
+          '<span>'+esc(e.location||'Lieu non renseigné')+' · '+(mine?'Créateur':manager?'Co-organisateur':'Participant')+'</span></div>'+
         '<button type="button" class="secondary eventCardCollapse" aria-label="Ouvrir ou réduire l’événement" title="Cliquer sur la carte pour ouvrir ou réduire">⌄</button>'+
         '<button type="button" class="secondary eventCardSettings" aria-label="Actions de l’événement" aria-expanded="false">⚙️</button>'+
       '</div>'+
@@ -968,6 +970,8 @@ async function selectEvent(id, options={}){
 
   if(callActive && !sameEvent) await stopGroupCall();
   event=r.data;
+  const roleRecord=event.creator_id===user.id?null:await sb.from('event_members').select('role').eq('event_id',id).eq('user_id',user.id).maybeSingle();
+  activeEventRole=event.creator_id===user.id?'owner':roleRecord?.data?.role||'member';
   localStorage.setItem('myevent_active_'+user.id,event.id);
   localStorage.setItem('myevent_last_event_'+user.id,event.id);
   // Les champs du formulaire « Créer un événement » restent indépendants
@@ -1242,16 +1246,24 @@ function renderEventHero(){
   $('eventCover').style.backgroundImage='';
   refreshEventCover();
   const mine=event.creator_id===user.id;
+  const manager=mine||activeEventRole==='coorganizer';
+  if($('pollBtn')){
+    $('pollBtn').disabled=!manager;
+    $('pollBtn').title=manager?'':'Création réservée au créateur et aux co-organisateurs';
+  }
   $('eventActions').classList.remove('hidden');
-  $('editEventToggle').classList.toggle('hidden',!mine);
+  $('editEventToggle').classList.toggle('hidden',!manager);
+  $('editEventVisibility').disabled=!mine;
+  $('shareEventFeedBtn').classList.toggle('hidden',!mine||!['public','friends'].includes(event.visibility));
   $('leaveEventBtn').classList.toggle('hidden',mine);
   $('editEventBox').classList.add('hidden');
-  if(mine){
+  if(manager){
     $('editEventName').value=event.name||'';
     if($('editEventType'))$('editEventType').value=event.event_type||'general';
     $('editEventDate').value=toLocalDateTime(event.event_date);
     $('editEventPlace').value=event.location||'';
     $('editEventDescription').value=event.description||'';
+    $('editEventVisibility').value=event.visibility||'private';
     $('editEventCoverFile').value='';
     $('editEventCoverFileName').textContent='';
     updateEditCoverPreview();
@@ -1265,7 +1277,7 @@ async function updateEditCoverPreview(){
   $('editCoverPreview').style.backgroundImage=url?'url("'+url.replace(/"/g,'%22')+'")':'';
 }
 async function saveEvent(){
-  if(!event||event.creator_id!==user.id)return;
+  if(!event)return;
   const name=$('editEventName').value.trim();
   if(!name){msg('editEventMsg','Indique un nom d’événement.','err');return}
   setBusy('saveEventBtn',true,'Enregistrement…');
@@ -1275,14 +1287,16 @@ async function saveEvent(){
     if(coverFile){
       coverPath=await uploadEventCover(coverFile);
     }
-    const r=await sb.from('events').update({
+    const changes={
       name,
       description:$('editEventDescription').value.trim()||null,
       location:$('editEventPlace').value.trim()||null,
       event_date:$('editEventDate').value?new Date($('editEventDate').value).toISOString():null,
       event_type:$('editEventType')?.value||'general',
       cover_url:coverPath
-    }).eq('id',event.id).select().single();
+    };
+    if(event.creator_id===user.id)changes.visibility=$('editEventVisibility').value;
+    const r=await sb.from('events').update(changes).eq('id',event.id).select().single();
     if(r.error)throw r.error;
     event=r.data;
     $('ename').value=event.name||'';$('place').value=event.location||'';
@@ -1307,6 +1321,7 @@ async function createEvent(){
     }).select().single();
     if(r.error) throw r.error;
     event=r.data;
+    activeEventRole='owner';
 
     // V54.10 — un événement nouvellement créé doit toujours démarrer vierge.
     // Nettoyage défensif : aucun ancien planning IA ne doit pouvoir être associé
@@ -1859,7 +1874,7 @@ async function loadMembers(){
     const p=pmap.get(m.user_id)||{};
     const name=m.nickname||p.display_name||p.username||'Membre';
     const avatar=p.avatar||'';
-    const badge=m.role==='owner'?'Organisateur':'Participant';
+    const badge=m.user_id===event.creator_id?'Créateur':m.role==='coorganizer'?'Co-organisateur':'Participant';
     const own=m.user_id===user.id;
     return '<button type="button" class="memberRow memberProfileTrigger" data-member-user-id="'+esc(m.user_id)+'" aria-label="Voir le profil de '+esc(name)+'">'+
       avatarHtml(avatar,'avatar')+
@@ -1873,10 +1888,12 @@ async function loadMembers(){
     const profile=pmap.get(String(memberId))||{};
     const name=member?.nickname||profile.display_name||profile.username||'Membre';
     window.dispatchEvent(new CustomEvent('myevent-open-member-profile',{detail:{
-      id:memberId,name,avatar:profile.avatar||'',role:member?.role==='owner'?'Organisateur':'Participant',self:memberId===user.id
+      id:memberId,name,avatar:profile.avatar||'',role:memberId===event.creator_id?'Créateur':member?.role==='coorganizer'?'Co-organisateur':'Participant',rawRole:member?.role,
+      eventId:event.id,ownerId:event.creator_id,canManage:event.creator_id===user.id||activeEventRole==='coorganizer',self:memberId===user.id
     }}));
   }));
 }
+window.myeventRefreshEventMembers=loadMembers;
 
 async function loadUnreadCount(){
   if(!event||!user)return;
@@ -3495,6 +3512,22 @@ $('editEventCoverFile')?.addEventListener('change',()=>{
 });
 
 $('saveEventBtn').addEventListener('click',saveEvent);
+$('shareEventFeedBtn')?.addEventListener('click',async()=>{
+  if(!event||event.creator_id!==user?.id||!['public','friends'].includes(event.visibility))return;
+  const button=$('shareEventFeedBtn');button.disabled=true;
+  try{
+    const result=await sb.from('event_feed_posts').insert({author_id:user.id,event_id:event.id,body:''});
+    if(result.error)throw result.error;
+    await window.myeventRefreshSocialFeed?.();
+    global('Événement partagé dans le fil MyEvent.','ok');
+  }catch(e){global('Partage impossible : '+(e.message||String(e)),'err')}
+  finally{button.disabled=false}
+});
+window.myeventOpenSocialEvent=async function(id){
+  if(!id)return;
+  await loadEvents();await selectEvent(id);
+  $('eventsCard').open=true;$('eventsCard').scrollIntoView({behavior:'smooth',block:'start'});
+};
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
 $('editEventToggle').addEventListener('click',()=>openEventTool('editEventBox'));
 
