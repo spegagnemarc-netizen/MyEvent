@@ -162,6 +162,7 @@
 .memberFriendProfileAvatar img{width:100%;height:100%;object-fit:cover}
 .memberFriendProfileCard strong{display:block;font-size:18px}
 .memberFriendProfileRole{display:block;margin-top:3px;color:#a9b8c8;font-size:13px}
+.memberFriendProfileIdentity{display:block;margin-top:6px;color:#8294a5;font-size:10px;overflow-wrap:anywhere}
 .memberFriendProfileActions{display:flex;justify-content:center;gap:8px;margin-top:16px}
 .memberFriendProfileActions button{width:auto!important;min-width:0!important;padding:9px 13px!important;border-radius:10px!important}
 .memberFriendProfileActions .danger{background:transparent!important;border:1px solid #ff4d5f!important;color:#ff6675!important}

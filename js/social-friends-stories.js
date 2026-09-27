@@ -348,7 +348,7 @@
     let sheet=$('memberFriendProfileSheet');
     if(sheet)return sheet;
     sheet=document.createElement('div');sheet.id='memberFriendProfileSheet';sheet.className='memberFriendProfileSheet';sheet.hidden=true;
-    sheet.innerHTML='<div class="memberFriendProfileCard" role="dialog" aria-modal="true" aria-labelledby="memberFriendProfileName"><button type="button" class="memberFriendProfileClose" aria-label="Fermer">×</button><div class="memberFriendProfileAvatar"></div><strong id="memberFriendProfileName"></strong><span class="memberFriendProfileRole"></span><div class="memberFriendProfileActions"></div><p class="memberFriendProfileStatus" role="status"></p></div>';
+    sheet.innerHTML='<div class="memberFriendProfileCard" role="dialog" aria-modal="true" aria-labelledby="memberFriendProfileName"><button type="button" class="memberFriendProfileClose" aria-label="Fermer">×</button><div class="memberFriendProfileAvatar"></div><strong id="memberFriendProfileName"></strong><span class="memberFriendProfileRole"></span><small class="memberFriendProfileIdentity"></small><div class="memberFriendProfileActions"></div><p class="memberFriendProfileStatus" role="status"></p></div>';
     document.body.append(sheet);
     sheet.querySelector('.memberFriendProfileClose').onclick=()=>{sheet.hidden=true;};
     sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.hidden=true;});
@@ -359,19 +359,31 @@
     const sheet=ensureMemberProfileSheet(),avatarHost=sheet.querySelector('.memberFriendProfileAvatar'),actions=sheet.querySelector('.memberFriendProfileActions'),message=sheet.querySelector('.memberFriendProfileStatus');
     sheet.querySelector('#memberFriendProfileName').textContent=detail.name||'Membre MyEvent';
     sheet.querySelector('.memberFriendProfileRole').textContent=detail.role||'Participant';
+    sheet.querySelector('.memberFriendProfileIdentity').textContent=(detail.username?'@'+detail.username+' · ':'')+'Compte '+detail.id+(detail.eventId?' · Événement '+detail.eventId:'');
     avatarHost.replaceChildren();
     if(detail.avatar&&/^https:\/\//.test(detail.avatar)){const img=document.createElement('img');img.src=detail.avatar;img.alt='';avatarHost.append(img);}else avatarHost.textContent='👤';
     actions.replaceChildren();message.textContent='';sheet.hidden=false;
     if(detail.id===user.id||detail.self){message.textContent='C’est votre profil.';return;}
-    if(detail.eventId&&detail.ownerId===user.id&&detail.id!==detail.ownerId){
+    if(detail.eventId&&detail.ownerId===user.id&&detail.id!==detail.ownerId&&detail.hasProfile&&detail.username){
       const promote=document.createElement('button');promote.type='button';
       const enabled=detail.rawRole==='coorganizer';
       promote.textContent=enabled?'Retirer le rôle de co-organisateur':'Nommer co-organisateur';
       promote.onclick=async()=>{promote.disabled=true;
-        try{check(await sb.rpc('set_event_coorganizer',{p_event_id:detail.eventId,p_user_id:detail.id,p_enabled:!enabled}));
+        try{check(await sb.rpc('set_event_coorganizer_verified',{p_event_id:detail.eventId,p_user_id:detail.id,p_username:detail.username,p_enabled:!enabled}));
           await window.myeventRefreshEventMembers?.();sheet.hidden=true;
         }catch(error){message.textContent=error.message||String(error);promote.disabled=false;}
       };actions.append(promote);
+    }
+    if(detail.eventId&&detail.ownerId===user.id&&!detail.hasProfile){
+      message.textContent='Profil absent : ce compte ne peut pas recevoir de nouveaux droits.';
+      if(detail.rawRole==='coorganizer'){
+        const demote=document.createElement('button');demote.type='button';demote.textContent='Retirer ce rôle non identifié';
+        demote.onclick=async()=>{demote.disabled=true;
+          try{check(await sb.rpc('set_event_coorganizer',{p_event_id:detail.eventId,p_user_id:detail.id,p_enabled:false}));
+            await window.myeventRefreshEventMembers?.();sheet.hidden=true;
+          }catch(error){message.textContent=error.message||String(error);demote.disabled=false;}
+        };actions.append(demote);
+      }
     }
     if(detail.eventId&&detail.canManage&&detail.id!==detail.ownerId
       &&(detail.rawRole!=='coorganizer'||detail.ownerId===user.id)){

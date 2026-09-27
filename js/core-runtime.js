@@ -1845,16 +1845,23 @@ async function saveExpense(){
 }
 async function loadMembers(){
   if(!event)return;
-  const r=await sb.from('event_members').select('user_id,nickname,role,status,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true});
-  if(r.error){ $('members').innerHTML='<p class="err">'+esc(r.error.message)+'</p>'; return; }
-  const members=r.data||[];
+  const activeId=event.id;
+  // The directory joins each membership to its profile by the immutable auth UUID.
+  // A missing profile stays visible as an unidentified row, never as a person.
+  const directory=await sb.rpc('event_member_directory',{p_event_id:activeId});
+  const r=directory.error
+    ?await sb.from('event_members').select('user_id,nickname,role,status,joined_at').eq('event_id',activeId).order('joined_at',{ascending:true})
+    :null;
+  if(event?.id!==activeId)return;
+  if(r?.error){ $('members').innerHTML='<p class="err">'+esc(r.error.message)+'</p>'; return; }
+  const members=directory.error?(r.data||[]):(directory.data||[]).map(m=>({...m,user_id:m.member_id}));
   $('memberCount').textContent='· '+members.length+' participant'+(members.length>1?'s':'');
   $('statMembers').textContent=members.length;
   if(!members.length){ $('members').innerHTML='<p class="muted">Aucun participant pour le moment.</p>'; return; }
 
   const ids=[...new Set(members.map(m=>m.user_id).filter(Boolean))];
   let profiles=[];
-  if(ids.length){
+  if(directory.error&&ids.length){
     // Event co-members must be able to see the public identity used by the
     // Participants UI even before they are friends. The RPC is scoped to the
     // active event and only returns profiles for members of that event.
@@ -1868,27 +1875,29 @@ async function loadMembers(){
       else console.warn('Profils des participants indisponibles:',eventProfiles.error.message||eventProfiles.error);
     }
   }
-  const pmap=new Map(profiles.map(p=>[String(p.id),p]));
+  const pmap=new Map((directory.error?profiles:members.map(m=>({id:m.user_id,display_name:m.display_name,username:m.username,avatar:m.avatar}))).map(p=>[String(p.id),p]));
 
   $('members').innerHTML=members.map(m=>{
     const p=pmap.get(m.user_id)||{};
-    const name=m.nickname||p.display_name||p.username||'Membre';
+    const identified=!!(p.username||p.display_name);
+    const name=identified?(p.display_name||p.username):'Compte sans profil · '+String(m.user_id).slice(0,8);
     const avatar=p.avatar||'';
     const badge=m.user_id===event.creator_id?'Créateur':m.role==='coorganizer'?'Co-organisateur':'Participant';
     const own=m.user_id===user.id;
     return '<button type="button" class="memberRow memberProfileTrigger" data-member-user-id="'+esc(m.user_id)+'" aria-label="Voir le profil de '+esc(name)+'">'+
       avatarHtml(avatar,'avatar')+
       '<div class="memberInfo"><b>'+esc(name)+'</b><span>'+badge+(m.status&&m.status!=='active'?' · '+esc(m.status):'')+'</span></div>'+
-      (own?'<span class="youBadge">Moi</span>':'<span class="memberProfileChevron" aria-hidden="true">›</span>')+
+      (own?'<span class="youBadge">Moi</span>':'')+'<span class="memberProfileChevron" aria-hidden="true">›</span>'+
       '</button>';
   }).join('');
   $('members').querySelectorAll('.memberProfileTrigger').forEach(row=>row.addEventListener('click',()=>{
     const memberId=row.dataset.memberUserId;
     const member=members.find(m=>String(m.user_id)===String(memberId));
     const profile=pmap.get(String(memberId))||{};
-    const name=member?.nickname||profile.display_name||profile.username||'Membre';
+    const name=profile.display_name||profile.username||'Compte sans profil · '+String(memberId).slice(0,8);
     window.dispatchEvent(new CustomEvent('myevent-open-member-profile',{detail:{
-      id:memberId,name,avatar:profile.avatar||'',role:memberId===event.creator_id?'Créateur':member?.role==='coorganizer'?'Co-organisateur':'Participant',rawRole:member?.role,
+      id:memberId,name,username:profile.username||'',hasProfile:!!profile.username,
+      avatar:profile.avatar||'',role:memberId===event.creator_id?'Créateur':member?.role==='coorganizer'?'Co-organisateur':'Participant',rawRole:member?.role,
       eventId:event.id,ownerId:event.creator_id,canManage:event.creator_id===user.id||activeEventRole==='coorganizer',self:memberId===user.id
     }}));
   }));
