@@ -73,3 +73,70 @@
 #socialHome #socialMyStory .storyAddBadge{z-index:2}
 #socialStoryViewer .storyOwnerActions{display:flex;justify-content:flex-end;gap:10px;padding:10px 18px 18px}
 #socialStoryViewer .storyOwnerActions button{position:static!important;width:auto!important}
+
+
+/* Friends list — one compact row per person, with lightweight actions. */
+#socialHome #socialFriendsView .socialPerson{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:7px 2px!important;
+  border-bottom:1px solid rgba(255,255,255,.10)!important;
+  box-sizing:border-box!important;
+}
+#socialHome #socialFriendsView .socialPerson .socialPostAvatar{
+  flex:0 0 34px!important;
+  width:34px!important;
+  height:34px!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+}
+#socialHome #socialFriendsView .socialPerson>.grow{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+#socialHome #socialFriendsView .socialFriendRowActions{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  flex:0 0 auto!important;
+}
+#socialHome #socialFriendsView .socialFriendRowActions button{
+  width:auto!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:6px 9px!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  line-height:1!important;
+}
+#socialHome #socialFriendsView .socialFriendRowActions .decline{
+  background:transparent!important;
+  border:1px solid #ff4d5f!important;
+  color:#ff6675!important;
+}
+#socialHome #socialFriendsView .socialFriendIconAction{
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:22px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#socialHome #socialFriendsView .socialFriendIconAction.remove{
+  border:1px solid rgba(255,77,95,.65)!important;
+  color:#ff4d5f!important;
+}
