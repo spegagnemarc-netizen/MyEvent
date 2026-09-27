@@ -10,7 +10,7 @@ const server=http.createServer(async(req,res)=>{
   const url=new URL(req.url,'http://127.0.0.1:4173');
   if(req.method==='POST'&&url.pathname.startsWith('/rpc/')){
    const [, ,identity,name]=url.pathname.split('/');
-   if(!users[Number(identity)]||!['game_create','game_join','game_action','game_snapshot','game_my_rooms','game_contacts'].includes(name))throw Error('Invalid test request');
+   if(!users[Number(identity)]||!['game_create','game_join','game_action','game_snapshot','game_my_rooms','game_contacts','defis_create','defis_join','defis_action','defis_snapshot','defis_my_rooms','defis_contacts'].includes(name))throw Error('Invalid test request');
    let body='';for await(const chunk of req){body+=chunk;if(body.length>16000)throw Error('Body too large');}
    try {const data=await rpc(db,users[Number(identity)],name,JSON.parse(body||'{}'));res.setHeader('Content-Type','application/json');res.end(JSON.stringify({data}));}
    catch(e){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({error:{message:e.message}}));}return;
