@@ -152,10 +152,9 @@ module.exports = async function handler(req, res) {
             headers: {
               "Content-Type": "application/json",
 
+              // Les nouvelles clés Supabase sb_secret_* sont des clés API
+              // opaques, pas des JWT : elles doivent rester dans apikey.
               apikey: supabaseKey,
-
-              Authorization:
-                `Bearer ${supabaseKey}`,
 
               Prefer: "return=representation"
             },
