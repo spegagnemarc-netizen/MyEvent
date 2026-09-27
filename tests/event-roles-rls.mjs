@@ -37,7 +37,7 @@ grant all on public.events,public.event_members,public.profiles,public.polls,pub
 alter table storage.objects enable row level security;`);
 for(const id of ids)await db.query('insert into auth.users values($1)',[id]);
 for(let i=0;i<ids.length;i++)await db.query('insert into public.profiles values($1,$2,$3,null)',[ids[i],'User '+i,'user'+i]);
-for(const name of ['202609250002_friends_stories.sql','202609270005_event_roles_visibility_feed.sql'])
+for(const name of ['202609250002_friends_stories.sql','202609270005_event_roles_visibility_feed.sql','202609270006_event_member_identity.sql'])
   await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
 await as(ids[0],'insert into public.events(id,creator_id,name,invite_code) values($1,$2,$3,$4)',[eid,ids[0],'Sortie','secret']);
 await as(ids[0],'insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[0],'owner']);
@@ -49,10 +49,25 @@ await fails(()=>as(ids[1],'insert into public.event_members(event_id,user_id,rol
 await fails(()=>as(ids[1],'insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[1],'member']));
 // A private invite-code RPC runs as a definer; seed the invited member with that privilege.
 await db.query('insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ids[1],'member']);
+const ghost='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+await db.query('insert into auth.users(id) values($1)',[ghost]);
+await db.query('insert into public.event_members(event_id,user_id,role) values($1,$2,$3)',[eid,ghost,'member']);
+const directory=(await as(ids[0],'select member_id,username,has_profile from public.event_member_directory($1)',[eid])).rows;
+assert.equal(directory.find(m=>m.member_id===ids[1]).username,'user1');
+assert.equal(directory.find(m=>m.member_id===ghost).has_profile,false);
+await fails(()=>as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ghost]));
+await fails(()=>as(ids[0],"update public.event_members set role='coorganizer' where event_id=$1 and user_id=$2",[eid,ghost]));
+await db.exec('alter table public.event_members disable trigger event_member_coorg_identity_guard_v3');
+await as(ids[0],"update public.event_members set role='coorganizer' where event_id=$1 and user_id=$2",[eid,ghost]);
+await db.exec('alter table public.event_members enable trigger event_member_coorg_identity_guard_v3');
+await as(ids[0],'select public.set_event_coorganizer($1,$2,false)',[eid,ghost]);
+assert.equal((await as(ids[0],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ghost])).rows[0].role,'member');
+await fails(()=>as(ids[0],'select public.set_event_coorganizer_verified($1,$2,$3,true)',[eid,ids[1],'someone_else']));
 await as(ids[1],'update public.event_members set role=$3 where event_id=$1 and user_id=$2',[eid,ids[1],'coorganizer']);
 assert.equal((await as(ids[0],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'member');
-await as(ids[0],'select public.set_event_coorganizer($1,$2,true)',[eid,ids[1]]);
+await as(ids[0],'select public.set_event_coorganizer_verified($1,$2,$3,true)',[eid,ids[1],'user1']);
 assert.equal((await as(ids[1],'select role from public.event_members where event_id=$1 and user_id=$2',[eid,ids[1]])).rows[0].role,'coorganizer');
+assert.equal((await as(ids[1],'select role from public.event_member_directory($1) where member_id=$2',[eid,ids[1]])).rows[0].role,'coorganizer');
 await as(ids[1],'insert into public.polls(event_id,question) values($1,$2)',[eid,'Question de co-organisateur']);
 const poll=(await as(ids[0],'select id from public.polls where event_id=$1',[eid])).rows[0].id;
 await as(ids[1],'insert into public.poll_options(poll_id,option_text) values($1,$2)',[poll,'Oui']);
