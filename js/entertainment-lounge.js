@@ -55,7 +55,7 @@
   function inviteUrl(){const url=new URL(location.pathname,location.origin);url.searchParams.set('game',session.state.room.code);return url.href;}
   function renderDefisRoom(){
     if(!session.state||!shown||screen!=='room')return;
-    const s=session.state,{room:r,challenge:c}=s,me=person(s.me),host=r.host_id===s.me,active=s.players.filter(p=>!p.left_at);
+    const s=session.state,{room:r,challenge:c}=s,me=person(s.me),host=r.host_id===s.me,active=s.players.filter(p=>!p.left_at);lastRevision=r.revision;
     let body='';
     if(r.status==='waiting'){
       body=`<div class="gl-panel gl-code-panel"><small>Code de la partie</small><div class="gl-room-code">${esc(r.code)}</div>${button('↗ Partager l’invitation','share')}<input id="gl-share-link" readonly aria-label="Lien de la partie" value="${esc(inviteUrl())}"></div>
@@ -152,7 +152,7 @@
   });
   root.addEventListener('change',e=>{if(e.target.name==='target')choice=e.target.value;if(screen==='defis-setup'){if(e.target.name==='players')defisConfig.players=Number(e.target.value);if(e.target.name==='challenges')defisConfig.challenges=Number(e.target.value);return;}if(screen==='setup'){if(e.target.name==='players'){config.players=Number(e.target.value);config.infiltrators=Math.min(config.infiltrators,Math.floor((config.players-1)/3));$('gl-infiltrators').innerHTML=infiltratorOptions();}if(e.target.name==='mode'){config.mode=e.target.value;$('gl-mode-help').textContent=modeHelp(config.mode);}if(e.target.name==='rounds')config.rounds=Number(e.target.value);if(e.target.name==='category')config.category=e.target.value;if(e.target.name==='infiltrators')config.infiltrators=Number(e.target.value);}});
   root.addEventListener('submit',e=>{e.preventDefault();const form=e.target,data=new FormData(form);run(async()=>{
-    if(form.id==='gl-join'){await session.join(String(data.get('code')).trim());screen='room';renderRoom();}
+    if(form.id==='gl-join'){await session.join(String(data.get('code')).trim());if(session===infiltreSession&&session.state?.room?.game_key==='defis'){const rid=session.roomId;session.disconnect();session=defisSession;await session.connect(rid);}screen='room';renderRoom();}
     if(form.id==='gl-defis-create'){defisConfig.players=Number(data.get('players'));defisConfig.challenges=Number(data.get('challenges'));await session.create({...defisConfig},data.has('event')?context().event?.id:null);screen='room';renderRoom();}
     if(form.id==='gl-create'){const pairs=String(data.get('pairs')||'').split('\n').filter(x=>x.trim()).map(line=>line.split('/').map(x=>x.trim()));if(pairs.some(x=>x.length!==2||x.some(w=>!w||w.length>40)))throw Error('Une paire par ligne, sous la forme mot A / mot B.');await session.create({...config,pairs,missions:data.has('missions'),powers:data.has('powers')},data.has('event')?context().event?.id:null);screen='room';renderRoom();}
     if(form.id==='gl-vote')await session.act('vote',{target:data.get('target')});
