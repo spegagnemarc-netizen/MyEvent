@@ -65,9 +65,15 @@
 #socialHome .homeFriendsArt img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 .socialFriendInvitePrompt,.socialFriendInviteShare{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0;padding:10px;border:1px solid var(--myevent-accent);border-radius:12px;background:#121820}
 .socialFriendInvitePrompt.hidden,.socialFriendInviteShare.hidden{display:none!important}
-.socialFriendInvitePrompt span{flex:1 1 160px}
+.socialFriendInviteAvatar{width:46px;height:46px;flex:0 0 46px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#222b38;border:1px solid var(--myevent-accent);font-size:22px}
+.socialFriendInviteAvatar img{width:100%;height:100%;object-fit:cover}
+.socialFriendInviteIdentity{display:flex;flex:1 1 140px;min-width:0;flex-direction:column;gap:2px}
+.socialFriendInviteIdentity strong,.socialFriendInviteIdentity small,.socialFriendInviteIdentity span{display:block;overflow-wrap:anywhere}
+.socialFriendInviteIdentity small{color:#b9c3cf}
+.socialFriendInviteIdentity span{font-size:12px;color:#d9e0e9}
 .socialFriendInviteShare input{flex:1 1 180px;min-width:0;color:#fff;background:#0b1017;border:1px solid #46505d;border-radius:9px;padding:9px}
 .socialFriendInvitePrompt button,.socialFriendInviteShare button{border:1px solid var(--myevent-accent);border-radius:9px;background:var(--myevent-accent-fill);color:#fff;padding:9px 12px}
+.socialFriendInvitePrompt button[hidden]{display:none!important}
 #socialHome #socialMyStory .socialStoryBubble{position:relative;display:block;width:54px!important;height:54px!important;overflow:hidden;border-radius:16px;padding:0}
 #socialHome #socialMyStory .myStoryThumbnail{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 #socialHome #socialMyStory .storyAddBadge{z-index:2}

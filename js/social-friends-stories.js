@@ -59,6 +59,11 @@
   const check = result => { if (result.error) throw result.error; return result.data; };
   const profileName = p => p?.display_name || p?.username || 'Membre MyEvent';
   let invitation = window.myeventInvitations?.get('friendInvite') || new URL(location.href).searchParams.get('friendInvite');
+  function clearInvitation() {
+    if (window.myeventInvitations) window.myeventInvitations.clear('friendInvite');
+    else { const url = new URL(location.href); url.searchParams.delete('friendInvite'); history.replaceState(history.state, '', url); }
+    invitation = null;
+  }
   async function prepareInvitation() {
     const {sb,user} = context(); if (!sb || !user) { status('Connecte-toi pour inviter un ami.'); return; }
     const button = $('invitePhoneContactsBtn'); button.disabled = true;
@@ -83,23 +88,32 @@
     if (!invitation) return;
     $('socialFriendInvitePrompt')?.classList.add('hidden');
     $('socialFriendsShortcut')?.click();
-    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(invitation)) { status('Lien d’invitation invalide.'); return; }
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(invitation)) { clearInvitation(); status('Lien d’invitation invalide.'); return; }
     try {
-      const {sb} = context();
+      const {sb,user} = context();
       const profiles = check(await sb.rpc('friend_invite_preview', {invitation})) || [];
-      if (!profiles.length) { status('Invitation expirée, déjà utilisée ou envoyée à toi-même.'); return; }
-      $('socialFriendInviteName').textContent = profileName(profiles[0]) + ' t’invite à devenir amis sur MyEvent.';
+      if (!profiles.length) { clearInvitation(); status('Invitation expirée, déjà utilisée ou envoyée à toi-même.'); return; }
+      const profile = profiles[0];
+      const picture = $('socialFriendInviteAvatar'); picture.replaceChildren();
+      if (profile.avatar && /^(https:\/\/|data:image\/(?:png|jpeg|webp);base64,)/.test(profile.avatar)) {
+        const image = document.createElement('img'); image.src = profile.avatar; image.alt = ''; picture.append(image);
+      } else picture.textContent = profile.avatar && profile.avatar.length < 8 ? profile.avatar : profileName(profile).charAt(0).toUpperCase();
+      $('socialFriendInviteName').textContent = profileName(profile);
+      $('socialFriendInviteUsername').textContent = profile.username ? '@' + profile.username : '';
+      const relation = relations.find(r => (r.user_low === user.id && r.user_high === profile.id) || (r.user_high === user.id && r.user_low === profile.id));
+      const alreadyFriends = relation?.status === 'accepted';
+      $('socialFriendInviteDetail').textContent = alreadyFriends ? 'Vous êtes déjà amis sur MyEvent.' : relation?.status === 'pending' ? 'Une demande existe déjà. Acceptez ce lien pour devenir amis.' : 'Vous invite à devenir amis sur MyEvent.';
+      $('socialFriendInviteAccept').hidden = alreadyFriends;
       $('socialFriendInvitePrompt').classList.remove('hidden');
+      if (alreadyFriends) clearInvitation();
     } catch (e) { status('Invitation indisponible : ' + e.message); }
   }
   async function acceptInvitation() {
     const {sb} = context(), button = $('socialFriendInviteAccept'); button.disabled = true;
     try {
       check(await sb.rpc('accept_friend_invite', {invitation}));
-      window.myeventInvitations?.clear('friendInvite'); invitation = null;
+      clearInvitation();
       $('socialFriendInvitePrompt').classList.add('hidden');
-      const url = new URL(location.href); url.searchParams.delete('friendInvite');
-      history.replaceState(history.state, '', url);
       await loadFriends(); await loadStories();
       status('Invitation acceptée : vous êtes maintenant amis.');
     } catch (e) { status('Impossible d’accepter : ' + e.message); }
@@ -368,8 +382,8 @@
   function scheduleRefresh() {clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>{loadFriends();loadStories();},250);}
   function start() {
     const {sb,user}=context(); if(!sb || !user || activeId===user.id)return;
-    if(channel)sb.removeChannel(channel); activeId=user.id;
-    loadFriends();loadStories();inspectInvitation();
+    if(channel)sb.removeChannel(channel); activeId=user.id; relations=[];
+    loadFriends().then(inspectInvitation);loadStories();
     channel=sb.channel('social-'+user.id)
       .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},scheduleRefresh)
       .on('postgres_changes',{event:'*',schema:'public',table:'social_stories'},scheduleRefresh).subscribe();
