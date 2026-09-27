@@ -1485,7 +1485,7 @@ async function loadFundMembers(selectedId){
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   sel.innerHTML='<option value="">Organisateur de l’événement</option>' + members.filter(m=>m.user_id!==event.creator_id).map(m=>{
-    const p=pmap.get(m.user_id)||{}; const name=m.nickname||p.display_name||p.username||'Membre';
+    const p=pmap.get(String(m.user_id))||{}; const name=m.nickname||p.display_name||p.username||'Membre';
     return '<option value="'+esc(m.user_id)+'">'+esc(name)+'</option>';
   }).join('');
   if(selectedId && members.some(m=>m.user_id===selectedId)) sel.value=selectedId;
@@ -1837,13 +1837,23 @@ async function loadMembers(){
   $('statMembers').textContent=members.length;
   if(!members.length){ $('members').innerHTML='<p class="muted">Aucun participant pour le moment.</p>'; return; }
 
-  const ids=members.map(m=>m.user_id).filter(Boolean);
+  const ids=[...new Set(members.map(m=>m.user_id).filter(Boolean))];
   let profiles=[];
   if(ids.length){
-    const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);
-    if(!pr.error) profiles=pr.data||[];
+    // Event co-members must be able to see the public identity used by the
+    // Participants UI even before they are friends. The RPC is scoped to the
+    // active event and only returns profiles for members of that event.
+    const eventProfiles=await sb.rpc('event_member_profiles',{p_event_id:event.id});
+    if(!eventProfiles.error){
+      profiles=eventProfiles.data||[];
+    }else{
+      // Backward-compatible fallback while the migration is being deployed.
+      const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);
+      if(!pr.error) profiles=pr.data||[];
+      else console.warn('Profils des participants indisponibles:',eventProfiles.error.message||eventProfiles.error);
+    }
   }
-  const pmap=new Map(profiles.map(p=>[p.id,p]));
+  const pmap=new Map(profiles.map(p=>[String(p.id),p]));
 
   $('members').innerHTML=members.map(m=>{
     const p=pmap.get(m.user_id)||{};
@@ -1860,7 +1870,7 @@ async function loadMembers(){
   $('members').querySelectorAll('.memberProfileTrigger').forEach(row=>row.addEventListener('click',()=>{
     const memberId=row.dataset.memberUserId;
     const member=members.find(m=>String(m.user_id)===String(memberId));
-    const profile=pmap.get(memberId)||{};
+    const profile=pmap.get(String(memberId))||{};
     const name=member?.nickname||profile.display_name||profile.username||'Membre';
     window.dispatchEvent(new CustomEvent('myevent-open-member-profile',{detail:{
       id:memberId,name,avatar:profile.avatar||'',role:member?.role==='owner'?'Organisateur':'Participant',self:memberId===user.id
