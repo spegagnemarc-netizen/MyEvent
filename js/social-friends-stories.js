@@ -305,6 +305,41 @@
     },true);
     $('myeventCameraModal')?.addEventListener('camera-closed',()=>{storyMode=false;});
   }
+  function ensureMemberProfileSheet() {
+    let sheet=$('memberFriendProfileSheet');
+    if(sheet)return sheet;
+    sheet=document.createElement('div');sheet.id='memberFriendProfileSheet';sheet.className='memberFriendProfileSheet';sheet.hidden=true;
+    sheet.innerHTML='<div class="memberFriendProfileCard" role="dialog" aria-modal="true" aria-labelledby="memberFriendProfileName"><button type="button" class="memberFriendProfileClose" aria-label="Fermer">×</button><div class="memberFriendProfileAvatar"></div><strong id="memberFriendProfileName"></strong><span class="memberFriendProfileRole"></span><div class="memberFriendProfileActions"></div><p class="memberFriendProfileStatus" role="status"></p></div>';
+    document.body.append(sheet);
+    sheet.querySelector('.memberFriendProfileClose').onclick=()=>{sheet.hidden=true;};
+    sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.hidden=true;});
+    return sheet;
+  }
+  async function openMemberProfile(detail) {
+    const {sb,user}=context();if(!sb||!user||!detail?.id)return;
+    const sheet=ensureMemberProfileSheet(),avatarHost=sheet.querySelector('.memberFriendProfileAvatar'),actions=sheet.querySelector('.memberFriendProfileActions'),message=sheet.querySelector('.memberFriendProfileStatus');
+    sheet.querySelector('#memberFriendProfileName').textContent=detail.name||'Membre MyEvent';
+    sheet.querySelector('.memberFriendProfileRole').textContent=detail.role||'Participant';
+    avatarHost.replaceChildren();
+    if(detail.avatar&&/^https:\/\//.test(detail.avatar)){const img=document.createElement('img');img.src=detail.avatar;img.alt='';avatarHost.append(img);}else avatarHost.textContent='👤';
+    actions.replaceChildren();message.textContent='';sheet.hidden=false;
+    if(detail.id===user.id||detail.self){message.textContent='C’est votre profil.';return;}
+    try{
+      const result=await sb.from('friendships').select('user_low,user_high,requester,status').or(`user_low.eq.${detail.id},user_high.eq.${detail.id}`);
+      if(result.error)throw result.error;
+      const relation=(result.data||[]).find(r=>(r.user_low===user.id&&r.user_high===detail.id)||(r.user_high===user.id&&r.user_low===detail.id));
+      const addButton=(label,action,className='')=>{
+        const button=document.createElement('button');button.type='button';button.textContent=label;if(className)button.className=className;
+        button.onclick=async()=>{button.disabled=true;try{check(await sb.rpc('friend_action',{other_id:detail.id,action}));await loadFriends();await loadStories();await openMemberProfile(detail);}catch(e){message.textContent=e.message||'Action impossible.';button.disabled=false;}};
+        actions.append(button);
+      };
+      if(!relation){addButton('＋ Ajouter en ami','send','primary');return;}
+      if(relation.status==='accepted'){message.textContent='✓ Vous êtes déjà amis.';return;}
+      if(relation.requester===user.id){message.textContent='Demande d’ami envoyée.';return;}
+      addButton('Accepter','accept','primary');addButton('Refuser','decline','danger');
+    }catch(e){message.textContent='Impossible de charger la relation d’amitié : '+(e.message||String(e));}
+  }
+  window.addEventListener('myevent-open-member-profile',e=>openMemberProfile(e.detail));
   function scheduleRefresh() {clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>{loadFriends();loadStories();},250);}
   function start() {
     const {sb,user}=context(); if(!sb || !user || activeId===user.id)return;
