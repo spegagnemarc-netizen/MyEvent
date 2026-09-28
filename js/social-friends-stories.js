@@ -336,19 +336,6 @@
       const friendSection=$('friendStoriesSection'),friendStrip=$('friendStoriesStrip');
       if(friendStrip){
         friendStrip.replaceChildren();
-        const own=latestOwnStory(user.id);
-        const tile=document.createElement('div');tile.className='friendStoryTile';
-        const mine=document.createElement('button');mine.type='button';mine.className='friendStoryMini ownStoryMini';
-        const ring=document.createElement('div');ring.className='miniRing';
-        const inside=document.createElement('div');
-        if(own){inside.append(storyCardPreview(own));
-        }else{const profileImage=document.querySelector('#profileAvatar img');if(profileImage)inside.append(profileImage.cloneNode(true));else inside.textContent='👤';}
-        ring.append(inside);
-        const name=document.createElement('span');name.textContent='Votre story';mine.append(ring,name);
-        mine.addEventListener('click',()=>{if(!own){createStory();return;}
-          const i=storyRows.findIndex(r=>r.id===own.id);if(i>=0)showStory(i);});
-        const add=document.createElement('button');add.type='button';add.className='friendStoryAdd';add.textContent='+';add.setAttribute('aria-label','Ajouter une Story');add.onclick=createStory;
-        tile.append(mine,add);friendStrip.append(tile);
       }
       const latestByAuthor=new Map();storyRows.forEach((r,i)=>{
         if(r.author_id!==user.id&&Date.parse(r.expires_at)>Date.now())latestByAuthor.set(r.author_id,{r,i});
