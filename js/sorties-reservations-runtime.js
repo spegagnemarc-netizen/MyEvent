@@ -429,7 +429,7 @@ async function searchOutings(){
   const km=Number($('outingRadius')?.value||5);
   const maxBudget=Number($('outingMaxBudget')?.value||0)||0;
   const placesApi='/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km);
-  const viatorApi='/api/search-viator?lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&count=30'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
+  const viatorApi='/api/search-places?mode=viator&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&count=30'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
 
   try{
     const [placesResult,viatorResult]=await Promise.allSettled([
