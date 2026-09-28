@@ -428,27 +428,21 @@ async function searchOutings(){
 
   const km=Number($('outingRadius')?.value||5);
   const maxBudget=Number($('outingMaxBudget')?.value||0)||0;
-  const placesApi='/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km);
   const viatorApi='/api/search-places?mode=viator&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&count=30'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
 
   try{
-    const [placesResult,viatorResult]=await Promise.allSettled([
-      fetch(placesApi,{headers:{Accept:'application/json'}}).then(async r=>({ok:r.ok,data:await r.json().catch(()=>null)})),
-      fetch(viatorApi,{headers:{Accept:'application/json'}}).then(async r=>({ok:r.ok,data:await r.json().catch(()=>null)}))
-    ]);
+    const response=await fetch(viatorApi,{headers:{Accept:'application/json'}});
+    const data=await response.json().catch(()=>null);
 
     if(searchVersion!==outingSearchVersion)return;
 
-    const places=placesResult.status==='fulfilled'&&placesResult.value.ok?(placesResult.value.data?.results||[]):[];
-    const viator=viatorResult.status==='fulfilled'&&viatorResult.value.ok?(viatorResult.value.data?.results||[]):[];
-
-    if(!places.length&&!viator.length){
-      const detail=placesResult.status==='fulfilled'?placesResult.value.data?.error:null;
-      const viatorDetail=viatorResult.status==='fulfilled'?viatorResult.value.data?.error:null;
-      if(detail||viatorDetail)throw new Error(detail||viatorDetail);
+    if(!response.ok){
+      throw new Error(data?.error||'Viator est momentanément indisponible.');
     }
 
-    outingResultsData=[...viator,...places]
+    const viator=Array.isArray(data?.results)?data.results:[];
+
+    outingResultsData=viator
       .map(x=>({...x,lat:+x.lat,lon:+x.lon,distance:Number(x.distance),price:x.price!=null?Number(x.price):null}))
       .filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
 
