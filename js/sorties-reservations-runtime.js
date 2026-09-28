@@ -186,6 +186,7 @@ function renderOutingResults(){
       '<div class="outingMeta"><span class="outingChip">'+typeLabel+'</span>'+
         '<span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span>'+
         '<span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div>'+
+      (isViator&&p.description?'<p class="muted">'+esc(p.description)+'</p>':'')+
       '<div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div>'+
       (isViator&&p.rating?'<div class="muted" style="margin-top:5px">⭐ '+esc(String(p.rating))+(p.reviewCount?' · '+esc(String(p.reviewCount))+' avis':'')+' · Viator</div>':'')+
       '<div class="outingActionsRow">'+
@@ -416,10 +417,11 @@ async function searchOutings(){
   const el=$('outingResults');
   if(el)el.innerHTML='<div class="outingEmpty">🔎 Recherche autour du centre de recherche 🎯…</div>';
 
+  const searchEventId=event.id;
   const searchVersion=++outingSearchVersion;
   const geo=await getActivitySearchCenter();
 
-  if(searchVersion!==outingSearchVersion)return;
+  if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
 
   if(!geo){
     if(el)el.innerHTML='<div class="outingEmpty">Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.</div>';
@@ -434,7 +436,7 @@ async function searchOutings(){
     const response=await fetch(viatorApi,{headers:{Accept:'application/json'}});
     const data=await response.json().catch(()=>null);
 
-    if(searchVersion!==outingSearchVersion)return;
+    if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
 
     if(!response.ok){
       throw new Error(data?.error||'Viator est momentanément indisponible.');
@@ -448,11 +450,11 @@ async function searchOutings(){
 
     renderOutingResults();
 
-    if(searchVersion!==outingSearchVersion)return;
+    if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
     await loadSelectedOuting();
 
   }catch(e){
-    if(searchVersion!==outingSearchVersion)return;
+    if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
     if(el)el.innerHTML='<div class="outingEmpty">La recherche est momentanément indisponible. Réessaie dans un instant.</div>';
     msg('outingMsg',e.message||String(e),'err');
   }

@@ -654,6 +654,8 @@ async function loadEvents(){
   let eventCardClickLockUntil=0;
   if(eventListEl){
     eventListEl.onclick=async ev=>{
+      // Inner planning controls must not toggle/collapse the parent event card.
+      if(ev.target.closest('.inlineEventDetails'))return;
       const now=Date.now();
       if(now<eventCardClickLockUntil)return;
       eventCardClickLockUntil=now+450;
@@ -891,6 +893,8 @@ async function renderInlineSelectedEvent(){
       });
     };
     const updateChoice=async(next)=>{
+      const choiceEventId=event?.id;
+      if(!choiceEventId)return;
       choice=next;
       try{ if(choiceKey)localStorage.setItem(choiceKey,choice); }catch(_){ }
       planning.querySelectorAll('[data-event-planning-choice]').forEach(b=>b.classList.toggle('active',b.dataset.eventPlanningChoice===choice));
@@ -901,13 +905,16 @@ async function renderInlineSelectedEvent(){
       // sélection directement depuis Supabase avant de construire le contenu.
       if(choice==='manual'){
         try{
-          const freshOuting=await getScopedEventOuting(event.id);
+          const freshOuting=await getScopedEventOuting(choiceEventId);
+          if(event?.id!==choiceEventId||renderToken!==inlineEventRenderToken)return;
           outing=freshOuting;
         }catch(_){
           outing=null;
         }
       }
 
+      if(event?.id!==choiceEventId||renderToken!==inlineEventRenderToken)return;
+      if(next==='manual')showEventTab('outings',true);
       if(content)content.innerHTML=choice==='ai'?renderAi():renderManual();
       const manualBox=planning.querySelector('#homeReservationBox');
       const aiBox=planning.querySelector('#homeAiReservationBox');
@@ -932,7 +939,7 @@ async function renderInlineSelectedEvent(){
         if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes();
       }
     };
-    planning.querySelectorAll('[data-event-planning-choice]').forEach(btn=>btn.addEventListener('click',()=>updateChoice(btn.dataset.eventPlanningChoice)));
+    planning.querySelectorAll('[data-event-planning-choice]').forEach(btn=>btn.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();updateChoice(btn.dataset.eventPlanningChoice);}));
     bindPlanningActions();
     if(choice==='ai'&&typeof renderAiPlanReservations==='function'&&aiPlan&&aiItems.length){
       renderAiPlanReservations(aiPlan,aiItems,'homeAiReservationBox');

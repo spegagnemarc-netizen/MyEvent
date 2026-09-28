@@ -388,7 +388,7 @@ async function fetchPhoton(
 // Viator Affiliate API shares this existing serverless route so MyEvent stays
 // within Vercel Hobby's serverless-function limit.
 const VIATOR_ACCEPT = 'application/json;version=2.0';
-let viatorDestinationCache = { expiresAt: 0, items: [] };
+let viatorDestinationCache = { base: null, expiresAt: 0, items: [] };
 
 function viatorBestImage(images) {
   const variants = (Array.isArray(images) ? images : [])
@@ -411,19 +411,19 @@ async function viatorFetch(base,path,key,options={}) {
   try {
     const response=await fetch(base+path,{
       ...options,
-      headers:{Accept:VIATOR_ACCEPT,'Accept-Language':'fr-FR','Content-Type':'application/json','exp-api-key':key,...(options.headers||{})},
+      headers:{Accept:VIATOR_ACCEPT,'Accept-Language':'fr','Content-Type':VIATOR_ACCEPT,'exp-api-key':key,...(options.headers||{})},
       signal:controller.signal
     });
     const data=await response.json().catch(()=>null);
-    if(!response.ok){const err=new Error(data?.message||data?.error||('Viator HTTP '+response.status));err.status=response.status;throw err;}
+    if(!response.ok){const err=new Error('Viator HTTP '+response.status+' ('+path+')');err.status=response.status;throw err;}
     return data;
   } finally { clearTimeout(timer); }
 }
 async function viatorDestinations(base,key) {
-  if(viatorDestinationCache.expiresAt>Date.now()&&viatorDestinationCache.items.length)return viatorDestinationCache.items;
-  const data=await viatorFetch(base,'/v1/taxonomy/destinations',key,{method:'GET'});
+  if(viatorDestinationCache.base===base&&viatorDestinationCache.expiresAt>Date.now()&&viatorDestinationCache.items.length)return viatorDestinationCache.items;
+  const data=await viatorFetch(base,'/destinations',key,{method:'GET'});
   const items=Array.isArray(data?.destinations)?data.destinations:(Array.isArray(data)?data:[]);
-  viatorDestinationCache={expiresAt:Date.now()+6*60*60*1000,items};
+  viatorDestinationCache={base,expiresAt:Date.now()+6*60*60*1000,items};
   return items;
 }
 function nearestViatorDestination(destinations,lat,lon) {
@@ -434,9 +434,9 @@ function nearestViatorDestination(destinations,lat,lon) {
   }).filter(Boolean).sort((a,b)=>a._distance-b._distance)[0]||null;
 }
 async function searchViator(req,lat,lon) {
-  const key=process.env.VIATOR_API_KEY_SANDBOX||process.env.VIATOR_API_KEY;
+  const production=String(process.env.VIATOR_API_ENV||'').trim().toLowerCase()==='production';
+  const key=production ? process.env.VIATOR_API_KEY : (process.env.VIATOR_API_KEY_SANDBOX||process.env.VIATOR_API_KEY);
   if(!key)throw new Error('Viator n’est pas encore configuré sur le serveur.');
-  const production=String(process.env.VIATOR_API_ENV||'').toLowerCase()==='production';
   const base=production?'https://api.viator.com/partner':'https://api.sandbox.viator.com/partner';
   const destinations=await viatorDestinations(base,key);
   const destination=nearestViatorDestination(destinations,lat,lon);
@@ -446,7 +446,7 @@ async function searchViator(req,lat,lon) {
   if(maxPrice!==null&&maxPrice>0)filtering.highestPrice=maxPrice;
   const count=Math.min(50,Math.max(1,Math.round(number(req.query.count)||30)));
   const data=await viatorFetch(base,'/products/search',key,{method:'POST',body:JSON.stringify({
-    filtering,sorting:{sort:'DEFAULT',order:'ASCENDING'},pagination:{start:1,count},currency:'EUR'
+    filtering,sorting:{sort:'DEFAULT'},pagination:{start:1,count},currency:'EUR'
   })});
   const centerLat=number(destination?.center?.latitude),centerLon=number(destination?.center?.longitude);
   const results=(Array.isArray(data?.products)?data.products:[]).map(product=>{
@@ -456,10 +456,10 @@ async function searchViator(req,lat,lon) {
       name:product?.title||'Activité Viator',description:product?.description||'',type:'viator_activity',
       typeLabel:'Activité réservable',address:destination?.name||'',lat:centerLat,lon:centerLon,
       distance:centerLat!==null&&centerLon!==null?distanceKm(lat,lon,centerLat,centerLon):null,
-      price:number(product?.pricing?.summary?.fromPrice)??number(product?.pricing?.fromPrice),
+      price:toNumber(product?.pricing?.summary?.fromPrice)??toNumber(product?.pricing?.fromPrice),
       currency:product?.pricing?.currency||product?.pricing?.summary?.currency||'EUR',
       image:viatorBestImage(product?.images),rating:reviews.rating,reviewCount:reviews.reviewCount,
-      website:product?.productUrl||'',flags:Array.isArray(product?.flags)?product.flags:[],
+      productUrl:product?.productUrl||'',website:product?.productUrl||'',flags:Array.isArray(product?.flags)?product.flags:[],
       tags:Array.isArray(product?.tags)?product.tags:[],source:'viator'
     };
   }).filter(x=>x.productCode&&x.name&&x.website);
