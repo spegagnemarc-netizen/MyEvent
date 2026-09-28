@@ -172,11 +172,13 @@ function renderOutingResults(){
 
   el.innerHTML=arr.slice(0,30).map(p=>{
     const price=Number.isFinite(Number(p.price))&&Number(p.price)>0?eur(Number(p.price)):'Tarif à vérifier';
+    const isViator=p.source==='viator';
     const cat=outingCategory(p.type);
     const typeLabel=cat==='restaurant'?'Restaurant':cat==='culture'?'Culture':cat==='nature'?'Nature':'Activité';
     const selected=isSelectedOuting(p);
 
     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'">'+
+      (p.image?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:9px">':'')+
       '<div class="outingCardTop"><div class="outingName">'+
         (locationIcons[p.type]||'🎯')+' '+esc(p.name)+
         (selected?' <span class="outingSelectedBadge">⭐ Sélectionnée</span>':'')+
@@ -185,12 +187,13 @@ function renderOutingResults(){
         '<span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span>'+
         '<span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div>'+
       '<div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div>'+
+      (isViator&&p.rating?'<div class="muted" style="margin-top:5px">⭐ '+esc(String(p.rating))+(p.reviewCount?' · '+esc(String(p.reviewCount))+' avis':'')+' · Viator</div>':'')+
       '<div class="outingActionsRow">'+
         '<button type="button" '+(selected?'class="secondary"':'')+' data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">'+
           (selected?'🔄 Changer de sortie':'⭐ Ajouter à l’événement')+
         '</button>'+
         (p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+
-        (p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+
+        (p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">'+(isViator?'🎟️ Réserver sur Viator':'↗️ Site')+'</a>':'')+
       '</div></div>';
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
 }
@@ -236,6 +239,10 @@ async function attachSelectedOutingActions(data){
       ev.preventDefault();
       ev.stopImmediatePropagation();
       if(!event||!outingSelected)return;
+      if(outingSelected.source==='viator'&&outingSelected.website){
+        window.open(outingSelected.website,'_blank','noopener');
+        return;
+      }
       reserveBtn.disabled=true;
       try{
         await refreshReservationBoxes();
@@ -349,7 +356,7 @@ async function selectOuting(id){
     p_price_per_person:Number.isFinite(Number(p.price))?Number(p.price):null,
     p_website:p.website||null,
     p_phone:p.phone||null,
-    p_source:'openstreetmap'
+    p_source:p.source||'openstreetmap'
   };
 
   const r=await sb.rpc('save_event_outing',payload);
@@ -420,16 +427,28 @@ async function searchOutings(){
   }
 
   const km=Number($('outingRadius')?.value||5);
-  const api='/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km);
+  const maxBudget=Number($('outingMaxBudget')?.value||0)||0;
+  const placesApi='/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km);
+  const viatorApi='/api/search-viator?lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&count=30'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
 
   try{
-    const r=await fetch(api,{headers:{Accept:'application/json'}});
-    const d=await r.json().catch(()=>null);
+    const [placesResult,viatorResult]=await Promise.allSettled([
+      fetch(placesApi,{headers:{Accept:'application/json'}}).then(async r=>({ok:r.ok,data:await r.json().catch(()=>null)})),
+      fetch(viatorApi,{headers:{Accept:'application/json'}}).then(async r=>({ok:r.ok,data:await r.json().catch(()=>null)}))
+    ]);
 
     if(searchVersion!==outingSearchVersion)return;
-    if(!r.ok||!d)throw new Error(d?.error||'Recherche indisponible');
 
-    outingResultsData=(d.results||[])
+    const places=placesResult.status==='fulfilled'&&placesResult.value.ok?(placesResult.value.data?.results||[]):[];
+    const viator=viatorResult.status==='fulfilled'&&viatorResult.value.ok?(viatorResult.value.data?.results||[]):[];
+
+    if(!places.length&&!viator.length){
+      const detail=placesResult.status==='fulfilled'?placesResult.value.data?.error:null;
+      const viatorDetail=viatorResult.status==='fulfilled'?viatorResult.value.data?.error:null;
+      if(detail||viatorDetail)throw new Error(detail||viatorDetail);
+    }
+
+    outingResultsData=[...viator,...places]
       .map(x=>({...x,lat:+x.lat,lon:+x.lon,distance:Number(x.distance),price:x.price!=null?Number(x.price):null}))
       .filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
 
