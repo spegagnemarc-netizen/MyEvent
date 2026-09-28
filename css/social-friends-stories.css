@@ -220,3 +220,31 @@
   position:absolute!important;left:0!important;right:0!important;bottom:7px!important;
   margin:0!important;text-align:center!important;line-height:1!important;z-index:7!important;
 }
+
+
+/* Stories shortcut — stacked story frames and label aligned with sibling shortcuts. */
+#socialHome #socialStoriesShortcut{justify-content:flex-start!important}
+#socialHome #socialStoriesShortcut .homeStoriesArt{
+  position:relative!important;
+  width:42px!important;
+  height:42px!important;
+  margin-top:17px!important;
+  flex:0 0 42px!important;
+}
+#socialHome #socialStoriesShortcut .homeStoriesArt span{
+  position:absolute!important;
+  width:25px!important;
+  height:34px!important;
+  border:2px solid #fff!important;
+  border-radius:7px!important;
+  box-sizing:border-box!important;
+  background:rgba(255,255,255,.05)!important;
+  box-shadow:0 0 7px rgba(255,255,255,.18)!important;
+}
+#socialHome #socialStoriesShortcut .homeStoriesArt span:first-child{left:4px!important;top:2px!important;opacity:.58!important}
+#socialHome #socialStoriesShortcut .homeStoriesArt span:last-child{left:13px!important;top:7px!important}
+#socialHome #socialStoriesShortcut>b{
+  margin-top:auto!important;
+  margin-bottom:9px!important;
+  line-height:1.05!important;
+}
