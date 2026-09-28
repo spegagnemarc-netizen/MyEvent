@@ -514,7 +514,6 @@ async function searchViator(req,lat,lon) {
     }
     if(!location)return null;
     const distance=distanceKm(lat,lon,location.lat,location.lon);
-    if(distance>radius)return null;
     const addressParts=location.address&&typeof location.address==='object'
       ? [location.address.street,location.address.administrativeArea,location.address.postcode,location.address.country].filter(Boolean)
       : [];
@@ -530,7 +529,12 @@ async function searchViator(req,lat,lon) {
       tags:Array.isArray(product?.tags)?product.tags:[],source:'viator'
     };
   }).filter(x=>x&&x.productCode&&x.name&&x.website).sort((a,b)=>a.distance-b.distance);
-  return {results,totalCount:number(data?.totalCount),radius,destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},environment:production?'production':'sandbox'};
+  const inRadius=results.filter(x=>x.distance<=radius);
+  // Keep the chosen radius strict when it has matches. If it has none, return
+  // the nearest real Viator products instead, preserving their true distance.
+  const fallbackUsed=inRadius.length===0&&results.length>0;
+  const finalResults=fallbackUsed?results.slice(0,30):inRadius;
+  return {results:finalResults,totalCount:number(data?.totalCount),radius,fallbackUsed,destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},environment:production?'production':'sandbox'};
 }
 
 module.exports =
