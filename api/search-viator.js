@@ -70,7 +70,7 @@ async function getDestinations(base, key) {
   if (destinationCache.expiresAt > Date.now() && destinationCache.items.length) {
     return destinationCache.items;
   }
-  const data = await viatorFetch(base, '/destinations', key, { method: 'GET' });
+  const data = await viatorFetch(base, '/v1/taxonomy/destinations', key, { method: 'GET' });
   const items = Array.isArray(data?.destinations) ? data.destinations : (Array.isArray(data) ? data : []);
   destinationCache = { expiresAt: Date.now() + 6 * 60 * 60 * 1000, items };
   return items;
