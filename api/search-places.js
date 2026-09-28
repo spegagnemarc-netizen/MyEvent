@@ -483,25 +483,55 @@ async function searchViator(req,lat,lon) {
   if(!key)throw new Error('Viator n’est pas encore configuré sur le serveur.');
   const base=production?'https://api.viator.com/partner':'https://api.sandbox.viator.com/partner';
   const destinations=await viatorDestinations(base,key);
-  const destination=nearestViatorDestination(destinations,lat,lon);
+  const rankedDestinations=destinations.map(d=>{
+    const dLat=number(d?.center?.latitude),dLon=number(d?.center?.longitude);
+    if(dLat===null||dLon===null||d?.destinationId==null)return null;
+    return {...d,_distance:distanceKm(lat,lon,dLat,dLon)};
+  }).filter(Boolean).sort((a,b)=>a._distance-b._distance);
+  const destination=rankedDestinations[0]||null;
   if(!destination)return {results:[],destination:null,environment:production?'production':'sandbox'};
-  const filtering={destination:String(destination.destinationId)};
+
+  const radius=Math.min(200,Math.max(1,number(req.query.radius)??5));
   const maxPrice=number(req.query.maxPrice);
-  if(maxPrice!==null&&maxPrice>0)filtering.highestPrice=maxPrice;
-  const count=Math.min(50,Math.max(1,Math.round(number(req.query.count)||30)));
-  const data=await viatorFetch(base,'/products/search',key,{method:'POST',body:JSON.stringify({
-    filtering,sorting:{sort:'DEFAULT'},pagination:{start:1,count},currency:'EUR'
-  })});
-  const products=Array.isArray(data?.products)?data.products:[];
+  const requestedCount=Math.min(50,Math.max(1,Math.round(number(req.query.count)||30)));
+
+  // Viator search is destination-based rather than a true radial query. Search
+  // several surrounding destinations, then merge/dedupe and rank using each
+  // product's resolved coordinates so coverage is 360 degrees around MyEvent.
+  const searchLimit=Math.max(radius,150);
+  const candidates=rankedDestinations.filter(d=>d._distance<=searchLimit).slice(0,8);
+  if(!candidates.some(d=>String(d.destinationId)===String(destination.destinationId)))candidates.unshift(destination);
+
+  const responses=await Promise.all(candidates.map(async d=>{
+    const filtering={destination:String(d.destinationId)};
+    if(maxPrice!==null&&maxPrice>0)filtering.highestPrice=maxPrice;
+    try {
+      const data=await viatorFetch(base,'/products/search',key,{method:'POST',body:JSON.stringify({
+        filtering,sorting:{sort:'DEFAULT'},pagination:{start:1,count:Math.min(30,requestedCount)},currency:'EUR'
+      })});
+      return {destination:d,data};
+    } catch(error) {
+      console.warn('[MyEvent Viator] destination '+d.destinationId+' skipped:',error?.message||error);
+      return null;
+    }
+  }));
+
+  const productMap=new Map();
+  let totalCount=0;
+  for(const response of responses.filter(Boolean)){
+    totalCount+=(number(response?.data?.totalCount)||0);
+    for(const product of (Array.isArray(response?.data?.products)?response.data.products:[])){
+      const code=String(product?.productCode||'');
+      if(code&&!productMap.has(code))productMap.set(code,product);
+    }
+  }
+  const products=[...productMap.values()];
   const locations=await viatorResolveLocations(base,key,products);
   const destinationById=new Map(destinations.map(item=>[String(item?.destinationId),item]));
-  const radius=Math.min(200,Math.max(1,number(req.query.radius)??5));
+
   const results=products.map(product=>{
     const reviews=viatorReviewSummary(product?.reviews);
     let location=viatorProductLocation(product,locations);
-    // Some Viator location references are GOOGLE locations. /locations/bulk does
-    // not include geolocation details for those, so fall back to the product's
-    // primary destination center instead of discarding an otherwise valid product.
     if(!location){
       const refs=Array.isArray(product?.destinations)?product.destinations:[];
       const primary=refs.find(item=>item?.primary) || refs[0];
@@ -529,12 +559,16 @@ async function searchViator(req,lat,lon) {
       tags:Array.isArray(product?.tags)?product.tags:[],source:'viator'
     };
   }).filter(x=>x&&x.productCode&&x.name&&x.website).sort((a,b)=>a.distance-b.distance);
+
   const inRadius=results.filter(x=>x.distance<=radius);
-  // Keep the chosen radius strict when it has matches. If it has none, return
-  // the nearest real Viator products instead, preserving their true distance.
   const fallbackUsed=inRadius.length===0&&results.length>0;
-  const finalResults=fallbackUsed?results.slice(0,30):inRadius;
-  return {results:finalResults,totalCount:number(data?.totalCount),radius,fallbackUsed,destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},environment:production?'production':'sandbox'};
+  const finalResults=(fallbackUsed?results:inRadius).slice(0,requestedCount);
+  return {
+    results:finalResults,totalCount,radius,fallbackUsed,
+    searchedDestinations:candidates.length,
+    destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},
+    environment:production?'production':'sandbox'
+  };
 }
 
 module.exports =
