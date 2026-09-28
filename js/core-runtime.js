@@ -203,16 +203,24 @@ const locationSearchCentersByEvent=new Map();
 function getStoredActivitySearchCenter(eventId){
   if(!eventId)return null;
   const key='myevent_activity_search_center_'+String(eventId);
+  const currentLocation=String(event?.id===eventId?event?.location||'':'').trim();
   try{
     const v=JSON.parse(localStorage.getItem(key)||'null');
-    if(v&&Number.isFinite(+v.lat)&&Number.isFinite(+v.lon))return {lat:+v.lat,lon:+v.lon};
+    // A saved center belongs to the event location that produced it. If the
+    // event address was edited later, do not reuse stale coordinates.
+    if(v&&Number.isFinite(+v.lat)&&Number.isFinite(+v.lon)&&(!currentLocation||!v.eventLocation||v.eventLocation===currentLocation)){
+      return {lat:+v.lat,lon:+v.lon};
+    }
   }catch(_){}
   const mem=locationSearchCentersByEvent.get(String(eventId));
-  return mem&&Number.isFinite(+mem.lat)&&Number.isFinite(+mem.lon)?{lat:+mem.lat,lon:+mem.lon}:null;
+  return mem&&Number.isFinite(+mem.lat)&&Number.isFinite(+mem.lon)&&(!currentLocation||!mem.eventLocation||mem.eventLocation===currentLocation)
+    ? {lat:+mem.lat,lon:+mem.lon}
+    : null;
 }
 function saveActivitySearchCenter(eventId,lat,lon){
   if(!eventId||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
-  const v={lat:+lat,lon:+lon};
+  const eventLocation=String(event?.id===eventId?event?.location||'':'').trim();
+  const v={lat:+lat,lon:+lon,eventLocation};
   locationSearchCentersByEvent.set(String(eventId),v);
   try{localStorage.setItem('myevent_activity_search_center_'+String(eventId),JSON.stringify(v));}catch(_){}
 }
