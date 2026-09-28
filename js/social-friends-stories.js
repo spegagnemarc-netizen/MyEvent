@@ -129,6 +129,11 @@
   function person(container, profile, label, action, options = {}) {
     const row = document.createElement('div'); row.className = 'socialPerson'; row.append(avatar(profile));
     const name = document.createElement('b'); name.className = 'grow'; name.textContent = profileName(profile); row.append(name);
+    if(action==='remove'){
+      const link=document.createElement('button');link.type='button';link.className='si-profile-link';link.textContent=profileName(profile);
+      link.addEventListener('click',()=>openMemberProfile({id:profile.id,name:profileName(profile),username:profile.username,avatar:profile.avatar,hasProfile:true,role:'Ami'}));
+      name.replaceWith(link);
+    }
     if (action) {
       const button = document.createElement('button'); button.type = 'button'; button.textContent = options.iconOnly ? '×' : label;
       if (options.className) button.classList.add(options.className);
@@ -406,7 +411,11 @@
         actions.append(button);
       };
       if(!relation){addButton('＋ Ajouter en ami','send','primary');return;}
-      if(relation.status==='accepted'){message.textContent='✓ Vous êtes déjà amis.';return;}
+      if(relation.status==='accepted'){
+        message.textContent='✓ Vous êtes déjà amis.';
+        const write=document.createElement('button');write.type='button';write.textContent='💬 Envoyer un message';
+        write.onclick=()=>{sheet.hidden=true;window.myeventSocialInbox?.openPeer(detail.id);};actions.append(write);return;
+      }
       if(relation.requester===user.id){message.textContent='Demande d’ami envoyée.';return;}
       addButton('Accepter','accept','primary');addButton('Refuser','decline','danger');
     }catch(e){message.textContent='Impossible de charger la relation d’amitié : '+(e.message||String(e));}

@@ -1,0 +1,36 @@
+/* Social inbox only: event messages and notifications keep their existing styles. */
+#socialHeaderMessagesBtnTop,#socialHeaderNotificationsBtnTop{position:relative}
+.si-badge{position:absolute;right:-5px;top:-5px;min-width:18px;padding:2px 4px;border-radius:12px;background:#ed3768;color:white;font:700 10px/1.4 system-ui}
+.si-badge[hidden]{display:none}
+.si-inbox{color:inherit;font:15px/1.45 system-ui;max-width:720px;margin:auto}
+.si-inbox *{box-sizing:border-box}
+.si-inbox button,.si-photo{min-height:44px;border:1px solid #36516a;border-radius:12px;background:#10283e;color:#f1f7ff;padding:10px;cursor:pointer;font:inherit}
+.si-inbox button:disabled{opacity:.5;cursor:default}
+.si-inbox :focus-visible{outline:3px solid #50cfff;outline-offset:2px}
+.si-inbox #si-status{color:#afdefe;overflow-wrap:anywhere;margin:8px 0}
+.si-tools,.si-thread-head,.si-compose-actions{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.si-tools p{flex:1;margin:0}.si-tools button:last-child{margin-left:auto}
+.si-list{display:grid;gap:8px}
+.si-inbox .si-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:6px 0;background:#091c2b}
+.si-inbox .si-unread{border-color:#128dd3;background:#0d2b42}
+.si-grow{flex:1;min-width:0;display:grid;gap:3px}
+.si-grow>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.si-inbox time{font-size:11px;opacity:.7;display:block}
+.si-avatar{width:40px;height:40px;flex:none;border-radius:50%;background:#24405e;display:grid;place-items:center;overflow:hidden;color:#fff}
+.si-avatar img{width:100%;height:100%;object-fit:cover}
+.si-count{background:#087ac5;border-radius:15px;padding:2px 7px;font-size:12px}
+.si-dot{width:9px;height:9px;background:#39b9ff;border-radius:50%;flex:none}
+.si-empty{text-align:center;padding:25px 10px;opacity:.8}
+.si-messages{height:min(48dvh,490px);min-height:150px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:10px 3px;scrollbar-width:thin}
+.si-message{align-self:flex-start;background:#193247;border-radius:15px 15px 15px 3px;padding:10px 12px;max-width:85%;overflow-wrap:anywhere;color:#f5faff}
+.si-message.si-mine{align-self:flex-end;background:#085d9b;border-radius:15px 15px 3px 15px}
+.si-message p{margin:0 0 5px;white-space:pre-wrap}
+.si-photo-message{max-width:100%;max-height:280px;object-fit:contain;border-radius:10px;display:block}
+.si-inbox textarea{width:100%;resize:vertical;max-height:180px;min-height:56px;background:#071a2a;color:#fff;border:1px solid #43627b;border-radius:12px;padding:10px;font:16px system-ui;margin-top:12px}
+.si-compose-actions{margin:8px 0;flex-wrap:wrap}.si-compose-actions button{margin-left:auto;background:#077ccb}
+.si-photo{position:relative;overflow:hidden}.si-photo input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+#si-file-name{font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.si-inbox small{font-size:11px;opacity:.7}
+#si-older[hidden]{display:none}
+.socialPerson .si-profile-link{background:none;border:0;padding:0;text-align:left;min-width:0;color:inherit;font:inherit;flex:1}

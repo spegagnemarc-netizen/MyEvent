@@ -153,16 +153,8 @@
     <h4>Mes amis</h4><div class="socialFriendCarousel" id="socialFriendList"></div>
   </div>
 
-  <div id="socialMessagesView" class="socialPeople">
-    <div class="socialEmpty" style="margin-top:12px">Les conversations privées pourront ensuite être reliées au vrai système de messagerie de MyEvent.</div>
-  </div>
-
-  <div id="socialGlobalNotificationsView" class="socialPeople" style="display:none">
-    <div class="socialSectionHead"><h3>🔔 Notifications</h3><button type="button" id="socialBackToFeedBtn">Accueil ›</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">👥</div><div class="grow"><b>Demandes d’amis</b><div class="muted">Tu as de nouvelles demandes d’amis.</div></div><button type="button" class="socialMessageBtn" id="socialGlobalFriendsBtn">Voir</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">🎉</div><div class="grow"><b>Invitations</b><div class="muted">Retrouve ici les invitations à rejoindre des événements.</div></div><button type="button" class="socialMessageBtn" id="socialGlobalEventsBtn">Voir</button></div>
-    <div class="socialPerson"><div class="socialPostAvatar">❤️</div><div class="grow"><b>Activité</b><div class="muted">Réactions, commentaires et nouvelles activités sur ton fil.</div></div><button type="button" class="socialMessageBtn">Voir</button></div>
-  </div>
+  <div id="socialMessagesView" class="socialPeople" style="display:none"><p>Ouvre Messages pour retrouver tes conversations privées.</p></div>
+  <div id="socialGlobalNotificationsView" class="socialPeople" style="display:none"><p>Ouvre Notifications pour retrouver ton activité sociale.</p></div>
 
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
     <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra selfie MyEvent">
@@ -1134,11 +1126,11 @@
 
 
 
-<script src="js/home-social-runtime.js?v=games-1"></script>
+<script src="js/home-social-runtime.js?v=social-inbox-1"></script>
 <script src="js/event-social-feed.js?v=event-roles-v1"></script>
 <link rel="stylesheet" href="css/event-social-feed.css?v=event-roles-v1">
 <link rel="stylesheet" href="css/social-friends-stories.css?v=member-identity-v2">
-<script src="js/social-friends-stories.js?v=member-identity-v2"></script>
+<script src="js/social-friends-stories.js?v=social-inbox-1"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
@@ -1308,5 +1300,7 @@
 
 
 
+<link rel="stylesheet" href="css/social-inbox.css?v=1">
+<script src="js/social-inbox.js?v=1"></script>
 </body>
 </html>

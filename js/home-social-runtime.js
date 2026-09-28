@@ -717,6 +717,7 @@
   }
 
   function openOverlay(kind){
+    if(window.myeventSocialInbox){window.myeventSocialInbox.open(kind);return;}
     const oid=kind==='messages'?'myeventGlobalMessagesOverlay':'myeventGlobalNotificationsOverlay';
     const sid=kind==='messages'?'socialMessagesView':'socialGlobalNotificationsView';
     const bid=kind==='messages'?'myeventGlobalMessagesBody':'myeventGlobalNotificationsBody';
@@ -728,6 +729,7 @@
     document.body.style.overflow='hidden';
   }
   function closeOverlay(id){
+    window.myeventSocialInbox?.closed();
     const o=$(id); if(!o)return;
     o.classList.remove('open');
     o.setAttribute('aria-hidden','true');
