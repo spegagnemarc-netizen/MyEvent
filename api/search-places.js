@@ -494,10 +494,24 @@ async function searchViator(req,lat,lon) {
   })});
   const products=Array.isArray(data?.products)?data.products:[];
   const locations=await viatorResolveLocations(base,key,products);
+  const destinationById=new Map(destinations.map(item=>[String(item?.destinationId),item]));
   const radius=Math.min(200,Math.max(1,number(req.query.radius)??5));
   const results=products.map(product=>{
     const reviews=viatorReviewSummary(product?.reviews);
-    const location=viatorProductLocation(product,locations);
+    let location=viatorProductLocation(product,locations);
+    // Some Viator location references are GOOGLE locations. /locations/bulk does
+    // not include geolocation details for those, so fall back to the product's
+    // primary destination center instead of discarding an otherwise valid product.
+    if(!location){
+      const refs=Array.isArray(product?.destinations)?product.destinations:[];
+      const primary=refs.find(item=>item?.primary) || refs[0];
+      const productDestination=primary ? destinationById.get(String(primary.ref)) : null;
+      const fallbackLat=number(productDestination?.center?.latitude);
+      const fallbackLon=number(productDestination?.center?.longitude);
+      if(fallbackLat!==null&&fallbackLon!==null){
+        location={lat:fallbackLat,lon:fallbackLon,name:productDestination?.name||'',address:null,approximate:true};
+      }
+    }
     if(!location)return null;
     const distance=distanceKm(lat,lon,location.lat,location.lon);
     if(distance>radius)return null;
