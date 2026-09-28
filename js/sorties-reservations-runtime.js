@@ -152,6 +152,47 @@ function isSelectedOuting(p){
   return sameName||sameCoords;
 }
 
+let outingResultsMap=null, outingResultsMapMarkers=[];
+
+function renderOutingResultsMap(center){
+  const host=$('outingResultsMap');
+  if(!host||!window.L)return;
+  const points=outingResultsData.filter(p=>Number.isFinite(+p.lat)&&Number.isFinite(+p.lon));
+  if(!points.length){
+    host.classList.add('hidden');
+    return;
+  }
+  host.classList.remove('hidden');
+  if(!outingResultsMap){
+    outingResultsMap=L.map(host,{zoomControl:true,attributionControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(outingResultsMap);
+  }
+  outingResultsMapMarkers.forEach(m=>outingResultsMap.removeLayer(m));
+  outingResultsMapMarkers=[];
+  const bounds=[];
+  if(center&&Number.isFinite(+center.lat)&&Number.isFinite(+center.lon)){
+    const eventMarker=L.marker([+center.lat,+center.lon],{icon:makeLocationIcon('📍','#e53935')}).addTo(outingResultsMap);
+    eventMarker.bindPopup('<b>Lieu de l’événement</b>');
+    outingResultsMapMarkers.push(eventMarker);
+    bounds.push([+center.lat,+center.lon]);
+  }
+  points.forEach((p,index)=>{
+    const marker=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon('🎯','#278cff')}).addTo(outingResultsMap);
+    const distance=Number.isFinite(+p.distance)?Number(p.distance).toFixed(1)+' km':'';
+    const price=Number.isFinite(+p.price)&&+p.price>0?eur(+p.price):'Tarif à vérifier';
+    marker.bindPopup('<b>'+esc(p.name)+'</b><br>📍 '+esc(distance)+' · 💶 '+esc(price));
+    marker.on('click',()=>{
+      const cards=$('outingResults')?.querySelectorAll('.outingCard');
+      cards?.[index]?.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+    outingResultsMapMarkers.push(marker);
+    bounds.push([+p.lat,+p.lon]);
+  });
+  if(bounds.length>1)outingResultsMap.fitBounds(bounds,{padding:[24,24],maxZoom:13});
+  else outingResultsMap.setView(bounds[0],12);
+  setTimeout(()=>outingResultsMap?.invalidateSize(),80);
+}
+
 function renderOutingResults(){
   const el=$('outingResults'); if(!el)return;
   const q=outingSearch.trim().toLowerCase();
@@ -453,6 +494,7 @@ async function searchOutings(){
       .filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
 
     renderOutingResults();
+    renderOutingResultsMap(geo);
 
     if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
     await loadSelectedOuting();
