@@ -444,6 +444,10 @@ async function searchOutings(){
 
     const viator=Array.isArray(data?.results)?data.results:[];
 
+    if(data?.fallbackUsed){
+      msg('outingMsg','Aucune activité Viator dans les '+km+' km · affichage des activités les plus proches avec leur distance réelle.','muted');
+    }
+
     outingResultsData=viator
       .map(x=>({...x,lat:+x.lat,lon:+x.lon,distance:Number(x.distance),price:x.price!=null?Number(x.price):null}))
       .filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
