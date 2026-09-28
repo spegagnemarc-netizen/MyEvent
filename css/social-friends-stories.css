@@ -58,6 +58,7 @@
 /* Always show the owner's real Story first, followed by accessible friends. */
 #socialHome #friendStoriesSection.friendStoriesSection{display:block!important;min-height:84px}
 #socialHome #friendStoriesStrip{display:flex!important;gap:11px;overflow-x:auto!important;scrollbar-width:none}
+#socialHome #friendStoriesSection.friendStoriesSection[hidden]{display:none!important}
 #socialHome .ownStoryMini .miniRing{position:relative;background:var(--myevent-accent-fill)!important;border:2px solid var(--myevent-accent)!important}
 #socialHome .friendStoryMini .miniRing img,
 #socialHome .friendStoryMini .miniRing video{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}

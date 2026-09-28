@@ -349,7 +349,6 @@
         mini.append(ring,label);mini.onclick=()=>showStory(i);friendStrip.append(mini);
       });
       friendSection?.classList.remove('hidden');
-      if(friendSection)friendSection.style.display='block';
     } catch(e) { console.warn('Stories indisponibles',e); }
   }
   function storyCardPreview(story){

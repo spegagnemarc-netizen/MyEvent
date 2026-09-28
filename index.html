@@ -93,6 +93,7 @@
   <div class="homeFeatureCarousel" aria-label="Raccourcis MyEvent">
     <div class="homeFeatureCard storyCard" id="socialMyStory"><div class="socialStoryBubble">👤</div><b>Ma story</b><span class="storyAddBadge">＋</span></div>
     <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview">👥</div><b>Amis</b></button>
+    <button type="button" class="homeFeatureCard storyCard" id="socialStoriesShortcut" aria-controls="friendStoriesSection" aria-expanded="false"><div class="homeFeatureIcon" aria-hidden="true">▣</div><b>Stories</b></button>
     <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><img class="homeFeatureArt" src="assets/ui/calendar-star.svg" alt=""><b>Événements</b></button>
     <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><img class="homeFeatureArt" src="assets/ui/games-purple.svg" alt=""><b>Jeux</b></button>
     <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
@@ -102,7 +103,7 @@
     <button type="button" class="homeFeatureCard popularCard"><div class="homeFeatureIcon">🔥</div><b>Populaire</b></button>
   </div>
   <div class="homeCarouselDots" aria-hidden="true"><i></i><i></i><i></i></div>
-  <div id="friendStoriesSection" class="friendStoriesSection hidden">
+  <div id="friendStoriesSection" class="friendStoriesSection" hidden>
     <div class="friendStoriesHead"><b>Stories de vos amis</b><button type="button" id="friendStoriesSeeAll">Voir tout ›</button></div>
     <div id="friendStoriesStrip" class="friendStoriesStrip"></div>
   </div>
@@ -1127,12 +1128,12 @@
 
 
 
-<script src="js/home-social-runtime.js?v=feed-reactions-1"></script>
+<script src="js/home-social-runtime.js?v=stories-toggle-1"></script>
 <script src="js/feed-interactions.js?v=feed-reactions-1"></script>
 <script src="js/event-social-feed.js?v=feed-reactions-1"></script>
 <link rel="stylesheet" href="css/event-social-feed.css?v=feed-reactions-1">
-<link rel="stylesheet" href="css/social-friends-stories.css?v=story-cards-2">
-<script src="js/social-friends-stories.js?v=story-cards-2"></script>
+<link rel="stylesheet" href="css/social-friends-stories.css?v=stories-toggle-1">
+<script src="js/social-friends-stories.js?v=stories-toggle-1"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
