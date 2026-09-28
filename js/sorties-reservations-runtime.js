@@ -158,10 +158,7 @@ function renderOutingResultsMap(center){
   const host=$('outingResultsMap');
   if(!host||!window.L)return;
   const points=outingResultsData.filter(p=>Number.isFinite(+p.lat)&&Number.isFinite(+p.lon));
-  if(!points.length){
-    host.classList.add('hidden');
-    return;
-  }
+  if(!points.length){host.classList.add('hidden');return;}
   host.classList.remove('hidden');
   if(!outingResultsMap){
     outingResultsMap=L.map(host,{zoomControl:true,attributionControl:true});
@@ -176,17 +173,41 @@ function renderOutingResultsMap(center){
     outingResultsMapMarkers.push(eventMarker);
     bounds.push([+center.lat,+center.lon]);
   }
-  points.forEach((p,index)=>{
-    const marker=L.marker([+p.lat,+p.lon],{icon:makeLocationIcon('🎯','#278cff')}).addTo(outingResultsMap);
-    const distance=Number.isFinite(+p.distance)?Number(p.distance).toFixed(1)+' km':'';
-    const price=Number.isFinite(+p.price)&&+p.price>0?eur(+p.price):'Tarif à vérifier';
-    marker.bindPopup('<b>'+esc(p.name)+'</b><br>📍 '+esc(distance)+' · 💶 '+esc(price));
-    marker.on('click',()=>{
-      const cards=$('outingResults')?.querySelectorAll('.outingCard');
-      cards?.[index]?.scrollIntoView({behavior:'smooth',block:'center'});
-    });
+
+  // Group activities that share the same/very close coordinates (~1 km).
+  // The list keeps every result, while the map stays readable.
+  const groups=[];
+  points.forEach(p=>{
+    let group=groups.find(g=>distanceKm(p.lat,p.lon,g.lat,g.lon)<=1);
+    if(!group){group={lat:+p.lat,lon:+p.lon,items:[]};groups.push(group);}
+    group.items.push(p);
+  });
+
+  groups.forEach(group=>{
+    const count=group.items.length;
+    const icon=count===1
+      ? makeLocationIcon('🎯','#278cff')
+      : L.divIcon({className:'',html:'<div style="width:42px;height:42px;border-radius:50%;background:#278cff;border:4px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;box-shadow:0 3px 9px #0008">'+count+'</div>',iconSize:[42,42],iconAnchor:[21,21],popupAnchor:[0,-22]});
+    const marker=L.marker([group.lat,group.lon],{icon}).addTo(outingResultsMap);
+    if(count===1){
+      const p=group.items[0];
+      const distance=Number.isFinite(+p.distance)?Number(p.distance).toFixed(1)+' km':'';
+      const price=Number.isFinite(+p.price)&&+p.price>0?eur(+p.price):'Tarif à vérifier';
+      marker.bindPopup('<b>'+esc(p.name)+'</b><br>📍 '+esc(distance)+' · 💶 '+esc(price));
+      marker.on('click',()=>{
+        const index=outingResultsData.indexOf(p);
+        const cards=$('outingResults')?.querySelectorAll('.outingCard');
+        cards?.[index]?.scrollIntoView({behavior:'smooth',block:'center'});
+      });
+    }else{
+      const lines=group.items.slice(0,10).map(p=>{
+        const distance=Number.isFinite(+p.distance)?Number(p.distance).toFixed(1)+' km':'';
+        return '<div style="margin:5px 0"><b>'+esc(p.name)+'</b>'+(distance?' · '+esc(distance):'')+'</div>';
+      }).join('');
+      marker.bindPopup('<b>'+count+' activités à proximité</b>'+lines,{maxWidth:280});
+    }
     outingResultsMapMarkers.push(marker);
-    bounds.push([+p.lat,+p.lon]);
+    bounds.push([group.lat,group.lon]);
   });
   if(bounds.length>1)outingResultsMap.fitBounds(bounds,{padding:[24,24],maxZoom:13});
   else outingResultsMap.setView(bounds[0],12);
