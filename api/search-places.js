@@ -433,6 +433,50 @@ function nearestViatorDestination(destinations,lat,lon) {
     return {...d,_distance:distanceKm(lat,lon,dLat,dLon)};
   }).filter(Boolean).sort((a,b)=>a._distance-b._distance)[0]||null;
 }
+function viatorLocationRefs(product) {
+  const refs=[];
+  const add=value=>{
+    const ref=String(value||'').trim();
+    if(ref.startsWith('LOC-')&&!refs.includes(ref))refs.push(ref);
+  };
+  const itinerary=product?.itinerary||{};
+  add(itinerary?.activityInfo?.location?.ref);
+  (Array.isArray(itinerary?.itineraryItems)?itinerary.itineraryItems:[]).forEach(item=>{
+    add(item?.pointOfInterestLocation?.location?.ref);
+    add(item?.pointOfInterestLocation?.ref);
+  });
+  (Array.isArray(itinerary?.pointOfInterestLocations)?itinerary.pointOfInterestLocations:[]).forEach(item=>add(item?.location?.ref||item?.ref));
+  (Array.isArray(itinerary?.pointsOfInterest)?itinerary.pointsOfInterest:[]).forEach(item=>add(item?.location?.ref||item?.ref));
+  (Array.isArray(itinerary?.routes)?itinerary.routes:[]).forEach(route=>{
+    (Array.isArray(route?.stops)?route.stops:[]).forEach(stop=>add(stop?.stopLocation?.ref||stop?.location?.ref||stop?.ref));
+    (Array.isArray(route?.pointsOfInterest)?route.pointsOfInterest:[]).forEach(item=>add(item?.location?.ref||item?.ref));
+  });
+  (Array.isArray(product?.logistics?.start)?product.logistics.start:[]).forEach(item=>add(item?.location?.ref||item?.ref));
+  return refs;
+}
+
+async function viatorResolveLocations(base,key,products) {
+  const refs=[...new Set(products.flatMap(viatorLocationRefs))];
+  if(!refs.length)return new Map();
+  const data=await viatorFetch(base,'/locations/bulk',key,{method:'POST',body:JSON.stringify({locations:refs})});
+  const map=new Map();
+  for(const location of (Array.isArray(data?.locations)?data.locations:[])){
+    const lat=number(location?.center?.latitude),lon=number(location?.center?.longitude);
+    if(lat!==null&&lon!==null&&location?.reference){
+      map.set(String(location.reference),{lat,lon,name:location?.name||'',address:location?.address||null});
+    }
+  }
+  return map;
+}
+
+function viatorProductLocation(product,locations) {
+  for(const ref of viatorLocationRefs(product)){
+    const location=locations.get(ref);
+    if(location)return location;
+  }
+  return null;
+}
+
 async function searchViator(req,lat,lon) {
   const production=String(process.env.VIATOR_API_ENV||'').trim().toLowerCase()==='production';
   const key=production ? process.env.VIATOR_API_KEY : (process.env.VIATOR_API_KEY_SANDBOX||process.env.VIATOR_API_KEY);
@@ -448,22 +492,31 @@ async function searchViator(req,lat,lon) {
   const data=await viatorFetch(base,'/products/search',key,{method:'POST',body:JSON.stringify({
     filtering,sorting:{sort:'DEFAULT'},pagination:{start:1,count},currency:'EUR'
   })});
-  const centerLat=number(destination?.center?.latitude),centerLon=number(destination?.center?.longitude);
-  const results=(Array.isArray(data?.products)?data.products:[]).map(product=>{
+  const products=Array.isArray(data?.products)?data.products:[];
+  const locations=await viatorResolveLocations(base,key,products);
+  const radius=Math.min(200,Math.max(1,number(req.query.radius)??5));
+  const results=products.map(product=>{
     const reviews=viatorReviewSummary(product?.reviews);
+    const location=viatorProductLocation(product,locations);
+    if(!location)return null;
+    const distance=distanceKm(lat,lon,location.lat,location.lon);
+    if(distance>radius)return null;
+    const addressParts=location.address&&typeof location.address==='object'
+      ? [location.address.street,location.address.administrativeArea,location.address.postcode,location.address.country].filter(Boolean)
+      : [];
     return {
       id:'viator-'+String(product?.productCode||''),productCode:product?.productCode||'',
       name:product?.title||'Activité Viator',description:product?.description||'',type:'viator_activity',
-      typeLabel:'Activité réservable',address:destination?.name||'',lat:centerLat,lon:centerLon,
-      distance:centerLat!==null&&centerLon!==null?distanceKm(lat,lon,centerLat,centerLon):null,
+      typeLabel:'Activité réservable',address:addressParts.join(', ')||location.name||destination?.name||'',
+      lat:location.lat,lon:location.lon,distance,
       price:toNumber(product?.pricing?.summary?.fromPrice)??toNumber(product?.pricing?.fromPrice),
       currency:product?.pricing?.currency||product?.pricing?.summary?.currency||'EUR',
       image:viatorBestImage(product?.images),rating:reviews.rating,reviewCount:reviews.reviewCount,
       productUrl:product?.productUrl||'',website:product?.productUrl||'',flags:Array.isArray(product?.flags)?product.flags:[],
       tags:Array.isArray(product?.tags)?product.tags:[],source:'viator'
     };
-  }).filter(x=>x.productCode&&x.name&&x.website);
-  return {results,totalCount:number(data?.totalCount),destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},environment:production?'production':'sandbox'};
+  }).filter(x=>x&&x.productCode&&x.name&&x.website).sort((a,b)=>a.distance-b.distance);
+  return {results,totalCount:number(data?.totalCount),radius,destination:{id:destination.destinationId,name:destination.name,type:destination.type,distanceKm:Number(destination._distance.toFixed(1))},environment:production?'production':'sandbox'};
 }
 
 module.exports =
