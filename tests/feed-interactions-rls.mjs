@@ -1,0 +1,54 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const db=new PGlite(),ids=Array.from({length:3},(_,i)=>`${i+1}`.repeat(8)+'-'+`${i+1}`.repeat(4)+'-4'+`${i+1}`.repeat(3)+'-8'+`${i+1}`.repeat(3)+'-'+`${i+1}`.repeat(12));
+const as=(id,query,args=[],role='authenticated')=>db.transaction(async tx=>{
+ await tx.exec(`set local role ${role}`);await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[id||'']);return tx.query(query,args);
+});
+const fails=fn=>assert.rejects(fn);
+try{
+ await db.exec(`create role authenticated;create role anon;create schema auth;
+ create table auth.users(id uuid primary key);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ grant usage on schema auth to authenticated;
+ create table public.profiles(id uuid primary key,display_name text,username text,avatar text);
+ create table public.event_feed_posts(id uuid primary key default gen_random_uuid(),event_id uuid,author_id uuid,body text);
+ create table public.social_posts(id uuid primary key default gen_random_uuid(),user_id uuid,content text);
+ create function public.event_is_visible(uuid) returns boolean language sql stable as $$select $1 is null or $1='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid$$;
+ alter table public.event_feed_posts enable row level security;
+ create policy event_read on public.event_feed_posts for select to authenticated using(event_id is null or public.event_is_visible(event_id));
+ alter table public.social_posts enable row level security;
+ create policy camera_read on public.social_posts for select to authenticated using(user_id=auth.uid());
+ grant select on public.event_feed_posts,public.social_posts to authenticated;`);
+ for(const id of ids){await db.query('insert into auth.users values($1)',[id]);await db.query('insert into public.profiles values($1,$2,$3,null)',[id,'User '+id[0],id[0]]);}
+ await db.exec(await readFile(new URL('../supabase/migrations/202609280003_feed_interactions.sql',import.meta.url),'utf8'));
+ const [a,b,c]=ids;
+ const publicPost=(await db.query('insert into public.event_feed_posts(author_id) values($1) returning id',[a])).rows[0].id;
+ const privatePost=(await db.query('insert into public.event_feed_posts(author_id,event_id) values($1,$2) returning id',[a,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'])).rows[0].id;
+ const camera=(await db.query('insert into public.social_posts(user_id) values($1) returning id',[a])).rows[0].id;
+ await as(b,'insert into public.feed_likes(event_post_id,user_id) values($1,$2)',[publicPost,b]);
+ await fails(()=>as(b,'insert into public.feed_likes(event_post_id,user_id) values($1,$2)',[publicPost,b]));
+ await fails(()=>as(b,'insert into public.feed_likes(event_post_id,user_id) values($1,$2)',[publicPost,a]));
+ await fails(()=>as(b,'insert into public.feed_likes(event_post_id,user_id) values($1,$2)',[privatePost,b]));
+ await fails(()=>as(b,'insert into public.feed_likes(camera_post_id,user_id) values($1,$2)',[camera,b]));
+ const summary=await as(a,"select public.feed_interactions('event',$1) as value",[publicPost]);
+ assert.equal(summary.rows[0].value.likes,1);
+ await fails(()=>as(b,"select public.feed_interactions('event',$1)",[privatePost]));
+ await fails(()=>as(b,"select public.feed_interactions('camera',$1)",[camera]));
+ await as(a,'insert into public.feed_likes(camera_post_id,user_id) values($1,$2)',[camera,a]);
+ const comment=(await as(b,'insert into public.feed_comments(event_post_id,author_id,body) values($1,$2,$3) returning id',[publicPost,b,'Bonsoir !'])).rows[0].id;
+ assert.equal((await as(a,"select public.feed_interactions('event',$1) as value",[publicPost])).rows[0].value.comments[0].author_name,'User 2');
+ await fails(()=>as(b,'insert into public.feed_comments(event_post_id,author_id,body) values($1,$2,$3)',[privatePost,b,'Secret']));
+ await fails(()=>as(c,'insert into public.feed_comments(event_post_id,author_id,body) values($1,$2,$3)',[publicPost,a,'Faux auteur']));
+ await fails(()=>as(a,'update public.feed_comments set body=$2 where id=$1',[comment,'modifié']));
+ await as(a,'delete from public.feed_comments where id=$1',[comment]);
+ assert.equal((await db.query('select count(*)::int n from public.feed_comments where id=$1',[comment])).rows[0].n,1);
+ await as(b,'delete from public.feed_comments where id=$1',[comment]);
+ assert.equal((await db.query('select count(*)::int n from public.feed_comments where id=$1',[comment])).rows[0].n,0);
+ await as(a,'delete from public.feed_likes where event_post_id=$1',[publicPost]);
+ assert.equal((await db.query('select count(*)::int n from public.feed_likes where event_post_id=$1',[publicPost])).rows[0].n,1);
+ await as(b,'delete from public.feed_likes where event_post_id=$1',[publicPost]);
+ assert.equal((await db.query('select count(*)::int n from public.feed_likes where event_post_id=$1',[publicPost])).rows[0].n,0);
+ await fails(()=>as(null,'select * from public.feed_likes',[],'anon'));
+ console.log('Fil : likes, commentaires, visibilité, auteurs et RLS : OK');
+}finally{await db.close();}

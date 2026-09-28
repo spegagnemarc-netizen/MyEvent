@@ -44,6 +44,7 @@
         view.textContent='Voir l’événement';actions.append(view);info.append(title,detail,actions);card.append(info);post.append(card);
       }
       $('socialFeed')?.append(post);
+      window.myeventFeedInteractions?.attach(post);
     }
     const empty=$('socialFeedEmpty');if(empty)empty.hidden=!!rows.length||!!$('socialFeed')?.querySelector('[data-camera-post-id]');
   }

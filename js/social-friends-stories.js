@@ -2,7 +2,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const context = () => window.myeventCameraContext?.() || {};
-  let activeId = null, channel = null, refreshTimer = null, storyTimer = null;
+  let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
@@ -324,6 +324,9 @@
         return result.error ? null : {...r,url:URL.createObjectURL(result.data),profile:profiles.get(r.author_id)};
       }));
       storyRows=media.filter(Boolean).sort((a,b)=>a.author_id.localeCompare(b.author_id)||a.created_at.localeCompare(b.created_at));
+      clearTimeout(stripExpiryTimer);
+      const nextExpiry=Math.min(...storyRows.map(r=>Date.parse(r.expires_at)));
+      if(Number.isFinite(nextExpiry))stripExpiryTimer=setTimeout(loadStories,Math.max(50,Math.min(nextExpiry-Date.now()+100,2147483647)));
       previous.forEach(r=>URL.revokeObjectURL(r.url));
       const strip=document.querySelector('#socialHome .socialStories');
       strip?.querySelectorAll('.socialStory[data-story-author]').forEach(x=>x.remove());
@@ -334,31 +337,45 @@
       if(friendStrip){
         friendStrip.replaceChildren();
         const own=latestOwnStory(user.id);
+        const tile=document.createElement('div');tile.className='friendStoryTile';
         const mine=document.createElement('button');mine.type='button';mine.className='friendStoryMini ownStoryMini';
         const ring=document.createElement('div');ring.className='miniRing';
         const inside=document.createElement('div');
-        if(own){const image=document.createElement(own.media_type==='video'?'video':'img');image.src=own.url;image.alt='';
-          if(own.media_type==='video'){image.muted=true;image.playsInline=true;image.preload='metadata';image.addEventListener('loadedmetadata',()=>{image.currentTime=.1},{once:true});}
-          inside.append(image);
+        if(own){inside.append(storyCardPreview(own));
         }else{const profileImage=document.querySelector('#profileAvatar img');if(profileImage)inside.append(profileImage.cloneNode(true));else inside.textContent='👤';}
-        ring.append(inside);const add=document.createElement('span');add.className='friendStoryAdd';add.textContent='+';ring.append(add);
+        ring.append(inside);
         const name=document.createElement('span');name.textContent='Votre story';mine.append(ring,name);
-        mine.addEventListener('click',e=>{if(e.target.closest('.friendStoryAdd')||!own){createStory();return;}
+        mine.addEventListener('click',()=>{if(!own){createStory();return;}
           const i=storyRows.findIndex(r=>r.id===own.id);if(i>=0)showStory(i);});
-        friendStrip.append(mine);
+        const add=document.createElement('button');add.type='button';add.className='friendStoryAdd';add.textContent='+';add.setAttribute('aria-label','Ajouter une Story');add.onclick=createStory;
+        tile.append(mine,add);friendStrip.append(tile);
       }
-      const seen=new Set();storyRows.forEach((r,i)=>{
-        if(r.author_id===user.id||seen.has(r.author_id))return;seen.add(r.author_id);
+      const latestByAuthor=new Map();storyRows.forEach((r,i)=>{
+        if(r.author_id!==user.id&&Date.parse(r.expires_at)>Date.now())latestByAuthor.set(r.author_id,{r,i});
+      });
+      latestByAuthor.forEach(({r,i})=>{
         if(!friendStrip)return;
         const mini=document.createElement('button');mini.type='button';mini.className='friendStoryMini';
         const ring=document.createElement('div');ring.className='miniRing';const inside=document.createElement('div');
-        inside.append(avatar(r.profile));ring.append(inside);
+        inside.append(storyCardPreview(r));ring.append(inside);
         const label=document.createElement('span');label.textContent=profileName(r.profile).split(/\s+/)[0];
         mini.append(ring,label);mini.onclick=()=>showStory(i);friendStrip.append(mini);
       });
       friendSection?.classList.remove('hidden');
       if(friendSection)friendSection.style.display='block';
     } catch(e) { console.warn('Stories indisponibles',e); }
+  }
+  function storyCardPreview(story){
+    if(story.media_type!=='video'){const image=document.createElement('img');image.src=story.url;image.alt='';return image;}
+    const frame=document.createElement('video');frame.src=story.url;frame.muted=true;frame.playsInline=true;frame.preload='metadata';
+    frame.addEventListener('loadedmetadata',()=>{if(frame.duration&&frame.isConnected)frame.currentTime=Math.min(.2,frame.duration/2);},{once:true});
+    frame.addEventListener('seeked',()=>{if(!frame.isConnected||!frame.videoWidth)return;
+      try{const canvas=document.createElement('canvas');canvas.width=160;canvas.height=Math.round(160*frame.videoHeight/frame.videoWidth);
+        canvas.getContext('2d').drawImage(frame,0,0,canvas.width,canvas.height);
+        const image=document.createElement('img');image.alt='';image.src=canvas.toDataURL('image/jpeg',.8);frame.replaceWith(image);
+      }catch(_){/* The paused video frame remains visible if Safari blocks canvas capture. */}
+    },{once:true});
+    return frame;
   }
   async function publishStory(file) {
     const {sb,user}=context(); if(!sb || !user || !file) return;
@@ -502,7 +519,7 @@
   $('socialFriendInviteShareBtn')?.addEventListener('click',shareInvitation);
   $('socialFriendInviteAccept')?.addEventListener('click',acceptInvitation);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden && activeId)scheduleRefresh();});
-  setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
+  setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];clearTimeout(stripExpiryTimer);storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
     if(user)start();},1000);
   setInterval(()=>{if(activeId){loadFriends();loadStories();}},60000);
   // Aggregates can change through friends' likes even when their individual rows are hidden by RLS.

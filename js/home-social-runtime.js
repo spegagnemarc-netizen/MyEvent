@@ -44,12 +44,13 @@
     finally{button.disabled=false;}
   });
   document.addEventListener('click',e=>{
-    const like=e.target.closest('.socialLikeBtn');if(like){let n=parseInt(like.querySelector('span').textContent||'0',10);const active=like.classList.toggle('active');n+=active?1:-1;like.querySelector('span').textContent=n;like.firstChild.textContent=active?'♥ J’aime ':'♡ J’aime ';return}
+    const like=e.target.closest('.socialLikeBtn');if(like){window.myeventFeedInteractions?.mutate(like.closest('.socialPost'),'like',like);return}
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
     const interest=e.target.closest('.socialInterestBtn');if(interest){interest.textContent='✅ Intérêt enregistré';interest.classList.add('active');return}
     const follow=e.target.closest('.socialFollowBtn');if(follow){$s('socialFriendsShortcut')?.click();const input=document.querySelector('#socialFriendsView .socialSearch input');if(input)input.focus();const notice=$s('socialFriendStatus');if(notice)notice.textContent='Recherche la personne dans Amis pour lui envoyer une vraie demande.';return}
     const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
-    const send=e.target.closest('.socialCommentBox button');if(send){const box=send.closest('.socialCommentBox'),input=box.querySelector('input');if(input.value.trim()){send.textContent='✓ Envoyé';input.value='';setTimeout(()=>send.textContent='Envoyer',900)}return}
+    const send=e.target.closest('.socialCommentBox button:not(.socialCommentDelete)');if(send){window.myeventFeedInteractions?.mutate(send.closest('.socialPost'),'send',send);return}
+    const removeComment=e.target.closest('.socialCommentDelete');if(removeComment){window.myeventFeedInteractions?.mutate(removeComment.closest('.socialPost'),'delete',removeComment);return}
     const msg=e.target.closest('.socialMessageBtn');if(msg){msg.textContent='✓ Messagerie';return}
     const view=e.target.closest('.socialViewEventBtn');if(view){window.myeventViewSocialEvent?.(view.dataset.eventId);return}
   });
@@ -630,6 +631,7 @@
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:250px;max-height:250px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
     post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
+    window.myeventFeedInteractions?.attach(post);
   }
   async function loadCameraFeedPosts(){
     if(typeof window.myeventLoadCameraPosts!=='function')return;
