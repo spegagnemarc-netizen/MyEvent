@@ -80,6 +80,23 @@
 #socialStoryViewer .storyOwnerActions{display:flex;justify-content:flex-end;gap:10px;padding:10px 18px 18px}
 #socialStoryViewer .storyOwnerActions button{position:static!important;width:auto!important}
 
+/* Story reactions sit above the home indicator and remain usable with the iPhone keyboard. */
+#socialStoryViewer .storyInteractions{position:absolute;z-index:5;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#080b10d9;border-radius:16px;padding:8px}
+#socialStoryViewer .storyLike,#socialStoryViewer .storyLikers{width:auto;min-width:0;padding:7px 10px;border:1px solid #ffffff77;border-radius:18px;background:#19202b;color:#fff}
+#socialStoryViewer .storyLike[aria-pressed="true"]{color:#ff718f;border-color:#ff718f}
+#socialStoryViewer .storyReply{display:flex;gap:6px;flex:1 1 170px;min-width:0}
+#socialStoryViewer .storyReply[hidden],#socialStoryViewer .storyLikers[hidden],#socialStoryViewer .storyLikersPanel[hidden]{display:none!important}
+#socialStoryViewer .storyReply input{flex:1;min-width:0;padding:9px;border:1px solid #ffffff77;border-radius:20px;background:#1a2029;color:white;font-size:16px}
+#socialStoryViewer .storyReply button{width:auto;min-width:0;padding:8px 11px;border-radius:18px;color:#fff;background:var(--myevent-accent-fill);border:1px solid var(--myevent-accent)}
+#socialStoryViewer .storyInteractionStatus{flex-basis:100%;margin:0;font-size:12px;line-height:1.25;color:#eee}
+#socialStoryViewer .storyInteractionStatus:empty{display:none}
+#socialStoryViewer .storyLikersPanel{position:absolute;z-index:8;inset:15% 5% 20%;overflow:auto;background:#151c27;border:1px solid #ffffff55;border-radius:18px;padding:18px}
+#socialStoryViewer .storyLikersPanel>button{float:right;width:auto;background:transparent;color:white;border:0;font-size:24px}
+#socialStoryViewer .storyLiker{display:flex;align-items:center;gap:10px;padding:7px;border-bottom:1px solid #ffffff22}
+#socialStoryViewer .storyLiker .socialPostAvatar{width:34px;height:34px;border-radius:50%;overflow:hidden}
+#socialStoryViewer .storyCaption{bottom:calc(16% + env(safe-area-inset-bottom));pointer-events:none}
+#socialStoryViewer .storyOwnerActions{position:absolute;z-index:4;right:6px;bottom:calc(68px + env(safe-area-inset-bottom));padding:0}
+
 
 /* Friends list — one compact row per person, with lightweight actions. */
 #socialHome #socialFriendsView .socialPerson{

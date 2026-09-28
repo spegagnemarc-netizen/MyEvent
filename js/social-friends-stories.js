@@ -3,7 +3,7 @@
   const $ = id => document.getElementById(id);
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null;
-  let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0;
+  let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
@@ -229,31 +229,80 @@
   }
   function initializeViewer() {
     const el = document.createElement('div'); el.id = 'socialStoryViewer'; el.className = 'socialStoryViewer'; el.hidden = true;
-    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><div class="storyOwnerActions"><button type="button" class="storyAddNew" data-story="add">＋ Nouvelle story</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button></div>';
+    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><div class="storyInteractions"><button type="button" class="storyLike" data-story="like" aria-label="Aimer la Story" aria-pressed="false">♡ <span>0</span></button><button type="button" class="storyLikers" data-story="likers" hidden>Voir les likes</button><form class="storyReply"><input maxlength="3750" placeholder="Répondre à la Story…" aria-label="Répondre à la Story"><button type="submit">Envoyer</button></form><p class="storyInteractionStatus" role="status"></p></div><div class="storyLikersPanel" hidden><button type="button" data-story="hide-likers" aria-label="Fermer la liste">✕</button><h3>J’aime</h3><div class="storyLikersList"></div></div><div class="storyOwnerActions"><button type="button" class="storyAddNew" data-story="add">＋ Nouvelle story</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button></div>';
     document.body.append(el);
     el.addEventListener('click', e => { const action = e.target.closest('[data-story]')?.dataset.story;
       if(action === 'close') closeViewer(); if(action === 'previous') showStory(viewerIndex - 1);
-      if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory(); });
+      if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory();
+      if(action === 'like') toggleStoryLike(); if(action === 'likers') showStoryLikers();
+      if(action === 'hide-likers') el.querySelector('.storyLikersPanel').hidden=true; });
+    el.querySelector('.storyReply').addEventListener('submit',replyToStory);
     let touchX = 0; el.addEventListener('touchstart',e => { touchX=e.changedTouches[0].clientX; },{passive:true});
     el.addEventListener('touchend',e => {const diff=e.changedTouches[0].clientX-touchX;
-      if(Math.abs(diff)>60) showStory(viewerIndex+(diff<0?1:-1));},{passive:true});
+      if(e.target.closest('.storyInteractions,.storyLikersPanel') || Math.abs(diff)<60)return;
+      showStory(viewerIndex+(diff<0?1:-1));},{passive:true});
     document.addEventListener('keydown',e => {if(el.hidden)return;
       if(e.key==='Escape')closeViewer(); if(e.key==='ArrowRight')showStory(viewerIndex+1);
       if(e.key==='ArrowLeft')showStory(viewerIndex-1); });
   }
-  function closeViewer() { clearTimeout(storyTimer); const el=$('socialStoryViewer'); el.hidden=true; el.querySelector('.storyMedia').replaceChildren(); document.body.style.overflow=''; }
+  function closeViewer() { clearTimeout(storyTimer); interactionTicket++; const el=$('socialStoryViewer'); el.hidden=true; el.querySelector('.storyMedia').replaceChildren(); document.body.style.overflow=''; }
+  async function refreshStoryLike(id,ticket=interactionTicket) {
+    const {sb}=context(); if(!sb)return;
+    try {const data=check(await sb.rpc('story_like_summary',{target_story:id}));
+      if(ticket!==interactionTicket || storyRows[viewerIndex]?.id!==id)return;
+      const button=$('socialStoryViewer').querySelector('.storyLike');
+      button.dataset.liked=String(data.liked);button.setAttribute('aria-pressed',String(data.liked));
+      button.firstChild.textContent=data.liked?'♥ ':'♡ ';
+      button.querySelector('span').textContent=data.count;
+    }catch(e){if(ticket===interactionTicket)storyInteractionStatus('Likes indisponibles : '+e.message);}
+  }
+  function storyInteractionStatus(message){$('socialStoryViewer').querySelector('.storyInteractionStatus').textContent=message;}
+  async function toggleStoryLike(){const item=storyRows[viewerIndex],{sb,user}=context();if(!item||!user)return;
+    const button=$('socialStoryViewer').querySelector('.storyLike');button.disabled=true;
+    try {if(button.dataset.liked==='true')check(await sb.from('social_story_likes').delete().eq('story_id',item.id).eq('user_id',user.id));
+      else check(await sb.from('social_story_likes').insert({story_id:item.id,user_id:user.id}));
+      await refreshStoryLike(item.id);
+    }catch(e){storyInteractionStatus('Like impossible : '+e.message);}finally{button.disabled=false;}
+  }
+  async function showStoryLikers(){const item=storyRows[viewerIndex],{sb,user}=context();if(!item||item.author_id!==user?.id)return;
+    const panel=$('socialStoryViewer').querySelector('.storyLikersPanel'),list=panel.querySelector('.storyLikersList');
+    panel.hidden=false;list.textContent='Chargement…';
+    try {const rows=check(await sb.from('social_story_likes').select('user_id').eq('story_id',item.id));
+      const profiles=await profilesFor(rows.map(r=>r.user_id));if(storyRows[viewerIndex]?.id!==item.id||panel.hidden)return;
+      list.replaceChildren();rows.forEach(row=>{const p=profiles.get(row.user_id),entry=document.createElement('div');
+        entry.className='storyLiker';entry.append(avatar(p),document.createTextNode(profileName(p)));list.append(entry);});
+      if(!rows.length)list.textContent='Aucun like pour le moment.';
+    }catch(e){list.textContent=e.message;}
+  }
+  async function replyToStory(e){e.preventDefault();const item=storyRows[viewerIndex],{sb,user}=context();
+    if(!item||!user||item.author_id===user.id)return;
+    const form=e.currentTarget,input=form.querySelector('input'),message=input.value.trim();if(!message)return;
+    const button=form.querySelector('button');button.disabled=true;storyInteractionStatus('Envoi…');
+    try {const conversation=check(await sb.rpc('dm_open',{other_id:item.author_id}));
+      const caption=item.caption?.trim();const contextText=`↩ Réponse à la Story du ${new Date(item.created_at).toLocaleString('fr-FR')}${caption?' · '+caption.slice(0,100):''}\n${message}`;
+      check(await sb.rpc('dm_send',{target_conversation:conversation,message_body:contextText,client_nonce:crypto.randomUUID()}));
+      input.value='';storyInteractionStatus('Réponse envoyée dans Messages privés.');
+    }catch(error){storyInteractionStatus('Envoi impossible : '+error.message);}finally{button.disabled=false;}
+  }
   function showStory(index) {
     if(index < 0 || index >= storyRows.length) { closeViewer(); return; }
-    clearTimeout(storyTimer); viewerIndex=index; startedAt=Date.now();
+    if(Date.parse(storyRows[index].expires_at)<=Date.now()){loadStories();closeViewer();return;}
+    clearTimeout(storyTimer); interactionTicket++;viewerIndex=index; startedAt=Date.now();
     const item=storyRows[index], el=$('socialStoryViewer'); el.hidden=false; document.body.style.overflow='hidden';
     el.querySelector('.storyHeader b').textContent=profileName(item.profile);
     el.querySelector('.storyCaption').textContent=item.caption || '';
     const own=item.author_id===context().user?.id; el.querySelector('.storyDelete').hidden=!own; el.querySelector('.storyAddNew').hidden=!own;
+    el.querySelector('.storyReply').hidden=own;el.querySelector('.storyReply input').value='';
+    el.querySelector('.storyLikers').hidden=!own;el.querySelector('.storyLikersPanel').hidden=true;
+    el.querySelector('.storyLike').dataset.liked='false';el.querySelector('.storyLike').setAttribute('aria-pressed','false');
+    el.querySelector('.storyLike').firstChild.textContent='♡ ';el.querySelector('.storyLike span').textContent='…';storyInteractionStatus('');
+    refreshStoryLike(item.id);
     const media=document.createElement(item.media_type==='video'?'video':'img'); media.src=item.url;
     if(item.media_type==='video') { media.autoplay=true; media.playsInline=true; media.addEventListener('ended',()=>showStory(viewerIndex+1),{once:true}); }
     el.querySelector('.storyMedia').replaceChildren(media);
     const progress=el.querySelector('.storyProgress span'); progress.style.width='0%';
-    const tick=()=>{if(el.hidden)return; const duration=item.media_type==='video' ? Math.min(30000,media.duration*1000||15000) : 5000;
+    const tick=()=>{if(el.hidden||storyRows[viewerIndex]?.id!==item.id)return; const duration=item.media_type==='video' ? Math.min(30000,media.duration*1000||15000) : 5000;
+      if(el.querySelector('.storyReply input')===document.activeElement||!el.querySelector('.storyLikersPanel').hidden){startedAt+=100;storyTimer=setTimeout(tick,100);return;}
       const ratio=Math.min(1,(Date.now()-startedAt)/duration); progress.style.width=(ratio*100)+'%';
       if(ratio>=1)showStory(viewerIndex+1); else storyTimer=setTimeout(tick,100);}; tick();
   }
@@ -428,7 +477,11 @@
     loadFriends().then(inspectInvitation);loadStories();
     channel=sb.channel('social-'+user.id)
       .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},scheduleRefresh)
-      .on('postgres_changes',{event:'*',schema:'public',table:'social_stories'},scheduleRefresh).subscribe();
+      .on('postgres_changes',{event:'*',schema:'public',table:'social_stories'},scheduleRefresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'social_story_likes'},()=>{
+        const viewer=$('socialStoryViewer'),item=storyRows[viewerIndex];
+        if(viewer&&!viewer.hidden&&item)refreshStoryLike(item.id);
+      }).subscribe();
   }
   setupCreation(); initializeViewer();
   const myStoryShortcut=$('socialMyStory');
@@ -452,4 +505,8 @@
   setInterval(()=>{const {sb,user}=context();if((!user || user.id!==activeId) && activeId){channel&&sb?.removeChannel(channel);channel=null;activeId=null;relations=[];storyRows.forEach(r=>URL.revokeObjectURL(r.url));storyRows=[];showMyStoryThumbnail(null);closeViewer();}
     if(user)start();},1000);
   setInterval(()=>{if(activeId){loadFriends();loadStories();}},60000);
+  // Aggregates can change through friends' likes even when their individual rows are hidden by RLS.
+  setInterval(()=>{const viewer=$('socialStoryViewer'),item=storyRows[viewerIndex];
+    if(activeId&&!document.hidden&&viewer&&!viewer.hidden&&item)refreshStoryLike(item.id);
+  },15000);
 })();

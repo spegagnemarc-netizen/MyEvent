@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {setup,users,as,rpc} from './games-db.mjs';
+const db=await setup();
+try{
+ await db.exec(await readFile(new URL('../supabase/migrations/202609280001_social_inbox.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../supabase/migrations/202609280002_story_interactions.sql',import.meta.url),'utf8'));
+ const [a,b,c]=users;
+ const fails=fn=>assert.rejects(fn);
+ await rpc(db,a,'friend_action',{other_id:b,action:'send'});
+ await rpc(db,b,'friend_action',{other_id:a,action:'accept'});
+ const story=(await as(db,a,"insert into public.social_stories(author_id,media_path,media_type) values($1,$2,'image') returning id",[a,`${a}/photo.jpg`])).rows[0].id;
+ assert.equal((await rpc(db,b,'story_like_summary',{target_story:story})).count,0);
+ await as(db,b,'insert into public.social_story_likes(story_id,user_id) values($1,$2)',[story,b]);
+ await fails(()=>as(db,b,'insert into public.social_story_likes(story_id,user_id) values($1,$2)',[story,b]));
+ await fails(()=>as(db,c,'insert into public.social_story_likes(story_id,user_id) values($1,$2)',[story,c]));
+ await fails(()=>as(db,b,'insert into public.social_story_likes(story_id,user_id) values($1,$2)',[story,a]));
+ assert.equal((await rpc(db,a,'story_like_summary',{target_story:story})).count,1);
+ assert.equal((await rpc(db,b,'story_like_summary',{target_story:story})).liked,true);
+ await fails(()=>rpc(db,c,'story_like_summary',{target_story:story}));
+ assert.equal((await as(db,a,'select * from public.social_story_likes where story_id=$1',[story])).rows.length,1);
+ assert.equal((await as(db,c,'select * from public.social_story_likes where story_id=$1',[story])).rows.length,0);
+ await fails(()=>as(db,a,'update public.social_story_likes set user_id=$1 where story_id=$2',[a,story]));
+ await as(db,a,'delete from public.social_story_likes where story_id=$1',[story]);
+ assert.equal((await rpc(db,b,'story_like_summary',{target_story:story})).count,1);
+ await as(db,b,'delete from public.social_story_likes where story_id=$1',[story]);
+ assert.equal((await rpc(db,a,'story_like_summary',{target_story:story})).count,0);
+ const conversation=await rpc(db,b,'dm_open',{other_id:a});
+ await rpc(db,b,'dm_send',{target_conversation:conversation,message_body:'↩ Réponse à la Story du 28/09\nSuper !',client_nonce:crypto.randomUUID()});
+ assert.match((await rpc(db,a,'dm_history',{target_conversation:conversation})).messages[0].body,/Réponse à la Story/);
+ await db.query("update public.social_stories set expires_at=now()-interval '1 second' where id=$1",[story]);
+ await fails(()=>rpc(db,b,'story_like_summary',{target_story:story}));
+ await fails(()=>as(db,b,'insert into public.social_story_likes(story_id,user_id) values($1,$2)',[story,b]));
+ await fails(()=>as(db,null,'select * from public.social_story_likes',[],'anon'));
+ await db.query('delete from public.social_stories where id=$1',[story]);
+ assert.equal((await db.query('select count(*)::int as n from public.social_story_likes')).rows[0].n,0);
+ console.log('Story likes, confidentialité, expiration, unicité et réponse DM : OK');
+}finally{await db.close();}
