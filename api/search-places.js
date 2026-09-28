@@ -493,7 +493,7 @@ async function searchViator(req,lat,lon) {
 
   const radius=Math.min(200,Math.max(1,number(req.query.radius)??5));
   const maxPrice=number(req.query.maxPrice);
-  const requestedCount=Math.min(50,Math.max(1,Math.round(number(req.query.count)||30)));
+  const requestedCount=Math.min(100,Math.max(1,Math.round(number(req.query.count)||60)));
 
   // Viator search is destination-based rather than a true radial query. Search
   // several surrounding destinations, then merge/dedupe and rank using each
@@ -562,7 +562,24 @@ async function searchViator(req,lat,lon) {
 
   const inRadius=results.filter(x=>x.distance<=radius);
   const fallbackUsed=inRadius.length===0&&results.length>0;
-  const finalResults=(fallbackUsed?results:inRadius).slice(0,requestedCount);
+  // Diversify the final list geographically: a dense tourist hub must not
+  // monopolise the search. Group nearby activities into ~15 km clusters and
+  // keep at most 10 products per cluster before filling from the next zones.
+  const sourceResults=fallbackUsed?results:inRadius;
+  const clusters=[];
+  const diversified=[];
+  for(const item of sourceResults){
+    let cluster=clusters.find(group=>distanceKm(item.lat,item.lon,group.lat,group.lon)<=15);
+    if(!cluster){
+      cluster={lat:item.lat,lon:item.lon,count:0};
+      clusters.push(cluster);
+    }
+    if(cluster.count>=10)continue;
+    cluster.count++;
+    diversified.push(item);
+    if(diversified.length>=requestedCount)break;
+  }
+  const finalResults=diversified;
   return {
     results:finalResults,totalCount,radius,fallbackUsed,
     searchedDestinations:candidates.length,
