@@ -79,6 +79,17 @@ function normalizeElement(x, index) {
   };
 }
 
+function isRelevantRentalVenue(item) {
+  const name=String(item?.name||'').toLowerCase();
+  const type=String(item?.typeLabel||'').toLowerCase();
+  const strongName=/(salle des f[eê]tes|salle de r[eé]ception|espace [eé]v[eé]nementiel|centre de conf[eé]rence|conference|s[eé]minaire|seminaire|wedding|reception|domaine)/i.test(name);
+  const strongType=/(events_venue|conference_centre)/i.test(type);
+  const hallName=/(salle|hall|foyer|maison des associations|centre culturel)/i.test(name);
+  const community=/(community_centre|village_hall|community_hall)/i.test(type);
+  const excluded=/(gymnase|gymnasium|stade|stadium|piscine|swimming|tennis|fitness|dojo|sport|school|école|ecole|mairie|townhall|hôtel de ville|hotel de ville|parking|église|eglise|church|hospital)/i.test(name+' '+type);
+  return !excluded && (strongName || strongType || (community && hallName));
+}
+
 function distanceKm(aLat, aLon, bLat, bLon) {
   const R = 6371;
   const rad = Math.PI / 180;
@@ -202,11 +213,13 @@ module.exports = async function handler(req, res) {
     );
   }
 
+  // V1: keep this search deliberately narrow. Generic public buildings,
+  // hotels and sports facilities produced many false positives.
   const query = `[out:json][timeout:20];(
-    nwr(around:${radius * 1000},${lat},${lon}) [amenity~"community_centre|social_centre|conference_centre|events_venue"];
-    nwr(around:${radius * 1000},${lat},${lon}) [building~"civic|public"];
-    nwr(around:${radius * 1000},${lat},${lon}) [tourism~"hotel|guest_house"];
-    nwr(around:${radius * 1000},${lat},${lon}) [leisure~"sports_hall|sports_centre"];
+    nwr(around:${radius * 1000},${lat},${lon}) [amenity~"events_venue|conference_centre"];
+    nwr(around:${radius * 1000},${lat},${lon}) [amenity="community_centre"];
+    nwr(around:${radius * 1000},${lat},${lon}) [community_centre~"village_hall|community_hall"];
+    nwr(around:${radius * 1000},${lat},${lon}) [name~"salle des fêtes|salle des fetes|salle de réception|salle de reception|espace événementiel|espace evenementiel|domaine|séminaire|seminaire|wedding|reception",i];
   );out center tags;`;
 
   let data = null;
@@ -260,7 +273,7 @@ module.exports = async function handler(req, res) {
         i
       );
 
-    if (!item) continue;
+    if (!item || !isRelevantRentalVenue(item)) continue;
 
     const key =
       `${item.name}|${item.lat.toFixed(5)}|${item.lon.toFixed(5)}`
