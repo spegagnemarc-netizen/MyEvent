@@ -164,6 +164,14 @@ $('draftForm').addEventListener('submit',async e=>{
 });
 $('draftDialog').addEventListener('cancel',e=>{if(formBusy)e.preventDefault();});
 
+async function refreshUnread(){
+  if(!user||!store)return;
+  try{
+    const count=await store.unread();
+    const b=$('inboxButton');
+    if(b){b.textContent=count>0?'Messages ('+count+')':'Messages';b.setAttribute('aria-label',count>0?count+' message'+(count>1?'s':'')+' non lu'+(count>1?'s':''):'Messages marketplace');}
+  }catch(_){}
+}
 async function openInbox(id=null){
   if(!requireUser())return;showDialog('inboxDialog');$('messageStatus').textContent='';
   try{
@@ -173,7 +181,7 @@ async function openInbox(id=null){
     const selected=rows.find(t=>t.id===(id||thread?.id));if(selected)await openThread(selected);
   }catch(e){$('messageStatus').textContent=errorMessage(e);toast(errorMessage(e));}
 }
-async function openThread(row){if(thread?.id!==row.id){$('messageForm').reset();$('messageStatus').textContent='';}thread=row;threadRevision++;$('conversation').hidden=false;$('conversationTitle').textContent=row.listing_title;await refreshMessages();}
+async function openThread(row){if(thread?.id!==row.id){$('messageForm').reset();$('messageStatus').textContent='';}thread=row;threadRevision++;$('conversation').hidden=false;$('conversationTitle').textContent=row.listing_title;try{await store.markRead(row.id);}catch(_){}await refreshUnread();await refreshMessages();}
 async function refreshMessages(){
   clearTimeout(messageTimer);if(!thread||!$('inboxDialog').open||!user)return;const revision=threadRevision,id=thread.id;
   try{
@@ -229,7 +237,7 @@ function startMarketplaceRealtime(){
   stopMarketplaceRealtime();
   const accountId=user.id;
   marketRealtimeChannel=client.channel('marketplace-'+accountId)
-    .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_messages'},()=>{if(user?.id===accountId&&thread&&$('inboxDialog').open)refreshMessages();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_messages'},()=>{if(user?.id!==accountId)return;refreshUnread();if(thread&&$('inboxDialog').open)refreshMessages();})
     .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_threads'},()=>{if(user?.id===accountId&&$('inboxDialog').open)openInbox(thread?.id);})
     .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_listings'},()=>{if(user?.id===accountId)load();})
     .subscribe();
@@ -246,7 +254,7 @@ try{
   client=window.supabase.createClient(projectUrl,publishableKey);store=createMarketplaceStore(client);
   client.auth.onAuthStateChange((_event,session)=>{
     // Schedule work outside the auth callback (avoid SDK auth-lock deadlocks).
-    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());startMarketplaceRealtime();load();}},0);
+    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());startMarketplaceRealtime();refreshUnread();load();}},0);
   });
 }catch(error){status(errorMessage(error));empty('Connexion indisponible');}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(messageTimer);else if($('inboxDialog').open)refreshMessages();});
