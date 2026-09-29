@@ -3415,7 +3415,15 @@ function subscribeRealtime(){
       typingUsers.set(payload.user_id,{name:payload.name||'Quelqu’un',until:Date.now()+2200});
       renderTypingIndicator();
     })
-    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'event_id=eq.'+event.id},async(payload)=>{
+      await loadMessages();
+      await refreshNotifications(false);
+      const content=String(payload?.new?.content||payload?.old?.content||'');
+      if(content.startsWith('[[MYEVENT_TRANSPORT]]')||content.startsWith('[[MYEVENT_LOCAL_TRAVEL]]')||content.startsWith('[[MYEVENT_ACCOMMODATION]]')){
+        if(typeof v58LoadModuleLists==='function')await v58LoadModuleLists();
+        if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent();
+      }
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async()=>{ await loadMessages(); })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
@@ -3423,6 +3431,13 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},async()=>{ await loadMembers(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await loadMessages(); await refreshNotifications(false); })
   .on('postgres_changes',{event:'*',schema:'public',table:'voice_messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_outings',filter:'event_id=eq.'+event.id},async()=>{ if(typeof loadSelectedOuting==='function')await loadSelectedOuting(); if(typeof refreshReservationBoxes==='function')await refreshReservationBoxes(); if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_outing_plans',filter:'event_id=eq.'+event.id},async()=>{ if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_outing_plan_reservations',filter:'event_id=eq.'+event.id},async()=>{ if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_hall_settings',filter:'event_id=eq.'+event.id},async()=>{ if(typeof loadHallSettings==='function')await loadHallSettings(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_fund_entries',filter:'event_id=eq.'+event.id},async()=>{ if(typeof loadFund==='function')await loadFund(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_fund_settings',filter:'event_id=eq.'+event.id},async()=>{ if(typeof loadFund==='function')await loadFund(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'event_supplies',filter:'event_id=eq.'+event.id},async()=>{ if(typeof loadSupplies==='function')await loadSupplies(); })
     .subscribe((status)=>{
       if(status==='SUBSCRIBED'){ global('Discussion et sondages en temps réel.','ok'); setupTypingInput(); }
     });
