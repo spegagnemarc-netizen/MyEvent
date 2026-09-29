@@ -3424,10 +3424,27 @@ function subscribeRealtime(){
         if(typeof renderInlineSelectedEvent==='function')await renderInlineSelectedEvent();
       }
     })
-    .on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async()=>{ await loadMessages(); })
+    // Child tables do not expose event_id directly. Ignore unrelated realtime
+    // changes by checking whether their parent belongs to the active event.
+    .on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async(payload)=>{
+      const messageId=payload.new?.message_id||payload.old?.message_id;
+      if(!messageId)return;
+      const {data}=await sb.from('messages').select('event_id').eq('id',messageId).maybeSingle();
+      if(data?.event_id===event.id)await loadMessages();
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'polls',filter:'event_id=eq.'+event.id},async()=>{ await loadPolls(); await refreshNotifications(false); })
-    .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},()=>loadPolls())
-    .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},async()=>{ await loadPolls(); await refreshNotifications(false); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'poll_options'},async(payload)=>{
+      const pollId=payload.new?.poll_id||payload.old?.poll_id;
+      if(!pollId)return;
+      const {data}=await sb.from('polls').select('event_id').eq('id',pollId).maybeSingle();
+      if(data?.event_id===event.id)await loadPolls();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'poll_votes'},async(payload)=>{
+      const pollId=payload.new?.poll_id||payload.old?.poll_id;
+      if(!pollId)return;
+      const {data}=await sb.from('polls').select('event_id').eq('id',pollId).maybeSingle();
+      if(data?.event_id===event.id){await loadPolls();await refreshNotifications(false);}
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'event_members',filter:'event_id=eq.'+event.id},async()=>{ await loadMembers(); await refreshNotifications(false); })
     .on('postgres_changes',{event:'*',schema:'public',table:'media',filter:'event_id=eq.'+event.id},async()=>{ await loadMedia(); await loadMessages(); await refreshNotifications(false); })
   .on('postgres_changes',{event:'*',schema:'public',table:'voice_messages',filter:'event_id=eq.'+event.id},async()=>{ await loadMessages(); await refreshNotifications(false); })
