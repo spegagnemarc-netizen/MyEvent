@@ -57,7 +57,13 @@
     const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
     const send=e.target.closest('.socialCommentBox button:not(.socialCommentDelete)');if(send){window.myeventFeedInteractions?.mutate(send.closest('.socialPost'),'send',send);return}
     const removeComment=e.target.closest('.socialCommentDelete');if(removeComment){window.myeventFeedInteractions?.mutate(removeComment.closest('.socialPost'),'delete',removeComment);return}
-    const msg=e.target.closest('.socialMessageBtn');if(msg){msg.textContent='✓ Messagerie';return}
+    const msg=e.target.closest('.socialMessageBtn');if(msg){
+      const post=msg.closest('.socialPost');
+      const peerId=msg.dataset.userId||msg.dataset.authorId||post?.dataset.userId||post?.dataset.authorId||post?.dataset.author;
+      if(peerId&&window.myeventSocialInbox?.openPeer){window.myeventSocialInbox.openPeer(peerId);return}
+      if(window.myeventSocialInbox?.open){window.myeventSocialInbox.open('messages');return}
+      tab('messages');return
+    }
     const view=e.target.closest('.socialViewEventBtn');if(view){window.myeventViewSocialEvent?.(view.dataset.eventId);return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
