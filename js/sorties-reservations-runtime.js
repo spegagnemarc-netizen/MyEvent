@@ -672,14 +672,14 @@ async function saveEventReservation(outingId,prefix){
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
   document.getElementById(prefix+'ReservationForm')?.remove();
   refreshReservationBoxes();
-  msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
+  msg('outingMsg','📅 Demande enregistrée dans MyEvent. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
 }
 function reservationStatusLabel(r){
   if(!r)return 'Aucune réservation enregistrée.';
   const d=r.reserved_at?new Date(r.reserved_at):null;
   const when=d&&!Number.isNaN(d.getTime())?d.toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'';
-  const status=r.status==='confirmed'?'confirmée':r.status==='cancelled'?'annulée':'à confirmer';
-  return '📅 Réservation <b>'+status+'</b>'+(when?' · '+esc(when):'')+' · '+esc(String(r.party_size||1))+' pers.';
+  const status=r.status==='confirmed'?'validée dans MyEvent':r.status==='cancelled'?'annulée':'à valider dans MyEvent';
+  return '📅 Suivi <b>'+status+'</b>'+(when?' · '+esc(when):'')+' · '+esc(String(r.party_size||1))+' pers.';
 }
 function reservationBoxHtml(prefix){
   if(!currentReservation)return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div><div class="muted">Aucune réservation enregistrée.</div><button type="button" class="secondary" id="'+prefix+'ReservationOpen">📅 Préparer la réservation</button><div id="'+prefix+'ReservationHost"></div></div>';
@@ -898,7 +898,7 @@ loadSelectedOuting=async function(){
       saveLocalReservationSnapshot(currentReservation);
       document.getElementById(prefix+'ReservationForm')?.remove();
       await refreshReservationBoxes();
-      msg('outingMsg','📅 Réservation préparée et enregistrée dans ton événement.','ok');
+      msg('outingMsg','📅 Demande enregistrée dans MyEvent. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
     }catch(err){
       console.error(err);
       alert('Erreur pendant l’enregistrement : '+(err?.message||err));
@@ -927,7 +927,7 @@ loadSelectedOuting=async function(){
   function isOrganizer(){ return !!(event && user && (event.creator_id === user.id || activeEventRole === 'coorganizer')); }
   async function confirmEventReservation(){
     if(!event)return;
-    if(!isOrganizer()){ alert('Seul l’organisateur peut confirmer la réservation.'); return; }
+    if(!isOrganizer()){ alert('Seul un organisateur peut valider ce suivi dans MyEvent.'); return; }
     // V54.24 : relecture obligatoire juste avant confirmation pour éviter
     // qu'un bloc Planning affiche une réservation devenue obsolète.
     try{
@@ -943,7 +943,7 @@ loadSelectedOuting=async function(){
     }
     if(!currentReservation){
       await refreshReservationBoxes();
-      alert('Impossible de confirmer la réservation : aucune réservation à confirmer.');
+      alert('Impossible de valider le suivi : aucune demande enregistrée.');
       return;
     }
     if(currentReservation.event_id && String(currentReservation.event_id)!==String(event.id)){
@@ -960,19 +960,19 @@ loadSelectedOuting=async function(){
     }
     if(currentReservation.status!=='pending'){
       await refreshReservationBoxes();
-      alert('Cette réservation n’est plus à confirmer.');
+      alert('Ce suivi n’est plus en attente de validation.');
       return;
     }
     const r=await sb.rpc('confirm_event_reservation',{p_event_id:event.id});
     if(r.error){
       console.error('confirm_event_reservation',r.error);
       await refreshReservationBoxes();
-      alert('Impossible de confirmer la réservation : '+r.error.message);
+      alert('Impossible de valider le suivi dans MyEvent : '+r.error.message);
       return;
     }
     currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
     await refreshReservationBoxes();
-    msg('outingMsg','✅ Réservation confirmée.','ok');
+    msg('outingMsg','✅ Suivi validé dans MyEvent. Vérifie la confirmation réelle auprès du prestataire.','ok');
   }
   window.confirmEventReservationV536=confirmEventReservation;
   const oldReservationBoxHtmlV536=reservationBoxHtml;
@@ -982,7 +982,7 @@ loadSelectedOuting=async function(){
     const confirmed=currentReservation.status==='confirmed';
     const cls=cancelled?'cancelled':confirmed?'confirmed':'pending';
     const confirmBtn=(!cancelled&&!confirmed&&isOrganizer())
-      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Confirmer la réservation</button>' : '';
+      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Valider dans MyEvent</button>' : '';
     return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div>'+
       '<div class="reservationStatus '+cls+'">'+reservationStatusLabel(currentReservation)+'</div>'+
       confirmBtn+
