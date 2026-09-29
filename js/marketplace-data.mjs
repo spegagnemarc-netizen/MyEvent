@@ -38,6 +38,8 @@ export function createMarketplaceStore(client){
     contact:id=>unwrap(client.rpc('marketplace_contact',{listing:id})),
     threads:()=>unwrap(client.from('marketplace_threads').select('*').order('created_at',{ascending:false})),
     messages:async id=>(await unwrap(client.from('marketplace_messages').select('*').eq('thread_id',id).order('created_at',{ascending:false}).limit(200))).reverse(),
+    markRead:id=>unwrap(client.rpc('marketplace_mark_thread_read',{p_thread_id:id})),
+    unread:async()=>Number(await unwrap(client.rpc('marketplace_unread_count'))||0),
     send:(thread_id,sender_id,body,id)=>unwrap(client.from('marketplace_messages').insert({id,thread_id,sender_id,body}).select().single())
   };
 }
