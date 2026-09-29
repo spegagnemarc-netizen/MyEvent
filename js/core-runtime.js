@@ -571,6 +571,10 @@ async function show(u){
     // V49.4 : connexion = accueil, sauf retour/rechargement de la même session
     // alors qu'un onglet était déjà ouvert.
     event=null;
+    activeEventRole='member';
+    if(typeof resetOutingModuleState==='function')resetOutingModuleState();
+    if(typeof resetAiModuleState==='function')resetAiModuleState();
+    currentReservation=null;
     const events=await loadEvents();
     await handleJoinLink();
 
@@ -3472,6 +3476,11 @@ async function logout(){
     if(notificationPollTimer){clearInterval(notificationPollTimer);notificationPollTimer=null;}
     await sb.auth.signOut();
     sessionStorage.removeItem('myevent_restore_view');
+    if(callActive)await stopGroupCall();
+    if(typeof resetOutingModuleState==='function')resetOutingModuleState();
+    if(typeof resetAiModuleState==='function')resetAiModuleState();
+    currentReservation=null;
+    activeEventRole='member';
     user=null; event=null;
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
