@@ -3,7 +3,7 @@ import {projectUrl,publishableKey} from './marketplace-config.mjs';
 
 const root=document.getElementById('myeventMarketplace'),$=id=>root.querySelector('#'+id);
 let client,store,user=null,items=[],favorites=new Set(),photos=new Map(),editing=null,thread=null;
-let own=false,onlyFavorites=false,loading=false,generation=0,toastTimer=0,messageTimer=0,formBusy=false,threadRevision=0;
+let own=false,onlyFavorites=false,loading=false,generation=0,toastTimer=0,messageTimer=0,formBusy=false,threadRevision=0,marketRealtimeChannel=null;
 const filters={mode:'all',category:'all',query:'',city:'',sort:'featured',center:null,radiusKm:25};
 const THEME_FALLBACK_KEY='myevent-marketplace-theme';
 const themeKey=()=>user?.id?'myevent-marketplace-theme:'+user.id:THEME_FALLBACK_KEY;
@@ -220,7 +220,22 @@ $('marketLogin').addEventListener('submit',async e=>{
   try{if(!client)throw new Error('Service indisponible. Rechargez la page.');const {error}=await client.auth.signInWithPassword({email:form.elements.email.value.trim(),password:form.elements.password.value});if(error)throw error;form.reset();$('authDialog').close();}
   catch(error){$('authStatus').textContent=errorMessage(error);}finally{b.disabled=false;}
 });
+async function stopMarketplaceRealtime(){
+  if(marketRealtimeChannel&&client){try{await client.removeChannel(marketRealtimeChannel);}catch{}}
+  marketRealtimeChannel=null;
+}
+function startMarketplaceRealtime(){
+  if(!client||!user)return;
+  stopMarketplaceRealtime();
+  const accountId=user.id;
+  marketRealtimeChannel=client.channel('marketplace-'+accountId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_messages'},()=>{if(user?.id===accountId&&thread&&$('inboxDialog').open)refreshMessages();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_threads'},()=>{if(user?.id===accountId&&$('inboxDialog').open)openInbox(thread?.id);})
+    .on('postgres_changes',{event:'*',schema:'public',table:'marketplace_listings'},()=>{if(user?.id===accountId)load();})
+    .subscribe();
+}
 function signedOut(){
+  stopMarketplaceRealtime();
   window.myeventThemeSetUser?.(null);
   generation++;threadRevision++;clearTimeout(messageTimer);user=null;items=[];photos.clear();favorites.clear();thread=null;editing=null;pendingMessage=null;onlyFavorites=own=false;
   for(const dialog of root.querySelectorAll('dialog[open]'))dialog.close();$('messageList').replaceChildren();$('threadList').replaceChildren();$('conversation').hidden=true;$('draftForm').reset();render();
@@ -231,7 +246,7 @@ try{
   client=window.supabase.createClient(projectUrl,publishableKey);store=createMarketplaceStore(client);
   client.auth.onAuthStateChange((_event,session)=>{
     // Schedule work outside the auth callback (avoid SDK auth-lock deadlocks).
-    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());load();}},0);
+    setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());startMarketplaceRealtime();load();}},0);
   });
 }catch(error){status(errorMessage(error));empty('Connexion indisponible');}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(messageTimer);else if($('inboxDialog').open)refreshMessages();});
