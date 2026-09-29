@@ -1390,7 +1390,7 @@ async function createEvent(){
 }
 
 function eur(v){ return Number(v||0).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}); }
-function fundIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function fundIsOrganizer(){ return !!(event&&user&&(event.creator_id===user.id||activeEventRole==='coorganizer')); }
 function fundManagerId(settings){ return settings?.manager_user_id || event?.creator_id || null; }
 function fundIsManager(settings){ return !!(event&&user&&(event.creator_id===user.id || settings?.manager_user_id===user.id)); }
 function fundSetFormOpen(open){ const box=$('fundOrganizerBox'); if(box) box.classList.toggle('hidden',!open); }
@@ -3071,7 +3071,7 @@ function pollActionDisplay(action,choice){
 
 async function validatePollDecision({pollId=null,question='',choice='',reason='',action='',container=null}){
   if(!event||!user){alert('Connecte-toi pour valider une décision.');return;}
-  if(event.creator_id!==user.id){alert('Seul l’organisateur peut valider une proposition IA.');return;}
+  if(!(event.creator_id===user.id||activeEventRole==='coorganizer')){alert('Seul un organisateur peut valider une proposition IA.');return;}
 
   const cleanQuestion=String(question||'Sondage').trim();
   const cleanChoice=String(choice||'Aucun consensus').trim();
@@ -3127,7 +3127,7 @@ async function validatePollDecision({pollId=null,question='',choice='',reason=''
 
 async function executePollAction({pollId=null,question='',choice='',reason='',action='',container=null}){
   if(!event||!user)return;
-  if(event.creator_id!==user.id){alert('Seul l’organisateur peut transformer la décision en action.');return;}
+  if(!(event.creator_id===user.id||activeEventRole==='coorganizer')){alert('Seul un organisateur peut transformer la décision en action.');return;}
 
   const cleanQuestion=String(question||'Sondage').trim();
   const cleanChoice=String(choice||'').trim();
