@@ -3,7 +3,7 @@
 let hallResultsData=[];
 let hallSelectedId=null;
 let hallSelectedFundExpenseId=null;
-function hallIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function hallIsOrganizer(){ return !!(event&&user&&(event.creator_id===user.id||activeEventRole==='coorganizer')); }
 function hallOpenManualForm(open){ $('hallManualForm')?.classList.toggle('hidden',!open); if(!open && $('hallManualMsg'))$('hallManualMsg').textContent=''; }
 function hallEscapeUrl(u){ return /^https?:\/\//i.test(String(u||'')) ? String(u) : ''; }
 function hallSelected(){ return hallResultsData.find(x=>x.id===hallSelectedId)||null; }
@@ -108,7 +108,7 @@ document.addEventListener('click',e=>{
 // V51.6 — Qui amène quoi ?
 let suppliesData=[];
 let supplyProfiles=[];
-function supplyIsOrganizer(){ return !!(event&&user&&event.creator_id===user.id); }
+function supplyIsOrganizer(){ return !!(event&&user&&(event.creator_id===user.id||activeEventRole==='coorganizer')); }
 function supplyStatusLabel(status){ return status==='brought'?'🟢 Apporté':status==='reserved'?'🔵 Réservé':'🟠 À prévoir'; }
 function supplyStatusClass(status){ return status==='brought'?'supplyStatusBrought':status==='reserved'?'supplyStatusReserved':'supplyStatusPlanned'; }
 function supplyMemberName(id){
