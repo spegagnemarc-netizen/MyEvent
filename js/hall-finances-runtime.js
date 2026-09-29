@@ -60,7 +60,7 @@ async function searchHalls(){
   const results=$('hallResults'); results.innerHTML='<div class="hallLoading">🔎 Recherche de salles autour de l’événement…</div>'; msg('hallMsg',''); await saveHallCriteria();
   const geo=await geocodeEventLocation(); if(!geo){results.innerHTML='<div class="hallEmpty">Impossible de localiser le lieu de l’événement. Vérifie son adresse dans l’événement.</div>';return;}
   const km=Number($('hallRadius').value||5); const minCapacity=Math.max(0,Number($('hallMinCapacity').value||0)); const maxBudget=Math.max(0,Number($('hallMaxPrice').value||0));
-  const api='/api/search-places?mode=hall&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&minCapacity='+encodeURIComponent(minCapacity)+'&maxBudget='+encodeURIComponent(maxBudget);
+  const api='/api/search-halls?lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&minCapacity='+encodeURIComponent(minCapacity)+'&maxBudget='+encodeURIComponent(maxBudget);
   try{ const r=await fetch(api,{headers:{Accept:'application/json'}}); const d=await r.json().catch(()=>null); if(!r.ok||!d)throw new Error(d?.error||'Recherche indisponible'); hallResultsData=(d.results||[]).map(h=>({...h,distance:Number(h.distance)})); renderHallResults(); msg('hallMsg',hallResultsData.length+' lieu'+(hallResultsData.length>1?'x':'')+' trouvé'+(hallResultsData.length>1?'s':'')+'.','ok'); }
   catch(e){hallResultsData=[];results.innerHTML='<div class="hallEmpty">La recherche est momentanément indisponible. Réessaie dans quelques instants.</div>';msg('hallMsg',e.message||'Erreur de recherche.','err');}
 }
