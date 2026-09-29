@@ -92,7 +92,14 @@ function render(){
     visual.append(el('span','productBadge',item.status==='draft'?'Brouillon':item.status==='archived'?'Retirée':item.mode==='rent'?'À louer':'À vendre'));
     const save=button(favorites.has(item.id)?'♥':'♡','saveProduct',()=>toggleFavorite(item,save));save.setAttribute('aria-label','Favori : '+item.title);save.setAttribute('aria-pressed',String(favorites.has(item.id)));visual.append(save);
     const title=el('h3');title.append(button(item.title,'titleButton',()=>openDetail(item)));
-    const bottom=el('div','productFooter'),price=el('span','price',money(item.price_cents));if(item.mode==='rent')price.append(el('small','',' / jour'));bottom.append(price,el('span','city','⌖ '+item.city));
+    const bottom=el('div','productFooter'),price=el('span','price',money(item.price_cents));if(item.mode==='rent')price.append(el('small','',' / jour'));
+    let placeLabel='⌖ '+item.city;
+    if(filters.center&&Number.isFinite(Number(item.latitude))&&Number.isFinite(Number(item.longitude))){
+      const toRad=v=>v*Math.PI/180,r=6371,a={latitude:Number(filters.center.latitude),longitude:Number(filters.center.longitude)},b={latitude:Number(item.latitude),longitude:Number(item.longitude)},dLat=toRad(b.latitude-a.latitude),dLon=toRad(b.longitude-a.longitude),h=Math.sin(dLat/2)**2+Math.cos(toRad(a.latitude))*Math.cos(toRad(b.latitude))*Math.sin(dLon/2)**2;
+      const km=2*r*Math.asin(Math.sqrt(h));
+      placeLabel+=' · '+(km<10?km.toFixed(1):Math.round(km))+' km';
+    }
+    bottom.append(price,el('span','city',placeLabel));
     card.append(visual,el('p','productCategory',labelCategory(item.category)),title,bottom);$('marketGrid').append(card);
   }
 }
