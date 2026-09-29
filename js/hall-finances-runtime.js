@@ -108,6 +108,7 @@ document.addEventListener('click',e=>{
 // V51.6 — Qui amène quoi ?
 let suppliesData=[];
 let supplyProfiles=[];
+let supplyContributions=[];
 function supplyIsOrganizer(){ return !!(event&&user&&(event.creator_id===user.id||activeEventRole==='coorganizer')); }
 function supplyStatusLabel(status){ return status==='brought'?'🟢 Apporté':status==='reserved'?'🔵 Réservé':'🟠 À prévoir'; }
 function supplyStatusClass(status){ return status==='brought'?'supplyStatusBrought':status==='reserved'?'supplyStatusReserved':'supplyStatusPlanned'; }
@@ -123,7 +124,9 @@ async function loadSupplies(){
   const r=await sb.from('event_supplies').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
   if(r.error){list.innerHTML='<p class="muted">Impossible de charger la liste : '+esc(r.error.message)+'</p>';return;}
   suppliesData=r.data||[];
-  const ids=[...new Set(suppliesData.map(x=>x.assigned_user_id).filter(Boolean))];
+  const cr=await sb.from('event_supply_contributions').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
+  supplyContributions=cr.error?[]:(cr.data||[]);
+  const ids=[...new Set([...suppliesData.map(x=>x.assigned_user_id),...supplyContributions.map(x=>x.user_id)].filter(Boolean))];
   if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)supplyProfiles=pr.data||[];}
   const mr=await sb.from('event_members').select('user_id,nickname').eq('event_id',event.id).order('joined_at',{ascending:true});
   const mids=(mr.data||[]).map(x=>x.user_id).filter(Boolean);
@@ -133,24 +136,36 @@ async function loadSupplies(){
 function renderSupplies(){
   const list=$('suppliesList'); if(!list)return;
   const summary=$('suppliesSummary');
-  const counts={planned:0,reserved:0,brought:0}; suppliesData.forEach(x=>{counts[x.status]=(counts[x.status]||0)+1;});
-  if(summary) summary.innerHTML='<span class="supplyChip">🎒 '+suppliesData.length+' élément'+(suppliesData.length>1?'s':'')+'</span><span class="supplyChip supplyStatusPlanned">🟠 '+counts.planned+' à prévoir</span><span class="supplyChip supplyStatusReserved">🔵 '+counts.reserved+' réservés</span><span class="supplyChip supplyStatusBrought">🟢 '+counts.brought+' apportés</span>';
+  const totalNeeded=suppliesData.reduce((n,x)=>n+Math.max(1,Number(x.quantity)||1),0);
+  const totalReserved=suppliesData.reduce((n,x)=>n+Math.min(Math.max(1,Number(x.quantity)||1),supplyContributions.filter(c=>c.supply_id===x.id).reduce((a,c)=>a+Number(c.quantity||0),0)),0);
+  if(summary) summary.innerHTML='<span class="supplyChip">🎒 '+suppliesData.length+' élément'+(suppliesData.length>1?'s':'')+'</span><span class="supplyChip supplyStatusReserved">🔵 '+totalReserved+'/'+totalNeeded+' attribués</span>';
   if(!suppliesData.length){list.innerHTML='<div class="hallEmpty">Aucun élément pour le moment. Ajoute le premier objet à apporter ou demande une proposition à l’IA.</div>';return;}
   const canManage=supplyIsOrganizer();
-  const memberOptions='<option value="">— Personne —</option>'+supplyProfiles.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.display_name||p.username||'Membre')+'</option>').join('');
   list.innerHTML=suppliesData.map(x=>{
-    const mine=x.assigned_user_id===user?.id;
-    const canEdit=canManage||mine||x.created_by===user?.id;
-    return '<div class="supplyCard" data-supply-id="'+esc(x.id)+'"><div class="supplyCompactMain"><div class="supplyCompactLeft"><div class="supplyCompactTitle">'+esc(x.title)+'</div><div class="supplyCompactMeta"><span class="supplyChip">🔢 '+esc(String(x.quantity||1))+'</span><span class="supplyChip '+supplyStatusClass(x.status)+'">'+supplyStatusLabel(x.status)+'</span><span class="supplyChip">👤 '+esc(supplyMemberName(x.assigned_user_id))+'</span></div></div></div>'+(x.note?'<div class="muted" style="margin-top:5px;font-size:12px">'+esc(x.note)+'</div>':'')+(canManage?'<div class="supplyAssign"><select data-supply-assign="'+esc(x.id)+'">'+memberOptions+'</select></div>':'')+'<div class="supplyCompactActions">'+(!x.assigned_user_id&&!canManage?'<button type="button" data-supply-me="'+esc(x.id)+'">🙋 Je m’en occupe</button>':'')+'<button type="button" class="secondary" data-supply-status="'+esc(x.id)+'">'+supplyStatusLabel(x.status)+'</button>'+(canEdit?'<button type="button" class="secondary" data-supply-edit="'+esc(x.id)+'">✏️ Modifier</button>':'')+(canEdit?'<button type="button" class="secondary" data-supply-delete="'+esc(x.id)+'">🗑️ Supprimer</button>':'')+'</div></div>';
+    const needed=Math.max(1,Number(x.quantity)||1), parts=supplyContributions.filter(c=>c.supply_id===x.id),taken=parts.reduce((a,c)=>a+Number(c.quantity||0),0),remaining=Math.max(0,needed-taken),mine=parts.find(c=>c.user_id===user?.id);
+    const people=parts.length?parts.map(c=>'👤 '+esc(supplyMemberName(c.user_id))+' : '+esc(String(c.quantity))+(c.status==='brought'?' ✓':'')).join(' · '):'Personne pour le moment';
+    const progress=taken>=needed?'🟢 Complet '+taken+'/'+needed:'🔵 '+taken+'/'+needed+' · reste '+remaining;
+    return '<div class="supplyCard" data-supply-id="'+esc(x.id)+'"><div class="supplyCompactMain"><div class="supplyCompactLeft"><div class="supplyCompactTitle">'+esc(x.title)+'</div><div class="supplyCompactMeta"><span class="supplyChip">🔢 Besoin : '+needed+'</span><span class="supplyChip '+(taken>=needed?'supplyStatusBrought':'supplyStatusReserved')+'">'+progress+'</span></div><div class="muted" style="margin-top:5px;font-size:12px">'+people+'</div></div></div>'+(x.note?'<div class="muted" style="margin-top:5px;font-size:12px">'+esc(x.note)+'</div>':'')+'<div class="supplyCompactActions">'+(remaining>0||mine?'<label class="supplyTakeQty">J’apporte <input type="number" min="0" max="'+(remaining+Number(mine?.quantity||0))+'" value="'+(mine?.quantity||Math.min(1,remaining))+'" data-supply-take-qty="'+esc(x.id)+'"></label><button type="button" data-supply-take="'+esc(x.id)+'">'+(mine?'Mettre à jour':'🙋 Je prends')+'</button>':'')+(mine?'<button type="button" class="secondary" data-supply-brought="'+esc(x.id)+'">'+(mine.status==='brought'?'↩️ Pas encore':'✅ Apporté')+'</button><button type="button" class="secondary" data-supply-release="'+esc(x.id)+'">Retirer ma part</button>':'')+(canManage||x.created_by===user?.id?'<button type="button" class="secondary" data-supply-edit="'+esc(x.id)+'">✏️ Modifier</button><button type="button" class="secondary" data-supply-delete="'+esc(x.id)+'">🗑️ Supprimer</button>':'')+'</div></div>';
   }).join('');
-  suppliesData.forEach(x=>{const sel=list.querySelector('[data-supply-assign="'+CSS.escape(x.id)+'"]');if(sel)sel.value=x.assigned_user_id||'';});
+}
+async function setSupplyContribution(id,quantity){
+  const x=suppliesData.find(v=>v.id===id);if(!x||!user)return;
+  const mine=supplyContributions.find(c=>c.supply_id===id&&c.user_id===user.id);
+  const others=supplyContributions.filter(c=>c.supply_id===id&&c.user_id!==user.id).reduce((a,c)=>a+Number(c.quantity||0),0);
+  const max=Math.max(0,Math.max(1,Number(x.quantity)||1)-others),qty=Math.max(0,Math.min(max,Number(quantity)||0));
+  let r;
+  if(qty===0&&mine)r=await sb.from('event_supply_contributions').delete().eq('id',mine.id);
+  else if(mine)r=await sb.from('event_supply_contributions').update({quantity:qty,updated_at:new Date().toISOString()}).eq('id',mine.id);
+  else if(qty>0)r=await sb.from('event_supply_contributions').insert({event_id:event.id,supply_id:id,user_id:user.id,quantity:qty,status:'reserved'});
+  if(r?.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;}
+  await loadSupplies(); msg('suppliesMsg',qty?'Quantité enregistrée.':'Participation retirée.','ok');
+}
+async function toggleSupplyBrought(id){
+  const mine=supplyContributions.find(c=>c.supply_id===id&&c.user_id===user?.id);if(!mine)return;
+  const r=await sb.from('event_supply_contributions').update({status:mine.status==='brought'?'reserved':'brought',updated_at:new Date().toISOString()}).eq('id',mine.id);
+  if(r.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;} await loadSupplies();
 }
 
-let materialAiItems=[];
-function materialAiContext(){
-  const h=(typeof hallSelected==='function'?hallSelected():null);
-  return {event_name:event?.name||'',event_type:event?.event_type||'',people:Math.max(1,Number($('materialAiPeople')?.value||30)),meal:String($('materialAiMeal')?.value||'').trim(),details:String($('materialAiDetails')?.value||'').trim(),hall:h?{name:h.name||'',capacity:h.capacity||null,equipment:h.equipment||''}:null};
-}
 function renderMaterialAiResults(){
   const box=$('materialAiResults'); if(!box)return;
   if(!materialAiItems.length){box.innerHTML='';return;}
@@ -221,7 +236,9 @@ async function editSupply(id){
   await updateSupply(id,{title:title.trim()||x.title,quantity:Math.max(1,Number(qty)||1),note:note.trim()||null});
 }
 document.addEventListener('change',e=>{
-  const a=e.target.closest('[data-supply-assign]'); if(a){updateSupply(a.dataset.supplyAssign,{assigned_user_id:a.value||null});return;}
+  const take=e.target.closest('[data-supply-take]'); if(take){const q=list.querySelector('[data-supply-take-qty="'+CSS.escape(take.dataset.supplyTake)+'"]');setSupplyContribution(take.dataset.supplyTake,q?.value||0);return;}
+  const rel=e.target.closest('[data-supply-release]'); if(rel){setSupplyContribution(rel.dataset.supplyRelease,0);return;}
+  const brought=e.target.closest('[data-supply-brought]'); if(brought){toggleSupplyBrought(brought.dataset.supplyBrought);return;}
 });
 document.addEventListener('click',e=>{
   const me=e.target.closest('[data-supply-me]'); if(me){updateSupply(me.dataset.supplyMe,{assigned_user_id:user.id,status:'reserved'});return;}
