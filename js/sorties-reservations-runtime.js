@@ -924,7 +924,7 @@ loadSelectedOuting=async function(){
 /* ===== original inline script 11 ===== */
 /* V53.6 — Confirmation de réservation par l'organisateur */
 (function(){
-  function isOrganizer(){ return !!(event && user && event.creator_id === user.id); }
+  function isOrganizer(){ return !!(event && user && (event.creator_id === user.id || activeEventRole === 'coorganizer')); }
   async function confirmEventReservation(){
     if(!event)return;
     if(!isOrganizer()){ alert('Seul l’organisateur peut confirmer la réservation.'); return; }
