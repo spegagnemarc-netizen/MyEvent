@@ -137,6 +137,7 @@ function showEventTab(name, forceState=null){
       if(name==='fund') loadFund();
       if(name==='hall'){ loadHall(); }
       if(name==='supplies'){ loadSupplies(); }
+      if(name==='tasks' && typeof loadEventTasks==='function'){ loadEventTasks(); }
       if(name==='outings'){ searchOutings(); }
       if(name==='aioutings'){ if(typeof loadAiOutingPlan==='function') loadAiOutingPlan(); }
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
