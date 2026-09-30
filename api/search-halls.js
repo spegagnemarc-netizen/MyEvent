@@ -1,7 +1,8 @@
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.nchc.org.tw/api/interpreter'
+  'https://overpass.nchc.org.tw/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter'
 ];
 
 function json(res, status, body) {
@@ -116,21 +117,12 @@ async function fetchOverpass(endpoint, query, timeoutMs = 9500) {
   );
 
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-
+    const response = await fetch(endpoint + '?data=' + encodeURIComponent(query), {
+      method: 'GET',
       headers: {
-        'Content-Type':
-          'application/x-www-form-urlencoded; charset=UTF-8',
-
         'Accept': 'application/json',
-
-        'User-Agent':
-          'MyEvent/51.1 (venue search; contact via my-event-eosin.vercel.app)'
+        'User-Agent': 'MyEvent/51.1 (venue search; contact via my-event-eosin.vercel.app)'
       },
-
-      body: 'data=' + encodeURIComponent(query),
-
       signal: controller.signal
     });
 
