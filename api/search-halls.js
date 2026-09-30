@@ -208,11 +208,13 @@ module.exports = async function handler(req, res) {
 
   // V1: keep this search deliberately narrow. Generic public buildings,
   // hotels and sports facilities produced many false positives.
-  const query = `[out:json][timeout:20];(
-    nwr(around:${radius * 1000},${lat},${lon}) [amenity~"events_venue|conference_centre"];
-    nwr(around:${radius * 1000},${lat},${lon}) [amenity="community_centre"];
-    nwr(around:${radius * 1000},${lat},${lon}) [community_centre~"village_hall|community_hall"];
-    nwr(around:${radius * 1000},${lat},${lon}) [name~"salle des fêtes|salle des fetes|salle de réception|salle de reception|espace événementiel|espace evenementiel|domaine|séminaire|seminaire|wedding|reception",i];
+  // Keep the provider query broad and cheap, then apply our stricter
+  // rental-venue filter in JavaScript. Complex regex filters in Overpass
+  // proved unreliable across public mirrors/serverless requests.
+  const query = `[out:json][timeout:15];(
+    nwr(around:${radius * 1000},${lat},${lon})[amenity="events_venue"];
+    nwr(around:${radius * 1000},${lat},${lon})[amenity="conference_centre"];
+    nwr(around:${radius * 1000},${lat},${lon})[amenity="community_centre"];
   );out center tags;`;
 
   let data = null;
