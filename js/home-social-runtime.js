@@ -928,7 +928,7 @@
 /* ===== original inline script 28 ===== */
 (function(){
   const $=id=>document.getElementById(id);
-  let nearbyMap=null, nearbyMeMarker=null, nearbySearchMarker=null, nearbySearchCircle=null, nearbyPlaceLayer=null, nearbyViatorLayer=null, nearbySocialLayer=null, nearbyPlaces=[], nearbyViator=[], nearbyFriends=[], nearbyEvents=[], nearbyFilter='all', nearbyRadiusKm=5, nearbyOrigin=null, nearbySearchCenter=null;
+  let nearbyMap=null, nearbyMeMarker=null, nearbySearchMarker=null, nearbySearchCircle=null, nearbyPlaceLayer=null, nearbyViatorLayer=null, nearbySocialLayer=null, nearbyPlaces=[], nearbyViator=[], nearbyFriends=[], nearbyEvents=[], nearbyFilters=new Set(), nearbyRadiusKm=5, nearbyOrigin=null, nearbySearchCenter=null;
 
   const wx={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 
@@ -1002,13 +1002,13 @@
     if(!nearbyMap)return;
     if(nearbySocialLayer)nearbySocialLayer.clearLayers();else nearbySocialLayer=L.layerGroup().addTo(nearbyMap);
     const center=nearbySearchCenter;if(!center)return;
-    if(['all','friends'].includes(nearbyFilter))nearbyFriends.forEach(x=>{
+    if(!nearbyFilters.size||nearbyFilters.has('friends'))nearbyFriends.forEach(x=>{
       let lat=+x.lat,lon=+x.lon;if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100}
       const p=x.profile||{},m=L.marker([lat,lon],{icon:nearbyAvatarIcon(p.avatar)}).addTo(nearbySocialLayer);
       m.bindPopup('<b>👥 '+nearbyEsc(p.display_name||p.username||'Ami')+'</b><br><span class="nearbyTrip">Calcul du trajet…</span>');
       m.on('popupopen',async()=>{const min=await routeMinutes(lat,lon),el=m.getPopup().getElement()?.querySelector('.nearbyTrip');if(el)el.textContent=min?'🚗 '+min+' min depuis ma position':'Trajet indisponible';});
     });
-    if(['all','events'].includes(nearbyFilter))nearbyEvents.forEach(ev=>{
+    if(!nearbyFilters.size||nearbyFilters.has('events'))nearbyEvents.forEach(ev=>{
       if(nearbyDistance(center.lat,center.lon,+ev.lat,+ev.lon)>nearbyRadiusKm)return;
       const priv=String(ev.visibility||'private')==='private',m=L.marker([+ev.lat,+ev.lon],{icon:nearbyEventIcon(priv)}).addTo(nearbySocialLayer);
       m.bindPopup('<b>'+(priv?'🔒 ':'🎉 ')+nearbyEsc(ev.name||ev.title||'Événement')+'</b><br>'+nearbyEsc(ev.location||'')+'<br><span class="nearbyTrip">Calcul du trajet…</span>');
@@ -1042,7 +1042,7 @@
   function renderNearbyViator(){
     if(!nearbyMap)return;
     if(nearbyViatorLayer)nearbyViatorLayer.clearLayers();else nearbyViatorLayer=L.layerGroup().addTo(nearbyMap);
-    if(!['all','viator'].includes(nearbyFilter))return;
+    if(nearbyFilters.size&&!nearbyFilters.has('viator'))return;
     nearbyViator.forEach(item=>{
       if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
       const dist=nearbyOrigin?nearbyDistance(nearbyOrigin.lat,nearbyOrigin.lon,+item.lat,+item.lon):null;
@@ -1069,8 +1069,8 @@
     if(nearbyPlaceLayer)nearbyPlaceLayer.clearLayers();
     else nearbyPlaceLayer=L.layerGroup().addTo(nearbyMap);
     const showLeisure=$('nearbyShowLeisureToggle')?.checked!==false;
-    if(!showLeisure||['friends','events','viator'].includes(nearbyFilter))return;
-    nearbyPlaces.filter(item=>nearbyFilter==='all'||nearbyCategory(item)===nearbyFilter).forEach(item=>{
+    if(!showLeisure||(nearbyFilters.size&&![...nearbyFilters].some(x=>['sport','restaurant','activity'].includes(x))))return;
+    nearbyPlaces.filter(item=>!nearbyFilters.size||nearbyFilters.has(nearbyCategory(item))).forEach(item=>{
       if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
       const cat=nearbyCategory(item), label=cat==='restaurant'?'Restaurant':cat==='sport'?'Sport':'Loisir';
       const distance=Number.isFinite(+item.distance)?' · '+(+item.distance).toFixed(1)+' km':'';
@@ -1237,8 +1237,16 @@
     document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(button=>{
       button.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();
-        nearbyFilter=button.dataset.nearbyFilter||'all';
-        document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(x=>x.classList.toggle('active',x===button));
+        const key=button.dataset.nearbyFilter||'all';
+        if(key==='all'){
+          nearbyFilters.clear();
+        }else{
+          if(nearbyFilters.has(key))nearbyFilters.delete(key);else nearbyFilters.add(key);
+        }
+        document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(x=>{
+          const k=x.dataset.nearbyFilter||'all';
+          x.classList.toggle('active',k==='all'?!nearbyFilters.size:nearbyFilters.has(k));
+        });
         renderNearbyPlaces();
         renderNearbyViator();
         renderNearbySocial();
