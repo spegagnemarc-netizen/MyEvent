@@ -3364,3 +3364,82 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #myeventNearbyPanel .myeventNearbySearch button{height:34px!important;border-radius:11px!important;padding:0 9px!important;font-size:11px!important}
 #myeventNearbyPanel .myeventNearbyMapTools{top:103px!important;gap:5px!important}
 #myeventNearbyPanel .myeventNearbyMapTools button{padding:6px 9px!important;font-size:10px!important;line-height:1.1!important}
+
+
+/* À proximité — barre de recherche + commandes en bas, carrousel juste au-dessus. */
+#myeventNearbyPanel .myeventNearbySearch{
+  top:auto!important;
+  left:12px!important;
+  right:132px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  height:46px!important;
+  z-index:540!important;
+  gap:5px!important;
+}
+#myeventNearbyPanel .myeventNearbySearch input{
+  height:46px!important;
+  border-radius:15px!important;
+  padding:0 12px!important;
+  font-size:13px!important;
+}
+#myeventNearbyPanel .myeventNearbySearch button{
+  width:42px!important;
+  height:42px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  font-size:0!important;
+  display:grid!important;
+  place-items:center!important;
+}
+#myeventNearbyPanel .myeventNearbySearch button:after{
+  content:'🔎';
+  font-size:17px;
+}
+#myeventNearbyPanel .myeventNearbyMapTools{
+  top:auto!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:calc(66px + env(safe-area-inset-bottom))!important;
+  z-index:535!important;
+  gap:6px!important;
+  padding:2px 0!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button{
+  padding:7px 10px!important;
+  font-size:10px!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  background:rgba(17,22,27,.92)!important;
+  color:#eef2f5!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools button.active{
+  background:var(--myevent-accent)!important;
+  border-color:rgba(255,255,255,.9)!important;
+  color:#fff!important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.16),0 3px 12px rgba(0,0,0,.35)!important;
+}
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  position:absolute!important;
+  right:70px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  z-index:545!important;
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:50%!important;
+  font-size:0!important;
+  display:grid!important;
+  place-items:center!important;
+}
+#myeventNearbyPanel #myeventNearbyLocateBtn:after{
+  content:'📍';
+  font-size:20px;
+}
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  right:12px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:50px!important;
+  height:50px!important;
+  z-index:545!important;
+}
