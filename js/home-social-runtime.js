@@ -917,7 +917,7 @@
 /* ===== original inline script 28 ===== */
 (function(){
   const $=id=>document.getElementById(id);
-  let nearbyMap=null, nearbyMeMarker=null, nearbyPlaceLayer=null, nearbyPlaces=[], nearbyFilter='all';
+  let nearbyMap=null, nearbyMeMarker=null, nearbySearchMarker=null, nearbySearchCircle=null, nearbyPlaceLayer=null, nearbySocialLayer=null, nearbyPlaces=[], nearbyFriends=[], nearbyEvents=[], nearbyFilter='all', nearbyRadiusKm=5, nearbyOrigin=null, nearbySearchCenter=null;
 
   const wx={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 
@@ -940,6 +940,78 @@
       ? '<div class="myeventMapAvatarMarker"><img src="'+String(src).replace(/"/g,'&quot;')+'" alt=""></div>'
       : '<div class="myeventMapAvatarMarker"><span>👤</span></div>';
     return L.divIcon({className:'',html:html,iconSize:[48,48],iconAnchor:[24,24],popupAnchor:[0,-24]});
+  }
+
+  function nearbyEsc(v){return String(v??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]))}
+  function nearbyDistance(a,b,c,d){const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,q=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+  function nearbyAvatarIcon(avatar,bg='#6f5cff'){
+    const v=String(avatar||''),inner=/^(https?:\/\/|data:image\/)/i.test(v)?'<img src="'+nearbyEsc(v)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span>👤</span>';
+    return L.divIcon({className:'',html:'<div style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:'+bg+';border:3px solid #fff;box-shadow:0 2px 9px rgba(0,0,0,.4);overflow:hidden">'+inner+'</div>',iconSize:[40,40],iconAnchor:[20,20],popupAnchor:[0,-20]});
+  }
+  function nearbyEventIcon(isPrivate){return L.divIcon({className:'',html:'<div class="myeventLeisureMarker">'+(isPrivate?'🔒':'🎉')+'</div>',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-18]})}
+  function updateNearbySearchCircle(){
+    if(!nearbyMap||!nearbySearchCenter)return;
+    if(nearbySearchCircle)nearbyMap.removeLayer(nearbySearchCircle);
+    nearbySearchCircle=L.circle([nearbySearchCenter.lat,nearbySearchCenter.lon],{radius:nearbyRadiusKm*1000,fillOpacity:.05,weight:1.5,color:'#278cff'}).addTo(nearbyMap);
+  }
+  async function routeMinutes(lat,lon){
+    if(!nearbyOrigin||!Number.isFinite(+lat)||!Number.isFinite(+lon))return null;
+    try{
+      const u='https://router.project-osrm.org/route/v1/driving/'+nearbyOrigin.lon+','+nearbyOrigin.lat+';'+(+lon)+','+(+lat)+'?overview=false';
+      const r=await fetch(u),d=await r.json();
+      const sec=d?.routes?.[0]?.duration;return Number.isFinite(+sec)?Math.max(1,Math.round(sec/60)):null;
+    }catch(e){return null}
+  }
+  async function geocodeNearbyEvent(place){
+    if(!place)return null;
+    try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(place));const d=await r.json();return d?.[0]?{lat:+d[0].lat,lon:+d[0].lon}:null}catch(e){return null}
+  }
+  async function loadNearbySocial(){
+    if(!nearbySearchCenter||!window.sb||!window.user)return;
+    try{
+      const rel=await sb.from('friendships').select('user_low,user_high').eq('status','accepted');
+      const ids=(rel.data||[]).map(x=>x.user_low===user.id?x.user_high:x.user_low).filter(Boolean);
+      let profiles=[];if(ids.length){const pr=await sb.rpc('social_friend_profiles',{ids});profiles=pr.data||[]}
+      // event_locations is intentionally member-scoped by RLS. It can therefore
+      // expose a friend's location only when Supabase already authorizes that row.
+      let loc=[];if(ids.length){const lr=await sb.from('event_locations').select('user_id,lat,lon,share_mode,updated_at').in('user_id',ids).neq('share_mode','off');loc=lr.data||[]}
+      const pm=new Map(profiles.map(x=>[x.id,x])),seen=new Set();
+      nearbyFriends=loc.filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)&&!seen.has(x.user_id)&&seen.add(x.user_id)).map(x=>({...x,profile:pm.get(x.user_id)||{}}));
+    }catch(e){nearbyFriends=[]}
+    try{
+      // Existing RLS keeps private event rows member-only. Public discovery may
+      // be supplied by the event feed; member events remain available here.
+      const er=await sb.from('events').select('id,name,title,location,visibility,start_at,date').limit(100);
+      const rows=er.data||[];
+      nearbyEvents=(await Promise.all(rows.map(async ev=>{const g=await geocodeNearbyEvent(ev.location);return g?{...ev,...g}:null}))).filter(Boolean);
+    }catch(e){nearbyEvents=[]}
+    renderNearbySocial();
+  }
+  function renderNearbySocial(){
+    if(!nearbyMap)return;
+    if(nearbySocialLayer)nearbySocialLayer.clearLayers();else nearbySocialLayer=L.layerGroup().addTo(nearbyMap);
+    const center=nearbySearchCenter;if(!center)return;
+    if(['all','friends'].includes(nearbyFilter))nearbyFriends.forEach(x=>{
+      let lat=+x.lat,lon=+x.lon;if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100}
+      if(nearbyDistance(center.lat,center.lon,lat,lon)>nearbyRadiusKm)return;
+      const p=x.profile||{},m=L.marker([lat,lon],{icon:nearbyAvatarIcon(p.avatar)}).addTo(nearbySocialLayer);
+      m.bindPopup('<b>👥 '+nearbyEsc(p.display_name||p.username||'Ami')+'</b><br><span class="nearbyTrip">Calcul du trajet…</span>');
+      m.on('popupopen',async()=>{const min=await routeMinutes(lat,lon),el=m.getPopup().getElement()?.querySelector('.nearbyTrip');if(el)el.textContent=min?'🚗 '+min+' min depuis ma position':'Trajet indisponible';});
+    });
+    if(['all','events'].includes(nearbyFilter))nearbyEvents.forEach(ev=>{
+      if(nearbyDistance(center.lat,center.lon,+ev.lat,+ev.lon)>nearbyRadiusKm)return;
+      const priv=String(ev.visibility||'private')==='private',m=L.marker([+ev.lat,+ev.lon],{icon:nearbyEventIcon(priv)}).addTo(nearbySocialLayer);
+      m.bindPopup('<b>'+(priv?'🔒 ':'🎉 ')+nearbyEsc(ev.name||ev.title||'Événement')+'</b><br>'+nearbyEsc(ev.location||'')+'<br><span class="nearbyTrip">Calcul du trajet…</span>');
+      m.on('popupopen',async()=>{const min=await routeMinutes(+ev.lat,+ev.lon),el=m.getPopup().getElement()?.querySelector('.nearbyTrip');if(el)el.textContent=min?'🚗 '+min+' min depuis ma position':'Trajet indisponible';});
+    });
+  }
+  function setNearbySearchCenter(lat,lon,{fit=false}={}){
+    if(!nearbyMap||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
+    nearbySearchCenter={lat:+lat,lon:+lon};
+    if(nearbySearchMarker)nearbyMap.removeLayer(nearbySearchMarker);
+    nearbySearchMarker=L.marker([+lat,+lon],{draggable:true,icon:L.divIcon({className:'',html:'<div class="myeventLeisureMarker">🎯</div>',iconSize:[38,38],iconAnchor:[19,19]})}).addTo(nearbyMap).bindPopup('<b>🎯 Zone à explorer</b><br>Déplace ce point pour rechercher ailleurs.');
+    nearbySearchMarker.on('dragend',async()=>{const ll=nearbySearchMarker.getLatLng();nearbySearchCenter={lat:ll.lat,lon:ll.lng};updateNearbySearchCircle();await Promise.all([loadNearbyPlaces(ll.lat,ll.lng),loadNearbySocial()]);});
+    updateNearbySearchCircle();if(fit)nearbyMap.setView([+lat,+lon],14,{animate:true});
   }
 
   function nearbyCategory(item){
@@ -992,10 +1064,13 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(nearbyMap);
     }
     nearbyMap.setView([lat,lon],14);
+    nearbyOrigin={lat:+lat,lon:+lon};
     if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);
-    nearbyMeMarker=L.marker([lat,lon],{icon:markerIcon()}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>').openPopup();
+    (async()=>{let avatar=getAvatarSrc();try{if(window.sb&&window.user){const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();avatar=pr?.data?.avatar||avatar}}catch(e){} if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);nearbyMeMarker=L.marker([lat,lon],{icon:nearbyAvatarIcon(avatar,'#278cff')}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>');})();
+    if(!nearbySearchCenter)setNearbySearchCenter(+lat,+lon);
     setTimeout(()=>nearbyMap.invalidateSize(),120);
-    loadNearbyPlaces(+lat,+lon);
+    loadNearbyPlaces(nearbySearchCenter?.lat??+lat,nearbySearchCenter?.lon??+lon);
+    loadNearbySocial();
   }
 
   function lastPosition(){
@@ -1098,6 +1173,7 @@
         nearbyFilter=button.dataset.nearbyFilter||'all';
         document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(x=>x.classList.toggle('active',x===button));
         renderNearbyPlaces();
+        renderNearbySocial();
       });
     });
     $('nearbyShowLeisureToggle')?.addEventListener('change',()=>{
