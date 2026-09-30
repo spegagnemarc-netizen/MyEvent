@@ -1056,7 +1056,7 @@
   }
   async function loadNearbyViator(lat,lon){
     try{
-      const r=await fetch('/api/search-places?mode=viator&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&count=30');
+      const r=await fetch('/api/search-places?mode=viator&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&radius='+encodeURIComponent(nearbyRadiusKm)+'&count=60');
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'Activités indisponibles');
       nearbyViator=(Array.isArray(d.results)?d.results:[]).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
@@ -1083,12 +1083,12 @@
     const toast=$('myeventNearbyToast');
     if(toast)toast.textContent='Recherche autour de toi…';
     try{
-      const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&radius=5');
+      const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&radius='+encodeURIComponent(nearbyRadiusKm));
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'Recherche indisponible');
       nearbyPlaces=Array.isArray(d.results)?d.results:[];
       renderNearbyPlaces();
-      if(toast)toast.textContent=nearbyPlaces.length?nearbyPlaces.length+' lieux trouvés autour de toi':'Aucun lieu trouvé dans un rayon de 5 km.';
+      if(toast)toast.textContent=nearbyPlaces.length?nearbyPlaces.length+' lieux trouvés dans un rayon de '+nearbyRadiusKm+' km':'Aucun lieu trouvé dans un rayon de '+nearbyRadiusKm+' km.';
     }catch(e){
       nearbyPlaces=[];renderNearbyPlaces();
       if(toast)toast.textContent='Les lieux à proximité sont temporairement indisponibles.';
