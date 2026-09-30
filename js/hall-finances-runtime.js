@@ -235,12 +235,10 @@ async function editSupply(id){
   const note=prompt('Note (optionnel) :',x.note||''); if(note===null)return;
   await updateSupply(id,{title:title.trim()||x.title,quantity:Math.max(1,Number(qty)||1),note:note.trim()||null});
 }
-document.addEventListener('change',e=>{
-  const take=e.target.closest('[data-supply-take]'); if(take){const q=list.querySelector('[data-supply-take-qty="'+CSS.escape(take.dataset.supplyTake)+'"]');setSupplyContribution(take.dataset.supplyTake,q?.value||0);return;}
+document.addEventListener('click',e=>{
+  const take=e.target.closest('[data-supply-take]'); if(take){const q=document.querySelector('[data-supply-take-qty="'+CSS.escape(take.dataset.supplyTake)+'"]');setSupplyContribution(take.dataset.supplyTake,q?.value||0);return;}
   const rel=e.target.closest('[data-supply-release]'); if(rel){setSupplyContribution(rel.dataset.supplyRelease,0);return;}
   const brought=e.target.closest('[data-supply-brought]'); if(brought){toggleSupplyBrought(brought.dataset.supplyBrought);return;}
-});
-document.addEventListener('click',e=>{
   const me=e.target.closest('[data-supply-me]'); if(me){updateSupply(me.dataset.supplyMe,{assigned_user_id:user.id,status:'reserved'});return;}
   const st=e.target.closest('[data-supply-status]'); if(st){const x=suppliesData.find(v=>v.id===st.dataset.supplyStatus);if(x){const next=x.status==='planned'?'reserved':x.status==='reserved'?'brought':'planned';updateSupply(x.id,{status:next});}return;}
   const ed=e.target.closest('[data-supply-edit]'); if(ed){editSupply(ed.dataset.supplyEdit);return;}
