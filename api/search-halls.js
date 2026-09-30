@@ -218,39 +218,29 @@ module.exports = async function handler(req, res) {
   );out center tags;`;
 
   let data = null;
-  let lastError = null;
+  const providerErrors = [];
 
-  try {
-
-    // Race several independent public mirrors. One slow/busy Overpass
-    // instance must not make the whole MyEvent venue search unavailable.
-    data = await Promise.any(
-      OVERPASS_ENDPOINTS.map(
-        endpoint =>
-          fetchOverpass(
-            endpoint,
-            query
-          )
-      )
-    );
-
-  } catch (error) {
-
-    lastError = error;
+  // Try mirrors sequentially. Promise.any() only exposed an AggregateError,
+  // which hid the real HTTP/timeout reason and made production diagnosis hard.
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      data = await fetchOverpass(endpoint, query, 7000);
+      if (data) break;
+    } catch (error) {
+      providerErrors.push({
+        endpoint: endpoint.replace('/api/interpreter',''),
+        error: error?.name === 'AbortError' ? 'timeout' : String(error?.message || error)
+      });
+    }
   }
 
   if (!data) {
-
     return json(
       res,
       503,
       {
-        error:
-          'Le service de recherche de salles est temporairement indisponible.',
-
-        detail:
-          lastError?.message ||
-          'Overpass indisponible'
+        error: 'Le service de recherche de salles est temporairement indisponible.',
+        detail: providerErrors.map(x => x.endpoint + ': ' + x.error).join(' | ') || 'Overpass indisponible'
       }
     );
   }
