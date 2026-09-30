@@ -978,7 +978,9 @@
     try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(place));const d=await r.json();return d?.[0]?{lat:+d[0].lat,lon:+d[0].lon}:null}catch(e){return null}
   }
   async function loadNearbySocial(){
-    if(!nearbySearchCenter||!window.sb||!window.user)return;
+    const ctx=globalThis.myeventCameraContext?.();
+    if(!nearbySearchCenter||!ctx?.sb||!ctx?.user)return;
+    const sb=ctx.sb,user=ctx.user;
     try{
       const rel=await sb.from('friendships').select('user_low,user_high').eq('status','accepted');
       const ids=(rel.data||[]).map(x=>x.user_low===user.id?x.user_high:x.user_low).filter(Boolean);
@@ -1108,7 +1110,7 @@
     nearbyMap.setView([lat,lon],14);
     nearbyOrigin={lat:+lat,lon:+lon};
     if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);
-    (async()=>{let avatar=getAvatarSrc();try{if(window.sb&&window.user){const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();avatar=pr?.data?.avatar||avatar}}catch(e){} if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);nearbyMeMarker=L.marker([lat,lon],{icon:nearbyAvatarIcon(avatar,'#278cff')}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>');})();
+    (async()=>{let avatar=getAvatarSrc();try{const ctx=globalThis.myeventCameraContext?.();if(ctx?.sb&&ctx?.user){const pr=await ctx.sb.from('profiles').select('avatar').eq('id',ctx.user.id).maybeSingle();avatar=pr?.data?.avatar||avatar}}catch(e){} if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);nearbyMeMarker=L.marker([lat,lon],{icon:nearbyAvatarIcon(avatar,'#278cff')}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>');})();
     if(!nearbySearchCenter)setNearbySearchCenter(+lat,+lon);
     setTimeout(()=>nearbyMap.invalidateSize(),120);
     const searchLat=nearbySearchCenter?.lat??+lat,searchLon=nearbySearchCenter?.lon??+lon;
