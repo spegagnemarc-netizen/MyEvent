@@ -520,6 +520,7 @@
 <button class="eventTab" data-tab="localtravel" role="tab">🧭 Déplacements</button>
 <button class="eventTab" data-tab="aioutings" role="tab">✨ Sortie IA</button>
 <button class="eventTab" data-tab="supplies" role="tab">🎒 Matériel</button>
+<button class="eventTab" data-tab="tasks" role="tab">✅ Qui fait quoi ?</button>
 </div>
 
 <details class="card notificationCenter collapsibleCard uniformToggle reorderableCard" id="notificationCenter">
@@ -920,6 +921,25 @@
 </div>
 </details>
 
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="tasks" id="eventTasksPanel">
+<summary>✅ Qui fait quoi ?</summary>
+<div class="collapsibleBody">
+  <div class="suppliesBox">
+    <div class="suppliesHead"><div><b>✅ Qui fait quoi ?</b><p class="muted">Répartis les tâches entre les participants et suis leur avancement.</p></div><button type="button" id="eventTaskAddBtn">➕ Ajouter une tâche</button></div>
+    <p id="eventTasksMsg" class="muted"></p>
+    <div id="eventTaskForm" class="editEventBox hidden" style="margin-top:10px">
+      <input id="eventTaskTitle" maxlength="180" placeholder="Ex. Réserver le restaurant, préparer la décoration…">
+      <label class="smallLabel">📅 Échéance (optionnel)</label>
+      <input id="eventTaskDue" type="datetime-local">
+      <input id="eventTaskNote" placeholder="Précisions — optionnel">
+      <button type="button" id="eventTaskSaveBtn">💾 Ajouter</button><button type="button" id="eventTaskCancelBtn" class="secondary">Annuler</button>
+    </div>
+    <div id="eventTasksSummary" class="suppliesSummary"></div>
+    <div id="eventTasksList" class="suppliesList"><p class="muted">Chargement…</p></div>
+  </div>
+</div>
+</details>
+
 </section>
 </div>
 
@@ -1100,6 +1120,7 @@
 
 
 <script src="js/hall-finances-runtime.js"></script>
+<script src="js/tasks-runtime.js"></script>
 
 
 
