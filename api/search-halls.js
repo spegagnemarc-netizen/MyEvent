@@ -1,6 +1,7 @@
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter'
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.nchc.org.tw/api/interpreter'
 ];
 
 function json(res, status, body) {
@@ -106,7 +107,7 @@ function distanceKm(aLat, aLon, bLat, bLon) {
   return 2 * R * Math.asin(Math.sqrt(q));
 }
 
-async function fetchOverpass(endpoint, query, timeoutMs = 7500) {
+async function fetchOverpass(endpoint, query, timeoutMs = 9500) {
   const controller = new AbortController();
 
   const timer = setTimeout(
@@ -227,6 +228,8 @@ module.exports = async function handler(req, res) {
 
   try {
 
+    // Race several independent public mirrors. One slow/busy Overpass
+    // instance must not make the whole MyEvent venue search unavailable.
     data = await Promise.any(
       OVERPASS_ENDPOINTS.map(
         endpoint =>
