@@ -917,7 +917,7 @@
 /* ===== original inline script 28 ===== */
 (function(){
   const $=id=>document.getElementById(id);
-  let nearbyMap=null, nearbyMeMarker=null;
+  let nearbyMap=null, nearbyMeMarker=null, nearbyPlaceLayer=null, nearbyPlaces=[], nearbyFilter='all';
 
   const wx={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 
@@ -942,6 +942,48 @@
     return L.divIcon({className:'',html:html,iconSize:[48,48],iconAnchor:[24,24],popupAnchor:[0,-24]});
   }
 
+  function nearbyCategory(item){
+    const t=String(item?.type||'').toLowerCase();
+    if(['restaurant','cafe','fast_food','bar','pub'].some(x=>t.includes(x)))return 'restaurant';
+    if(['sport','fitness','stadium','track','pitch','swimming','golf','ice_rink'].some(x=>t.includes(x)))return 'sport';
+    return 'activity';
+  }
+  function leisureIcon(item){
+    const cat=nearbyCategory(item), emoji=cat==='restaurant'?'🍽️':cat==='sport'?'⚽':'🎯';
+    return L.divIcon({className:'',html:'<div class="myeventLeisureMarker">'+emoji+'</div>',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-18]});
+  }
+  function renderNearbyPlaces(){
+    if(!nearbyMap)return;
+    if(nearbyPlaceLayer)nearbyPlaceLayer.clearLayers();
+    else nearbyPlaceLayer=L.layerGroup().addTo(nearbyMap);
+    const showLeisure=$('nearbyShowLeisureToggle')?.checked!==false;
+    if(!showLeisure||['friends','events'].includes(nearbyFilter))return;
+    nearbyPlaces.filter(item=>nearbyFilter==='all'||nearbyCategory(item)===nearbyFilter).forEach(item=>{
+      if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
+      const cat=nearbyCategory(item), label=cat==='restaurant'?'Restaurant':cat==='sport'?'Sport':'Loisir';
+      const distance=Number.isFinite(+item.distance)?' · '+(+item.distance).toFixed(1)+' km':'';
+      L.marker([+item.lat,+item.lon],{icon:leisureIcon(item)}).addTo(nearbyPlaceLayer)
+        .bindPopup('<b>'+String(item.name||label).replace(/[<>&"]/g,s=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[s]))+'</b><br><small>'+label+distance+'</small>');
+    });
+  }
+  async function loadNearbyPlaces(lat,lon){
+    if($('nearbyShowLeisureToggle')?.checked===false){nearbyPlaces=[];renderNearbyPlaces();return}
+    const toast=$('myeventNearbyToast');
+    if(toast)toast.textContent='Recherche autour de toi…';
+    try{
+      const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&radius=5');
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Recherche indisponible');
+      nearbyPlaces=Array.isArray(d.results)?d.results:[];
+      renderNearbyPlaces();
+      if(toast)toast.textContent=nearbyPlaces.length?nearbyPlaces.length+' lieux trouvés autour de toi':'Aucun lieu trouvé dans un rayon de 5 km.';
+    }catch(e){
+      nearbyPlaces=[];renderNearbyPlaces();
+      if(toast)toast.textContent='Les lieux à proximité sont temporairement indisponibles.';
+    }
+    if(toast)setTimeout(()=>{if(toast.textContent)toast.textContent=''},3500);
+  }
+
   function initNearbyMap(lat,lon){
     const node=$('myeventNearbyMap');
     if(!node||!window.L||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
@@ -953,6 +995,7 @@
     if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);
     nearbyMeMarker=L.marker([lat,lon],{icon:markerIcon()}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>').openPopup();
     setTimeout(()=>nearbyMap.invalidateSize(),120);
+    loadNearbyPlaces(+lat,+lon);
   }
 
   function lastPosition(){
@@ -1048,6 +1091,26 @@
     p.classList.remove('open');p.setAttribute('aria-hidden','true');
   }
 
+  function activateNearbyDiscovery(){
+    document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(button=>{
+      button.addEventListener('click',e=>{
+        e.preventDefault();e.stopPropagation();
+        nearbyFilter=button.dataset.nearbyFilter||'all';
+        document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(x=>x.classList.toggle('active',x===button));
+        renderNearbyPlaces();
+      });
+    });
+    $('nearbyShowLeisureToggle')?.addEventListener('change',()=>{
+      try{localStorage.setItem('myevent_nearby_leisure_v1',$('nearbyShowLeisureToggle').checked?'1':'0')}catch(e){}
+      const pos=lastPosition();
+      if($('nearbyShowLeisureToggle').checked&&pos?.lat&&pos?.lon)loadNearbyPlaces(+pos.lat,+pos.lon);else renderNearbyPlaces();
+    });
+    try{
+      const saved=localStorage.getItem('myevent_nearby_leisure_v1');
+      if(saved!==null&&$('nearbyShowLeisureToggle'))$('nearbyShowLeisureToggle').checked=saved==='1';
+    }catch(e){}
+  }
+
   function activateSocialShortcuts(){
     // Amis : navigation amis.
     document.querySelectorAll('#socialHome .socialStory').forEach(x=>{
@@ -1107,6 +1170,7 @@
     });
 
     // L'ancien bouton séparé reste compatible, mais n'est plus nécessaire dans l'interface.
+    activateNearbyDiscovery();
     bind('socialNearbyShareBtn',openNearby);
     bind('closeNearbyPanelBtn',closeNearby);
     bind('myeventNearbyLocateBtn',()=>{
