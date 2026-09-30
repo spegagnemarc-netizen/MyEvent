@@ -974,29 +974,73 @@
   function dayName(date){
     return new Intl.DateTimeFormat('fr-FR',{weekday:'short'}).format(date).replace('.','');
   }
-
+  function weatherTime(v){return v?new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit'}).format(new Date(v)):'--:--'}
+  function weatherValue(v,suffix=''){return Number.isFinite(Number(v))?Math.round(Number(v))+suffix:'—'}
+  function eventWeatherPlace(){
+    const ev=(typeof event!=='undefined'&&event)||null;
+    return String(ev?.location||'').trim();
+  }
+  async function geocodeWeatherPlace(place){
+    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(place)+'&count=1&language=fr&format=json');
+    if(!r.ok)throw new Error('Lieu introuvable');
+    const d=await r.json(),g=d.results?.[0];
+    if(!g)throw new Error('Lieu de l’événement introuvable');
+    return {lat:g.latitude,lon:g.longitude,label:[g.name,g.admin1].filter(Boolean).join(', ')};
+  }
+  async function fetchDetailedWeather(lat,lon){
+    const current='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m';
+    const daily='weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset';
+    const hourly='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m';
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current='+current+'&daily='+daily+'&hourly='+hourly+'&forecast_days=7&timezone=auto';
+    const r=await fetch(u); if(!r.ok)throw new Error('Météo indisponible');
+    return r.json();
+  }
+  function renderDetailedWeather(body,d,label,mode){
+    const cur=d.current||{}, daily=d.daily||{}, hourly=d.hourly||{};
+    const days=(daily.time||[]).slice(0,7).map((t,i)=>{
+      const date=new Date(t+'T12:00:00');
+      const weekend=[0,6].includes(date.getDay());
+      return '<button type="button" class="myeventWeatherDay" data-weather-day="'+i+'"><b>'+dayName(date)+'</b><span>'+(wx[daily.weather_code?.[i]]||'🌤️')+'</span><small>'+weatherValue(daily.temperature_2m_min?.[i],'°')+' / '+weatherValue(daily.temperature_2m_max?.[i],'°')+'</small><small>🌧️ '+weatherValue(daily.precipitation_probability_max?.[i],'%')+(weekend?' · week-end':'')+'</small></button>';
+    }).join('');
+    body.innerHTML='<div class="myeventWeatherMode"><button type="button" data-weather-mode="gps" class="'+(mode==='gps'?'active':'')+'">📍 Ma position</button><button type="button" data-weather-mode="event" class="'+(mode==='event'?'active':'')+'">📅 Mon événement</button></div>'+
+      '<div class="myeventWeatherNow"><div class="myeventWeatherNowIcon">'+(wx[cur.weather_code]||'🌤️')+'</div><div><div class="myeventWeatherNowTemp">'+weatherValue(cur.temperature_2m,'°C')+'</div><div class="myeventWeatherNowMeta">'+label+'</div><small>Ressenti '+weatherValue(cur.apparent_temperature,'°')+' · 💧 '+weatherValue(cur.relative_humidity_2m,'%')+' · 💨 '+weatherValue(cur.wind_speed_10m,' km/h')+' · 🌧️ '+weatherValue(cur.precipitation,' mm')+'</small></div></div>'+
+      '<div class="myeventWeatherForecast">'+days+'</div><div id="myeventWeatherDayDetail"></div>';
+    const showDay=i=>{
+      const date=daily.time?.[i]; if(!date)return;
+      const rows=(hourly.time||[]).map((t,j)=>({t,j})).filter(x=>x.t.startsWith(date)&&Number(x.t.slice(11,13))%3===0).map(x=>'<div class="myeventWeatherHour"><b>'+x.t.slice(11,16)+'</b><span>'+(wx[hourly.weather_code?.[x.j]]||'🌤️')+'</span><span>'+weatherValue(hourly.temperature_2m?.[x.j],'°')+'</span><small>ress. '+weatherValue(hourly.apparent_temperature?.[x.j],'°')+' · pluie '+weatherValue(hourly.precipitation_probability?.[x.j],'%')+' · vent '+weatherValue(hourly.wind_speed_10m?.[x.j],' km/h')+'</small></div>').join('');
+      const detail=$('myeventWeatherDayDetail'); if(detail)detail.innerHTML='<div class="myeventWeatherDaySummary"><b>'+new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date(date+'T12:00:00'))+'</b><span>🌡️ '+weatherValue(daily.temperature_2m_min?.[i],'°')+' / '+weatherValue(daily.temperature_2m_max?.[i],'°')+' · ressenti '+weatherValue(daily.apparent_temperature_min?.[i],'°')+' / '+weatherValue(daily.apparent_temperature_max?.[i],'°')+'</span><span>🌧️ '+weatherValue(daily.precipitation_probability_max?.[i],'%')+' · 💨 '+weatherValue(daily.wind_speed_10m_max?.[i],' km/h')+' · 🌅 '+weatherTime(daily.sunrise?.[i])+' · 🌇 '+weatherTime(daily.sunset?.[i])+'</span></div><div class="myeventWeatherHourly">'+rows+'</div>';
+    };
+    body.querySelectorAll('[data-weather-day]').forEach(b=>b.addEventListener('click',()=>showDay(Number(b.dataset.weatherDay))));
+    body.querySelector('[data-weather-mode="gps"]')?.addEventListener('click',()=>loadWeatherMode('gps',body));
+    body.querySelector('[data-weather-mode="event"]')?.addEventListener('click',()=>loadWeatherMode('event',body));
+    showDay(0);
+  }
+  async function loadWeatherMode(mode,body){
+    body.innerHTML='<div class="myeventWeatherLoading">🌤️ Chargement de la météo…</div>';
+    try{
+      let lat,lon,label;
+      if(mode==='event'){
+        const place=eventWeatherPlace();
+        if(!place)throw new Error('Sélectionne un événement avec un lieu pour afficher sa météo.');
+        const g=await geocodeWeatherPlace(place); lat=g.lat;lon=g.lon;label='📅 '+g.label;
+      }else{
+        if(!navigator.geolocation)throw new Error('La géolocalisation n’est pas disponible.');
+        const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:300000}));
+        lat=pos.coords.latitude;lon=pos.coords.longitude;label='📍 Météo de ta position GPS';
+      }
+      renderDetailedWeather(body,await fetchDetailedWeather(lat,lon),label,mode);
+    }catch(e){
+      const msg=mode==='gps'&&e?.code===1?'Autorise la localisation pour afficher ta météo.':(e?.message||'Impossible de charger la météo pour le moment.');
+      body.innerHTML='<div class="myeventWeatherMode"><button type="button" data-weather-mode="gps">📍 Ma position</button><button type="button" data-weather-mode="event">📅 Mon événement</button></div><div class="myeventWeatherLoading">⚠️ '+msg+'</div>';
+      body.querySelector('[data-weather-mode="gps"]')?.addEventListener('click',()=>loadWeatherMode('gps',body));
+      body.querySelector('[data-weather-mode="event"]')?.addEventListener('click',()=>loadWeatherMode('event',body));
+    }
+  }
   async function openWeather(){
     const panel=$('myeventPersonalWeatherPanel'), body=$('myeventPersonalWeatherContent');
     if(!panel||!body)return;
     panel.classList.add('open');panel.setAttribute('aria-hidden','false');
-    body.innerHTML='<div class="myeventWeatherLoading">📍 Recherche de ta position…</div>';
-    if(!navigator.geolocation){body.innerHTML='<div class="myeventWeatherLoading">La géolocalisation n’est pas disponible.</div>';return}
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      body.innerHTML='<div class="myeventWeatherLoading">🌤️ Chargement de la météo…</div>';
-      try{
-        const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=4&timezone=auto';
-        const r=await fetch(u); if(!r.ok)throw Error();
-        const d=await r.json();
-        const cur=d.current||{}, daily=d.daily||{};
-        const days=(daily.time||[]).map((t,i)=>'<div class="myeventWeatherDay"><b>'+dayName(new Date(t+'T12:00:00'))+'</b><span>'+(wx[daily.weather_code?.[i]]||'🌤️')+'</span><small>'+Math.round(daily.temperature_2m_min?.[i]??0)+'° / '+Math.round(daily.temperature_2m_max?.[i]??0)+'°</small></div>').join('');
-        body.innerHTML='<div class="myeventWeatherNow"><div class="myeventWeatherNowIcon">'+(wx[cur.weather_code]||'🌤️')+'</div><div><div class="myeventWeatherNowTemp">'+Math.round(Number(cur.temperature_2m))+'°C</div><div class="myeventWeatherNowMeta">Météo de ta position GPS</div></div></div><div class="myeventWeatherForecast">'+days+'</div>';
-      }catch(e){
-        body.innerHTML='<div class="myeventWeatherLoading">Impossible de charger la météo pour le moment.</div>';
-      }
-    },()=>{
-      body.innerHTML='<div class="myeventWeatherLoading">⚠️ Autorise la localisation pour afficher ta météo.</div>';
-    },{enableHighAccuracy:true,timeout:15000,maximumAge:300000});
+    await loadWeatherMode('gps',body);
   }
 
   function closeWeather(){
