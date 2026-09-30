@@ -1096,6 +1096,23 @@
     if(toast)setTimeout(()=>{if(toast.textContent)toast.textContent=''},3500);
   }
 
+  async function searchNearbyFrance(query){
+    const q=String(query||'').trim();if(!q)return;
+    const toast=$('myeventNearbyToast');
+    if(toast)toast.textContent='🔎 Recherche de '+q+'…';
+    try{
+      const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=fr&q='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
+      const d=await r.json();
+      const hit=Array.isArray(d)?d.find(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)):null;
+      if(!r.ok||!hit)throw new Error('Lieu introuvable');
+      setNearbySearchCenter(+hit.lat,+hit.lon,{fit:true,load:true});
+      if(toast)toast.textContent='📍 '+(hit.display_name||q);
+    }catch(e){
+      if(toast)toast.textContent='Aucun lieu trouvé en France pour « '+q+' ».';
+    }
+    if(toast)setTimeout(()=>{if(toast.textContent)toast.textContent=''},4000);
+  }
+
   function initNearbyMap(lat,lon){
     const node=$('myeventNearbyMap');
     if(!node||!window.L||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
@@ -1213,6 +1230,10 @@
   }
 
   function activateNearbyDiscovery(){
+    $('myeventNearbySearchForm')?.addEventListener('submit',e=>{
+      e.preventDefault();e.stopPropagation();
+      searchNearbyFrance($('myeventNearbySearchInput')?.value);
+    });
     document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(button=>{
       button.addEventListener('click',e=>{
         e.preventDefault();e.stopPropagation();
