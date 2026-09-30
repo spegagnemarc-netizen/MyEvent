@@ -3443,3 +3443,49 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
   height:50px!important;
   z-index:545!important;
 }
+
+
+/* À proximité — rangée basse finale : recherche + position + réglages. */
+#myeventNearbyPanel .myeventNearbySearch{
+  left:12px!important;
+  right:130px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  height:50px!important;
+  gap:0!important;
+}
+#myeventNearbyPanel .myeventNearbySearch input{
+  width:100%!important;
+  height:50px!important;
+  padding:0 50px 0 14px!important;
+  border-radius:16px!important;
+}
+#myeventNearbyPanel .myeventNearbySearch button{
+  position:absolute!important;
+  right:4px!important;
+  top:4px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  border-radius:50%!important;
+  margin:0!important;
+  z-index:2!important;
+}
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  right:70px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  border-radius:50%!important;
+}
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  right:12px!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  border-radius:50%!important;
+}
+#myeventNearbyPanel .myeventNearbyMapTools{
+  bottom:calc(68px + env(safe-area-inset-bottom))!important;
+}
