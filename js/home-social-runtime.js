@@ -829,6 +829,15 @@
         accuracy:pos.coords.accuracy||null,updatedAt:Date.now()
       }));
     }catch(e){}
+    if(isShareEnabled()){
+      const ctx=globalThis.myeventCameraContext?.();
+      if(ctx?.sb&&ctx?.user){
+        ctx.sb.from('social_locations').upsert({
+          user_id:ctx.user.id,lat:pos.coords.latitude,lon:pos.coords.longitude,
+          accuracy:pos.coords.accuracy||null,share_mode:'exact',updated_at:new Date().toISOString()
+        },{onConflict:'user_id'}).then(()=>{}).catch(()=>{});
+      }
+    }
   }
 
   async function loadGpsWeather(pos){
@@ -900,6 +909,8 @@
         if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='📍 Partage activé. MyEvent pourra utiliser ta position sur cet appareil. Autorise la localisation si le navigateur la demande.';
         getPosition(false);
       }else{
+        const ctx=globalThis.myeventCameraContext?.();
+        if(ctx?.sb&&ctx?.user)ctx.sb.from('social_locations').upsert({user_id:ctx.user.id,lat:null,lon:null,accuracy:null,share_mode:'off',updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(()=>{}).catch(()=>{});
         if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='Partage désactivé. Ton choix est mémorisé et restera désactivé aux prochaines connexions.';
       }
     });
@@ -917,7 +928,7 @@
 /* ===== original inline script 28 ===== */
 (function(){
   const $=id=>document.getElementById(id);
-  let nearbyMap=null, nearbyMeMarker=null, nearbySearchMarker=null, nearbySearchCircle=null, nearbyPlaceLayer=null, nearbySocialLayer=null, nearbyPlaces=[], nearbyFriends=[], nearbyEvents=[], nearbyFilter='all', nearbyRadiusKm=5, nearbyOrigin=null, nearbySearchCenter=null;
+  let nearbyMap=null, nearbyMeMarker=null, nearbySearchMarker=null, nearbySearchCircle=null, nearbyPlaceLayer=null, nearbyViatorLayer=null, nearbySocialLayer=null, nearbyPlaces=[], nearbyViator=[], nearbyFriends=[], nearbyEvents=[], nearbyFilter='all', nearbyRadiusKm=5, nearbyOrigin=null, nearbySearchCenter=null;
 
   const wx={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
 
@@ -972,9 +983,7 @@
       const rel=await sb.from('friendships').select('user_low,user_high').eq('status','accepted');
       const ids=(rel.data||[]).map(x=>x.user_low===user.id?x.user_high:x.user_low).filter(Boolean);
       let profiles=[];if(ids.length){const pr=await sb.rpc('social_friend_profiles',{ids});profiles=pr.data||[]}
-      // event_locations is intentionally member-scoped by RLS. It can therefore
-      // expose a friend's location only when Supabase already authorizes that row.
-      let loc=[];if(ids.length){const lr=await sb.from('event_locations').select('user_id,lat,lon,share_mode,updated_at').in('user_id',ids).neq('share_mode','off');loc=lr.data||[]}
+      let loc=[];if(ids.length){const lr=await sb.rpc('nearby_friend_locations');loc=lr.data||[]}
       const pm=new Map(profiles.map(x=>[x.id,x])),seen=new Set();
       nearbyFriends=loc.filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon)&&!seen.has(x.user_id)&&seen.add(x.user_id)).map(x=>({...x,profile:pm.get(x.user_id)||{}}));
     }catch(e){nearbyFriends=[]}
@@ -993,7 +1002,6 @@
     const center=nearbySearchCenter;if(!center)return;
     if(['all','friends'].includes(nearbyFilter))nearbyFriends.forEach(x=>{
       let lat=+x.lat,lon=+x.lon;if(x.share_mode==='approx'){lat=Math.round(lat*100)/100;lon=Math.round(lon*100)/100}
-      if(nearbyDistance(center.lat,center.lon,lat,lon)>nearbyRadiusKm)return;
       const p=x.profile||{},m=L.marker([lat,lon],{icon:nearbyAvatarIcon(p.avatar)}).addTo(nearbySocialLayer);
       m.bindPopup('<b>👥 '+nearbyEsc(p.display_name||p.username||'Ami')+'</b><br><span class="nearbyTrip">Calcul du trajet…</span>');
       m.on('popupopen',async()=>{const min=await routeMinutes(lat,lon),el=m.getPopup().getElement()?.querySelector('.nearbyTrip');if(el)el.textContent=min?'🚗 '+min+' min depuis ma position':'Trajet indisponible';});
@@ -1005,13 +1013,13 @@
       m.on('popupopen',async()=>{const min=await routeMinutes(+ev.lat,+ev.lon),el=m.getPopup().getElement()?.querySelector('.nearbyTrip');if(el)el.textContent=min?'🚗 '+min+' min depuis ma position':'Trajet indisponible';});
     });
   }
-  function setNearbySearchCenter(lat,lon,{fit=false}={}){
+  function setNearbySearchCenter(lat,lon,{fit=false,load=false}={}){
     if(!nearbyMap||!Number.isFinite(+lat)||!Number.isFinite(+lon))return;
     nearbySearchCenter={lat:+lat,lon:+lon};
-    if(nearbySearchMarker)nearbyMap.removeLayer(nearbySearchMarker);
-    nearbySearchMarker=L.marker([+lat,+lon],{draggable:true,icon:L.divIcon({className:'',html:'<div class="myeventLeisureMarker">🎯</div>',iconSize:[38,38],iconAnchor:[19,19]})}).addTo(nearbyMap).bindPopup('<b>🎯 Zone à explorer</b><br>Déplace ce point pour rechercher ailleurs.');
-    nearbySearchMarker.on('dragend',async()=>{const ll=nearbySearchMarker.getLatLng();nearbySearchCenter={lat:ll.lat,lon:ll.lng};updateNearbySearchCircle();await Promise.all([loadNearbyPlaces(ll.lat,ll.lng),loadNearbySocial()]);});
-    updateNearbySearchCircle();if(fit)nearbyMap.setView([+lat,+lon],14,{animate:true});
+    if(nearbySearchMarker){nearbyMap.removeLayer(nearbySearchMarker);nearbySearchMarker=null}
+    updateNearbySearchCircle();
+    if(fit)nearbyMap.setView([+lat,+lon],14,{animate:true});
+    if(load)Promise.all([loadNearbyPlaces(+lat,+lon),loadNearbyViator(+lat,+lon),loadNearbySocial()]);
   }
 
   function nearbyCategory(item){
@@ -1024,12 +1032,42 @@
     const cat=nearbyCategory(item), emoji=cat==='restaurant'?'🍽️':cat==='sport'?'⚽':'🎯';
     return L.divIcon({className:'',html:'<div class="myeventLeisureMarker">'+emoji+'</div>',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-18]});
   }
+  function viatorPhotoIcon(item){
+    const src=String(item?.image||'');
+    const inner=/^https?:\/\//i.test(src)?'<img src="'+nearbyEsc(src)+'" alt="">':'<span>🎟️</span>';
+    return L.divIcon({className:'',html:'<div style="width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#151515;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45);overflow:hidden">'+inner.replace('<img ','<img style="width:100%;height:100%;object-fit:cover" ')+'</div>',iconSize:[48,48],iconAnchor:[24,24],popupAnchor:[0,-24]});
+  }
+  function renderNearbyViator(){
+    if(!nearbyMap)return;
+    if(nearbyViatorLayer)nearbyViatorLayer.clearLayers();else nearbyViatorLayer=L.layerGroup().addTo(nearbyMap);
+    if(!['all','viator'].includes(nearbyFilter))return;
+    nearbyViator.forEach(item=>{
+      if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
+      const dist=nearbyOrigin?nearbyDistance(nearbyOrigin.lat,nearbyOrigin.lon,+item.lat,+item.lon):null;
+      const price=Number.isFinite(+item.price)?' · dès '+Number(item.price).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}):'';
+      const rating=Number.isFinite(+item.rating)?'<br>⭐ '+Number(item.rating).toFixed(1)+(item.reviewCount?' ('+Number(item.reviewCount)+' avis)':''):'';
+      const link=item.website||item.productUrl||'';
+      const action=link?'<br><a href="'+nearbyEsc(link)+'" target="_blank" rel="noopener">Voir / Réserver</a>':'';
+      const m=L.marker([+item.lat,+item.lon],{icon:viatorPhotoIcon(item)}).addTo(nearbyViatorLayer);
+      m.bindPopup('<b>🎟️ '+nearbyEsc(item.name||'Activité')+'</b>'+rating+'<br>'+(Number.isFinite(dist)?dist.toFixed(1)+' km depuis ma position':'')+price+action);
+    });
+  }
+  async function loadNearbyViator(lat,lon){
+    try{
+      const r=await fetch('/api/search-places?mode=viator&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&count=30');
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Activités indisponibles');
+      nearbyViator=(Array.isArray(d.results)?d.results:[]).filter(x=>Number.isFinite(+x.lat)&&Number.isFinite(+x.lon));
+    }catch(e){nearbyViator=[]}
+    renderNearbyViator();
+  }
+
   function renderNearbyPlaces(){
     if(!nearbyMap)return;
     if(nearbyPlaceLayer)nearbyPlaceLayer.clearLayers();
     else nearbyPlaceLayer=L.layerGroup().addTo(nearbyMap);
     const showLeisure=$('nearbyShowLeisureToggle')?.checked!==false;
-    if(!showLeisure||['friends','events'].includes(nearbyFilter))return;
+    if(!showLeisure||['friends','events','viator'].includes(nearbyFilter))return;
     nearbyPlaces.filter(item=>nearbyFilter==='all'||nearbyCategory(item)===nearbyFilter).forEach(item=>{
       if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
       const cat=nearbyCategory(item), label=cat==='restaurant'?'Restaurant':cat==='sport'?'Sport':'Loisir';
@@ -1062,6 +1100,10 @@
     if(!nearbyMap){
       nearbyMap=L.map(node,{zoomControl:true,attributionControl:true});
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(nearbyMap);
+      nearbyMap.doubleClickZoom.disable();
+      nearbyMap.on('dblclick',e=>setNearbySearchCenter(e.latlng.lat,e.latlng.lng,{load:true}));
+      let lastTap=0;
+      nearbyMap.on('click',e=>{const now=Date.now();if(now-lastTap<420)setNearbySearchCenter(e.latlng.lat,e.latlng.lng,{load:true});lastTap=now;});
     }
     nearbyMap.setView([lat,lon],14);
     nearbyOrigin={lat:+lat,lon:+lon};
@@ -1069,7 +1111,9 @@
     (async()=>{let avatar=getAvatarSrc();try{if(window.sb&&window.user){const pr=await sb.from('profiles').select('avatar').eq('id',user.id).maybeSingle();avatar=pr?.data?.avatar||avatar}}catch(e){} if(nearbyMeMarker)nearbyMap.removeLayer(nearbyMeMarker);nearbyMeMarker=L.marker([lat,lon],{icon:nearbyAvatarIcon(avatar,'#278cff')}).addTo(nearbyMap).bindPopup('<b>📍 Ma position</b>');})();
     if(!nearbySearchCenter)setNearbySearchCenter(+lat,+lon);
     setTimeout(()=>nearbyMap.invalidateSize(),120);
-    loadNearbyPlaces(nearbySearchCenter?.lat??+lat,nearbySearchCenter?.lon??+lon);
+    const searchLat=nearbySearchCenter?.lat??+lat,searchLon=nearbySearchCenter?.lon??+lon;
+    loadNearbyPlaces(searchLat,searchLon);
+    loadNearbyViator(searchLat,searchLon);
     loadNearbySocial();
   }
 
@@ -1173,6 +1217,7 @@
         nearbyFilter=button.dataset.nearbyFilter||'all';
         document.querySelectorAll('#myeventNearbyMapTools [data-nearby-filter]').forEach(x=>x.classList.toggle('active',x===button));
         renderNearbyPlaces();
+        renderNearbyViator();
         renderNearbySocial();
       });
     });
