@@ -3542,3 +3542,11 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 .myeventDiscoverVideo{padding:23px 12px;text-align:center;border:1px dashed rgba(150,150,150,.55);border-radius:13px;background:rgba(120,120,120,.08)}
 .myeventDiscoverVideo small{opacity:.75}.myeventDiscoverVersion{font-size:12px;opacity:.65;text-align:center;margin-top:24px}
 @media(max-width:360px){.myeventDiscoverFeatures{grid-template-columns:1fr}}
+
+/* GetYourGuide official Marseille city widget in outings */
+#myeventGygMarseille{margin:16px 0;border:1px solid rgba(150,150,150,.32);border-radius:14px;overflow:hidden;max-width:100%}
+#myeventGygMarseille>summary{padding:14px 12px;cursor:pointer;font-weight:750;list-style:none}
+#myeventGygMarseille>summary::-webkit-details-marker{display:none}
+#myeventGygMarseille[open]>summary{border-bottom:1px solid rgba(150,150,150,.22)}
+.myeventGygBody{padding:12px;min-width:0;overflow-x:auto}
+.myeventGygBody [data-gyg-widget]{max-width:100%;min-width:0}
