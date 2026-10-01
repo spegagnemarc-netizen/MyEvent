@@ -3489,3 +3489,39 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #myeventNearbyPanel .myeventNearbyMapTools{
   bottom:calc(68px + env(safe-area-inset-bottom))!important;
 }
+
+
+/* À proximité — verrouillage final de la rangée basse sur mobile. */
+#myeventNearbyPanel #myeventNearbyLocateBtn{
+  position:absolute!important;
+  left:auto!important;
+  right:70px!important;
+  top:auto!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  transform:none!important;
+  float:none!important;
+  margin:0!important;
+  z-index:560!important;
+}
+#myeventNearbyPanel .myeventMapSettingsFloating{
+  position:absolute!important;
+  left:auto!important;
+  right:12px!important;
+  top:auto!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  transform:none!important;
+  margin:0!important;
+  z-index:560!important;
+}
+#myeventNearbyPanel .myeventNearbySearch{
+  position:absolute!important;
+  left:12px!important;
+  right:128px!important;
+  top:auto!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  width:auto!important;
+  max-width:none!important;
+  margin:0!important;
+  transform:none!important;
+  z-index:555!important;
+}
