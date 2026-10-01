@@ -321,6 +321,24 @@ function buildPhotonUrl(
 }
 
 
+async function fetchNearbyOverpass(lat,lon,radius){
+  const meters=Math.round(radius*1000);
+  const clauses=[
+    'nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|cinema|theatre|arts_centre|bowling_alley|community_centre)$"]',
+    'nwr["leisure"~"^(sports_centre|fitness_centre|sports_hall|swimming_pool|golf_course|miniature_golf|park|playground|garden|stadium|track|pitch|ice_rink|bowling_alley|water_park)$"]',
+    'nwr["tourism"~"^(museum|gallery|attraction|viewpoint|theme_park|zoo|aquarium)$"]',
+    'nwr["sport"]'
+  ];
+  const query='[out:json][timeout:18];('+clauses.map(x=>x+'(around:'+meters+','+lat+','+lon+');').join('')+');out center 350;';
+  const response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(22000)});
+  if(!response.ok)throw new Error('Overpass HTTP '+response.status);
+  const data=await response.json();
+  return {features:(data.elements||[]).map(el=>{
+    const p=el.tags||{},a=el.lat??el.center?.lat,b=el.lon??el.center?.lon;
+    return {geometry:{coordinates:[b,a]},properties:{name:p.name||p['name:fr']||'',osm_key:p.amenity?'amenity':p.leisure?'leisure':p.tourism?'tourism':'sport',osm_value:p.amenity||p.leisure||p.tourism||(p.sport?'sport':'attraction'),extra:p}};
+  })};
+}
+
 async function fetchPhoton(
   url,
   timeoutMs = 9000
@@ -755,8 +773,7 @@ module.exports =
 
     try {
 
-      data =
-        await fetchPhoton(url);
+      data = mode === 'nearby' ? await fetchNearbyOverpass(lat,lon,radius) : await fetchPhoton(url);
 
     } catch (error) {
 
@@ -923,7 +940,7 @@ module.exports =
             : null,
 
         source:
-          'OpenStreetMap / Photon via MyEvent API'
+          mode === 'nearby' ? 'OpenStreetMap / Overpass via MyEvent API' : 'OpenStreetMap / Photon via MyEvent API'
       }
     );
   };
