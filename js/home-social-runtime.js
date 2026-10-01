@@ -1027,7 +1027,7 @@
   function nearbyCategory(item){
     const t=String(item?.type||'').toLowerCase();
     if(['restaurant','cafe','fast_food','bar','pub'].some(x=>t.includes(x)))return 'restaurant';
-    if(['sport','fitness','stadium','track','pitch','swimming','golf','ice_rink'].some(x=>t.includes(x)))return 'sport';
+    if(['sport','fitness','stadium','track','pitch','swimming','golf','ice_rink','sports_centre','sports_hall','swimming_pool','golf_course','miniature_golf'].some(x=>t.includes(x)))return 'sport';
     return 'activity';
   }
   function leisureIcon(item){
