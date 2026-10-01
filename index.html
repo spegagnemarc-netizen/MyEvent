@@ -47,6 +47,8 @@
   <link rel="stylesheet" href="css/camera.css?v=settings-overlay-fix-2">
 <link rel="stylesheet" href="css/music-workspace.css?v=playlists-image-v1">
   <link rel="stylesheet" href="css/marketplace-entry.css?v=accent-v3">
+<!-- GetYourGuide official partner widget and analytics -->
+<script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="ZJ2NODE"></script>
 </head>
 <body>
 <div class="app">
@@ -776,6 +778,13 @@
 <div id="outingSelectedBox" class="outingSelected hidden"></div>
 <div id="outingResultsMap" class="hidden" style="height:300px;width:100%;border-radius:16px;overflow:hidden;margin:10px 0 14px;position:relative;z-index:1"></div>
 <div id="outingResults" class="outingResults"><div class="outingEmpty">Appuie sur « Rechercher » pour trouver des restaurants et activités autour de l’événement.</div></div>
+<details class="myeventGygSection" id="myeventGygMarseille">
+  <summary>🎟️ GetYourGuide · Activités à Marseille</summary>
+  <div class="myeventGygBody">
+    <p class="muted">Découvre d’autres activités à Marseille. Réservation sécurisée sur GetYourGuide, partenaire externe. Cette sélection est dédiée à Marseille et ne suit pas encore le rayon de recherche MyEvent.</p>
+    <div data-gyg-href="https://widget.getyourguide.com/default/city.frame" data-gyg-location-id="292" data-gyg-locale-code="fr-FR" data-gyg-widget="city" data-gyg-partner-id="ZJ2NODE"></div>
+  </div>
+</details>
 <div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations sont maintenant disponibles directement depuis la sortie sélectionnée.</div>
 </div>
 </details>
