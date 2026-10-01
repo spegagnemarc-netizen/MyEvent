@@ -3550,3 +3550,6 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #myeventGygMarseille[open]>summary{border-bottom:1px solid rgba(150,150,150,.22)}
 .myeventGygBody{padding:12px;min-width:0;overflow-x:auto}
 .myeventGygBody [data-gyg-widget]{max-width:100%;min-width:0}
+
+#myeventGygEiffel .myeventGygActivityLink{display:block;width:100%;box-sizing:border-box;margin-top:12px;padding:13px 15px;border-radius:12px;background:#1769c2;color:#fff;text-align:center;text-decoration:none;font-weight:750;overflow-wrap:anywhere}
+#myeventGygEiffel .myeventGygActivityLink:focus-visible{outline:3px solid #ffb84d;outline-offset:3px}
