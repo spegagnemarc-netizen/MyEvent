@@ -49,6 +49,21 @@
   <link rel="stylesheet" href="css/marketplace-entry.css?v=accent-v3">
 <!-- GetYourGuide official partner widget and analytics -->
 <script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="ZJ2NODE"></script>
+<style id="myevent-ticket-styles">
+.homeFeatureCard.ticketCard{border-color:rgba(218,169,65,.55);background:linear-gradient(145deg,rgba(97,65,18,.34),rgba(22,20,24,.8));color:#ffe0a0}
+.ticketCard .homeFeatureIcon{font-size:35px}
+#myeventTicketModal[hidden]{display:none!important}
+#myeventTicketModal{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
+.myeventTicketDialog{width:min(100%,480px);max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;background:#18191f;border:1px solid #9d7430;border-radius:18px;padding:16px;color:#fff;box-shadow:0 16px 50px #0009}
+.myeventTicketHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.myeventTicketHead h2{margin:0;color:#ffd78d;font-size:23px}
+#myeventTicketClose{border:1px solid #8d744c;border-radius:50%;background:#303039;color:#fff;width:38px;height:38px;flex:none;cursor:pointer;font-size:23px}
+.myeventTicketDialog p{font-size:13px;line-height:1.5;color:#d6d6dc}
+.myeventTicketWidget{display:flex;justify-content:center;max-width:100%;overflow-x:auto;padding:8px 0}
+.myeventTicketWidget .tnSearchWidget{max-width:100%;box-sizing:border-box}
+.myeventTicketWidget .tnSearchWidget input{max-width:100%;box-sizing:border-box}
+@media(max-width:390px){.myeventTicketDialog{padding:10px}.myeventTicketWidget .tnSearchWidget{width:100%!important}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -101,6 +116,7 @@
     <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><img class="homeFeatureArt" src="assets/ui/games-purple.svg" alt=""><b>Jeux</b></button>
     <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
     <button type="button" class="homeFeatureCard musicCard" id="socialHeaderMusicBtn"><img class="homeFeatureArt" src="assets/ui/music-pink.svg" alt=""><b>Musique</b></button>
+    <button type="button" class="homeFeatureCard ticketCard" id="socialHeaderTicketsBtn" aria-haspopup="dialog" aria-controls="myeventTicketModal"><div class="homeFeatureIcon" aria-hidden="true">🎫</div><b>Billetterie</b></button>
     <button type="button" id="socialGpsWeatherCard" class="homeFeatureCard weatherCard"><img class="homeFeatureArt" id="socialGpsWeatherIcon" src="assets/ui/weather-sun-cloud.svg" alt=""><b>Ma météo</b><small id="socialGpsWeatherTemp">--°</small></button>
     <button type="button" id="socialNearbyShareBtn" class="homeFeatureCard nearbyCard"><div class="homeFeatureIcon">📍</div><b>À proximité</b></button>
     <button type="button" class="homeFeatureCard popularCard"><div class="homeFeatureIcon">🔥</div><b>Populaire</b></button>
@@ -1365,5 +1381,28 @@
 
 <link rel="stylesheet" href="css/social-inbox.css?v=1">
 <script src="js/social-inbox.js?v=1"></script>
+<!-- Standalone affiliate ticketing: independent of event outings and Viator -->
+<div id="myeventTicketModal" hidden role="dialog" aria-modal="true" aria-labelledby="myeventTicketTitle">
+  <section class="myeventTicketDialog" tabindex="-1">
+    <header class="myeventTicketHead"><h2 id="myeventTicketTitle">🎫 Billetterie</h2><button type="button" id="myeventTicketClose" aria-label="Fermer la billetterie">×</button></header>
+    <p>Recherche des billets pour des concerts, spectacles et événements sportifs. Les résultats et achats s'ouvrent sur TicketNetwork, partenaire externe. La disponibilité dépend notamment du pays et de l'événement.</p>
+    <div class="myeventTicketWidget">
+<!-- TN Search Widget --><!-- DO NOT ALTER BELOW THIS POINT --><div class='tnSearchWidget' style='width:350px;'><script type='text/javascript' src='https://s3.amazonaws.com/ticketnetwork/affiliate-widget/js/scriptsretail-stringutils.js'></script><script type='text/javascript'>function addCss(cssUrl){var fileref=document.createElement('link');fileref.setAttribute('rel', 'stylesheet');fileref.setAttribute('type', 'text/css');fileref.setAttribute('href', cssUrl);document.getElementsByTagName('head')[0].appendChild(fileref);}addCss('https://fonts.googleapis.com/css?family=Open+Sans:400italic|Montserrat:700');addCss('https://s3.amazonaws.com/ticketnetwork/affiliate-widget/css/tn-widget.css');addCss('https://use.fontawesome.com/releases/v5.8.1/css/all.css');</script><div class='tnTopBanner' style='color:#000000;'>Find tickets for your event</div><div class='tnSearchContainer '><input class='search_text' id='txtTNSearchPhrase_7goh4vw8sx' type='text' placeholder='Search by artist, team, event, etc...' /><a class='search_button' href='javascript:' id='submitSearch_7goh4vw8sx'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/search-icon.png' alt='Rechercher'/></a></div><a target='_blank' rel='noopener noreferrer' href='https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=https%3A//www.ticketnetwork.com%3Futm_source%3DCJ+Affiliate%26utm_medium%3DWidget' class='tnBottomBanner'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/btm-logo.png' alt='TicketNetwork'/><span>Visit Site&nbsp;</span></a></div><script type='text/javascript'>function tn_SubmitSearch_7goh4vw8sx(){var SearchPhrase = document.getElementById('txtTNSearchPhrase_7goh4vw8sx').value;if(SearchPhrase != '') window.open('https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=' + escape('https://www.ticketnetwork.com/search?q='+Fixer(SearchPhrase ) +'&utm_source=CJ+Affiliate&utm_medium=Widget'),'_blank','noopener,noreferrer');}function tn_KeyDownHandler(e) { if (e == null) e = window.event;if (e.keyCode == 13) tn_SubmitSearch_7goh4vw8sx();}document.getElementById('txtTNSearchPhrase_7goh4vw8sx').onkeypress=tn_KeyDownHandler;document.getElementById('submitSearch_7goh4vw8sx').onclick=tn_SubmitSearch_7goh4vw8sx;</script><!-- TN Search box end -->
+    </div>
+    <p>Affiliation CJ · Les réservations et paiements sont effectués directement auprès du partenaire.</p>
+  </section>
+</div>
+<script id="myevent-ticket-controller">
+(function(){
+ const trigger=document.getElementById('socialHeaderTicketsBtn'),modal=document.getElementById('myeventTicketModal'),close=document.getElementById('myeventTicketClose');
+ if(!trigger||!modal||!close)return;
+ let previousFocus=null;
+ function hide(){modal.hidden=true;document.removeEventListener('keydown',onKey);if(previousFocus&&previousFocus.isConnected)previousFocus.focus();}
+ function onKey(e){if(e.key==='Escape')hide();if(e.key==='Tab'){const focusables=Array.from(modal.querySelectorAll('button,a[href],input')).filter(el=>el.getClientRects().length);if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}
+ trigger.addEventListener('click',()=>{previousFocus=document.activeElement;modal.hidden=false;close.focus();document.addEventListener('keydown',onKey);});
+ close.addEventListener('click',hide);
+ modal.addEventListener('click',e=>{if(e.target===modal)hide();});
+})();
+</script>
 </body>
 </html>
