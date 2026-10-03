@@ -1405,34 +1405,59 @@
  modal.addEventListener('click',e=>{if(e.target===modal)hide();});
 })();
 </script>
-<section id="myeventAdminPanel" hidden role="dialog" aria-modal="true" aria-label="Administration MyEvent" style="position:fixed;inset:0;z-index:99999;background:rgba(4,8,22,.94);overflow:auto;padding:24px 14px;color:#fff">
- <div style="max-width:900px;margin:auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2>🛡️ Administration MyEvent</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button></div>
-  <p style="opacity:.8">Tableau de bord privé · Version 1 (consultation uniquement)</p>
-  <div id="myeventAdminStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0"></div>
-  <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
-  <h3>Contenus affiliés · GetYourGuide</h3>
-  <form id="myeventAdminContentForm" style="display:grid;gap:10px;max-width:600px;margin:16px 0">
-   <input name="title" required maxlength="160" placeholder="Titre (ex. Tour Eiffel)">
-   <select name="kind"><option value="city_widget">Widget ville</option><option value="activity">Activité</option><option value="availability">Disponibilité</option></select>
-   <input name="city" maxlength="120" placeholder="Ville (ex. Paris)">
-   <input name="external_id" maxlength="100" placeholder="Identifiant GetYourGuide (ex. 786932)">
-   <input name="affiliate_url" type="url" maxlength="2048" placeholder="Lien affilié HTTPS (facultatif)">
-   <input name="campaign" maxlength="100" placeholder="Campagne (ex. Paris)">
-   <label><input type="checkbox" name="enabled"> Actif</label>
-   <button type="submit">Enregistrer le contenu</button>
-  </form>
-  <div id="myeventAdminContentList" aria-live="polite"></div>
-  <p id="myeventAdminMessage" aria-live="polite"></p>
-  <p style="opacity:.75">La gestion des utilisateurs, des événements et de la modération sera ajoutée après validation des autorisations et des tests de sécurité.</p>
+<section id="myeventAdminPanel" hidden role="dialog" aria-modal="true" aria-label="Administration MyEvent" style="position:fixed;inset:0;z-index:99999;background:#080d18;overflow:auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);color:#fff">
+ <div style="max-width:1000px;margin:auto;padding:16px 0 42px">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:#080d18;z-index:2;padding:12px 0">
+   <h2 style="margin:0">🛡️ MyEvent Admin</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button>
+  </header>
+  <nav id="myeventAdminNav" aria-label="Rubriques administration" style="display:flex;overflow-x:auto;gap:8px;padding:12px 0">
+   <button type="button" data-admin-tab="overview" aria-current="page">Tableau de bord</button>
+   <button type="button" data-admin-tab="content">Affiliation</button>
+   <button type="button" data-admin-tab="users">Utilisateurs</button>
+   <button type="button" data-admin-tab="events">Événements</button>
+   <button type="button" data-admin-tab="marketplace">Marketplace</button>
+   <button type="button" data-admin-tab="partners">Partenaires</button>
+   <button type="button" data-admin-tab="settings">Paramètres</button>
+  </nav>
+  <p id="myeventAdminMessage" role="status" aria-live="polite"></p>
+  <div data-admin-view="overview">
+   <h3>Vue d'ensemble</h3>
+   <div id="myeventAdminStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0"></div>
+   <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
+   <p style="opacity:.75">Données consultées via une fonction Supabase réservée au super_admin.</p>
+  </div>
+  <div data-admin-view="content" hidden>
+   <h3>Contenus affiliés · GetYourGuide</h3>
+   <p style="opacity:.75">Ajoute, modifie ou désactive les contenus du catalogue. Leur publication sur les pages publiques fera l'objet d'une intégration distincte.</p>
+   <form id="myeventAdminContentForm" style="display:grid;gap:10px;max-width:600px;margin:16px 0">
+    <input name="title" required maxlength="160" placeholder="Titre (ex. Tour Eiffel)" aria-label="Titre">
+    <select name="kind" aria-label="Type de contenu"><option value="city_widget">Widget ville</option><option value="activity">Activité</option><option value="availability">Disponibilité</option></select>
+    <input name="city" maxlength="120" placeholder="Ville (ex. Paris)" aria-label="Ville">
+    <input name="external_id" maxlength="100" placeholder="Identifiant GetYourGuide" aria-label="Identifiant partenaire">
+    <input name="affiliate_url" type="url" maxlength="2048" placeholder="Lien affilié HTTPS (facultatif)" aria-label="Lien affilié">
+    <input name="campaign" maxlength="100" placeholder="Campagne" aria-label="Campagne">
+    <label><input type="checkbox" name="enabled"> Actif dans le catalogue</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="submit">Enregistrer le contenu</button><button type="button" id="myeventAdminContentCancel" class="secondary" hidden>Annuler la modification</button></div>
+   </form>
+   <h3>Catalogue</h3><div id="myeventAdminContentList" aria-live="polite"></div>
+  </div>
+  <div data-admin-view="users" hidden><h3>Utilisateurs</h3><p>Module de gestion en préparation : aucune suspension ni suppression n'est activée avant l'ajout de permissions et d'un journal d'audit côté serveur.</p></div>
+  <div data-admin-view="events" hidden><h3>Événements</h3><p>Module de gestion en préparation : les événements existants ne sont pas modifiés par ce tableau de bord.</p></div>
+  <div data-admin-view="marketplace" hidden><h3>Marketplace</h3><p>Modération des annonces et signalements à connecter aux tables existantes, avec confirmation des actions sensibles.</p></div>
+  <div data-admin-view="partners" hidden><h3>Partenaires et API</h3><p>GetYourGuide est éditable dans Affiliation. Les clés API et secrets resteront exclusivement côté serveur.</p></div>
+  <div data-admin-view="settings" hidden><h3>Paramètres</h3><p>Les réglages globaux seront activés progressivement après définition de leur portée et des contrôles d'accès.</p></div>
  </div>
 </section>
 <style>
-#myeventAdminEntry[hidden],#myeventAdminPanel[hidden]{display:none!important}
+#myeventAdminEntry[hidden],#myeventAdminPanel[hidden],#myeventAdminPanel [data-admin-view][hidden],#myeventAdminContentCancel[hidden]{display:none!important}
+#myeventAdminPanel input:not([type=checkbox]),#myeventAdminPanel select{width:100%;min-height:46px;box-sizing:border-box}
+#myeventAdminPanel button{min-height:42px}
+#myeventAdminNav button{flex-shrink:0;white-space:nowrap}
+#myeventAdminNav button[aria-current=page]{outline:2px solid #fa7642}
 .myeventAdminStat{padding:20px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:10px}
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<script src="js/admin-runtime.js?v=2" defer></script>
+<script src="js/admin-runtime.js?v=3" defer></script>
 </body>
 </html>
