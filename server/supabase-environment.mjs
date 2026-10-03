@@ -12,6 +12,7 @@ export function supabaseEnvironment(env=process.env){
  if(!/^sb_publishable_[A-Za-z0-9_-]+$/.test(publishableKey))throw Error('Une clé publique Supabase publishable est requise.');
  const projectRef=cloud?parsed.hostname.split('.')[0]:'local';
  const isTest=environment!=='production';
+ if(environment==='preview'&&projectRef!=='ahyyknfjsielnqyoxqgh')throw Error('Projet Supabase de test requis sur cette Preview.');
  if(isTest){
   if(projectRef===protectedProject)throw Error('La base actuelle est interdite en développement et Preview.');
   if(String(env.MYEVENT_TEST_SUPABASE_REF||'')!==projectRef)throw Error('Projet de test non confirmé.');

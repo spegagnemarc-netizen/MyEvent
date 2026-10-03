@@ -4,11 +4,11 @@ import {createRequire} from 'node:module';const require=createRequire(import.met
 import {supabaseEnvironment} from '../server/supabase-environment.mjs';
 import handler from '../server/runtime-config-handler.mjs';
 import {checkConfig} from '../scripts/check-test-environment.mjs';import {validateSchemaOnly,prepare,priorMigrations} from '../scripts/prepare-admin-test.mjs';
-const ref='aaaaaaaaaaaaaaaaaaaa',env={VERCEL_ENV:'preview',SUPABASE_URL:`https://${ref}.supabase.co`,SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:ref};
+const ref='ahyyknfjsielnqyoxqgh',env={VERCEL_ENV:'preview',SUPABASE_URL:`https://${ref}.supabase.co`,SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:ref};
 test('Preview is pinned, no source fallback, local and production scopes remain explicit',()=>{
  const c=supabaseEnvironment(env);assert.equal(c.projectRef,ref);assert.equal(c.authStorageKey,`myevent-test-preview-${ref}-auth`);
  for(const bad of [{},{...env,SUPABASE_URL:'https://nxxvadbliinhvkirqkkl.supabase.co',MYEVENT_TEST_SUPABASE_REF:'nxxvadbliinhvkirqkkl'},
- {...env,MYEVENT_TEST_SUPABASE_REF:'bbbbbbbbbbbbbbbbbbbb'},{...env,SUPABASE_URL:'https://evil.test'},
+ {...env,MYEVENT_TEST_SUPABASE_REF:'bbbbbbbbbbbbbbbbbbbb'}, {...env,SUPABASE_URL:'https://bbbbbbbbbbbbbbbbbbbb.supabase.co',MYEVENT_TEST_SUPABASE_REF:'bbbbbbbbbbbbbbbbbbbb'},{...env,SUPABASE_URL:'https://evil.test'},
  {...env,SUPABASE_URL:`https://user:password@${ref}.supabase.co`},{...env,SUPABASE_PUBLISHABLE_KEY:'sb_secret_fake'},
  {...env,SUPABASE_PUBLISHABLE_KEY:'eyJ.fake.service_role'},{...env,SUPABASE_URL:env.SUPABASE_URL+'/auth'},
  {...env,VERCEL_ENV:'something'},{...env,VERCEL_ENV:'preview',MYEVENT_ENV:'production',MYEVENT_TEST_SUPABASE_REF:''}])assert.throws(()=>supabaseEnvironment(bad));
@@ -28,12 +28,21 @@ test('Browser boundary fails closed and shows test identity; same session key fo
  const source=await readFile(new URL('../js/runtime-config.js',import.meta.url),'utf8');
  for(const valid of [true,false]){
   const dom=new JSDOM('<body></body>',{url:'https://example.test',runScripts:'outside-only'});
-  dom.window.fetch=async()=>({ok:valid,json:async()=>valid?supabaseEnvironment(env):{error:'failure'}});
+  dom.window.fetch=async(url,options)=>{assert.equal(url,'/api/runtime-config');assert.equal(options.credentials,'same-origin');return {ok:valid,json:async()=>valid?supabaseEnvironment(env):{error:'failure'}};};
   dom.window.eval(source);if(valid){const c=await dom.window.myeventRuntime.ready;assert.equal(c.projectRef,ref);}else await assert.rejects(dom.window.myeventRuntime.ready);
   await new Promise(r=>setImmediate(r));assert.match(dom.window.document.getElementById('myeventEnvironmentBanner').textContent,valid?/MYEVENT TEST/:/BLOQUÉE/);dom.window.close();
  }
  for(const p of ['../js/core-runtime.js','../js/marketplace.mjs']){const s=await readFile(new URL(p,import.meta.url),'utf8');assert(s.includes('storageKey:config.authStorageKey'));assert(!s.includes('sb_publishable_'));assert(!s.includes('nxxvadbliinhvkirqkkl'));}
  for(const p of ['../index.html','../marketplace.html'])assert((await readFile(new URL(p,import.meta.url),'utf8')).includes('/js/runtime-config.js'));
+});
+test('Browser rejects another Preview project even when the response claims it is test',async()=>{
+ const source=await readFile(new URL('../js/runtime-config.js',import.meta.url),'utf8');
+ for(const overrides of [{projectRef:'bbbbbbbbbbbbbbbbbbbb',url:'https://bbbbbbbbbbbbbbbbbbbb.supabase.co'},{url:'https://nxxvadbliinhvkirqkkl.supabase.co'}]){
+  const dom=new JSDOM('<body></body>',{url:'https://example.test',runScripts:'outside-only'});
+  dom.window.fetch=async()=>({ok:true,json:async()=>({...supabaseEnvironment(env),...overrides})});
+  dom.window.eval(source);await assert.rejects(dom.window.myeventRuntime.ready,/Projet Supabase de test requis/);
+  await new Promise(r=>setImmediate(r));assert.match(dom.window.document.getElementById('myeventEnvironmentBanner').textContent,/BLOQUÉE/);dom.window.close();
+ }
 });
 test('Schema-only pack rejects data/secrets and lists history including duplicate migration versions',async()=>{
  const base=['profiles','events','event_members','marketplace_listings','platform_admins','admin_partner_content'].map(t=>`CREATE TABLE public.${t} (id uuid);`).join('\n');

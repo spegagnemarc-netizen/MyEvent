@@ -1,6 +1,7 @@
 // Same configuration for the main app and standalone pages; no storage overrides.
 (()=>{
- const ready=fetch('/api/runtime-config',{cache:'no-store',credentials:'omit'}).then(async response=>{
+ // Keep the same-origin Vercel Preview authentication cookie on this request.
+ const ready=fetch('/api/runtime-config',{cache:'no-store',credentials:'same-origin'}).then(async response=>{
   const value=await response.json();
   if(!response.ok)throw Error('Connexion désactivée : environnement Supabase non configuré.');
   if(!value||!['development','preview','production'].includes(value.environment)||
@@ -8,6 +9,7 @@
    !/^sb_publishable_[A-Za-z0-9_-]+$/.test(value.publishableKey)||
    value.isTest!==(value.environment!=='production')||typeof value.authStorageKey!=='string')throw Error('Configuration Supabase invalide.');
   if(value.isTest&&value.projectRef==='nxxvadbliinhvkirqkkl')throw Error('Base actuelle interdite sur cette Preview.');
+  if(value.environment==='preview'&&(value.projectRef!=='ahyyknfjsielnqyoxqgh'||value.url!=='https://ahyyknfjsielnqyoxqgh.supabase.co'))throw Error('Projet Supabase de test requis sur cette Preview.');
   return Object.freeze(value);
  });
  window.myeventRuntime=Object.freeze({ready});
