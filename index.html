@@ -843,6 +843,19 @@
     <p id="m58TransportMsg" class="muted"></p>
   </div>
   <div id="m58TransportList" class="m58ModuleList"><p class="muted">Chargement…</p></div>
+ 
+<div id="myeventOmioSection" class="m58OmioSection" style="margin-top:18px;padding:14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;">
+  <h3>🚆 Réserver avec Omio</h3>
+  <p>Compare les trains, bus et ferries disponibles pour ton trajet.</p>
+
+  <div
+    data-omio-widget="true"
+    data-partner-id="omio-affiliates"
+    data-new-tab="true"
+    data-redirect="https://omio.sjv.io/c/7865634/3963000/7385?u="
+  ></div>
+</div>
+ 
 </div>
 </details>
 
@@ -1483,5 +1496,25 @@ body.myeventAdminOpen{overflow:hidden}
 </style>
 <link rel="stylesheet" href="css/admin-v2.css?v=2">
 <script src="js/admin-runtime.js?v=5" defer></script>
+
+<!-- MyEvent — Chargement du widget officiel Omio -->
+<script>
+  (function addOmioWidget(d) {
+    var widgetStyle = d.createElement('link');
+    widgetStyle.setAttribute('rel', 'stylesheet');
+    widgetStyle.setAttribute(
+      'href',
+      'https://www.omio.com/gcs-proxy/b2b-nemo-prod/bundle/fr/bundle.css?v=' + new Date().getTime()
+    );
+    d.head.appendChild(widgetStyle);
+
+    var widgetScript = d.createElement('script');
+    widgetScript.setAttribute(
+      'src',
+      'https://www.omio.com/gcs-proxy/b2b-nemo-prod/bundle/fr/bundle.js?v=' + new Date().getTime()
+    );
+    d.body.appendChild(widgetScript);
+  })(document);
+</script>
 </body>
 </html>
