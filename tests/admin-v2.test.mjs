@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 const db=new PGlite();
 const A='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',B='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',C='cccccccc-cccc-4ccc-8ccc-cccccccccccc',E='dddddddd-dddd-4ddd-8ddd-dddddddddddd',L='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 async function as(id,sql,args=[]){return db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[id]);return tx.query(sql,args);});}
-await db.exec(`create role authenticated;create role anon;create schema auth;
+await db.exec(`create role authenticated;create role anon;create role service_role;create role authenticator;create schema auth;create schema storage;
+create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);
+alter table storage.objects enable row level security;
 create table auth.users(id uuid primary key,created_at timestamptz default now(),banned_until timestamptz);
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 grant usage on schema auth to authenticated;
@@ -16,6 +18,7 @@ create function public.event_is_member(p_event uuid,p_user uuid default auth.uid
 create function public.are_friends(uuid,uuid) returns boolean language sql stable as $$select false$$;
 create function public.event_protect_identity() returns trigger language plpgsql as $$begin return new;end$$;
 create trigger event_protect_identity_v2 before update on public.events for each row execute function public.event_protect_identity();
+alter table public.profiles enable row level security;create policy profile_read on public.profiles for select to authenticated using(true);
 alter table public.events enable row level security;create policy events_read on public.events for select to authenticated using(true);
 alter table public.marketplace_listings enable row level security;create policy listings_read on public.marketplace_listings for select to authenticated using(true);
 create policy listings_write on public.marketplace_listings for update to authenticated using(owner_id=auth.uid()) with check(owner_id=auth.uid());
@@ -34,7 +37,11 @@ await db.query("insert into public.platform_admins(user_id) values($1)",[A]);
 assert.equal((await as(A,"select jsonb_array_length(public.myevent_admin_list('users')) n")).rows[0].n,3);
 await assert.rejects(()=>as(B,"select public.myevent_admin_list('users')"));
 await assert.rejects(()=>as(A,"select public.myevent_admin_action('user',$1,'suspend','','sufficient reason')",[A]));
+await assert.rejects(()=>as(A,"select public.myevent_admin_action('user',$1,'suspend','','sufficient reason')",[B]),/004/);
+await db.exec(await readFile(new URL('../supabase/migrations/202610030004_admin_v21_request_gate.sql',import.meta.url),'utf8'));
 await as(A,"select public.myevent_admin_action('user',$1,'suspend','','sufficient reason')",[B]);
+await assert.rejects(()=>as(B,'select public.myevent_api_request_guard()'),/MYEVENT_ACCOUNT_SUSPENDED/);
+await as(C,'select public.myevent_api_request_guard()');
 assert.equal((await db.query('select banned_until>now() as banned from auth.users where id=$1',[B])).rows[0].banned,true);
 assert.equal((await as(B,'select count(*)::int n from public.events')).rows[0].n,0);
 await as(A,"select public.myevent_admin_action('event',$1,'hide','','sufficient reason')",[E]);
@@ -60,4 +67,4 @@ assert.ok((await as(A,"select jsonb_array_length(public.myevent_admin_list('audi
 await assert.rejects(()=>as(B,"select public.myevent_admin_config('module','games',false)"));
 await as(A,"select public.myevent_admin_config('module','games',false)");
 assert.equal((await db.query("select enabled from public.admin_app_settings where key='games'")).rows[0].enabled,false);
-console.log('Admin V2: roles, suspension, moderation, reports, config and audit OK');
+console.log('Admin V2.1: roles, suspension, moderation, reports, config and audit OK');

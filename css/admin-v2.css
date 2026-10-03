@@ -1,23 +1,29 @@
-#myeventAdminPanel{font:inherit;overscroll-behavior:contain}
+#myeventAdminPanel{font:inherit;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#myeventAdminPanel .adminTopbar{position:sticky;top:0;z-index:2;background:#080d18;padding-top:4px}
+#myeventAdminPanel .adminHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0}
+#myeventAdminPanel .adminHeader h2{font-size:clamp(18px,4.5vw,26px);min-width:0;line-height:1.25}
+#myeventAdminPanel .adminHeader button{flex-shrink:0;white-space:nowrap}
 #myeventAdminPanel [data-admin-view]{max-width:940px;margin:auto;padding-bottom:32px}
 #myeventAdminPanel [data-admin-view] h3{margin:24px 0 12px}
-#myeventAdminNav{position:sticky;top:68px;z-index:2;background:#080d18;scrollbar-width:thin;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+#myeventAdminPanel #myeventAdminNav{background:#080d18;scrollbar-width:thin;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;max-width:100%;padding-bottom:16px}
 #myeventAdminNav button{scroll-snap-align:start;border:1px solid #ffffff38;border-radius:999px;background:#1a2333;color:#fff;padding:8px 14px}
 #myeventAdminNav button[aria-current=page]{border-color:var(--myevent-accent,#fa7642);background:rgba(var(--myevent-accent-rgb,250,118,66),.2);box-shadow:0 0 0 1px var(--myevent-accent,#fa7642);outline:0}
-#myeventAdminMessage{min-height:1.5em;color:#cbd5e1}
+#myeventAdminMessage{min-height:1.5em;color:#cbd5e1;overflow-wrap:anywhere}
 #myeventAdminMessage[data-state=error]{color:#ff9292}
 #myeventAdminMessage[data-state=success]{color:#88efb5}
 #myeventAdminPanel .adminSearch{display:block;max-width:600px;margin:16px 0}
 #myeventAdminPanel .adminSearch input{margin-top:6px}
-.adminList{display:grid;gap:10px;margin:14px 0 22px}
-.adminCard{border:1px solid #ffffff30;border-radius:14px;background:#151d2b;padding:14px;min-width:0}
-.adminCard h4{margin:0 0 6px;font-size:1rem;overflow-wrap:anywhere}
-.adminCard p{margin:5px 0;color:#cbd5e1;overflow-wrap:anywhere}
-.adminCard small{color:#aab6c9}
-.adminAvatarText{display:grid;place-items:center;background:#26344a;font-size:24px}
-.adminActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-#myeventAdminPanel .adminActions button{padding:8px 12px;background:#222e40;color:#fff;border:1px solid #ffffff55;border-radius:10px}
+#myeventAdminPanel input,#myeventAdminPanel select{font-size:16px;max-width:100%}
+#myeventAdminPanel .adminList{display:grid;gap:10px;margin:14px 0 22px;min-width:0}
+#myeventAdminPanel .adminCard{border:1px solid #ffffff30;border-radius:14px;background:#151d2b;padding:14px;min-width:0}
+#myeventAdminPanel .adminCard h4{margin:0 0 6px;font-size:1rem;overflow-wrap:anywhere}
+#myeventAdminPanel .adminCard p{margin:5px 0;color:#cbd5e1;overflow-wrap:anywhere}
+#myeventAdminPanel .adminCard small{color:#aab6c9;overflow-wrap:anywhere}
+#myeventAdminPanel .adminAvatarText{display:grid;place-items:center;background:#26344a;font-size:24px}
+#myeventAdminPanel .adminActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#myeventAdminPanel .adminActions button{padding:8px 12px;background:#222e40;color:#fff;border:1px solid #ffffff55;border-radius:10px;min-height:44px}
 #myeventAdminPanel .adminActions button.adminDanger{border-color:#ec7777;color:#ffb4b4}
-#myeventAdminPanel .adminActions button:disabled{opacity:.5}
+#myeventAdminPanel button:disabled{opacity:.5}
+#myeventAdminPanel button:focus-visible,#myeventAdminPanel input:focus-visible,#myeventAdminPanel select:focus-visible{outline:2px solid var(--myevent-accent,#fa7642);outline-offset:2px}
 #myeventAdminPanel .adminAvatar{width:40px;height:40px;border-radius:50%;object-fit:cover;float:left;margin-right:10px}
-@media(max-width:600px){#myeventAdminPanel{padding-left:12px!important;padding-right:12px!important}#myeventAdminPanel>div>header{min-height:52px}#myeventAdminNav{top:70px;margin-left:-12px;margin-right:-12px;padding-left:12px!important;padding-right:12px!important}#myeventAdminPanel .myeventAdminStat{padding:14px}.adminCard{padding:12px}}
+@media(max-width:600px){#myeventAdminPanel>div{padding-bottom:calc(42px + env(safe-area-inset-bottom))}#myeventAdminPanel .myeventAdminStat{padding:14px}#myeventAdminPanel .adminCard{padding:12px}}

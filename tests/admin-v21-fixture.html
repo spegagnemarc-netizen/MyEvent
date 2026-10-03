@@ -1,0 +1,31 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fixture mobile Admin</title></head><body><p id="fixtureStatus">Chargement du test…</p><script>
+// Deliberately synthetic, isolated visual harness. Never calls Supabase or a real API.
+(async()=>{
+ const source=await (await fetch('../index.html',{cache:'no-store'})).text();const parsed=new DOMParser().parseFromString(source,'text/html');
+ for(const link of parsed.querySelectorAll('link[rel="stylesheet"]')){const url=new URL(link.getAttribute('href'),new URL('../index.html',location.href));if(url.origin===location.origin){const css=document.createElement('link');css.rel='stylesheet';css.href=url.href;document.head.append(css);}}
+ for(const style of parsed.querySelectorAll('style'))document.head.append(style.cloneNode(true));
+ const panel=parsed.getElementById('myeventAdminPanel');document.body.append(document.importNode(panel,true));
+ const toolbar=document.createElement('div');toolbar.style.cssText='padding:10px;background:#151c29;color:#fff;font:14px system-ui';toolbar.innerHTML='<strong>Données fictives</strong> <label><input id="fixtureError" type="checkbox"> Erreur RPC</label><button id="myeventAdminEntry" hidden>Administration MyEvent</button>';document.body.append(toolbar);
+ document.getElementById('fixtureStatus').remove();
+ const me='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',other='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',when=new Date().toISOString();
+ const rows={users:[{id:me,username:'testadmin',display_name:'Administrateur de test',is_admin:true,created_at:when,avatar:'🛡️'},{id:other,username:'testuser',display_name:'Utilisateur fictif au nom très long pour contrôler le retour à la ligne',created_at:when,suspended:false,avatar:'👤'}],events:[{id:'event',name:'Événement fictif',location:'Gap',creator_name:'Utilisateur de test',event_date:when,visibility:'private',hidden:false}],listings:[{id:'listing',title:'Annonce fictive',city:'Gap',status:'active',price_cents:2000,owner_name:'Utilisateur de test',hidden:false}],reports:[{id:'report',target_kind:'event',target_id:'event',reason:'Signalement fictif de contrôle',status:'open',created_at:when}],partners:[{provider:'getyourguide',label:'GetYourGuide',enabled:true,notes:'Catalogue conservé'},{provider:'viator',label:'Viator',enabled:false,notes:''},{provider:'booking',label:'Booking',enabled:false,notes:''},{provider:'ticketnetwork',label:'TicketNetwork',enabled:false,notes:''}],settings:[{key:'music',description:'Musique',enabled:true},{key:'stories',description:'Stories',enabled:true}],audit:[{id:1,action:'configure',target_kind:'module',detail:{key:'music',enabled:true},created_at:when,actor_id:me}]};
+ window.sb={auth:{getUser:async()=>({data:{user:{id:me}}}),onAuthStateChange:()=>{}},rpc:async(name,args)=>{
+  await new Promise(r=>setTimeout(r,80));
+  if(name==='myevent_is_admin')return{data:true};
+  if(document.getElementById('fixtureError').checked)return{error:{message:'Erreur RPC fictive : connexion indisponible'}};
+  if(name==='myevent_admin_overview')return{data:{users:2,events:1,marketplace:1,suspended:rows.users[1].suspended?1:0,open_reports:1,suspension_gate_ready:true,generated_at:when}};
+  if(name==='myevent_admin_list')return{data:(rows[args.p_kind]||[]).filter(r=>!args.p_query||JSON.stringify(r).toLowerCase().includes(args.p_query.toLowerCase()))};
+  if(name==='myevent_admin_partner_content_list')return{data:[{id:'content',title:'Activité GetYourGuide fictive',kind:'activity',city:'Gap',enabled:true}]};
+  if(name==='myevent_admin_action'){
+   if(args.p_kind==='user'){rows.users[1].suspended=args.p_action==='suspend';rows.users[1].managed_suspension=rows.users[1].suspended;}
+   if(args.p_kind==='event'){if(args.p_action==='visibility')rows.events[0].visibility=args.p_value;else rows.events[0].hidden=args.p_action==='hide';}
+   if(args.p_kind==='listing')rows.listings[0].hidden=args.p_action==='hide';
+   if(args.p_kind==='report')rows.reports[0].status=args.p_action==='resolve'?'resolved':args.p_action==='dismiss'?'dismissed':'open';
+   rows.audit.unshift({id:rows.audit.length+1,action:args.p_action,target_kind:args.p_kind,detail:{reason:args.p_reason},created_at:when,actor_id:me});
+  }
+  if(name==='myevent_admin_config'){const row=(args.p_kind==='partner'?rows.partners:rows.settings).find(r=>(r.provider||r.key)===args.p_key);row.enabled=args.p_enabled;if(args.p_kind==='partner')row.notes=args.p_notes;}
+  return{data:null};
+ }};
+ const script=document.createElement('script');script.src='../js/admin-runtime.js?v=5';document.body.append(script);
+})();
+</script></body></html>
