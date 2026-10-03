@@ -37,7 +37,34 @@ async function load(){
   item.append(name,number);stats.appendChild(item);
  }
  message.textContent='Données actualisées · '+new Date(data.generated_at).toLocaleString('fr-FR');
+ await loadContent();
 }
+const contentForm=document.getElementById('myeventAdminContentForm');
+const contentList=document.getElementById('myeventAdminContentList');
+async function loadContent(){
+ if(!authorized||!contentList)return;
+ const {data,error}=await sb.rpc('myevent_admin_partner_content_list');
+ contentList.replaceChildren();
+ if(error){contentList.textContent='Catalogue indisponible : appliquer la migration 202610030002.';return;}
+ for(const item of data||[]){
+  const line=document.createElement('div');
+  line.style.cssText='padding:12px;border-bottom:1px solid #ffffff33;display:flex;justify-content:space-between;gap:12px;align-items:center';
+  const label=document.createElement('span');
+  label.textContent=item.title+' · '+item.kind+' · '+(item.city||'—')+' · '+(item.enabled?'Actif':'Inactif');
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';
+  edit.addEventListener('click',()=>{for(const key of ['title','kind','city','external_id','affiliate_url','campaign'])contentForm.elements.namedItem(key).value=item[key]||'';contentForm.elements.namedItem('enabled').checked=item.enabled;contentForm.dataset.editId=item.id;contentForm.scrollIntoView({behavior:'smooth'});});
+  line.append(label,edit);contentList.append(line);
+ }
+}
+contentForm?.addEventListener('submit',async e=>{
+ e.preventDefault();await check();if(!authorized){message.textContent='Accès refusé.';return;}
+ const fd=new FormData(contentForm);
+ const args={p_provider:'getyourguide',p_kind:fd.get('kind'),p_title:fd.get('title'),p_city:fd.get('city'),p_external_id:fd.get('external_id'),p_affiliate_url:fd.get('affiliate_url'),p_campaign:fd.get('campaign'),p_enabled:fd.has('enabled'),p_id:contentForm.dataset.editId||null};
+ const submit=contentForm.querySelector('[type=submit]');submit.disabled=true;
+ try{const {error}=await sb.rpc('myevent_admin_partner_content_save',args);if(error)throw error;contentForm.reset();delete contentForm.dataset.editId;message.textContent='Contenu enregistré.';await loadContent();}
+ catch(err){message.textContent='Enregistrement impossible : '+(err.message||'Erreur');}
+ finally{submit.disabled=false;}
+});
 entry.addEventListener('click',async()=>{await check();if(!authorized)return;panel.hidden=false;document.body.classList.add('myeventAdminOpen');await load();});
 close.addEventListener('click',hide);
 refresh.addEventListener('click',load);
