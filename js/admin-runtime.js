@@ -99,6 +99,7 @@ async function perform(kind,id,action,value='',askReason=false){
 function renderUsers(rows,target){
  for(const user of rows){const card=item('article',null,'adminCard');
   if(user.avatar&&/^https:\/\//.test(user.avatar)){const img=document.createElement('img');img.src=user.avatar;img.alt='';img.className='adminAvatar';card.append(img);}
+  else if(user.avatar&&user.avatar.length<12){card.append(item('span',user.avatar,'adminAvatar adminAvatarText'));}
   card.append(item('h4',user.display_name||user.username||'Compte MyEvent'),item('p','@'+(user.username||'—')+' · '+user.id),item('small','Inscrit le '+stamp(user.created_at)+' · '+(user.suspended?'Suspendu':'Actif')+(user.is_admin?' · Administrateur':'')));
   if(!user.is_admin){const actions=item('div',null,'adminActions');actions.append(actionButton(user.suspended?'Réactiver':'Suspendre',()=>perform('user',user.id,user.suspended?'reactivate':'suspend','',!user.suspended),!user.suspended));card.append(actions);}
   target.append(card);
