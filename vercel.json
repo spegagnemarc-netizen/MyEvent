@@ -4,14 +4,21 @@
       "maxDuration": 180
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/runtime-config",
-      "destination": "/api/camera-ai?runtime_config=1"
+      "src": "^/server/search-(accommodation|transport)\\.js$",
+      "status": 404
     },
     {
-      "source": "/",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/api/runtime-config$",
+      "dest": "/api/camera-ai?runtime_config=1"
+    },
+    {
+      "src": "^/$",
+      "dest": "/index.html"
     }
   ]
 }
