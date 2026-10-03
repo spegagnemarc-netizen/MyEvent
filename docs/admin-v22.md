@@ -125,3 +125,5 @@ Configuration : `server/supabase-environment.mjs`, `server/runtime-config-handle
 Sources officielles : https://supabase.com/docs/guides/getting-started/api-keys ; https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore ; https://supabase.com/docs/guides/local-development/database-migrations ; https://vercel.com/docs/environment-variables .
 
 Le premier build a atteint la limite Vercel Hobby de 12 fonctions. La route de configuration réutilise désormais la fonction caméra existante sur un GET dédié, sans modifier ses POST ni ajouter une treizième fonction.
+
+La vérification HTTP a aussi révélé un import ESM statique incompatible avec la compilation CommonJS de Vercel. Les modules serveur et les presets caméra sont chargés par import dynamique dans la fonction async ; cela conserve les POST existants et permet une réponse de configuration contrôlée.

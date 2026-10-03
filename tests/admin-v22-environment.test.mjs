@@ -58,3 +58,15 @@ test('Fictitious accounts seed refuses defaults and grants only A on an empty te
  await db.query('insert into platform_admins values($1,$2)',[ids[1],'super_admin']);await assert.rejects(db.exec(configured),/classiques/);await db.exec('rollback');
  }finally{await db.close();}
 });
+test('Camera config route survives CommonJS compilation and returns controlled 503 without credentials',async()=>{
+ const temp=await mkdtemp(join(tmpdir(),'admin-cjs-'));
+ try{
+  const {writeFile}=await import('node:fs/promises');const {spawnSync}=await import('node:child_process');
+  let compiled=await readFile(new URL('../api/camera-ai.js',import.meta.url),'utf8');
+  compiled=compiled.replace(/export const config=([^\n]+)\n/,'').replace(/export const maxDuration=([^\n]+)\n/,'').replace('export default async function handler','module.exports = async function handler');
+  compiled=compiled.replace(/import\('([^']+)'\)/g,(_,path)=>`import(${JSON.stringify(new URL(path,new URL('../api/camera-ai.js',import.meta.url)).href)})`);
+  const path=join(temp,'camera.cjs');await writeFile(path,compiled);
+  const script=`const h=require(${JSON.stringify(path)});const r={setHeader(){},status(n){this.n=n;return this},json(body){console.log(JSON.stringify({status:this.n,fields:Object.keys(body)}));}};h({method:'GET',query:{runtime_config:'1'}},r).catch(()=>process.exit(1));`;
+  const result=spawnSync(process.execPath,['-e',script],{env:{VERCEL_ENV:'preview'},encoding:'utf8'});assert.equal(result.status,0);assert.deepEqual(JSON.parse(result.stdout),{status:503,fields:['error']});
+ }finally{await rm(temp,{recursive:true,force:true});}
+});

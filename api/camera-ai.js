@@ -1,15 +1,16 @@
-import runtimeConfig from '../server/runtime-config-handler.mjs';
-import {supabaseEnvironment} from '../server/supabase-environment.mjs';
-import {aiLenses} from '../js/camera-ai-presets.mjs';
 
 export const config={api:{bodyParser:{sizeLimit:'4mb'}}};
 export const maxDuration=180;
 export default async function handler(req,res){
-  if(req.method==='GET'&&req.query?.runtime_config==='1')return runtimeConfig(req,res);
+  if(req.method==='GET'&&req.query?.runtime_config==='1'){
+    const {default:runtimeConfig}=await import('../server/runtime-config-handler.mjs');
+    return runtimeConfig(req,res);
+  }
   res.setHeader('Cache-Control','no-store');
   if(req.method!=='POST')return res.status(405).json({error:'Méthode non autorisée.'});
   const authorization=req.headers?.authorization;
   if(!/^Bearer \S+$/.test(authorization||''))return res.status(401).json({error:'Connecte-toi pour utiliser les filtres IA.'});
+  const {aiLenses}=await import('../js/camera-ai-presets.mjs');
   const lens=aiLenses.find(x=>x.id===req.body?.lens);
   const imageData=req.body?.imageData;
   if(!lens)return res.status(400).json({error:'Filtre inconnu.'});
@@ -19,7 +20,7 @@ export default async function handler(req,res){
   const bytes=Buffer.from(match[1],'base64');
   if(bytes.length<4||bytes[0]!==0xff||bytes[1]!==0xd8||bytes[2]!==0xff)return res.status(400).json({error:'Photo JPEG invalide.'});
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'Les filtres IA ne sont pas encore activés sur ce serveur.'});
-  let runtime;try{runtime=supabaseEnvironment();}catch{return res.status(503).json({error:'Environnement Supabase non configuré.'});}
+  let runtime;try{const {supabaseEnvironment}=await import('../server/supabase-environment.mjs');runtime=supabaseEnvironment();}catch{return res.status(503).json({error:'Environnement Supabase non configuré.'});}
   try{
     const auth=await fetch(runtime.url+'/auth/v1/user',{headers:{authorization,apikey:runtime.publishableKey},signal:AbortSignal.timeout(10000)});
     if(!auth.ok)return res.status(auth.status>=500?503:401).json({error:auth.status>=500?'Connexion indisponible. Réessaie.':'Ta session a expiré. Reconnecte-toi.'});
