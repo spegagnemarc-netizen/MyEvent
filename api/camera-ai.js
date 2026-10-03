@@ -1,11 +1,8 @@
+import {supabaseEnvironment} from '../server/supabase-environment.mjs';
 import {aiLenses} from '../js/camera-ai-presets.mjs';
 
 export const config={api:{bodyParser:{sizeLimit:'4mb'}}};
 export const maxDuration=180;
-// Same public project as the application. Secrets stay in server environment variables.
-const authUrl='https://nxxvadbliinhvkirqkkl.supabase.co/auth/v1/user';
-const publicKey='sb_publishable_jBqcZF0k-mNBp5HJGxniTQ_gcjkPgMn';
-
 export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
   if(req.method!=='POST')return res.status(405).json({error:'Méthode non autorisée.'});
@@ -20,8 +17,9 @@ export default async function handler(req,res){
   const bytes=Buffer.from(match[1],'base64');
   if(bytes.length<4||bytes[0]!==0xff||bytes[1]!==0xd8||bytes[2]!==0xff)return res.status(400).json({error:'Photo JPEG invalide.'});
   if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'Les filtres IA ne sont pas encore activés sur ce serveur.'});
+  let runtime;try{runtime=supabaseEnvironment();}catch{return res.status(503).json({error:'Environnement Supabase non configuré.'});}
   try{
-    const auth=await fetch(authUrl,{headers:{authorization,apikey:publicKey},signal:AbortSignal.timeout(10000)});
+    const auth=await fetch(runtime.url+'/auth/v1/user',{headers:{authorization,apikey:runtime.publishableKey},signal:AbortSignal.timeout(10000)});
     if(!auth.ok)return res.status(auth.status>=500?503:401).json({error:auth.status>=500?'Connexion indisponible. Réessaie.':'Ta session a expiré. Reconnecte-toi.'});
     const user=await auth.json();
     if(!user.id)return res.status(401).json({error:'Session invalide.'});

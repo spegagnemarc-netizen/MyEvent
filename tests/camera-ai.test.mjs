@@ -14,6 +14,9 @@ async function run(req){
 }
 function mock(t,fetcher){
   const original=globalThis.fetch,key=process.env.OPENAI_API_KEY;
+  const names=['VERCEL_ENV','SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','MYEVENT_TEST_SUPABASE_REF'];const saved=Object.fromEntries(names.map(k=>[k,process.env[k]]));
+  Object.assign(process.env,{VERCEL_ENV:'preview',SUPABASE_URL:'https://aaaaaaaaaaaaaaaaaaaa.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:'aaaaaaaaaaaaaaaaaaaa'});
+  t.after(()=>{for(const k of names){if(saved[k]===undefined)delete process.env[k];else process.env[k]=saved[k];}});
   process.env.OPENAI_API_KEY='test-only';globalThis.fetch=fetcher;
   t.after(()=>{globalThis.fetch=original;if(key===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=key;});
 }

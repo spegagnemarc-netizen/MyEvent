@@ -1,5 +1,5 @@
 import {categories,conditions,money,validateListing,filterListings,createMarketplaceStore} from './marketplace-data.mjs';
-import {projectUrl,publishableKey} from './marketplace-config.mjs';
+import {marketplaceConfig} from './marketplace-config.mjs';
 
 const root=document.getElementById('myeventMarketplace'),$=id=>root.querySelector('#'+id);
 let client,store,user=null,items=[],favorites=new Set(),photos=new Map(),editing=null,thread=null;
@@ -258,7 +258,8 @@ function signedOut(){
 }
 try{
   if(!window.supabase)throw new Error('Le service de connexion n’a pas pu être chargé. Rechargez la page.');
-  client=window.supabase.createClient(projectUrl,publishableKey);store=createMarketplaceStore(client);
+  const config=await marketplaceConfig();
+  client=window.supabase.createClient(config.url,config.publishableKey,{auth:{storageKey:config.authStorageKey}});store=createMarketplaceStore(client);
   client.auth.onAuthStateChange((_event,session)=>{
     // Schedule work outside the auth callback (avoid SDK auth-lock deadlocks).
     setTimeout(()=>{const next=session?.user;if(!next){signedOut();return;}if(user?.id!==next.id){user=next;window.myeventThemeSetUser?.(next.id);applyTheme(savedTheme());startMarketplaceRealtime();refreshUnread();load();}},0);

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
 <head>
+  <script src="/js/runtime-config.js?v=admin-v22"></script>
 <meta name="impact-site-verification" value="9c29c602-92ef-4085-a0cd-f6009aa76852">
 <!-- V54.31 — suppression du double rendu à l’ouverture d’un événement -->
 <meta charset="utf-8">
@@ -71,9 +72,9 @@
 
 <section id="setup" class="card">
 <h2>Connexion</h2>
-<p class="muted">Project URL déjà renseignée. Ta clé reste dans ton navigateur.</p>
-<input id="url" value="https://nxxvadbliinhvkirqkkl.supabase.co">
-<input id="key" type="password" placeholder="Publishable key (sb_publishable_…)" autocomplete="off">
+<p class="muted">La connexion est configurée pour cet environnement.</p>
+<input id="url" hidden disabled>
+<input id="key" hidden disabled>
 <button id="connectBtn" class="hidden">Connecter</button>
 <p id="status" class="muted"></p>
 </section>
@@ -1079,7 +1080,7 @@
 
 
 <script src="js/invitation-context.js?v=1"></script>
-<script src="js/core-runtime.js?v=outings-viator-fix-1"></script>
+<script src="js/core-runtime.js?v=environment-v22"></script>
 
 
 <script src="js/discussion-runtime.js"></script>

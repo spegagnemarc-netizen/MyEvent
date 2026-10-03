@@ -426,14 +426,13 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#locRefreshBtn'))loadEventLocations();
 });
 
-const SUPABASE_URL='https://nxxvadbliinhvkirqkkl.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_jBqcZF0k-mNBp5HJGxniTQ_gcjkPgMn';
-
 async function connect(){
   msg('status','Connexion à Supabase…');
   try{
     if(!window.supabase) throw new Error('La bibliothèque Supabase ne s’est pas chargée. Recharge la page.');
-    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+    if(!window.myeventRuntime)throw new Error('Configuration de connexion indisponible.');
+    const config=await window.myeventRuntime.ready;
+    sb=window.supabase.createClient(config.url,config.publishableKey,{auth:{storageKey:config.authStorageKey}});
     const r=await sb.auth.getSession();
     if(r.error) throw r.error;
     $('setup').classList.add('hidden');

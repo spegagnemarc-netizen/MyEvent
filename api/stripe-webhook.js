@@ -143,7 +143,10 @@ module.exports = async function handler(req, res) {
          */
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!supabaseKey) throw new Error("Configuration Supabase incomplète");
+        // Test webhooks can never reach the current Supabase project.
         const url = fundEntriesUrl(process.env.SUPABASE_URL, fundEntryId);
+        const {supabaseEnvironment} = await import('../server/supabase-environment.mjs');
+        supabaseEnvironment({...process.env,SUPABASE_URL:url.origin});
         const response = await fetch(
           url,
           {
