@@ -3553,3 +3553,8 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 
 #myeventGygEiffel .myeventGygActivityLink{display:block;width:100%;box-sizing:border-box;margin-top:12px;padding:13px 15px;border-radius:12px;background:#1769c2;color:#fff;text-align:center;text-decoration:none;font-weight:750;overflow-wrap:anywhere}
 #myeventGygEiffel .myeventGygActivityLink:focus-visible{outline:3px solid #ffb84d;outline-offset:3px}
+/* Accommodation controls remain usable at 320px and with text zoom. */
+#accommodationPanel input,#accommodationPanel select,#accommodationPanel button{min-height:44px;font-size:16px}
+#accommodationPanel .m58SearchResult{overflow-wrap:anywhere}
+#accommodationPanel a{color:#a6dfff;text-decoration:underline}
+#accommodationPanel button:focus-visible,#accommodationPanel input:focus-visible,#accommodationPanel select:focus-visible,#accommodationPanel a:focus-visible{outline:3px solid #a6dfff;outline-offset:2px}

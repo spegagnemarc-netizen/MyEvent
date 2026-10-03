@@ -862,16 +862,16 @@
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel">
 <summary>🏨 Hébergement</summary>
 <div class="collapsibleBody">
-  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Recherche des disponibilités ou ajoute un hébergement choisi. Les hébergements pourront être placés sur la carte et dans le planning.</p></div>
-  <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher des disponibilités</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button></div>
+  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Prépare ta recherche ou ajoute un hébergement choisi. La recherche intégrée attend un fournisseur autorisé. Les hébergements pourront être placés sur la carte et dans le planning.</p></div>
+  <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher un hébergement</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button><button type="button" class="secondary" id="m58AccommodationPlanningBtn">📅 Voir le planning</button></div>
   <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
     <div class="m58SearchTitle">🔎 Recherche d’hébergement</div>
     <label class="m58Field"><span>📍 Ville ou destination</span><input id="m58AccommodationDestination" placeholder="Ville, région ou adresse"></label>
     <div class="fieldRow"><label class="m58Field"><span>📅 Date d’arrivée</span><input id="m58AccommodationCheckin" type="date"></label><label class="m58Field"><span>📅 Date de départ</span><input id="m58AccommodationCheckout" type="date"></label></div>
-    <div class="fieldRow"><label class="m58Field"><span>👥 Voyageurs</span><input id="m58AccommodationGuests" type="number" min="1" value="2" placeholder="Ex. 2"></label><label class="m58Field"><span>🛏️ Chambres</span><input id="m58AccommodationRooms" type="number" min="1" value="1" placeholder="Ex. 1"></label></div>
-    <select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select>
+    <div class="fieldRow"><label class="m58Field"><span>👥 Voyageurs</span><input id="m58AccommodationGuests" type="number" min="1" max="30" step="1" inputmode="numeric" value="2" placeholder="Ex. 2"></label><label class="m58Field"><span>🛏️ Chambres</span><input id="m58AccommodationRooms" type="number" min="1" max="30" step="1" inputmode="numeric" value="1" placeholder="Ex. 1"></label></div>
+    <label class="m58Field"><span>Type d’hébergement</span><select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select></label>
     <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58AccommodationSearchCancel">Annuler</button></div>
-    <div id="m58AccommodationSearchResult" class="m58SearchResult"></div>
+    <div id="m58AccommodationSearchResult" class="m58SearchResult" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
   <div id="m58AccommodationForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un hébergement</div>
@@ -1199,6 +1199,8 @@
 
 <script src="js/ai-runtime.js"></script>
 
+<script src="js/accommodation-search-contract.js"></script>
+<script src="js/accommodation-search-runtime.js"></script>
 <script src="js/planning-transport-runtime.js"></script>
 
 
