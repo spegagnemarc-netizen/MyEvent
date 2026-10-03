@@ -543,6 +543,17 @@ await loadMembers();
 finally{setBusy('saveProfileBtn',false,'Enregistrer mon profil')}
 }
 
+function renderEventLoadError(error){
+  const list=$('eventList');
+  if(!list)return;
+  const detail=error?.message||String(error);
+  const paragraph=document.createElement('p');
+  paragraph.className='err';
+  paragraph.setAttribute('role','alert');
+  paragraph.textContent='Impossible de charger les événements. '+detail;
+  list.replaceChildren(paragraph);
+}
+
 async function show(u){
   user=u;
   window.restoreMyEventCardOrder?.();
@@ -598,11 +609,13 @@ async function show(u){
     $('mediaGrid').innerHTML='<p class="muted">Sélectionne un événement pour voir les souvenirs.</p>';
     global(events.length ? 'Accueil chargé. Choisis un événement pour l’ouvrir.' : 'Aucun événement pour le moment. Crée ou rejoins un groupe.','ok');
   }catch(e){
+    renderEventLoadError(e);
     global(e.message||String(e),'err');
   }
 }
 
 async function loadEvents(){
+  try{
   const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
   if(owned.error) throw new Error('Événements : '+owned.error.message);
 
@@ -740,6 +753,10 @@ async function loadEvents(){
     if(typeof refreshReservationBoxes==='function') await refreshReservationBoxes();
   }
   return events;
+  }catch(e){
+    renderEventLoadError(e);
+    throw e;
+  }
 }
 
 let inlineEventRenderToken=0;
