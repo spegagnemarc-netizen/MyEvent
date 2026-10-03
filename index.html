@@ -1411,6 +1411,18 @@
   <p style="opacity:.8">Tableau de bord privé · Version 1 (consultation uniquement)</p>
   <div id="myeventAdminStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0"></div>
   <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
+  <h3>Contenus affiliés · GetYourGuide</h3>
+  <form id="myeventAdminContentForm" style="display:grid;gap:10px;max-width:600px;margin:16px 0">
+   <input name="title" required maxlength="160" placeholder="Titre (ex. Tour Eiffel)">
+   <select name="kind"><option value="city_widget">Widget ville</option><option value="activity">Activité</option><option value="availability">Disponibilité</option></select>
+   <input name="city" maxlength="120" placeholder="Ville (ex. Paris)">
+   <input name="external_id" maxlength="100" placeholder="Identifiant GetYourGuide (ex. 786932)">
+   <input name="affiliate_url" type="url" maxlength="2048" placeholder="Lien affilié HTTPS (facultatif)">
+   <input name="campaign" maxlength="100" placeholder="Campagne (ex. Paris)">
+   <label><input type="checkbox" name="enabled"> Actif</label>
+   <button type="submit">Enregistrer le contenu</button>
+  </form>
+  <div id="myeventAdminContentList" aria-live="polite"></div>
   <p id="myeventAdminMessage" aria-live="polite"></p>
   <p style="opacity:.75">La gestion des utilisateurs, des événements et de la modération sera ajoutée après validation des autorisations et des tests de sécurité.</p>
  </div>
@@ -1421,6 +1433,6 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<script src="js/admin-runtime.js?v=1" defer></script>
+<script src="js/admin-runtime.js?v=2" defer></script>
 </body>
 </html>
