@@ -1441,11 +1441,32 @@
    </form>
    <h3>Catalogue</h3><div id="myeventAdminContentList" aria-live="polite"></div>
   </div>
-  <div data-admin-view="users" hidden><h3>Utilisateurs</h3><p>Module de gestion en préparation : aucune suspension ni suppression n'est activée avant l'ajout de permissions et d'un journal d'audit côté serveur.</p></div>
-  <div data-admin-view="events" hidden><h3>Événements</h3><p>Module de gestion en préparation : les événements existants ne sont pas modifiés par ce tableau de bord.</p></div>
-  <div data-admin-view="marketplace" hidden><h3>Marketplace</h3><p>Modération des annonces et signalements à connecter aux tables existantes, avec confirmation des actions sensibles.</p></div>
-  <div data-admin-view="partners" hidden><h3>Partenaires et API</h3><p>GetYourGuide est éditable dans Affiliation. Les clés API et secrets resteront exclusivement côté serveur.</p></div>
-  <div data-admin-view="settings" hidden><h3>Paramètres</h3><p>Les réglages globaux seront activés progressivement après définition de leur portée et des contrôles d'accès.</p></div>
+  <div data-admin-view="users" hidden>
+   <h3>Utilisateurs</h3><p>Profils et dates d'inscription. Les comptes administrateurs sont protégés.</p>
+   <label class="adminSearch">Rechercher un utilisateur<input type="search" data-admin-search="users" placeholder="Nom, pseudo ou UUID"></label>
+   <div id="myeventAdminUsers" class="adminList" aria-live="polite"></div>
+  </div>
+  <div data-admin-view="events" hidden>
+   <h3>Événements</h3><p>La mise en retrait masque l'événement dans la découverte. Les membres conservent leur accès.</p>
+   <label class="adminSearch">Rechercher un événement<input type="search" data-admin-search="events" placeholder="Nom, lieu ou UUID"></label>
+   <div id="myeventAdminEvents" class="adminList" aria-live="polite"></div>
+   <h3>Signalements d'événements</h3><div id="myeventAdminEventReports" class="adminList"></div>
+  </div>
+  <div data-admin-view="marketplace" hidden>
+   <h3>Marketplace</h3><p>Modération des annonces et signalements, sans suppression définitive.</p>
+   <label class="adminSearch">Rechercher une annonce<input type="search" data-admin-search="listings" placeholder="Titre, ville ou UUID"></label>
+   <div id="myeventAdminListings" class="adminList" aria-live="polite"></div>
+   <h3>Signalements des annonces</h3><div id="myeventAdminListingReports" class="adminList"></div>
+  </div>
+  <div data-admin-view="partners" hidden>
+   <h3>Partenaires</h3><p>Le registre central conserve l'état et les notes de chaque partenaire. Les clés API restent sur le serveur ; activer un registre ne met pas une intégration en ligne.</p>
+   <div id="myeventAdminPartners" class="adminList" aria-live="polite"></div>
+  </div>
+  <div data-admin-view="settings" hidden>
+   <h3>Paramètres généraux</h3><p>Configuration administrative préparée pour les modules. Son état n'interrompt pas les fonctions existantes tant que chaque module n'y est pas relié.</p>
+   <div id="myeventAdminSettings" class="adminList" aria-live="polite"></div>
+   <h3>Historique administratif</h3><div id="myeventAdminAudit" class="adminList" aria-live="polite"></div>
+  </div>
  </div>
 </section>
 <style>
@@ -1458,6 +1479,7 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<script src="js/admin-runtime.js?v=3" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=1">
+<script src="js/admin-runtime.js?v=4" defer></script>
 </body>
 </html>

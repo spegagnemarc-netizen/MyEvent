@@ -1,0 +1,22 @@
+#myeventAdminPanel{font:inherit;overscroll-behavior:contain}
+#myeventAdminPanel [data-admin-view]{max-width:940px;margin:auto;padding-bottom:32px}
+#myeventAdminPanel [data-admin-view] h3{margin:24px 0 12px}
+#myeventAdminNav{position:sticky;top:68px;z-index:2;background:#080d18;scrollbar-width:thin;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+#myeventAdminNav button{scroll-snap-align:start;border:1px solid #ffffff38;border-radius:999px;background:#1a2333;color:#fff;padding:8px 14px}
+#myeventAdminNav button[aria-current=page]{border-color:var(--myevent-accent,#fa7642);background:rgba(var(--myevent-accent-rgb,250,118,66),.2);box-shadow:0 0 0 1px var(--myevent-accent,#fa7642);outline:0}
+#myeventAdminMessage{min-height:1.5em;color:#cbd5e1}
+#myeventAdminMessage[data-state=error]{color:#ff9292}
+#myeventAdminMessage[data-state=success]{color:#88efb5}
+#myeventAdminPanel .adminSearch{display:block;max-width:600px;margin:16px 0}
+#myeventAdminPanel .adminSearch input{margin-top:6px}
+.adminList{display:grid;gap:10px;margin:14px 0 22px}
+.adminCard{border:1px solid #ffffff30;border-radius:14px;background:#151d2b;padding:14px;min-width:0}
+.adminCard h4{margin:0 0 6px;font-size:1rem;overflow-wrap:anywhere}
+.adminCard p{margin:5px 0;color:#cbd5e1;overflow-wrap:anywhere}
+.adminCard small{color:#aab6c9}
+.adminActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#myeventAdminPanel .adminActions button{padding:8px 12px;background:#222e40;color:#fff;border:1px solid #ffffff55;border-radius:10px}
+#myeventAdminPanel .adminActions button.adminDanger{border-color:#ec7777;color:#ffb4b4}
+#myeventAdminPanel .adminActions button:disabled{opacity:.5}
+#myeventAdminPanel .adminAvatar{width:40px;height:40px;border-radius:50%;object-fit:cover;float:left;margin-right:10px}
+@media(max-width:600px){#myeventAdminPanel{padding-left:12px!important;padding-right:12px!important}#myeventAdminPanel>div>header{min-height:52px}#myeventAdminNav{top:70px;margin-left:-12px;margin-right:-12px;padding-left:12px!important;padding-right:12px!important}#myeventAdminPanel .myeventAdminStat{padding:14px}.adminCard{padding:12px}}
