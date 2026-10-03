@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import vm f
 import {readFile,mkdtemp,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';
 import {createRequire} from 'node:module';const require=createRequire(import.meta.url);const {JSDOM}=require('jsdom');
 import {supabaseEnvironment} from '../server/supabase-environment.mjs';
-import handler from '../api/runtime-config.js';
+import handler from '../server/runtime-config-handler.mjs';
 import {checkConfig} from '../scripts/check-test-environment.mjs';import {validateSchemaOnly,prepare,priorMigrations} from '../scripts/prepare-admin-test.mjs';
 const ref='aaaaaaaaaaaaaaaaaaaa',env={VERCEL_ENV:'preview',SUPABASE_URL:`https://${ref}.supabase.co`,SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:ref};
 test('Preview is pinned, no source fallback, local and production scopes remain explicit',()=>{

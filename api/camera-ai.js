@@ -1,9 +1,11 @@
+import runtimeConfig from '../server/runtime-config-handler.mjs';
 import {supabaseEnvironment} from '../server/supabase-environment.mjs';
 import {aiLenses} from '../js/camera-ai-presets.mjs';
 
 export const config={api:{bodyParser:{sizeLimit:'4mb'}}};
 export const maxDuration=180;
 export default async function handler(req,res){
+  if(req.method==='GET'&&req.query?.runtime_config==='1')return runtimeConfig(req,res);
   res.setHeader('Cache-Control','no-store');
   if(req.method!=='POST')return res.status(405).json({error:'Méthode non autorisée.'});
   const authorization=req.headers?.authorization;

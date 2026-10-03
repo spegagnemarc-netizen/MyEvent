@@ -1,8 +1,14 @@
 {
   "functions": {
-    "api/camera-ai.js": { "maxDuration": 180 }
+    "api/camera-ai.js": {
+      "maxDuration": 180
+    }
   },
   "rewrites": [
+    {
+      "source": "/api/runtime-config",
+      "destination": "/api/camera-ai?runtime_config=1"
+    },
     {
       "source": "/",
       "destination": "/index.html"

@@ -63,3 +63,9 @@ test('timeout preserves a retryable error',async t=>{
   mock(t,async()=>{throw new DOMException('Timeout','TimeoutError');});
   assert.equal((await run(request())).status,504);
 });
+test('dedicated config GET reuses camera function without invoking Auth or image generation',async t=>{
+ mock(t,()=>{throw new Error('Unexpected network');});
+ const req=request({},undefined,'GET');req.query={runtime_config:'1'};
+ const result=await run(req);assert.equal(result.status,200);assert.equal(result.body.environment,'preview');assert.equal(result.body.projectRef,'aaaaaaaaaaaaaaaaaaaa');assert(!JSON.stringify(result.body).includes('test-only'));
+ assert.equal((await run(request({},undefined,'GET'))).status,405);
+});

@@ -1,4 +1,4 @@
-import {supabaseEnvironment} from '../server/supabase-environment.mjs';
+import {supabaseEnvironment} from './supabase-environment.mjs';
 export default function handler(req,res){
  res.setHeader('Cache-Control','no-store, max-age=0');res.setHeader('X-Content-Type-Options','nosniff');
  if(req.method!=='GET')return res.status(405).json({error:'Méthode non autorisée.'});

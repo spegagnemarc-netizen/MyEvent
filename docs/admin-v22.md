@@ -22,7 +22,7 @@ La voie sûre préparée est **un export complet du schéma courant, sans donné
 | `SUPABASE_PUBLISHABLE_KEY` | Clé publique du TEST | Clé publique du TEST | Clé publique de sa propre base |
 | `MYEVENT_TEST_SUPABASE_REF` | Référence TEST, ou `local` | Référence TEST exacte | Non utilisée |
 
-`.env.example` donne les noms, sans clé réelle. `.env*`, `.vercel` et `supabase/test/private` sont ignorés par Git. `api/runtime-config.js` expose uniquement URL, référence, environnement, indicateur de test, clé **publishable publique** et nom de session. Il n'expose jamais service_role, clé secrète, clé OpenAI, mot de passe DB ou variables d'environnement complètes. La clé publishable est un identifiant public requis par le SDK navigateur ; elle ne donne aucun contournement de RLS. Seules les clés `sb_publishable_` sont acceptées, pas les anciennes clés JWT ni `sb_secret_`.
+`.env.example` donne les noms, sans clé réelle. `.env*`, `.vercel` et `supabase/test/private` sont ignorés par Git. La route `/api/runtime-config` (réécrite vers un GET dédié de la fonction caméra, handler `server/runtime-config-handler.mjs`) expose uniquement URL, référence, environnement, indicateur de test, clé **publishable publique** et nom de session. Il n'expose jamais service_role, clé secrète, clé OpenAI, mot de passe DB ou variables d'environnement complètes. La clé publishable est un identifiant public requis par le SDK navigateur ; elle ne donne aucun contournement de RLS. Seules les clés `sb_publishable_` sont acceptées, pas les anciennes clés JWT ni `sb_secret_`.
 
 L'endpoint est `no-store`. En cas d'erreur, le message ne recopie aucune valeur de variable. Le bandeau TEST reste au-dessus de l'interface, y compris Admin et Marketplace ; si configuration absente, bandeau CONNEXION BLOQUÉE. Pas de service worker identifié dans ce dépôt. Les anciens déploiements ont encore leur ancienne configuration : ne tester que la nouvelle URL Preview.
 
@@ -120,6 +120,8 @@ Les résultats distants Auth/RLS/Storage/Realtime, le schéma historique complet
 
 ## Fichiers
 
-Configuration : `server/supabase-environment.mjs`, `api/runtime-config.js`, `js/runtime-config.js`, `.env.example`, `.gitignore` ; intégrations minimales dans `index.html`, `marketplace.html`, `js/core-runtime.js`, `js/marketplace-config.mjs`, `js/marketplace.mjs`, `api/camera-ai.js`, `api/stripe-webhook.js`. Préparation : deux scripts hors ligne/lecture seule, quatre SQL sous `supabase/test`. Tests : `tests/admin-v22-environment.test.mjs`, fixtures d'environnement caméra/webhook adaptées. Aucun secret réel ajouté.
+Configuration : `server/supabase-environment.mjs`, `server/runtime-config-handler.mjs`, `vercel.json`, `js/runtime-config.js`, `.env.example`, `.gitignore` ; intégrations minimales dans `index.html`, `marketplace.html`, `js/core-runtime.js`, `js/marketplace-config.mjs`, `js/marketplace.mjs`, `api/camera-ai.js`, `api/stripe-webhook.js`. Préparation : deux scripts hors ligne/lecture seule, quatre SQL sous `supabase/test`. Tests : `tests/admin-v22-environment.test.mjs`, fixtures d'environnement caméra/webhook adaptées. Aucun secret réel ajouté.
 
 Sources officielles : https://supabase.com/docs/guides/getting-started/api-keys ; https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore ; https://supabase.com/docs/guides/local-development/database-migrations ; https://vercel.com/docs/environment-variables .
+
+Le premier build a atteint la limite Vercel Hobby de 12 fonctions. La route de configuration réutilise désormais la fonction caméra existante sur un GET dédié, sans modifier ses POST ni ajouter une treizième fonction.
