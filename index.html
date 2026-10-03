@@ -1497,6 +1497,10 @@ body.myeventAdminOpen{overflow:hidden}
 <link rel="stylesheet" href="css/admin-v2.css?v=2">
 <script src="js/admin-runtime.js?v=5" defer></script>
 
+<!-- Keep the official widget inside the Transport card on narrow screens. -->
+<style id="myevent-omio-responsive">
+#myeventOmioSection [data-omio-widget],#myeventOmioSection form,#myeventOmioSection form>div{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+</style>
 <!-- MyEvent — Chargement du widget officiel Omio -->
 <script>
   (function addOmioWidget(d) {
