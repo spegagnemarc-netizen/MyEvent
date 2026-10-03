@@ -351,6 +351,7 @@
 <div class="card socialProfileStatusCard">
   <div class="profileQuickAccess">
     <div class="muted profileHint">Ton profil est affiché en haut de l'accueil. Maintiens ta photo pour le modifier.</div>
+    <button type="button" class="secondary" id="myeventAdminEntry" hidden>🛡️ Administration MyEvent</button>
     <button class="secondary" id="logoutBtn">Déconnexion</button>
   </div>
   <div id="globalmsg" class="notice muted">Prêt.</div>
@@ -1404,5 +1405,22 @@
  modal.addEventListener('click',e=>{if(e.target===modal)hide();});
 })();
 </script>
+<section id="myeventAdminPanel" hidden role="dialog" aria-modal="true" aria-label="Administration MyEvent" style="position:fixed;inset:0;z-index:99999;background:rgba(4,8,22,.94);overflow:auto;padding:24px 14px;color:#fff">
+ <div style="max-width:900px;margin:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2>🛡️ Administration MyEvent</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button></div>
+  <p style="opacity:.8">Tableau de bord privé · Version 1 (consultation uniquement)</p>
+  <div id="myeventAdminStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0"></div>
+  <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
+  <p id="myeventAdminMessage" aria-live="polite"></p>
+  <p style="opacity:.75">La gestion des utilisateurs, des événements et de la modération sera ajoutée après validation des autorisations et des tests de sécurité.</p>
+ </div>
+</section>
+<style>
+#myeventAdminEntry[hidden],#myeventAdminPanel[hidden]{display:none!important}
+.myeventAdminStat{padding:20px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:10px}
+.myeventAdminStat strong{font-size:2rem}
+body.myeventAdminOpen{overflow:hidden}
+</style>
+<script src="js/admin-runtime.js?v=1" defer></script>
 </body>
 </html>
