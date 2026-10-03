@@ -6,6 +6,17 @@ const panel=document.getElementById('myeventAdminPanel');
 const close=document.getElementById('myeventAdminClose');
 const refresh=document.getElementById('myeventAdminRefresh');
 const message=document.getElementById('myeventAdminMessage');
+const nav=document.getElementById('myeventAdminNav');
+const cancelEdit=document.getElementById('myeventAdminContentCancel');
+function tab(name){
+ for(const button of nav.querySelectorAll('[data-admin-tab]')){
+  if(button.dataset.adminTab===name)button.setAttribute('aria-current','page');
+  else button.removeAttribute('aria-current');
+ }
+ for(const view of panel.querySelectorAll('[data-admin-view]'))view.hidden=view.dataset.adminView!==name;
+ panel.scrollTop=0;
+}
+nav?.addEventListener('click',e=>{const button=e.target.closest('[data-admin-tab]');if(button)tab(button.dataset.adminTab);});
 if(!entry||!panel||!close||!refresh||!message)return;
 let currentId=null,checking=false,authorized=false;
 function hide(){panel.hidden=true;document.body.classList.remove('myeventAdminOpen');}
@@ -52,7 +63,7 @@ async function loadContent(){
   const label=document.createElement('span');
   label.textContent=item.title+' · '+item.kind+' · '+(item.city||'—')+' · '+(item.enabled?'Actif':'Inactif');
   const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';
-  edit.addEventListener('click',()=>{for(const key of ['title','kind','city','external_id','affiliate_url','campaign'])contentForm.elements.namedItem(key).value=item[key]||'';contentForm.elements.namedItem('enabled').checked=item.enabled;contentForm.dataset.editId=item.id;contentForm.scrollIntoView({behavior:'smooth'});});
+  edit.addEventListener('click',()=>{for(const key of ['title','kind','city','external_id','affiliate_url','campaign'])contentForm.elements.namedItem(key).value=item[key]||'';contentForm.elements.namedItem('enabled').checked=item.enabled;contentForm.dataset.editId=item.id;cancelEdit.hidden=false;tab('content');contentForm.scrollIntoView({behavior:'smooth'});});
   line.append(label,edit);contentList.append(line);
  }
 }
@@ -61,11 +72,12 @@ contentForm?.addEventListener('submit',async e=>{
  const fd=new FormData(contentForm);
  const args={p_provider:'getyourguide',p_kind:fd.get('kind'),p_title:fd.get('title'),p_city:fd.get('city'),p_external_id:fd.get('external_id'),p_affiliate_url:fd.get('affiliate_url'),p_campaign:fd.get('campaign'),p_enabled:fd.has('enabled'),p_id:contentForm.dataset.editId||null};
  const submit=contentForm.querySelector('[type=submit]');submit.disabled=true;
- try{const {error}=await sb.rpc('myevent_admin_partner_content_save',args);if(error)throw error;contentForm.reset();delete contentForm.dataset.editId;message.textContent='Contenu enregistré.';await loadContent();}
+ try{const {error}=await sb.rpc('myevent_admin_partner_content_save',args);if(error)throw error;contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;message.textContent='Contenu enregistré.';await loadContent();}
  catch(err){message.textContent='Enregistrement impossible : '+(err.message||'Erreur');}
  finally{submit.disabled=false;}
 });
-entry.addEventListener('click',async()=>{await check();if(!authorized)return;panel.hidden=false;document.body.classList.add('myeventAdminOpen');await load();});
+cancelEdit?.addEventListener('click',()=>{contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;});
+entry.addEventListener('click',async()=>{await check();if(!authorized)return;panel.hidden=false;tab('overview');document.body.classList.add('myeventAdminOpen');await load();});
 close.addEventListener('click',hide);
 refresh.addEventListener('click',load);
 panel.addEventListener('click',e=>{if(e.target===panel)hide();});
