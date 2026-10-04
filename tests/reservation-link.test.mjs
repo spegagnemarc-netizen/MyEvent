@@ -92,6 +92,10 @@ test('the real planning timeline renders imported status, original link and no i
  await w.renderEventPlanningTimeline(box,{id:'event-a'},'manual',null,null,[]);
  assert.match(box.textContent,/Hébergement ajouté/);assert.match(box.textContent,/heure à préciser/);assert.equal(box.querySelector('.reservationLinkActions a').href,url);assert.equal(box.querySelectorAll('.inlineEventTimelineItem').length,2);
  assert(box.querySelector('[data-reservation-link-add]'));
+ assert.equal(w.v58AccommodationDate('2026-10-05',true),'05/10/2026 · heure à préciser');
+ await w.renderEventAccommodation(box,{id:'event-a'});
+ assert.match(box.querySelector('#eventAccommodationList').textContent,/heure à préciser/);
+ assert.doesNotMatch(box.querySelector('#eventAccommodationList').textContent,/02:00|00:00/);
  }finally{f.close();}
 });
 test('map layer only includes verified coordinates and clears them on event changes',async()=>{

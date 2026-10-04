@@ -188,6 +188,7 @@ async function getEventAccommodations(eventId){
 }
 function v58AccommodationDate(value,withTime=false){
   if(!value)return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(value)))return String(value).split('-').reverse().join('/')+(withTime?' · heure à préciser':'');
   const d=new Date(value);
   if(Number.isNaN(d.getTime()))return String(value);
   return d.toLocaleString('fr-FR',withTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit',year:'numeric'});
