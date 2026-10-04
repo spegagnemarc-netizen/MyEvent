@@ -862,16 +862,17 @@
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel">
 <summary>🏨 Hébergement</summary>
 <div class="collapsibleBody">
-  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Prépare ta recherche ou ajoute un hébergement choisi. La recherche intégrée attend un fournisseur autorisé. Les hébergements pourront être placés sur la carte et dans le planning.</p></div>
+  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Recherche avec Hotels.com France ou ajoute un hébergement choisi. Retrouve ensuite tes nuitées sur la carte et dans le planning.</p></div>
   <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher un hébergement</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button><button type="button" class="secondary" id="m58AccommodationPlanningBtn">📅 Voir le planning</button></div>
   <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
-    <div class="m58SearchTitle">🔎 Recherche d’hébergement</div>
-    <label class="m58Field"><span>📍 Ville ou destination</span><input id="m58AccommodationDestination" placeholder="Ville, région ou adresse"></label>
-    <div class="fieldRow"><label class="m58Field"><span>📅 Date d’arrivée</span><input id="m58AccommodationCheckin" type="date"></label><label class="m58Field"><span>📅 Date de départ</span><input id="m58AccommodationCheckout" type="date"></label></div>
-    <div class="fieldRow"><label class="m58Field"><span>👥 Voyageurs</span><input id="m58AccommodationGuests" type="number" min="1" max="30" step="1" inputmode="numeric" value="2" placeholder="Ex. 2"></label><label class="m58Field"><span>🛏️ Chambres</span><input id="m58AccommodationRooms" type="number" min="1" max="30" step="1" inputmode="numeric" value="1" placeholder="Ex. 1"></label></div>
-    <label class="m58Field"><span>Type d’hébergement</span><select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select></label>
-    <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58AccommodationSearchCancel">Annuler</button></div>
-    <div id="m58AccommodationSearchResult" class="m58SearchResult" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="m58SearchTitle">🏨 Rechercher avec Hotels.com France</div>
+    <p class="muted">Choisis ta destination et tes dates dans le widget Hotels.com. La recherche et la réservation s’ouvrent sur leur site.</p>
+    <div id="m58AccommodationHotelsWidget" class="eg-widget" data-widget="search" data-program="fr-hcom" data-lobs="stays" data-network="pz" data-camref="1110lR6fx" data-pubref="myevent-hebergement"></div>
+    <p id="m58AccommodationWidgetStatus" role="status" aria-live="polite">Chargement du widget Hotels.com…</p>
+    <button type="button" id="m58AccommodationWidgetRetry" class="secondary hidden">Réessayer le chargement</button>
+    <p class="muted">Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible. Après réservation, ajoute ton hébergement au planning avec « Ajouter un hébergement ».</p>
+    <div class="m58ModuleActions"><button type="button" class="secondary" id="m58AccommodationSearchCancel">Fermer la recherche</button></div>
+    <noscript>Active JavaScript pour utiliser le widget Hotels.com. Tu peux aussi ajouter un hébergement manuellement.</noscript>
   </div>
   <div id="m58AccommodationForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un hébergement</div>
@@ -1201,6 +1202,7 @@
 
 <script src="js/accommodation-search-contract.js"></script>
 <script src="js/accommodation-search-runtime.js"></script>
+<script class="eg-widgets-script" src="https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js" onerror="MyEventAccommodationWidget.fail()"></script>
 <script src="js/planning-transport-runtime.js"></script>
 
 

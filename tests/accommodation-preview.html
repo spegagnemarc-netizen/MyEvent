@@ -1,16 +1,18 @@
-<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/inline-extracted.css"><style>body{background:#08131e;color:white;font-family:system-ui;margin:12px}#accommodationPanel.tabPanel{display:block!important}.hidden{display:none}input,select{padding:10px}button{padding:10px}.fieldRow{display:grid;gap:8px}</style><h1>Preview Hébergement</h1><details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel" open>
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MyEvent — Preview Hébergement Hotels.com</title><link rel="stylesheet" href="/css/inline-extracted.css"><style>body{background:#08131e;color:white;font-family:system-ui;margin:12px}#accommodationPanel.tabPanel{display:block!important}.hidden{display:none}input,select{padding:10px}button{padding:10px}.fieldRow{display:grid;gap:8px}</style><h1>Preview Hébergement</h1>
+<details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel" open>
 <summary>🏨 Hébergement</summary>
 <div class="collapsibleBody">
-  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Prépare ta recherche ou ajoute un hébergement choisi. La recherche intégrée attend un fournisseur autorisé. Les hébergements pourront être placés sur la carte et dans le planning.</p></div>
+  <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Recherche avec Hotels.com France ou ajoute un hébergement choisi. Retrouve ensuite tes nuitées sur la carte et dans le planning.</p></div>
   <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher un hébergement</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button><button type="button" class="secondary" id="m58AccommodationPlanningBtn">📅 Voir le planning</button></div>
-  <div id="m58AccommodationSearchBox" class="m58SearchBox">
-    <div class="m58SearchTitle">🔎 Recherche d’hébergement</div>
-    <label class="m58Field"><span>📍 Ville ou destination</span><input id="m58AccommodationDestination" placeholder="Ville, région ou adresse"></label>
-    <div class="fieldRow"><label class="m58Field"><span>📅 Date d’arrivée</span><input id="m58AccommodationCheckin" type="date"></label><label class="m58Field"><span>📅 Date de départ</span><input id="m58AccommodationCheckout" type="date"></label></div>
-    <div class="fieldRow"><label class="m58Field"><span>👥 Voyageurs</span><input id="m58AccommodationGuests" type="number" min="1" max="30" step="1" inputmode="numeric" value="2" placeholder="Ex. 2"></label><label class="m58Field"><span>🛏️ Chambres</span><input id="m58AccommodationRooms" type="number" min="1" max="30" step="1" inputmode="numeric" value="1" placeholder="Ex. 1"></label></div>
-    <label class="m58Field"><span>Type d’hébergement</span><select id="m58AccommodationType"><option value="all">🏨 Tous les hébergements</option><option value="hotel">🏨 Hôtel</option><option value="apartment">🏠 Appartement / maison</option><option value="camping">⛺ Camping</option></select></label>
-    <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchLaunch">🔎 Rechercher</button><button type="button" class="secondary" id="m58AccommodationSearchCancel">Annuler</button></div>
-    <div id="m58AccommodationSearchResult" class="m58SearchResult" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
+    <div class="m58SearchTitle">🏨 Rechercher avec Hotels.com France</div>
+    <p class="muted">Choisis ta destination et tes dates dans le widget Hotels.com. La recherche et la réservation s’ouvrent sur leur site.</p>
+    <div id="m58AccommodationHotelsWidget" class="eg-widget" data-widget="search" data-program="fr-hcom" data-lobs="stays" data-network="pz" data-camref="1110lR6fx" data-pubref="myevent-hebergement"></div>
+    <p id="m58AccommodationWidgetStatus" role="status" aria-live="polite">Chargement du widget Hotels.com…</p>
+    <button type="button" id="m58AccommodationWidgetRetry" class="secondary hidden">Réessayer le chargement</button>
+    <p class="muted">Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible. Après réservation, ajoute ton hébergement au planning avec « Ajouter un hébergement ».</p>
+    <div class="m58ModuleActions"><button type="button" class="secondary" id="m58AccommodationSearchCancel">Fermer la recherche</button></div>
+    <noscript>Active JavaScript pour utiliser le widget Hotels.com. Tu peux aussi ajouter un hébergement manuellement.</noscript>
   </div>
   <div id="m58AccommodationForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un hébergement</div>
@@ -27,8 +29,13 @@
     <div class="m58ModuleActions"><button type="button" id="m58AccommodationSaveBtn">💾 Enregistrer</button><button type="button" class="secondary" id="m58AccommodationCancelBtn">Annuler</button></div>
     <p id="m58AccommodationMsg" class="muted"></p>
   </div>
-  <div id="m58AccommodationList" class="m58ModuleList"><p class="muted">Aucun hébergement — Preview sans base de données.</p></div>
+  <div id="m58AccommodationList" class="m58ModuleList"><p class="muted">Preview Hébergement sans base de données.</p></div>
 </div>
 </details>
-
-<script>const $=id=>document.getElementById(id);</script><script src="/js/accommodation-search-contract.js"></script><script src="/js/accommodation-search-runtime.js"></script><script>document.getElementById('m58AccommodationSearchLaunch').addEventListener('click',v58SearchAccommodation);</script></html>
+<script src="/js/accommodation-search-runtime.js"></script>
+<script class="eg-widgets-script" src="https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js" onerror="MyEventAccommodationWidget.fail()"></script>
+<script>
+document.getElementById('m58AccommodationSearchCancel').addEventListener('click',()=>document.getElementById('m58AccommodationSearchBox').classList.add('hidden'));
+document.getElementById('m58AccommodationAddBtn').addEventListener('click',()=>{document.getElementById('m58AccommodationSearchBox').classList.add('hidden');document.getElementById('m58AccommodationForm').classList.remove('hidden');});
+document.getElementById('m58AccommodationCancelBtn').addEventListener('click',()=>document.getElementById('m58AccommodationForm').classList.add('hidden'));
+</script></html>

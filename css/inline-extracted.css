@@ -3560,3 +3560,10 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #accommodationPanel .m58SearchResult{overflow-wrap:anywhere}
 #accommodationPanel a{color:#a6dfff;text-decoration:underline}
 #accommodationPanel button:focus-visible,#accommodationPanel input:focus-visible,#accommodationPanel select:focus-visible,#accommodationPanel a:focus-visible{outline:3px solid #a6dfff;outline-offset:2px}
+
+/* The official Hotels.com widget keeps its own iframe height and validation. */
+#m58AccommodationSearchBox{min-width:0;max-width:100%;box-sizing:border-box}
+#m58AccommodationHotelsWidget{width:100%;max-width:575px;min-width:0;margin-inline:auto}
+#m58AccommodationHotelsWidget iframe{display:block;width:100%!important;max-width:100%;min-width:0;border:0;border-radius:12px}
+#m58AccommodationSearchBox p{overflow-wrap:anywhere}
+#m58AccommodationWidgetStatus[hidden]{display:none}
