@@ -1337,6 +1337,7 @@ body.discussionFullScreen{overflow:hidden!important;}
 
 /* ===== extracted style block 30 ===== */
 .socialProfileStatusCard{display:none!important}
+.socialProfileStatusCard:has(+ .profileSettingsVisible){display:block!important}
 .socialTop .socialProfileAvatar{width:58px!important;height:58px!important;flex:0 0 58px!important;border:1px solid rgba(255,255,255,.16);box-shadow:0 4px 18px rgba(0,0,0,.28)}
 .socialTop .socialProfileAvatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .socialTopTools{display:flex;align-items:center;gap:7px}
