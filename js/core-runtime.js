@@ -1001,6 +1001,7 @@ async function selectEvent(id, options={}){
   const sameEvent=String(event?.id||'')===String(id);
   if(!sameEvent){
     window.MyEventReservationLinkUI?.clearMap();
+    window.MyEventReservationLinkUI?.clearDownloads();
     resetOutingModuleState();
     resetAiModuleState();
   }
@@ -3502,6 +3503,8 @@ async function logout(){
     if(typeof resetAiModuleState==='function')resetAiModuleState();
     currentReservation=null;
     activeEventRole='member';
+    window.MyEventReservationLinkUI?.clearDownloads();
+    window.MyEventReservationLinkUI?.clearMap();
     user=null; event=null;
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');

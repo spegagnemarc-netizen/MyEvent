@@ -4,6 +4,8 @@
   const $=id=>document.getElementById(id);
   let dialog,context,working=false,previousFocus;
   const markers=[];
+  const downloads=new Set();
+  function clearDownloads(){for(const release of [...downloads])release();}
   const current=()=>typeof event!=='undefined'?event:null;
   const viewer=()=>typeof user!=='undefined'?user:null;
   const same=ctx=>ctx&&current()?.id===ctx.eventId&&viewer()?.id===ctx.userId;
@@ -89,14 +91,17 @@
     if(item.photo){try{api.url(item.photo);const link=document.createElement('a');link.href=item.photo;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Voir la photo';row.append(link);}catch(_){}}
     if(item.proof){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent='Télécharger le justificatif';button.addEventListener('click',async()=>{
       try{
-        const eventId=current()?.id;if(!eventId||!viewer())throw Error('Connecte-toi à cet événement.');
+        const ctx={eventId:current()?.id,userId:viewer()?.id},eventId=ctx.eventId;if(!eventId||!ctx.userId)throw Error('Connecte-toi à cet événement.');
         const r=await sb.from('messages').select('content').eq('event_id',eventId).eq('id',item._message_id).single();
-        if(r.error||!r.data||current()?.id!==eventId)throw Error('Justificatif inaccessible.');
+        if(r.error||!r.data||!same(ctx))throw Error('Justificatif inaccessible.');
         const p=JSON.parse(r.data.content.slice(r.data.content.indexOf(']]')+2)).proof;
         if(!p||!['application/pdf','image/png','image/jpeg'].includes(p.type)||p.base64.length>280000)throw Error('Justificatif non valide.');
         const bytes=Uint8Array.from(atob(p.base64),c=>c.charCodeAt(0)),blob=new Blob([bytes],{type:p.type}),href=URL.createObjectURL(blob),a=document.createElement('a');
-        a.href=href;a.download=p.name.replace(/[^\p{L}\p{N}._ -]/gu,'_');a.click();setTimeout(()=>URL.revokeObjectURL(href),1000);
-      }catch(e){alert(e.message);}
+        a.href=href;a.download=p.name.replace(/[^\p{L}\p{N}._ -]/gu,'_');a.textContent='Enregistrer le justificatif';row.append(a);button.disabled=true;
+        const release=()=>{URL.revokeObjectURL(href);a.remove();button.disabled=false;downloads.delete(release);};downloads.add(release);setTimeout(release,60000);
+        a.addEventListener('click',e=>{if(!same(ctx)){e.preventDefault();release();}});
+        a.click();
+      }catch(e){const notice=document.createElement('p');notice.setAttribute('role','alert');notice.textContent=e.message;row.append(notice);}
     });row.append(button);}
     parent.append(row);
   }
@@ -126,7 +131,7 @@
       markers.push(L.marker([item.geo.lat,item.geo.lon],{icon:makeLocationIcon(item.checkin?'🏨':'🚆','#278cff')}).addTo(locationMap).bindPopup(content));
     }
   }
-  window.MyEventReservationLinkUI={open,actions,cardDecorate,map,clearMap,proof,verifyAccess};
+  window.MyEventReservationLinkUI={open,actions,cardDecorate,map,clearMap,clearDownloads,proof,verifyAccess};
   document.addEventListener('click',e=>{const button=e.target.closest('[data-reservation-link-add]');if(button)open(button.dataset.reservationLinkAdd);});
   const originalAccommodation=v58RenderAccommodationModule,originalTransport=v58RenderTransportModule;
   v58RenderAccommodationModule=function(items){originalAccommodation(items);cardDecorate(items,'accommodation');};

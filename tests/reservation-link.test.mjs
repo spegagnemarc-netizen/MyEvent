@@ -107,3 +107,21 @@ test('map layer only includes verified coordinates and clears them on event chan
  w.MyEventReservationLinkUI.clearMap();assert.equal(removed.length,1);
  }finally{f.close();}
 });
+
+test('proof download rechecks event access, exposes a usable link and revokes it on session changes',async()=>{
+ const f=fixture();try{const w=f.w,filters=[],revoked=[],blobs=[];
+ w.Blob=Blob;w.URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:https://preview.example.org/proof';};w.URL.revokeObjectURL=url=>revoked.push(url);
+ w.HTMLAnchorElement.prototype.click=function(){};
+ const item={...api.payload(valid),_message_id:'message-a',proof:{name:'fictif.pdf',type:'application/pdf',base64:'JVBERi0='}};
+ w.sb.from=table=>{assert.equal(table,'messages');const q={select(){return q;},eq(k,v){filters.push([k,v]);return q;},single:async()=>({data:{content:w.V58_ACCOMMODATION_MARKER+JSON.stringify(item)}})};return q;};
+ const parent=w.document.createElement('div');w.document.body.append(parent);w.MyEventReservationLinkUI.actions(parent,item,'accommodation');parent.querySelector('button').click();await new Promise(r=>setTimeout(r,30));
+ assert.deepEqual(filters,[['event_id','event-a'],['id','message-a']]);assert.equal(await blobs[0].text(),'%PDF-');
+ const link=parent.querySelector('a[download]');assert.equal(link.textContent,'Enregistrer le justificatif');assert.equal(link.download,'fictif.pdf');
+ w.__state.user={id:'outside'};w.eval('user=__state.user');assert.equal(link.dispatchEvent(new w.MouseEvent('click',{cancelable:true})),false);assert.equal(parent.querySelector('a[download]'),null);assert.equal(revoked.length,1);
+ // A session change while the database read is pending must not expose bytes.
+ w.__state.user={id:'owner'};w.eval('user=__state.user');let resolveRead;
+ w.sb.from=()=>{const q={select(){return q;},eq(){return q;},single:()=>new Promise(r=>{resolveRead=r;})};return q;};
+ parent.querySelector('button').click();w.__state.user={id:'outside'};w.eval('user=__state.user');resolveRead({data:{content:w.V58_ACCOMMODATION_MARKER+JSON.stringify(item)}});await new Promise(r=>setTimeout(r,30));
+ assert.equal(blobs.length,1);assert.match(parent.querySelector('[role="alert"]').textContent,/inaccessible/);
+ }finally{f.w.MyEventReservationLinkUI.clearDownloads();f.close();}
+});
