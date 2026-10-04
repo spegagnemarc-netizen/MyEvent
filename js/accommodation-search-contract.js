@@ -1,6 +1,15 @@
 (function(root){
   function today(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
-  function validDate(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===v;}
+  // Date inputs expose YYYY-MM-DD even on a French iPhone. Check the calendar
+  // directly so Safari's Date parser cannot turn a valid input into an error.
+  function validDate(v){
+    if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;
+    const year=Number(v.slice(0,4)),month=Number(v.slice(5,7)),day=Number(v.slice(8,10));
+    if(year<1||month<1||month>12||day<1)return false;
+    const leap=year%4===0&&(year%100!==0||year%400===0);
+    const days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+    return day<=days[month-1];
+  }
   function validate(q, minimum=today()){
     if(typeof q.destination!=='string'||!q.destination.trim()||q.destination.trim().length>200)return 'Indique une destination de 1 à 200 caractères.';
     if(!validDate(q.checkIn)||!validDate(q.checkOut))return 'Indique des dates valides.';
@@ -11,5 +20,7 @@
     if(!['all','hotel','apartment','camping'].includes(q.type))return 'Choisis un type d’hébergement valide.';
     return '';
   }
-  const api={today,validate};if(typeof module==='object')module.exports=api;else root.MyEventAccommodation=api;
+  // There is no approved hotel supplier yet. Enable this only with an
+  // authorized provider on the server and a tested Preview deployment.
+  const api={today,validate,integratedSearchEnabled:false};if(typeof module==='object')module.exports=api;else root.MyEventAccommodation=api;
 })(typeof window==='object'?window:this);
