@@ -397,7 +397,7 @@ async function loadEventLocations(){
     locationPlacesData=[];
     $('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';
   }
-  await loadSharedMemberLocations();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);
+  await loadSharedMemberLocations();await window.MyEventReservationLinkUI?.map();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);
 }
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
 document.addEventListener('input',e=>{if(e.target?.id==='locationPlaceSearch'){locationPlaceSearch=e.target.value||'';renderNearbyPlaces();}});
@@ -1000,6 +1000,7 @@ async function selectEvent(id, options={}){
   // Un vrai changement d'événement conserve au contraire l'isolation stricte.
   const sameEvent=String(event?.id||'')===String(id);
   if(!sameEvent){
+    window.MyEventReservationLinkUI?.clearMap();
     resetOutingModuleState();
     resetAiModuleState();
   }
@@ -2174,6 +2175,9 @@ async function loadMessages(){
       if(!payload)return '';
       const displayAction=pollActionDisplay(payload.action,payload.choice);
       return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+avatarHtml(av,'messageAvatar')+'<div class="messageBody chatPollMessage"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="chatPollTitle">⚡ Action créée</div><div class="chatPollHint">Décision issue du sondage : '+esc(payload.question||'Sondage')+'</div><p><b>Choix :</b> '+esc(payload.choice||'')+'</p>'+(displayAction?'<p><b>Action :</b> '+esc(displayAction)+'</p>':'')+'<div class="pollDecisionValidated">⚡ Action publiée dans l’événement</div></div></div>';
+    }
+    if(item.kind==='message' && typeof m.content==='string' && /^\[\[MYEVENT_(TRANSPORT|ACCOMMODATION)\]\]/.test(m.content)){
+      try{const record=JSON.parse(m.content.slice(m.content.indexOf(']]')+2));if(record.link_import){return '<div class="messageRow"><div class="messageBody">'+esc(record.name||'Réservation ajoutée')+' · '+esc(window.MyEventReservationLink?.statusLabel(record,record.checkin?'accommodation':'transport')||'Ajout au planning')+'</div></div>';}}catch(_){}
     }
     if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){ 
       let a=null; try{a=JSON.parse(m.content.slice('[[MYEVENT_ATTACHMENT]]'.length));}catch{}

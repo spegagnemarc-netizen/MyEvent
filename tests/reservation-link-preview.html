@@ -1,0 +1,15 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MyEvent — Ajouter ma réservation par lien</title><link rel="stylesheet" href="/css/inline-extracted.css"><style>body{background:#08131e;color:white;font-family:system-ui;margin:12px}details{padding:12px;margin:12px 0}button{min-height:44px}#previewMessage{overflow-wrap:anywhere}.reservationLinkDialog{color:white}</style>
+<h1>Ajouter ma réservation par lien</h1><p>Démo isolée, sans connexion à Supabase. Les ajouts de cette page restent uniquement en mémoire et disparaissent au rechargement.</p>
+<details id="accommodationPanel" open><summary>Hébergement</summary><div id="m58AccommodationList"></div></details><details id="transportPanel" open><summary>Transport</summary><div id="m58TransportList"></div></details><p id="previewMessage" role="status"></p>
+<script>
+let event={id:'preview-event',creator_id:'preview-owner'},user={id:'preview-owner'};
+const V58_TRANSPORT_MARKER='[[MYEVENT_TRANSPORT]]',V58_ACCOMMODATION_MARKER='[[MYEVENT_ACCOMMODATION]]';
+const records=[];
+function v58IsEventManager(){return true;}
+function cards(items,id){const target=document.getElementById(id);target.replaceChildren();items.forEach(item=>{const card=document.createElement('article');card.className='m58ModuleCard';const heading=document.createElement('h3');heading.textContent=item.name;const text=document.createElement('p');text.textContent=[item.checkin||item.departure,item.checkout||item.arrival,item.destination].filter(Boolean).join(' · ');card.append(heading,text);target.append(card);});}
+function v58RenderAccommodationModule(items){cards(items,'m58AccommodationList');}
+function v58RenderTransportModule(items){cards(items,'m58TransportList');}
+async function v58LoadModuleLists(){v58RenderAccommodationModule(records.filter(r=>r.checkin));v58RenderTransportModule(records.filter(r=>r.departure));}
+function v58OpenLocationPoint(lat,lon,name){document.getElementById('previewMessage').textContent='Coordonnées vérifiées : '+lat+', '+lon+' · '+name;}
+const sb={from(table){const q={select(){return q;},eq(){return q;},single:async()=>({data:{id:event.id,creator_id:user.id}}),insert(row){const item=JSON.parse(row.content.slice(row.content.indexOf(']]')+2));item._message_id='preview-'+records.length;records.push(item);q.single=async()=>({data:{id:item._message_id}});document.getElementById('previewMessage').textContent='Ajout en mémoire uniquement — aucune réservation effectuée auprès du partenaire.';return q;}};return q;}};
+</script><script src="/js/reservation-link-contract.js"></script><script src="/js/reservation-link-runtime.js"></script></html>

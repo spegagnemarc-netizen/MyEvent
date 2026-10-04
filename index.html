@@ -857,6 +857,7 @@
 </div>
  
 </div>
+<section id="myeventExpediaFlightsSection" class="m58OmioSection"><h3>✈️ Expedia Vols</h3><p class="muted">Recherche les vols avec Expedia France. Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible.</p><section class="myeventEgSlot" data-partner="Expedia Vols"><div id="m58TransportExpediaWidget" class="eg-widget" data-widget="search" data-program="fr-expedia" data-lobs="flights" data-network="pz" data-camref="1011l6tumI" data-pubref="myevent-expedia"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Expedia Vols…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section></section>
 </details>
 
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel">
@@ -865,11 +866,12 @@
   <div class="m58ModuleIntro"><b>Organise les nuitées de l’événement</b><p class="muted">Recherche avec Hotels.com France ou ajoute un hébergement choisi. Retrouve ensuite tes nuitées sur la carte et dans le planning.</p></div>
   <div class="m58ModuleActions"><button type="button" id="m58AccommodationSearchBtn">🔎 Rechercher un hébergement</button><button type="button" class="secondary" id="m58AccommodationAddBtn">➕ Ajouter un hébergement</button><button type="button" class="secondary" id="m58AccommodationPlanningBtn">📅 Voir le planning</button></div>
   <div id="m58AccommodationSearchBox" class="m58SearchBox hidden">
-    <div class="m58SearchTitle">🏨 Rechercher avec Hotels.com France</div>
-    <p class="muted">Choisis ta destination et tes dates dans le widget Hotels.com. La recherche et la réservation s’ouvrent sur leur site.</p>
-    <div id="m58AccommodationHotelsWidget" class="eg-widget" data-widget="search" data-program="fr-hcom" data-lobs="stays" data-network="pz" data-camref="1110lR6fx" data-pubref="myevent-hebergement"></div>
-    <p id="m58AccommodationWidgetStatus" role="status" aria-live="polite">Chargement du widget Hotels.com…</p>
-    <button type="button" id="m58AccommodationWidgetRetry" class="secondary hidden">Réessayer le chargement</button>
+    <div class="m58SearchTitle">🏨 Choisir un partenaire Hébergement</div>
+    <p class="muted">Choisis Hotels.com, Expedia ou Abritel, puis ta destination et tes dates. La recherche et la réservation s’ouvrent sur le site du partenaire.</p>
+    <div class="myeventPartnerSelector" role="group" aria-label="Partenaire Hébergement"><button type="button" data-partner-select="m58AccommodationHotelsSlot" aria-pressed="true">Hotels.com</button><button type="button" data-partner-select="m58AccommodationExpediaSlot" aria-pressed="false">Expedia</button><button type="button" data-partner-select="m58AccommodationAbritelSlot" aria-pressed="false">Abritel</button></div>
+<section id="m58AccommodationHotelsSlot" class="myeventEgSlot" data-partner="Hotels.com"><div id="m58AccommodationHotelsWidget" class="eg-widget" data-widget="search" data-program="fr-hcom" data-lobs="stays" data-network="pz" data-camref="1110lR6fx" data-pubref="myevent-hebergement"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Hotels.com…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
+<section id="m58AccommodationExpediaSlot" class="myeventEgSlot" data-partner="Expedia Séjours" hidden><div id="m58AccommodationExpediaWidget" class="eg-widget" data-widget="search" data-program="fr-expedia" data-lobs="stays" data-network="pz" data-camref="1011l6tumI" data-pubref="myevent-expedia"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Expedia Séjours…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
+<section id="m58AccommodationAbritelSlot" class="myeventEgSlot" data-partner="Abritel" hidden><div id="m58AccommodationAbritelWidget" class="eg-widget" data-widget="search" data-program="abritel" data-lobs="stays" data-network="pz" data-camref="1100l6v4qo" data-pubref="myevent-abritel"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Abritel…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
     <p class="muted">Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible. Après réservation, ajoute ton hébergement au planning avec « Ajouter un hébergement ».</p>
     <div class="m58ModuleActions"><button type="button" class="secondary" id="m58AccommodationSearchCancel">Fermer la recherche</button></div>
     <noscript>Active JavaScript pour utiliser le widget Hotels.com. Tu peux aussi ajouter un hébergement manuellement.</noscript>
@@ -1204,6 +1206,8 @@
 <script src="js/accommodation-search-runtime.js"></script>
 <script class="eg-widgets-script" src="https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js" onerror="MyEventAccommodationWidget.fail()"></script>
 <script src="js/planning-transport-runtime.js"></script>
+<script src="js/reservation-link-contract.js"></script>
+<script src="js/reservation-link-runtime.js"></script>
 
 
 

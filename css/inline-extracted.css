@@ -3567,3 +3567,23 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #m58AccommodationHotelsWidget iframe{display:block;width:100%!important;max-width:100%;min-width:0;border:0;border-radius:12px}
 #m58AccommodationSearchBox p{overflow-wrap:anywhere}
 #m58AccommodationWidgetStatus[hidden]{display:none}
+
+/* Reservation link dialog shared by planning, accommodation and transport. */
+.reservationLinkDialog{color:inherit;background:#102231;border:1px solid #6c8ca5;border-radius:16px;width:min(520px,calc(100% - 24px));max-height:90dvh;padding:16px;box-sizing:border-box;overflow:auto}
+.reservationLinkDialog::backdrop{background:#0009}
+.reservationLinkDialog form,.reservationLinkDialog #rlDetails{display:grid;gap:12px;min-width:0}
+.reservationLinkDialog [hidden]{display:none!important}
+.reservationLinkDialog label{display:grid;gap:6px;min-width:0}
+.reservationLinkDialog input,.reservationLinkDialog select,.reservationLinkDialog textarea,.reservationLinkDialog button{font-size:16px;min-height:44px;max-width:100%;width:100%;box-sizing:border-box}
+.reservationLinkDialog .rlCheck{display:flex;align-items:start;gap:10px}
+.reservationLinkDialog .rlCheck input{width:22px;min-height:22px;flex-shrink:0}
+.reservationLinkActions{display:flex;flex-wrap:wrap;gap:10px;overflow-wrap:anywhere}.reservationLinkActions p{flex-basis:100%;margin:4px 0}.reservationLinkActions a{color:#a6dfff;min-height:44px;display:inline-flex;align-items:center}
+/* Scoped partner choices and official responsive widgets. */
+.myeventPartnerSelector{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.myeventPartnerSelector button{flex:1 1 90px;min-height:44px;padding:10px 8px}
+.myeventPartnerSelector button[aria-pressed="true"]{outline:2px solid #a6dfff;outline-offset:2px}
+.myeventEgSlot[hidden],.myeventEgStatus[hidden],.myeventEgRetry[hidden]{display:none!important}
+.myeventEgSlot{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.myeventEgSlot .eg-widget{width:100%;min-width:0;max-width:575px;margin-inline:auto}
+.myeventEgSlot iframe{display:block;width:100%!important;max-width:100%;min-width:0;border:0;border-radius:12px}
+#myeventExpediaFlightsSection{margin-top:18px;padding:14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-sizing:border-box;min-width:0}

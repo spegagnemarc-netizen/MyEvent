@@ -54,6 +54,7 @@ async function renderEventTransport(box,eventObj){
         (t.note?'<div class="inlineEventTransportMeta">📝 '+v58TransportEsc(t.note)+'</div>':'')+'<div class="inlineEventTransportActions"><button type="button" class="secondary" data-v58-edit-transport="'+i+'">✏️ Modifier</button><button type="button" class="secondary" data-v58-delete-transport="'+i+'">🗑️ Supprimer</button></div></div>';
     }).join('');
   }
+  list.querySelectorAll('.inlineEventTransportItem').forEach((card,i)=>{const item=transports[i];if(item?.link_import){card.querySelector('[data-v58-edit-transport]')?.remove();window.MyEventReservationLinkUI?.actions(card,item,'transport');}});
   const form=wrap.querySelector('#eventTransportForm');
   const fillTransportForm=(t)=>{
     $('eventTransportType').value=t.type||'other';$('eventTransportFrom').value=t.from||'';$('eventTransportTo').value=t.to||'';
@@ -254,6 +255,7 @@ async function renderEventAccommodation(box,eventObj){
         '</div>';
     }).join('');
   }
+  list.querySelectorAll('.inlineEventAccommodationItem').forEach((card,i)=>window.MyEventReservationLinkUI?.actions(card,accommodations[i],'accommodation'));
   const form=wrap.querySelector('#eventAccommodationForm');
   wrap.querySelector('#eventAccommodationAddBtn').addEventListener('click',()=>{form.style.display='grid';wrap.querySelector('#eventAccommodationName')?.focus()});
   wrap.querySelector('#eventAccommodationCancelBtn').addEventListener('click',()=>{form.style.display='none'});
@@ -354,11 +356,12 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       name:[t.from,t.to].filter(Boolean).join(' → ')||'Trajet',
       type:'transport',
       time:t.departure||'',
-      duration:t.departure&&t.arrival?Math.max(0,Math.round((new Date(t.arrival)-new Date(t.departure))/60000)):null,
+      duration:t.departure&&t.arrival&&(!t.link_import||t.departure.includes('T')&&t.arrival.includes('T'))?Math.max(0,Math.round((new Date(t.arrival)-new Date(t.departure))/60000)):null,
       address:t.to||'',
       price:Number(t.cost)>0?(Number(t.cost)/Math.max(1,Number(t.people_count||aiPlan?.people||1))):null,
       source:'transport',
-      fullDate:t.departure||''
+      fullDate:t.departure||'',
+      reservation:t.link_import?t:null
     }));
   }
   const localTravels=await getEventLocalTravels(eventObj.id);
@@ -383,8 +386,8 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       const baseName=a.name||'Hébergement';
       const cost=Number(a.total_cost)>0?Number(a.total_cost):0;
       const peopleCount=Number(a.people_count||0)||Number(String(a.people||'').match(/\d+/)?.[0]||0)||Number(aiPlan?.people||0)||1;
-      steps.push({order:20000+i*2,name:'Arrivée · '+baseName,type:'accommodation',time:a.checkin||'',duration:null,address:a.address||'',price:cost>0?cost/Math.max(1,peopleCount):null,source:'accommodation',fullDate:a.checkin||''});
-      steps.push({order:20001+i*2,name:'Départ · '+baseName,type:'accommodation',time:a.checkout||'',duration:null,address:a.address||'',price:null,source:'accommodation',fullDate:a.checkout||''});
+      steps.push({order:20000+i*2,name:'Arrivée · '+baseName,type:'accommodation',time:a.checkin||'',duration:null,address:a.address||'',price:cost>0?cost/Math.max(1,peopleCount):null,source:'accommodation',fullDate:a.checkin||'',reservation:a.link_import?a:null});
+      if(!a.link_import||a.checkout)steps.push({order:20001+i*2,name:'Départ · '+baseName,type:'accommodation',time:a.checkout||'',duration:null,address:a.address||'',price:null,source:'accommodation',fullDate:a.checkout||'',reservation:a.link_import?a:null});
     });
   }
   // V54.41 — tri chronologique réel : une étape avec seulement HH:MM
@@ -439,6 +442,7 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       const time=document.createElement('div');
       time.className='inlineEventTimelineTime';
       time.textContent=step.fullDate?(new Date(step.fullDate).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):((step.time&&/^\d{4}-\d{2}-\d{2}T/.test(String(step.time)))?new Date(step.time).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):(step.time||'Horaire à définir'));
+      if(step.reservation&&/^\d{4}-\d{2}-\d{2}$/.test(step.fullDate))time.textContent=new Date(step.fullDate+'T12:00:00').toLocaleDateString('fr-FR')+' · heure à préciser';
       const name=document.createElement('div');
       name.className='inlineEventTimelineName';
       name.textContent=step.name;
@@ -452,6 +456,7 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       if(step.price!=null && Number.isFinite(Number(step.price)))parts.push('💶 '+eur(Number(step.price))+' / pers.');
       meta.textContent=parts.join(' · ');
       content.append(time,name,meta);
+      window.MyEventReservationLinkUI?.actions(content,step.reservation,step.type);
       row.append(dot,content);
       list.appendChild(row);
     });
@@ -469,6 +474,7 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
     document.querySelector('.tabPanel[data-panel="'+(choice==='ai'?'aioutings':'outings')+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});
   });
   action.appendChild(openBtn);
+  const addLink=document.createElement('button');addLink.type='button';addLink.className='secondary';addLink.dataset.reservationLinkAdd='';addLink.textContent='Ajouter ma réservation par lien';action.appendChild(addLink);
   wrap.appendChild(action);
   box.appendChild(wrap);
 }

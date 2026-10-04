@@ -26,7 +26,7 @@ test('official snippet and single pre-DOMContentLoaded script preserve exact aff
    assert(source.indexOf('m58AccommodationHotelsWidget')<source.indexOf('eg-widgets-script'));
    assert.equal(d.querySelector('#m58AccommodationSearchLaunch'),null);
    assert.equal(d.querySelector('#m58AccommodationDestination'),null);
-   assert.match(widget.parentElement.textContent,/Lien affilié/);
+   assert.match(widget.closest('#m58AccommodationSearchBox').textContent,/Lien affilié/);
   }finally{dom.window.close();}
  }
 });
@@ -43,8 +43,8 @@ test('legacy search and repeated opening never call old API or duplicate widget 
 test('script failure is specific, visible, retryable and keeps manual planning intact',()=>{
  const {dom,w,cleared}=fixture();try{
   w.MyEventAccommodationWidget.fail();const d=w.document;
-  assert.match(d.getElementById('m58AccommodationWidgetStatus').textContent,/n’a pas pu charger/);
-  assert(!d.getElementById('m58AccommodationWidgetRetry').classList.contains('hidden'));
+  assert.match(d.querySelector('#m58AccommodationHotelsSlot .myeventEgStatus').textContent,/n’a pas pu charger/);
+  assert.equal(d.querySelector('#m58AccommodationHotelsSlot .myeventEgRetry').hidden,false);
   assert(d.getElementById('m58AccommodationManualName'));assert(d.getElementById('m58AccommodationSaveBtn'));
   assert(cleared());assert(!runtime.includes('unhandledrejection'));assert(!runtime.includes("addEventListener('error'"));
  }finally{dom.window.close();}
@@ -54,14 +54,14 @@ test('slow iframe reports failure; only the matching official frame can recover 
   const d=w.document,widget=d.getElementById('m58AccommodationHotelsWidget');
   widget.setAttribute('data-instance','fixture');const frame=d.createElement('iframe');widget.append(frame);
   await Promise.resolve();assert.equal(frame.title,'Recherche Hotels.com France');
-  expire();const message=d.getElementById('m58AccommodationWidgetStatus');assert.equal(message.hidden,false);
+  w.MyEventAccommodationWidget.fail();const message=d.querySelector('#m58AccommodationHotelsSlot .myeventEgStatus');assert.equal(message.hidden,false);
   const data={type:'eg-widget/resize',meta:{instance:'fixture'},payload:{frame:{style:{width:'375px',height:'420px'}}}};
   for(const overrides of [{origin:'https://evil.test'},{source:w},{data:{...data,meta:{instance:'other'}}},{data:{...data,type:'other'}}]){
    w.dispatchEvent(new w.MessageEvent('message',{origin:'https://creator.expediagroup.com',source:frame.contentWindow,data,...overrides}));assert.equal(message.hidden,false);
   }
   w.dispatchEvent(new w.MessageEvent('message',{origin:'https://creator.expediagroup.com',source:frame.contentWindow,data}));
   assert.equal(message.hidden,true);assert(cleared());w.MyEventAccommodationWidget.fail();assert.equal(message.hidden,true);
-  assert(d.getElementById('m58AccommodationWidgetRetry').classList.contains('hidden'));
+  assert.equal(d.querySelector('#m58AccommodationHotelsSlot .myeventEgRetry').hidden,true);
  }finally{dom.window.close();}
 });
 test('reevaluating our integration does not install a second setup or swallow unrelated errors',()=>{
