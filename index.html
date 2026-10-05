@@ -1439,6 +1439,7 @@
    <button type="button" data-admin-tab="content">Affiliation</button>
    <button type="button" data-admin-tab="users">Utilisateurs</button>
    <button type="button" data-admin-tab="events">Événements</button>
+   <button type="button" data-admin-tab="reservations">Réservations</button>
    <button type="button" data-admin-tab="marketplace">Marketplace</button>
    <button type="button" data-admin-tab="partners">Partenaires</button>
    <button type="button" data-admin-tab="settings">Paramètres</button>
@@ -1470,6 +1471,16 @@
    <h3>Utilisateurs</h3><p>Profils et dates d'inscription. Les comptes administrateurs sont protégés.</p>
    <label class="adminSearch">Rechercher un utilisateur<input type="search" data-admin-search="users" placeholder="Nom, pseudo ou UUID"></label>
    <div id="myeventAdminUsers" class="adminList" aria-live="polite"></div>
+  </div>
+  <div data-admin-view="reservations" hidden>
+   <h3>Réservations</h3><p>Supervision des réservations personnelles et rattachées aux événements. Les justificatifs privés ne sont jamais affichés ici.</p>
+   <div class="adminReservationFilters" role="group" aria-label="Filtrer les réservations">
+    <button type="button" data-admin-reservation-scope="all" aria-pressed="true">Toutes</button>
+    <button type="button" data-admin-reservation-scope="personal" aria-pressed="false">Personnelles</button>
+    <button type="button" data-admin-reservation-scope="event" aria-pressed="false">Événements</button>
+   </div>
+   <label class="adminSearch">Rechercher une réservation<input type="search" data-admin-search="reservations" placeholder="Utilisateur, destination, événement ou UUID"></label>
+   <div id="myeventAdminReservations" class="adminList" aria-live="polite"></div>
   </div>
   <div data-admin-view="events" hidden>
    <h3>Événements</h3><p>La mise en retrait masque l'événement dans la découverte. Les membres conservent leur accès.</p>
@@ -1504,8 +1515,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=2">
-<script src="js/admin-runtime.js?v=6" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=3">
+<script src="js/admin-runtime.js?v=7" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
