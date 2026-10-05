@@ -115,6 +115,48 @@ insert into public.admin_partner_registry(provider,label,enabled,notes) values
  ('fnac_spectacles','Fnac Spectacles',false,'Programme/accès non confirmé comme actif')
 on conflict(provider) do update set label=excluded.label,notes=excluded.notes,updated_at=now();
 
+-- Extend the legacy affiliate-content catalogue to the providers currently managed by MyEvent.
+do $ declare r record; begin
+ for r in
+  select c.conname from pg_constraint c
+  join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
+  where n.nspname='public' and t.relname='admin_partner_content' and c.contype='c'
+   and pg_get_constraintdef(c.oid) ilike '%provider%'
+ loop execute format('alter table public.admin_partner_content drop constraint %I',r.conname); end loop;
+end $;
+alter table public.admin_partner_content add constraint admin_partner_content_provider_check
+ check (provider in ('getyourguide','viator','booking','ticketnetwork','fnac_spectacles',
+ 'hotels_com','expedia','abritel','omio','tiqets','awin'));
+
+create or replace function public.myevent_admin_partner_content_save(
+ p_provider text,p_kind text,p_title text,p_city text default '',p_external_id text default '',
+ p_affiliate_url text default '',p_campaign text default '',p_enabled boolean default false,p_id uuid default null
+) returns uuid language plpgsql security definer set search_path='' as $
+declare v_id uuid;
+begin
+ perform public.myevent_admin_guard();
+ if not exists(select 1 from public.admin_partner_registry where provider=p_provider)
+ or p_kind not in ('city_widget','activity','availability')
+ or length(trim(coalesce(p_title,''))) not between 1 and 160
+ or length(coalesce(p_city,''))>120 or length(coalesce(p_external_id,''))>100
+ or length(coalesce(p_campaign,''))>100 or length(coalesce(p_affiliate_url,''))>2048
+ or (coalesce(p_affiliate_url,'')<>'' and p_affiliate_url !~ '^https://')
+ then raise exception 'Contenu invalide' using errcode='22023'; end if;
+ if p_id is null then
+  insert into public.admin_partner_content(provider,kind,title,city,external_id,affiliate_url,campaign,enabled)
+  values(p_provider,p_kind,trim(p_title),coalesce(p_city,''),coalesce(p_external_id,''),coalesce(p_affiliate_url,''),coalesce(p_campaign,''),coalesce(p_enabled,false))
+  returning id into v_id;
+ else
+  update public.admin_partner_content set provider=p_provider,kind=p_kind,title=trim(p_title),city=coalesce(p_city,''),
+   external_id=coalesce(p_external_id,''),affiliate_url=coalesce(p_affiliate_url,''),campaign=coalesce(p_campaign,''),
+   enabled=coalesce(p_enabled,false),updated_at=now() where id=p_id returning id into v_id;
+  if v_id is null then raise exception 'Contenu introuvable' using errcode='P0002'; end if;
+ end if;
+ return v_id;
+end $;
+revoke all on function public.myevent_admin_partner_content_save(text,text,text,text,text,text,text,boolean,uuid) from public,anon;
+grant execute on function public.myevent_admin_partner_content_save(text,text,text,text,text,text,text,boolean,uuid) to authenticated;
+
 create or replace function public.myevent_admin_statistics()
 returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare personal_total bigint:=0; personal_30d bigint:=0; linked_total bigint:=0;
