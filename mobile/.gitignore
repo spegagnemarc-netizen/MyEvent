@@ -1,0 +1,6 @@
+ios/Generated/
+ios/*.xcodeproj/
+ios/DerivedData/
+ios/Resources/*.usdz
+ios/Resources/*.xcassets/
+*.xcuserstate
