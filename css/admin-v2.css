@@ -60,3 +60,19 @@
  #myeventAdminPanel .adminStatsGrid,#myeventAdminStats{grid-template-columns:1fr!important}
  #myeventAdminPanel .adminReservationFilters{grid-template-columns:1fr}
 }
+
+#myeventAdminPanel .adminUserDetail{border:1px solid #ffffff30;border-radius:16px;background:#101827;padding:14px;margin:14px 0 24px;scroll-margin-top:130px}
+#myeventAdminPanel .adminUserDetail[hidden]{display:none!important}
+#myeventAdminPanel .adminUserDetailHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+#myeventAdminPanel .adminUserDetailHead h4{margin:0}
+#myeventAdminPanel .adminUserIdentity{min-width:0;margin-bottom:14px}
+#myeventAdminPanel .adminUserIdentity h4,#myeventAdminPanel .adminUserIdentity p{margin:4px 0;overflow-wrap:anywhere}
+#myeventAdminPanel .adminUserFacts{display:grid;gap:8px}
+#myeventAdminPanel .adminUserFact{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid #ffffff1f}
+#myeventAdminPanel .adminUserFact span{color:#aab6c9}
+#myeventAdminPanel .adminUserFact strong{text-align:right;overflow-wrap:anywhere;min-width:0}
+@media(max-width:600px){
+ #myeventAdminPanel .adminUserDetail{padding:12px}
+ #myeventAdminPanel .adminUserFact{display:grid;gap:4px}
+ #myeventAdminPanel .adminUserFact strong{text-align:left}
+}
