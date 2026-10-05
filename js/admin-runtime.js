@@ -94,7 +94,7 @@ async function loadContent(){
   for(const row of rows||[]){
    const card=item('article',null,'adminCard');card.append(item('h4',row.title),item('p',row.kind+' · '+(row.city||'—')+' · '+(row.enabled?'Actif':'Inactif')));
    const actions=item('div',null,'adminActions');actions.append(actionButton('Modifier',()=>{
-    for(const key of ['title','kind','city','external_id','affiliate_url','campaign'])contentForm.elements.namedItem(key).value=row[key]||'';
+    for(const key of ['provider','title','kind','city','external_id','affiliate_url','campaign'])contentForm.elements.namedItem(key).value=row[key]||'';
     contentForm.elements.namedItem('enabled').checked=row.enabled;contentForm.dataset.editId=row.id;cancelEdit.hidden=false;contentForm.scrollIntoView({behavior:'smooth'});
    }));card.append(actions);contentList.append(card);
   }
@@ -278,7 +278,7 @@ async function loadTab(name){
 }
 contentForm?.addEventListener('submit',async e=>{
  e.preventDefault();if(mutationBusy)return;if(!window.confirm('Enregistrer ce contenu affilié ?'))return;
- const fd=new FormData(contentForm),args={p_provider:'getyourguide',p_kind:fd.get('kind'),p_title:fd.get('title'),p_city:fd.get('city'),p_external_id:fd.get('external_id'),p_affiliate_url:fd.get('affiliate_url'),p_campaign:fd.get('campaign'),p_enabled:fd.has('enabled'),p_id:contentForm.dataset.editId||null};
+ const fd=new FormData(contentForm),args={p_provider:fd.get('provider'),p_kind:fd.get('kind'),p_title:fd.get('title'),p_city:fd.get('city'),p_external_id:fd.get('external_id'),p_affiliate_url:fd.get('affiliate_url'),p_campaign:fd.get('campaign'),p_enabled:fd.has('enabled'),p_id:contentForm.dataset.editId||null};
  await mutate(async()=>{await rpc('myevent_admin_partner_content_save',args);contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;},'Contenu enregistré dans le journal.');
 });
 cancelEdit?.addEventListener('click',()=>{contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;});
