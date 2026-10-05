@@ -18,7 +18,7 @@ export function importPhotoScript(base64, origin, id) {
     const input=document.getElementById('cameraFileInput'),open=document.getElementById('socialBottomCreate');
     if(!input || !open || typeof DataTransfer!=='function'){reply('import-unavailable');return;}
     try{
-      open.click();
+      if(window.__myeventMobileCamera)window.__myeventMobileCamera.openWeb();else open.click();
       const bytes=Uint8Array.from(atob(p.base64),c=>c.charCodeAt(0));
       const transfer=new DataTransfer();transfer.items.add(new File([bytes],'MyEvent-mobile.jpg',{type:'image/jpeg'}));
       input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));reply('imported');
