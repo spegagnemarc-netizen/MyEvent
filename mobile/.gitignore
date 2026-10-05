@@ -4,3 +4,9 @@ ios/DerivedData/
 ios/Resources/*.usdz
 ios/Resources/*.xcassets/
 *.xcuserstate
+app/node_modules/
+app/.expo/
+app/android/
+app/ios/
+app/dist-android/
+app/dist-ios/

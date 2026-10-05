@@ -1,5 +1,7 @@
 # MyEvent Mobile V1 — socle iPhone
 
+**Architecture remplacée par le socle Android + iOS React Native/Expo dans `mobile/app`.** Voir [architecture commune](CROSS-PLATFORM.md) et [lancement Android sous Windows](WINDOWS-ANDROID.md). Ce document décrit le prototype iOS conservé comme référence ; il n'est plus l'architecture générale de l'application.
+
 Base web vérifiée le 5 octobre 2026 : `refactor-final` / `0d0af241d8e85852a7faa159ff9ec883bdc1082a`. Branche isolée : `mobile-v1-native-camera`. Les sources nouvelles sont dans `mobile/` ; seule la fixture de `tests/camera-ai.test.mjs` est alignée sur la référence TEST déjà imposée par le serveur, sans appel réseau réel. Aucun fichier applicatif web, API, variable, table ou policy Supabase modifié. Aucun déploiement requis.
 
 ## Architecture retenue

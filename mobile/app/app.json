@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "MyEvent TEST",
+    "slug": "myevent-mobile-test",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {"bundleIdentifier": "app.myevent.mobile.dev", "supportsTablet": false, "infoPlist": {
+      "NSMicrophoneUsageDescription": "Utiliser le microphone pour les appels MyEvent après votre accord.",
+      "NSLocationWhenInUseUsageDescription": "Rechercher autour de vous dans MyEvent après votre accord."
+    }},
+    "android": {"package": "app.myevent.mobile.dev", "permissions": ["CAMERA", "RECORD_AUDIO", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]},
+    "plugins": [
+      ["expo-camera", {"cameraPermission": "Prendre une photo MyEvent après votre accord.", "recordAudioAndroid": false}],
+      ["expo-image-picker", {"photosPermission": "Choisir une photo pour MyEvent.", "cameraPermission": "Prendre une photo MyEvent après votre accord.", "microphonePermission": "Utiliser le microphone pour les appels MyEvent après votre accord."}],
+      ["expo-sensors", {"motionPermission": "Afficher le niveau de la caméra MyEvent."}]
+    ],
+    "updates": {"enabled": false}
+  }
+}
