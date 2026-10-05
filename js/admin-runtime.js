@@ -124,20 +124,29 @@ function renderUsers(rows,target){
 }
 async function showUserDetail(userId){
  if(!authorized||mutationBusy)return;
- notify('Chargement de la fiche utilisateur…','loading');
+ const box=$('myeventAdminUserDetail'),body=$('myeventAdminUserDetailBody');
+ if(!box||!body)return;
+ notify('Chargement de la fiche utilisateur…','loading');box.hidden=false;body.textContent='Chargement…';
  try{
   const user=await rpc('myevent_admin_user_detail',{p_user:userId});
-  const lines=[
-   user.display_name||user.username||'Compte MyEvent',
-   '@'+(user.username||'—'),
-   'UUID : '+user.id,
-   'Inscrit le '+stamp(user.created_at),
-   user.is_admin?'Administrateur protégé':(user.suspended?'Compte suspendu':'Compte actif'),
-   'Événements créés : '+Number(user.events_created||0).toLocaleString('fr-FR'),
-   'Dernière action admin : '+stamp(user.last_admin_action)
-  ];
-  window.alert(lines.join('\n'));notify('Fiche utilisateur chargée.');
- }catch(error){notify('Fiche indisponible : '+errorText(error),'error');}
+  body.replaceChildren();
+  const identity=item('div',null,'adminUserIdentity');
+  if(user.avatar&&/^https:\/\//.test(user.avatar)){const img=document.createElement('img');img.src=user.avatar;img.alt='';img.className='adminAvatar';identity.append(img);}
+  identity.append(item('h4',user.display_name||user.username||'Compte MyEvent'),item('p','@'+(user.username||'—')),item('small','UUID · '+user.id));
+  body.append(identity);
+  const facts=item('div',null,'adminUserFacts');
+  for(const [label,value] of [
+   ['État',user.is_admin?'Administrateur protégé':(user.suspended?'Suspendu':'Actif')],
+   ['Inscription',stamp(user.created_at)],
+   ['Événements créés',Number(user.events_created||0).toLocaleString('fr-FR')],
+   ['Dernière action admin',stamp(user.last_admin_action)]
+  ]){const row=item('div',null,'adminUserFact');row.append(item('span',label),item('strong',value));facts.append(row);}
+  body.append(facts);
+  const note=item('p',user.is_admin?'Ce compte administrateur est protégé contre la suspension depuis MyEvent Admin.':'Les actions sensibles restent confirmées et journalisées.','adminMobileHint');body.append(note);
+  const actions=item('div',null,'adminActions');
+  if(!user.is_admin)actions.append(actionButton(user.suspended?'Réactiver':'Suspendre',()=>perform('user',user.id,user.suspended?'reactivate':'suspend','',!user.suspended),!user.suspended));
+  body.append(actions);box.scrollIntoView({behavior:'smooth',block:'start'});notify('Fiche utilisateur chargée.');
+ }catch(error){body.textContent='Fiche indisponible.';notify('Fiche indisponible : '+errorText(error),'error');}
 }
 function renderReservations(rows,target){
  for(const row of rows){
@@ -279,3 +288,5 @@ if(profile)new MutationObserver(()=>{if(profile.classList.contains('profileSetti
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
 window.addEventListener('pageshow',()=>check());
 })();
+
+$('myeventAdminUserDetailClose')?.addEventListener('click',()=>{const box=$('myeventAdminUserDetail');if(box)box.hidden=true;});
