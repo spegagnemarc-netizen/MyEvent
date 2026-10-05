@@ -87,3 +87,8 @@
 #myeventAdminPanel .adminQuickCard.adminQuickUrgent{border-color:#ec7777}
 @media(max-width:600px){#myeventAdminPanel .adminQuickGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:340px){#myeventAdminPanel .adminQuickGrid{grid-template-columns:1fr}}
+
+#myeventAdminPanel .adminPartnerStatus{display:inline-flex;margin:8px 0 2px;padding:5px 9px;border-radius:999px;border:1px solid #ffffff35;font-size:.8rem;font-weight:700}
+#myeventAdminPanel .adminPartnerStatus.isActive{border-color:#65d99b;color:#9af0bd}
+#myeventAdminPanel .adminPartnerStatus.isPending{border-color:#e6bc63;color:#f3d692}
+#myeventAdminPanel .adminPartnerStatus.isInactive{color:#aab6c9}
