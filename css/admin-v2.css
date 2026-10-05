@@ -76,3 +76,14 @@
  #myeventAdminPanel .adminUserFact{display:grid;gap:4px}
  #myeventAdminPanel .adminUserFact strong{text-align:left}
 }
+
+#myeventAdminPanel .adminDashboardSection{margin:20px 0}
+#myeventAdminPanel .adminDashboardSection h4{margin:0 0 10px}
+#myeventAdminPanel .adminQuickGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px}
+#myeventAdminPanel .adminQuickGrid button{min-width:0;min-height:52px;border:1px solid #ffffff30;border-radius:12px;background:#151d2b;color:#fff;text-align:left;padding:11px}
+#myeventAdminPanel .adminQuickCard{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#myeventAdminPanel .adminQuickCard span{overflow-wrap:anywhere}
+#myeventAdminPanel .adminQuickCard strong{font-size:1.3rem}
+#myeventAdminPanel .adminQuickCard.adminQuickUrgent{border-color:#ec7777}
+@media(max-width:600px){#myeventAdminPanel .adminQuickGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:340px){#myeventAdminPanel .adminQuickGrid{grid-template-columns:1fr}}
