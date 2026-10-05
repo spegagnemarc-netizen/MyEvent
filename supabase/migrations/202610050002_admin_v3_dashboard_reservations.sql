@@ -87,8 +87,17 @@ revoke all on function public.myevent_admin_reservations(text,text,int) from pub
 grant execute on function public.myevent_admin_reservations(text,text,int) to authenticated;
 
 
--- Reconcile the administrative partner registry with integrations actually present in MyEvent.
-alter table public.admin_partner_registry drop constraint if exists admin_partner_registry_provider_check;
+-- Reconcile the registry without assuming PostgreSQL's historical CHECK constraint name.
+do $ declare r record; begin
+ for r in
+  select c.conname from pg_constraint c
+  join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
+  where n.nspname='public' and t.relname='admin_partner_registry' and c.contype='c'
+   and pg_get_constraintdef(c.oid) ilike '%provider%'
+ loop
+  execute format('alter table public.admin_partner_registry drop constraint %I',r.conname);
+ end loop;
+end $;
 alter table public.admin_partner_registry add constraint admin_partner_registry_provider_check
  check (provider in ('getyourguide','viator','booking','ticketnetwork','fnac_spectacles',
  'hotels_com','expedia','abritel','omio','tiqets','awin'));
@@ -100,7 +109,10 @@ insert into public.admin_partner_registry(provider,label,enabled,notes) values
  ('ticketnetwork','TicketNetwork',true,'Billetterie'),
  ('viator','Viator',true,'Activités'),
  ('tiqets','Tiqets',false,'Demande partenaire en attente'),
- ('awin','Awin',false,'Réseau partenaire; programmes à valider individuellement')
+ ('awin','Awin',false,'Réseau partenaire; programmes à valider individuellement'),
+ ('booking','Booking.com',false,'API/partenariat en attente; ne pas confondre avec les widgets Expedia Group'),
+ ('getyourguide','GetYourGuide',false,'Intégration non active à ce stade'),
+ ('fnac_spectacles','Fnac Spectacles',false,'Programme/accès non confirmé comme actif')
 on conflict(provider) do update set label=excluded.label,notes=excluded.notes,updated_at=now();
 
 create or replace function public.myevent_admin_statistics()
