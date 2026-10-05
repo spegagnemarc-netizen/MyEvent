@@ -1459,13 +1459,16 @@
    <p style="opacity:.75">Données consultées via une fonction Supabase réservée au super_admin.</p>
   </div>
   <div data-admin-view="content" hidden>
-   <h3>Contenus affiliés · GetYourGuide</h3>
-   <p style="opacity:.75">Ajoute, modifie ou désactive les contenus du catalogue. Leur publication sur les pages publiques fera l'objet d'une intégration distincte.</p>
+   <h3>Contenus affiliés</h3>
+   <p style="opacity:.75">Gère les contenus éditoriaux liés aux partenaires. Activer un contenu ici ne remplace pas l’intégration technique ni l’activation du partenaire.</p>
    <form id="myeventAdminContentForm" style="display:grid;gap:10px;max-width:600px;margin:16px 0">
-    <input name="title" required maxlength="160" placeholder="Titre (ex. Tour Eiffel)" aria-label="Titre">
+    <select name="provider" required aria-label="Partenaire">
+     <option value="getyourguide">GetYourGuide</option><option value="viator">Viator</option><option value="hotels_com">Hotels.com</option><option value="expedia">Expedia</option><option value="abritel">Abritel</option><option value="omio">Omio</option><option value="ticketnetwork">TicketNetwork</option><option value="booking">Booking.com</option><option value="tiqets">Tiqets</option><option value="awin">Awin</option><option value="fnac_spectacles">Fnac Spectacles</option>
+    </select>
+    <input name="title" required maxlength="160" placeholder="Titre du contenu" aria-label="Titre">
     <select name="kind" aria-label="Type de contenu"><option value="city_widget">Widget ville</option><option value="activity">Activité</option><option value="availability">Disponibilité</option></select>
     <input name="city" maxlength="120" placeholder="Ville (ex. Paris)" aria-label="Ville">
-    <input name="external_id" maxlength="100" placeholder="Identifiant GetYourGuide" aria-label="Identifiant partenaire">
+    <input name="external_id" maxlength="100" placeholder="Identifiant partenaire" aria-label="Identifiant partenaire">
     <input name="affiliate_url" type="url" maxlength="2048" placeholder="Lien affilié HTTPS (facultatif)" aria-label="Lien affilié">
     <input name="campaign" maxlength="100" placeholder="Campagne" aria-label="Campagne">
     <label><input type="checkbox" name="enabled"> Actif dans le catalogue</label>
@@ -1529,8 +1532,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=7">
-<script src="js/admin-runtime.js?v=11" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=8">
+<script src="js/admin-runtime.js?v=12" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
