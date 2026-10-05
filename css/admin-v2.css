@@ -31,3 +31,5 @@
 #myeventAdminPanel .adminReservationFilters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 #myeventAdminPanel .adminReservationFilters button{min-height:42px;padding:8px 12px;border:1px solid #ffffff38;border-radius:999px;background:#1a2333;color:#fff}
 #myeventAdminPanel .adminReservationFilters button[aria-pressed=true]{border-color:var(--myevent-accent,#fa7642);box-shadow:0 0 0 1px var(--myevent-accent,#fa7642)}
+
+#myeventAdminPanel .adminStatsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0 24px}
