@@ -129,4 +129,28 @@ end $$;
 revoke all on function public.myevent_admin_statistics() from public,anon;
 grant execute on function public.myevent_admin_statistics() to authenticated;
 
+
+-- Owner/Super Admin readiness helpers. Membership is never hardcoded in client code.
+create or replace function public.myevent_admin_identity()
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare v_id uuid:=auth.uid(); v_role text;
+begin
+ if v_id is null then raise exception 'Authentification requise' using errcode='42501'; end if;
+ select role into v_role from public.platform_admins where user_id=v_id;
+ return jsonb_build_object(
+  'user_id',v_id,
+  'is_admin',v_role='super_admin',
+  'role',v_role,
+  'account_active',public.myevent_account_active()
+ );
+end $$;
+revoke all on function public.myevent_admin_identity() from public,anon;
+grant execute on function public.myevent_admin_identity() to authenticated;
+
+-- Deliberately SQL-only: production owner enrollment remains a separate, explicit operation.
+-- Example to execute only after final production authorization:
+-- insert into public.platform_admins(user_id,role)
+-- values ('OWNER_AUTH_UUID'::uuid,'super_admin')
+-- on conflict(user_id) do update set role=excluded.role;
+
 commit;
