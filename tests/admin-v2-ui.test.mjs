@@ -1,9 +1,10 @@
-import {JSDOM} from 'jsdom';
+import {createRequire} from 'node:module';
+const {JSDOM}=createRequire(import.meta.url)('jsdom');
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const section=html.match(/<section id="myeventAdminPanel"[\s\S]*?<\/section>/)?.[0];assert.ok(section);
-const dom=new JSDOM('<!doctype html><html><body><button id="myeventAdminEntry" hidden></button>'+section+'</body></html>',{runScripts:'outside-only',url:'https://preview.example.test/'});
+const dom=new JSDOM('<!doctype html><html><body><div id="profileSettingsCard"><button id="myeventAdminEntry" hidden></button></div>'+section+'</body></html>',{runScripts:'outside-only',url:'https://preview.example.test/'});
 const {window}=dom;const doc=window.document;window.HTMLElement.prototype.scrollIntoView=function(){};
 const wait=ms=>new Promise(r=>setTimeout(r,ms));const click=selector=>doc.querySelector(selector).click();
 let allowed=true,currentId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',authCallback,confirm=true,errorMode=false,deferred;
@@ -37,4 +38,9 @@ errorMode=false;click('[data-admin-tab=events]');await wait(20);assert.equal(doc
 let resolveDeferred;deferred=new Promise(r=>resolveDeferred=r);click('[data-admin-tab=users]');await wait(20);
 allowed=false;currentId='cccccccc-cccc-4ccc-8ccc-cccccccccccc';authCallback();await wait(20);resolveDeferred({data:data.users});deferred=null;await wait(20);
 assert.equal(doc.getElementById('myeventAdminPanel').hidden,true);assert.equal(doc.getElementById('myeventAdminEntry').hidden,true);assert.equal(doc.getElementById('myeventAdminUsers').childElementCount,0);
-window.close();console.log('Admin V2.1 UI: all 7 tabs, search, cancellation, duplicate protection, errors, audit and session-race checks OK');
+// Returning to the Profile recovers a permission check after installation,
+// without granting access from client identity fields.
+allowed=true;doc.getElementById('profileSettingsCard').classList.add('profileSettingsVisible');await wait(30);
+assert.equal(doc.getElementById('myeventAdminEntry').hidden,false);assert.equal(doc.getElementById('myeventAdminPanel').hidden,true);
+allowed=false;window.dispatchEvent(new window.Event('pageshow'));await wait(30);assert.equal(doc.getElementById('myeventAdminEntry').hidden,true);
+window.close();console.log('Admin V2.1 UI: all 7 tabs, search, cancellation, duplicate protection, errors, audit, session-race and Profile/pageshow rechecks OK');

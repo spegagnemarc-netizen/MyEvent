@@ -54,7 +54,7 @@ async function renderEventTransport(box,eventObj){
         (t.note?'<div class="inlineEventTransportMeta">📝 '+v58TransportEsc(t.note)+'</div>':'')+'<div class="inlineEventTransportActions"><button type="button" class="secondary" data-v58-edit-transport="'+i+'">✏️ Modifier</button><button type="button" class="secondary" data-v58-delete-transport="'+i+'">🗑️ Supprimer</button></div></div>';
     }).join('');
   }
-  list.querySelectorAll('.inlineEventTransportItem').forEach((card,i)=>{const item=transports[i];if(item?.link_import){card.querySelector('[data-v58-edit-transport]')?.remove();window.MyEventReservationLinkUI?.actions(card,item,'transport');}});
+  list.querySelectorAll('.inlineEventTransportItem').forEach((card,i)=>{const item=transports[i];if(item?.link_import){card.querySelector('[data-v58-edit-transport]')?.remove();if(item._reservation_id)card.querySelector('[data-v58-delete-transport]')?.remove();window.MyEventReservationLinkUI?.actions(card,item,'transport');}});
   const form=wrap.querySelector('#eventTransportForm');
   const fillTransportForm=(t)=>{
     $('eventTransportType').value=t.type||'other';$('eventTransportFrom').value=t.from||'';$('eventTransportTo').value=t.to||'';
@@ -391,6 +391,8 @@ async function renderEventPlanningTimeline(box,eventObj,choice,outing,aiPlan,aiI
       if(!a.link_import||a.checkout)steps.push({order:20001+i*2,name:'Départ · '+baseName,type:'accommodation',time:a.checkout||'',duration:null,address:a.address||'',price:null,source:'accommodation',fullDate:a.checkout||'',reservation:a.link_import?a:null});
     });
   }
+  const explorerItems=await window.MyEventExplorerEventReservations?.list(eventObj.id)||[];
+  for(const [i,item] of explorerItems.entries())steps.push({order:25000+i,name:item.name,type:item._kind,time:item.checkin||item.departure||'',fullDate:item.checkin||item.departure||'',address:item.address||'',source:'explorer',reservation:item});
   // V54.41 — tri chronologique réel : une étape avec seulement HH:MM
   // doit être rattachée à la date de l'événement avant de la comparer
   // à un transport qui possède une date ISO complète.

@@ -118,6 +118,7 @@
     <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
     <button type="button" class="homeFeatureCard musicCard" id="socialHeaderMusicBtn"><img class="homeFeatureArt" src="assets/ui/music-pink.svg" alt=""><b>Musique</b></button>
     <button type="button" class="homeFeatureCard ticketCard" id="socialHeaderTicketsBtn" aria-haspopup="dialog" aria-controls="myeventTicketModal"><div class="homeFeatureIcon" aria-hidden="true">🎫</div><b>Billetterie</b></button>
+    <a href="explorer.html" class="homeFeatureCard explorerCard"><div class="homeFeatureIcon" aria-hidden="true">🧭</div><b>Explorer</b></a>
     <button type="button" id="socialGpsWeatherCard" class="homeFeatureCard weatherCard"><img class="homeFeatureArt" id="socialGpsWeatherIcon" src="assets/ui/weather-sun-cloud.svg" alt=""><b>Ma météo</b><small id="socialGpsWeatherTemp">--°</small></button>
     <button type="button" id="socialNearbyShareBtn" class="homeFeatureCard nearbyCard"><div class="homeFeatureIcon">📍</div><b>À proximité</b></button>
     <button type="button" class="homeFeatureCard popularCard"><div class="homeFeatureIcon">🔥</div><b>Populaire</b></button>
@@ -1207,6 +1208,7 @@
 <script class="eg-widgets-script" src="https://creator.expediagroup.com/products/widgets/assets/eg-widgets.js" onerror="MyEventAccommodationWidget.fail()"></script>
 <script src="js/planning-transport-runtime.js"></script>
 <script src="js/reservation-link-contract.js"></script>
+<script src="js/explorer-event-reservations.js"></script>
 <script src="js/reservation-link-runtime.js"></script>
 
 
@@ -1503,7 +1505,7 @@
 body.myeventAdminOpen{overflow:hidden}
 </style>
 <link rel="stylesheet" href="css/admin-v2.css?v=2">
-<script src="js/admin-runtime.js?v=5" defer></script>
+<script src="js/admin-runtime.js?v=6" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">

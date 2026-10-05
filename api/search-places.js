@@ -569,7 +569,7 @@ async function searchViator(req,lat,lon) {
       id:'viator-'+String(product?.productCode||''),productCode:product?.productCode||'',
       name:product?.title||'Activité Viator',description:product?.description||'',type:'viator_activity',
       typeLabel:'Activité réservable',address:addressParts.join(', ')||location.name||destination?.name||'',
-      lat:location.lat,lon:location.lon,distance,
+      lat:location.lat,lon:location.lon,distance,locationApproximate:!!location.approximate,
       price:toNumber(product?.pricing?.summary?.fromPrice)??toNumber(product?.pricing?.fromPrice),
       currency:product?.pricing?.currency||product?.pricing?.summary?.currency||'EUR',
       image:viatorBestImage(product?.images),rating:reviews.rating,reviewCount:reviews.reviewCount,

@@ -51,6 +51,6 @@
     const booking={link_import:true,original_url,provider:detected.provider,reservation_status:status,confirmation_source:status==='confirmed'?'user_declared':null,reference:trim('reference',100),destination,address,photo:trim('photo',8192),geo:coordinates,name,title:name,people:people?people+' voyageur(s)':'',people_count:people?Number(people):null,booking:original_url,note:trim('note',1500)};
     return kind==='accommodation'?{...booking,type:'other',checkin:start,checkout:end,total_cost:0}:{...booking,type:'other',from,to:destination,departure:start,arrival:end,cost:0};
   }
-  function statusLabel(value,kind){return value.reservation_status==='confirmed'?'Réservation confirmée (déclarée par vous)':kind==='transport'?'Transport ajouté · réservation à vérifier':'Hébergement ajouté · réservation à vérifier';}
+  function statusLabel(value,kind){return value.reservation_status==='confirmed'?'Réservation confirmée (déclarée par vous)':({transport:'Transport ajouté',restaurant:'Restaurant ajouté',activity:'Activité ajoutée',ticket:'Billet ajouté'}[value._kind||kind]||'Hébergement ajouté')+' · réservation à vérifier';}
   return {url,date,dateTime,extract,payload,geo,reliableGeo,statusLabel};
 });

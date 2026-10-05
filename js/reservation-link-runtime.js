@@ -92,9 +92,9 @@
     if(item.proof){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent='Télécharger le justificatif';button.addEventListener('click',async()=>{
       try{
         const ctx={eventId:current()?.id,userId:viewer()?.id},eventId=ctx.eventId;if(!eventId||!ctx.userId)throw Error('Connecte-toi à cet événement.');
-        const r=await sb.from('messages').select('content').eq('event_id',eventId).eq('id',item._message_id).single();
+        const r=item._reservation_id?await sb.from('personal_reservations').select('details').eq('event_id',eventId).eq('id',item._reservation_id).single():await sb.from('messages').select('content').eq('event_id',eventId).eq('id',item._message_id).single();
         if(r.error||!r.data||!same(ctx))throw Error('Justificatif inaccessible.');
-        const p=JSON.parse(r.data.content.slice(r.data.content.indexOf(']]')+2)).proof;
+        const p=item._reservation_id?r.data.details.proof:JSON.parse(r.data.content.slice(r.data.content.indexOf(']]')+2)).proof;
         if(!p||!['application/pdf','image/png','image/jpeg'].includes(p.type)||p.base64.length>280000)throw Error('Justificatif non valide.');
         const bytes=Uint8Array.from(atob(p.base64),c=>c.charCodeAt(0)),blob=new Blob([bytes],{type:p.type}),href=URL.createObjectURL(blob),a=document.createElement('a');
         a.href=href;a.download=p.name.replace(/[^\p{L}\p{N}._ -]/gu,'_');a.textContent='Enregistrer le justificatif';row.append(a);button.disabled=true;
@@ -109,6 +109,7 @@
     const selector=kind==='transport'?'#m58TransportList':'#m58AccommodationList';
     document.querySelectorAll(selector+' .m58ModuleCard').forEach((card,i)=>{
       const item=items[i];if(!item?.link_import)return;actions(card,item,kind);
+      if(item._reservation_id){card.querySelectorAll('[data-m58-transport-delete],[data-m58-accommodation-delete]').forEach(b=>b.remove());const hint=document.createElement('p');hint.textContent='Réservation personnelle partagée · modification depuis Explorer / Mes réservations.';card.append(hint);}
       const dates=[item.checkin||item.departure,item.checkout||item.arrival].filter(Boolean);
       if(dates.length&&dates.every(v=>/^\d{4}-\d{2}-\d{2}$/.test(v))){const meta=card.querySelector('.m58ModuleCardMeta');if(meta)meta.textContent=dates.map(v=>new Date(v+'T12:00:00').toLocaleDateString('fr-FR')).join(' → ')+' · heures à préciser'+(item.people?' · '+item.people:'');}
       // Imported records never use the legacy first-result geocoder or destructive editor.
@@ -123,9 +124,9 @@
     clearMap();const generation=mapGeneration;
     if(!current()||!viewer()||typeof locationMap==='undefined'||!locationMap||!window.L)return;
     const eventId=current().id;
-    const [ts,as]=await Promise.all([getEventTransports(eventId),getEventAccommodations(eventId)]);
+    const [ts,as,other]=await Promise.all([getEventTransports(eventId),getEventAccommodations(eventId),window.MyEventExplorerEventReservations?.list(eventId)||[]]);
     if(current()?.id!==eventId||generation!==mapGeneration)return;
-    for(const item of [...ts,...as])if(item.link_import&&api.reliableGeo(item.geo)){
+    for(const item of [...ts,...as,...other])if(item.link_import&&api.reliableGeo(item.geo)){
       const content=document.createElement('div');const title=document.createElement('strong');title.textContent=item.name;content.append(title);
       actions(content,item,item.checkin?'accommodation':'transport');
       markers.push(L.marker([item.geo.lat,item.geo.lon],{icon:makeLocationIcon(item.checkin?'🏨':'🚆','#278cff')}).addTo(locationMap).bindPopup(content));

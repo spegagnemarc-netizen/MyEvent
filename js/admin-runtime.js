@@ -185,4 +185,10 @@ const ready=setInterval(()=>{
  if(typeof sb==='undefined'||!sb)return;clearInterval(ready);
  sb.auth.onAuthStateChange(()=>{identityEpoch++;currentId=null;reset();setTimeout(check,0);});check();
 },400);
+// Recheck server permissions when returning to the Profile after installation,
+// a temporary network failure, or a Safari page restored from the background.
+const profile=$('profileSettingsCard');
+if(profile)new MutationObserver(()=>{if(profile.classList.contains('profileSettingsVisible'))check();}).observe(profile,{attributes:true,attributeFilter:['class']});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
+window.addEventListener('pageshow',()=>check());
 })();
