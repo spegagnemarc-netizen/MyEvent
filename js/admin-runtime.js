@@ -63,6 +63,21 @@ async function load(){
   }
   const gate=$('myeventAdminGate');
   if(gate)gate.textContent=data.suspension_gate_ready?'Protection des suspensions configurée · validation Supabase réelle requise.':'Suspensions verrouillées tant que la protection serveur n’est pas activée et vérifiée.';
+  const attention=$('myeventAdminAttention');
+  if(attention){
+   attention.replaceChildren();
+   const cards=[
+    ['Signalements ouverts',data.open_reports,'reports',Number(data.open_reports||0)>0],
+    ['Comptes suspendus',data.suspended,'users',Number(data.suspended||0)>0],
+    ['Réservations à superviser',Number(data.personal_reservations||0)+Number(data.event_reservations||0),'reservations',false]
+   ];
+   for(const [label,value,destination,urgent] of cards){
+    const button=item('button',null,'adminQuickCard'+(urgent?' adminQuickUrgent':''));
+    button.type='button';button.dataset.adminJump=destination;
+    button.append(item('span',label),item('strong',Number(value||0).toLocaleString('fr-FR')));
+    attention.append(button);
+   }
+  }
   notify('Données actualisées · '+stamp(data.generated_at));
   if(activeTab!=='overview')return await loadTab(activeTab);return true;
  }catch(error){if(sameSession(id,epoch))notify('Statistiques indisponibles : '+errorText(error),'error');return false;}
@@ -265,6 +280,7 @@ contentForm?.addEventListener('submit',async e=>{
 });
 cancelEdit?.addEventListener('click',()=>{contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;});
 nav.addEventListener('click',e=>{const button=e.target.closest('[data-admin-tab]');if(button)tab(button.dataset.adminTab);});
+panel.addEventListener('click',e=>{const button=e.target.closest('[data-admin-jump]');if(button)tab(button.dataset.adminJump);});
 panel.querySelectorAll('[data-admin-search]').forEach(input=>input.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadTab(activeTab),250);}));
 panel.querySelectorAll('[data-admin-reservation-scope]').forEach(button=>button.addEventListener('click',()=>{
  reservationScope=button.dataset.adminReservationScope;
