@@ -5,13 +5,14 @@ export function cameraTriggerScript(origin, token) {
     if(window!==window.top || location.origin!==origin || !window.ReactNativeWebView?.postMessage)return;
     const key='__myeventMobileCamera';
     window[key]?.dispose();
-    let bypass=false,opening=false,available;
+    let bypass=false,opening=false,available,story=false;
     function send(type,extra={}){window.ReactNativeWebView.postMessage(JSON.stringify({version:1,type,token,...extra}));}
     function announce(){
       const exists=!!document.getElementById('socialBottomCreate');
       if(exists!==available){available=exists;send('camera-trigger-ready',{available:exists});}
     }
     function click(event){
+      if(event.target?.closest?.('#storyUseCamera'))story=true;
       if(bypass || !event.target?.closest?.('#socialBottomCreate'))return;
       event.preventDefault();event.stopImmediatePropagation();
       if(opening)return;
@@ -25,7 +26,7 @@ export function cameraTriggerScript(origin, token) {
     const observer=new MutationObserver(announce);
     observer.observe(document.documentElement,{childList:true,subtree:true});
     window.addEventListener('click',click,true);
-    window[key]={openWeb,release(){opening=false;},dispose(){observer.disconnect();window.removeEventListener('click',click,true);}};
+    window[key]={openWeb,get story(){return story;},release(){opening=false;story=false;},dispose(){observer.disconnect();window.removeEventListener('click',click,true);}};
     announce();
   })();true;`;
 }

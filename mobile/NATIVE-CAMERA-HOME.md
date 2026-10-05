@@ -1,5 +1,7 @@
 # Bouton caméra de l’accueil — mobile uniquement
 
+Rapport historique du premier raccordement. La finalisation du parcours sans panneau web intermédiaire est décrite dans `V1-FINALISATION-TEST.md`.
+
 Base distante vérifiée : `f47316bafdde9413441fcf15581f993a36bef95f`, branche `mobile-v1-native-camera`.
 
 ## Raccordement

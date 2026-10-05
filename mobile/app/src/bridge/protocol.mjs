@@ -7,10 +7,10 @@ export function validatePhoto(base64) {
   const binary=atob(base64);
   if(binary.length<4 || binary.length>MAX_PHOTO_BYTES || binary.charCodeAt(0)!==255 || binary.charCodeAt(1)!==216 || binary.charCodeAt(binary.length-2)!==255 || binary.charCodeAt(binary.length-1)!==217)throw new Error('JPEG invalide.');
 }
-export function importPhotoScript(base64, origin, id) {
+export function importPhotoScript(base64, origin, id, silent=false) {
   validatePhoto(base64);
   // Serialized arguments; never concatenate an unescaped URI, caption or session token.
-  const payload=JSON.stringify({base64,origin,id});
+  const payload=JSON.stringify({base64,origin,id,silent});
   return `(function(){
     const p=${payload};
     if(window!==window.top || location.origin!==p.origin)return;
@@ -18,7 +18,8 @@ export function importPhotoScript(base64, origin, id) {
     const input=document.getElementById('cameraFileInput'),open=document.getElementById('socialBottomCreate');
     if(!input || !open || typeof DataTransfer!=='function'){reply('import-unavailable');return;}
     try{
-      if(window.__myeventMobileCamera)window.__myeventMobileCamera.openWeb();else open.click();
+      if(p.silent){const modal=document.getElementById('myeventCameraModal');if(!modal)throw Error('Caméra absente');modal.classList.add('open');modal.setAttribute('aria-hidden','true');}
+      else if(window.__myeventMobileCamera)window.__myeventMobileCamera.openWeb();else open.click();
       const bytes=Uint8Array.from(atob(p.base64),c=>c.charCodeAt(0));
       const transfer=new DataTransfer();transfer.items.add(new File([bytes],'MyEvent-mobile.jpg',{type:'image/jpeg'}));
       input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));reply('imported');
