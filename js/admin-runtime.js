@@ -7,7 +7,7 @@ const refresh=$('myeventAdminRefresh'),message=$('myeventAdminMessage'),nav=$('m
 const contentForm=$('myeventAdminContentForm'),contentList=$('myeventAdminContentList'),cancelEdit=$('myeventAdminContentCancel');
 if(!entry||!panel||!close||!refresh||!message||!nav)return;
 let activeTab='overview',generation=0,identityEpoch=0,currentId=null,authorized=false;
-let checking=null,mutationBusy=false,searchTimer,previousFocus;
+let checking=null,mutationBusy=false,searchTimer,previousFocus,reservationScope='all';
 const sameSession=(id,epoch)=>authorized&&currentId===id&&identityEpoch===epoch;
 const notify=(text,state='success')=>{message.textContent=text;message.dataset.state=state;};
 function item(tag,text,className){const el=document.createElement(tag);if(text!=null)el.textContent=String(text);if(className)el.className=className;return el;}
@@ -58,7 +58,7 @@ async function load(){
   const data=await rpc('myevent_admin_overview');
   if(!sameSession(id,epoch)||panel.hidden)return;
   const stats=$('myeventAdminStats');stats.replaceChildren();
-  for(const [label,value] of [['Utilisateurs',data.users],['Événements',data.events],['Annonces',data.marketplace],['Comptes suspendus',data.suspended],['Signalements ouverts',data.open_reports]]){
+  for(const [label,value] of [['Utilisateurs',data.users],['Nouveaux 24 h',data.new_users_24h],['Nouveaux 7 j',data.new_users_7d],['Nouveaux 30 j',data.new_users_30d],['Événements',data.events],['Réservations perso.',data.personal_reservations],['Réservations événement',data.event_reservations],['Signalements ouverts',data.open_reports],['Actions admin 24 h',data.recent_admin_actions],['Comptes suspendus',data.suspended]]){
    const card=item('div',null,'myeventAdminStat');card.append(item('span',label),item('strong',value==null?'—':Number(value).toLocaleString('fr-FR')));stats.append(card);
   }
   const gate=$('myeventAdminGate');
@@ -116,9 +116,53 @@ function renderUsers(rows,target){
   else if(user.avatar&&user.avatar.length<12)card.append(item('span',user.avatar,'adminAvatar adminAvatarText'));
   const managed=user.managed_suspension===true;
   card.append(item('h4',user.display_name||user.username||'Compte MyEvent'),item('p','@'+(user.username||'—')+' · '+user.id),item('small','Inscrit le '+stamp(user.created_at)+' · '+(user.suspended?(managed?'Suspendu par MyEvent':'Bannissement externe protégé'):'Actif')+(user.is_admin?' · Administrateur':'')));
-  if(!user.is_admin&&(!user.suspended||managed)){const actions=item('div',null,'adminActions');actions.append(actionButton(managed?'Réactiver':'Suspendre',()=>perform('user',user.id,managed?'reactivate':'suspend','',!managed),!managed));card.append(actions);}
+  const actions=item('div',null,'adminActions');
+  actions.append(actionButton('Voir la fiche',()=>showUserDetail(user.id)));
+  if(!user.is_admin&&(!user.suspended||managed))actions.append(actionButton(managed?'Réactiver':'Suspendre',()=>perform('user',user.id,managed?'reactivate':'suspend','',!managed),!managed));
+  card.append(actions);target.append(card);
+ }
+}
+async function showUserDetail(userId){
+ if(!authorized||mutationBusy)return;
+ notify('Chargement de la fiche utilisateur…','loading');
+ try{
+  const user=await rpc('myevent_admin_user_detail',{p_user:userId});
+  const lines=[
+   user.display_name||user.username||'Compte MyEvent',
+   '@'+(user.username||'—'),
+   'UUID : '+user.id,
+   'Inscrit le '+stamp(user.created_at),
+   user.is_admin?'Administrateur protégé':(user.suspended?'Compte suspendu':'Compte actif'),
+   'Événements créés : '+Number(user.events_created||0).toLocaleString('fr-FR'),
+   'Dernière action admin : '+stamp(user.last_admin_action)
+  ];
+  window.alert(lines.join('\n'));notify('Fiche utilisateur chargée.');
+ }catch(error){notify('Fiche indisponible : '+errorText(error),'error');}
+}
+function renderReservations(rows,target){
+ for(const row of rows){
+  const card=item('article',null,'adminCard');
+  const scope=row.event_id?'Événement':'Personnelle';
+  card.append(item('h4',row.destination||row.provider||'Réservation MyEvent'),
+   item('p',scope+' · '+(row.kind||'—')+' · '+(row.reservation_status==='confirmed'?'Confirmée':'Ajoutée / à vérifier')),
+   item('small','Utilisateur : '+(row.owner_name||row.owner_id)+(row.event_name?' · Événement : '+row.event_name:'')+' · '+stamp(row.created_at)));
+  if(row.provider)card.append(item('p','Partenaire / source : '+row.provider));
+  if(row.has_proof)card.append(item('small','Justificatif présent · contenu privé non affiché dans l’administration.'));
   target.append(card);
  }
+}
+async function loadReservations(){
+ const sequence=++generation,id=currentId,epoch=identityEpoch,target=$('myeventAdminReservations');
+ if(!target||!authorized||panel.hidden)return;
+ target.textContent='Chargement…';notify('Chargement des réservations…','loading');
+ try{
+  const query=panel.querySelector('[data-admin-search="reservations"]')?.value?.trim()||'';
+  const rows=await rpc('myevent_admin_reservations',{p_scope:reservationScope,p_query:query,p_limit:60});
+  if(!sameSession(id,epoch)||sequence!==generation||panel.hidden)return;
+  target.replaceChildren();renderReservations(rows||[],target);
+  if(!target.childElementCount)target.append(item('p','Aucune réservation pour ce filtre.'));
+  notify('Réservations actualisées · '+new Date().toLocaleTimeString('fr-FR'));return true;
+ }catch(error){if(sameSession(id,epoch)&&sequence===generation){target.textContent='Réservations indisponibles.';notify(errorText(error),'error');}return false;}
 }
 function renderEvents(rows,target){for(const event of rows){
  const card=item('article',null,'adminCard');card.append(item('h4',event.name),item('p',(event.location||'Lieu non renseigné')+' · '+stamp(event.event_date)),item('small','Créateur : '+(event.creator_name||event.creator_id)+' · '+event.visibility+' · '+(event.hidden?'Masqué dans la découverte':'Visible selon sa confidentialité')));
@@ -153,6 +197,7 @@ async function loadTab(name){
  const sequence=++generation,id=currentId,epoch=identityEpoch;
  if(name==='overview')return load();
  if(name==='content')return loadContent();
+ if(name==='reservations')return loadReservations();
  const kinds={users:['users'],events:['events','reports'],marketplace:['listings','reports'],partners:['partners'],settings:['settings','audit']}[name];if(!kinds)return;
  for(const kind of kinds){const target=$(targetIds[kind]);if(target)target.textContent='Chargement…';}
  notify('Chargement de la rubrique…','loading');
@@ -175,6 +220,11 @@ contentForm?.addEventListener('submit',async e=>{
 cancelEdit?.addEventListener('click',()=>{contentForm.reset();delete contentForm.dataset.editId;cancelEdit.hidden=true;});
 nav.addEventListener('click',e=>{const button=e.target.closest('[data-admin-tab]');if(button)tab(button.dataset.adminTab);});
 panel.querySelectorAll('[data-admin-search]').forEach(input=>input.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadTab(activeTab),250);}));
+panel.querySelectorAll('[data-admin-reservation-scope]').forEach(button=>button.addEventListener('click',()=>{
+ reservationScope=button.dataset.adminReservationScope;
+ panel.querySelectorAll('[data-admin-reservation-scope]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+ if(activeTab==='reservations')loadReservations();
+}));
 entry.addEventListener('click',async()=>{if(!await check())return;previousFocus=document.activeElement;panel.hidden=false;document.body.classList.add('myeventAdminOpen');tab('overview');close.focus();});
 close.addEventListener('click',hide);refresh.addEventListener('click',load);
 document.addEventListener('keydown',e=>{
