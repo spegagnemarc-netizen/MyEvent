@@ -86,4 +86,47 @@ end $$;
 revoke all on function public.myevent_admin_reservations(text,text,int) from public,anon;
 grant execute on function public.myevent_admin_reservations(text,text,int) to authenticated;
 
+
+-- Reconcile the administrative partner registry with integrations actually present in MyEvent.
+alter table public.admin_partner_registry drop constraint if exists admin_partner_registry_provider_check;
+alter table public.admin_partner_registry add constraint admin_partner_registry_provider_check
+ check (provider in ('getyourguide','viator','booking','ticketnetwork','fnac_spectacles',
+ 'hotels_com','expedia','abritel','omio','tiqets','awin'));
+insert into public.admin_partner_registry(provider,label,enabled,notes) values
+ ('hotels_com','Hotels.com',true,'Widget affilié'),
+ ('expedia','Expedia',true,'Séjours et vols'),
+ ('abritel','Abritel',true,'Hébergements'),
+ ('omio','Omio',true,'Transport'),
+ ('ticketnetwork','TicketNetwork',true,'Billetterie'),
+ ('viator','Viator',true,'Activités'),
+ ('tiqets','Tiqets',false,'Demande partenaire en attente'),
+ ('awin','Awin',false,'Réseau partenaire; programmes à valider individuellement')
+on conflict(provider) do update set label=excluded.label,notes=excluded.notes,updated_at=now();
+
+create or replace function public.myevent_admin_statistics()
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare personal_total bigint:=0; personal_30d bigint:=0; linked_total bigint:=0;
+begin
+ perform public.myevent_admin_guard();
+ if to_regclass('public.personal_reservations') is not null then
+  execute 'select count(*),count(*) filter(where created_at>=now()-interval ''30 days''),count(*) filter(where event_id is not null) from public.personal_reservations'
+   into personal_total,personal_30d,linked_total;
+ end if;
+ return jsonb_build_object(
+  'users_total',(select count(*) from auth.users),
+  'users_30d',(select count(*) from auth.users where created_at>=now()-interval '30 days'),
+  'events_total',(select count(*) from public.events),
+  'events_30d',(select count(*) from public.events where created_at>=now()-interval '30 days'),
+  'marketplace_total',(select count(*) from public.marketplace_listings),
+  'reservations_total',personal_total,
+  'reservations_30d',personal_30d,
+  'reservations_linked_to_event',linked_total,
+  'reports_open',(select count(*) from public.admin_reports where status='open'),
+  'reports_resolved',(select count(*) from public.admin_reports where status='resolved'),
+  'partners_enabled',(select count(*) from public.admin_partner_registry where enabled),
+  'generated_at',now());
+end $$;
+revoke all on function public.myevent_admin_statistics() from public,anon;
+grant execute on function public.myevent_admin_statistics() to authenticated;
+
 commit;
