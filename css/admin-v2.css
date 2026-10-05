@@ -27,3 +27,7 @@
 #myeventAdminPanel button:focus-visible,#myeventAdminPanel input:focus-visible,#myeventAdminPanel select:focus-visible{outline:2px solid var(--myevent-accent,#fa7642);outline-offset:2px}
 #myeventAdminPanel .adminAvatar{width:40px;height:40px;border-radius:50%;object-fit:cover;float:left;margin-right:10px}
 @media(max-width:600px){#myeventAdminPanel>div{padding-bottom:calc(42px + env(safe-area-inset-bottom))}#myeventAdminPanel .myeventAdminStat{padding:14px}#myeventAdminPanel .adminCard{padding:12px}}
+
+#myeventAdminPanel .adminReservationFilters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+#myeventAdminPanel .adminReservationFilters button{min-height:42px;padding:8px 12px;border:1px solid #ffffff38;border-radius:999px;background:#1a2333;color:#fff}
+#myeventAdminPanel .adminReservationFilters button[aria-pressed=true]{border-color:var(--myevent-accent,#fa7642);box-shadow:0 0 0 1px var(--myevent-accent,#fa7642)}
