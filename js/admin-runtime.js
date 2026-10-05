@@ -192,12 +192,49 @@ function renderConfig(rows,target,kind){for(const row of rows){
  card.append(actions);target.append(card);
 }}
 const targetIds={users:'myeventAdminUsers',events:'myeventAdminEvents',listings:'myeventAdminListings',partners:'myeventAdminPartners',settings:'myeventAdminSettings',audit:'myeventAdminAudit'};
+function renderCentralReports(rows,target){
+ for(const report of rows){
+  const card=item('article',null,'adminCard');
+  const type=report.target_kind==='event'?'Événement':'Annonce';
+  card.append(item('h4',type+' · '+report.reason),item('small',report.status+' · '+stamp(report.created_at)+' · ID '+report.target_id));
+  const actions=item('div',null,'adminActions');
+  for(const [label,action] of report.status==='open'?[['Résoudre','resolve'],['Classer','dismiss']]:[['Rouvrir','reopen']])actions.append(actionButton(label,()=>perform('report',report.id,action)));
+  card.append(actions);target.append(card);
+ }
+}
+async function loadReports(){
+ const sequence=++generation,id=currentId,epoch=identityEpoch,target=$('myeventAdminReports');
+ if(!target||!authorized||panel.hidden)return;
+ target.textContent='Chargement…';
+ try{
+  const rows=await rpc('myevent_admin_list',{p_kind:'reports',p_query:'',p_limit:100});
+  if(!sameSession(id,epoch)||sequence!==generation||panel.hidden)return;
+  target.replaceChildren();renderCentralReports(rows||[],target);
+  if(!target.childElementCount)target.append(item('p','Aucun signalement.'));
+  notify('Signalements actualisés.');return true;
+ }catch(error){if(sameSession(id,epoch)){target.textContent='Signalements indisponibles.';notify(errorText(error),'error');}return false;}
+}
+async function loadStatistics(){
+ const sequence=++generation,id=currentId,epoch=identityEpoch,target=$('myeventAdminStatistics');
+ if(!target||!authorized||panel.hidden)return;
+ target.textContent='Chargement…';
+ try{
+  const data=await rpc('myevent_admin_statistics');
+  if(!sameSession(id,epoch)||sequence!==generation||panel.hidden)return;
+  target.replaceChildren();
+  const rows=[['Utilisateurs',data.users_total],['Nouveaux utilisateurs · 30 j',data.users_30d],['Événements',data.events_total],['Nouveaux événements · 30 j',data.events_30d],['Annonces Marketplace',data.marketplace_total],['Réservations',data.reservations_total],['Réservations · 30 j',data.reservations_30d],['Rattachées à un événement',data.reservations_linked_to_event],['Signalements ouverts',data.reports_open],['Signalements résolus',data.reports_resolved],['Partenaires actifs',data.partners_enabled]];
+  for(const [label,value] of rows){const card=item('div',null,'myeventAdminStat');card.append(item('span',label),item('strong',value==null?'—':Number(value).toLocaleString('fr-FR')));target.append(card);}
+  notify('Statistiques actualisées · '+stamp(data.generated_at));return true;
+ }catch(error){if(sameSession(id,epoch)){target.textContent='Statistiques indisponibles.';notify(errorText(error),'error');}return false;}
+}
 async function loadTab(name){
  if(!authorized||panel.hidden)return;
  const sequence=++generation,id=currentId,epoch=identityEpoch;
  if(name==='overview')return load();
  if(name==='content')return loadContent();
  if(name==='reservations')return loadReservations();
+ if(name==='reports')return loadReports();
+ if(name==='statistics')return loadStatistics();
  const kinds={users:['users'],events:['events','reports'],marketplace:['listings','reports'],partners:['partners'],settings:['settings','audit']}[name];if(!kinds)return;
  for(const kind of kinds){const target=$(targetIds[kind]);if(target)target.textContent='Chargement…';}
  notify('Chargement de la rubrique…','loading');
