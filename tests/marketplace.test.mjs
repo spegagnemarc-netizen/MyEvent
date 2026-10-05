@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateListing,filterListings,createMarketplaceStore} from '../js/marketplace-data.mjs';
 const fields={title:'Enceinte portable',description:'Enceinte en bon état, chargeur et housse inclus.',city:'Lyon',price:'35.90',mode:'rent',category:'sound',condition:'good'};
+test('radius excludes unknown/invalid coordinates without treating them as zero; real zero remains valid',()=>{
+ const point={...validateListing(fields),latitude:0,longitude:0};
+ const rows=[point,{...point,latitude:null,longitude:null},{...point,latitude:'',longitude:''},{...point,latitude:100},{...point,latitude:'bad'}];
+ assert.deepEqual(filterListings(rows,{center:{latitude:0,longitude:0},radiusKm:25}),[point]);
+ for(const pair of [{latitude:91,longitude:0},{latitude:0,longitude:181},{latitude:0},{latitude:'bad',longitude:0}])assert.throws(()=>validateListing({...fields,...pair}),/Coordonnées/);
+ assert.equal(validateListing({...fields,latitude:0,longitude:0}).latitude,0);
+});
 test('listing validation preserves cents and rejects incomplete or invalid listings',()=>{
   assert.equal(validateListing(fields).price_cents,3590);
   for(const changes of [{price:'NaN'},{price:'1.001'},{price:'0'},{mode:'free'},{category:'invalid'},{condition:'broken'},{title:'a'},{description:'court'},{city:''}])assert.throws(()=>validateListing({...fields,...changes}));

@@ -7,7 +7,7 @@ const server=readFileSync(new URL('../api/search-places.js',import.meta.url),'ut
 const core=readFileSync(new URL('../js/core-runtime.js',import.meta.url),'utf8');
 const outings=readFileSync(new URL('../js/sorties-reservations-runtime.js',import.meta.url),'utf8');
 const productUrl='https://www.viator.com/tours/Gap/Example/d1-TEST?pid=P000TEST&mcid=42383&campaign=my-event';
-const product={productCode:'TEST',title:'Sortie test',description:'Une description',productUrl,
+const product={productCode:'TEST',title:'Sortie test',description:'Une description',productUrl,destinations:[{ref:7,primary:true}],
   pricing:{summary:{fromPrice:24.5},currency:'EUR'},images:[{variants:[{width:720,url:'https://example.com/photo.jpg'}]}],
   reviews:{combinedAverageRating:4.7,totalReviews:51}};
 function api(env={},products=[product]) {
@@ -44,8 +44,12 @@ test('sandbox remains isolated, including destination cache after environment ch
 });
 test('missing price stays unknown, count bounded, missing coordinates rejected',async()=>{
   const a=api({},[{...product,pricing:{summary:{fromPrice:null}}}]);const r=await a.run({count:'999'});
-  assert.equal(r.body.results[0].price,null);assert.equal(JSON.parse(a.calls[1].options.body).pagination.count,50);
+  assert.equal(r.body.results[0].price,null);assert.equal(JSON.parse(a.calls[1].options.body).pagination.count,30);
+  assert.equal(r.body.results[0].locationApproximate,true);
   assert.equal((await a.run({lat:'invalid'})).code,400);
+});
+test('a product without resolved location or explicit destination is not assigned invented coordinates',async()=>{
+ const a=api({},[{...product,destinations:[]}]);assert.equal((await a.run()).body.results.length,0);
 });
 test('upstream failures stay explicit, never fall back to Photon or expose upstream payload',async()=>{
   const a=api();a.context.fetch=async()=>({ok:false,status:403,json:async()=>({message:'sensitive upstream data'})});

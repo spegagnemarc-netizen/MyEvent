@@ -10,13 +10,14 @@ export function validateListing(fields){
   if(!Number.isFinite(price)||price_cents<100||price_cents>10000000||Math.abs(price*100-price_cents)>.00001)throw new Error('Indiquez un prix entre 1 et 100 000 €, avec deux décimales maximum.');
   if(!['rent','sale'].includes(fields.mode)||!categories.some(([id])=>id===fields.category)||!Object.hasOwn(conditions,fields.condition))throw new Error('Vérifiez le type, la catégorie et l’état du matériel.');
   const latitude=fields.latitude===''||fields.latitude==null?null:Number(fields.latitude),longitude=fields.longitude===''||fields.longitude==null?null:Number(fields.longitude);
+  if((latitude===null)!==(longitude===null)||(latitude!==null&&(!Number.isFinite(latitude)||!Number.isFinite(longitude)||Math.abs(latitude)>90||Math.abs(longitude)>180)))throw new Error('Coordonnées du secteur invalides.');
   return {title,description,city,price_cents,mode:fields.mode,category:fields.category,condition:fields.condition,latitude,longitude};
 }
 const normalize=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function filterListings(items,{mode='all',category='all',query='',city='',sort='featured',favorites=null,center=null,radiusKm=null}={}){
   const words=normalize(query).trim().split(/\s+/).filter(Boolean);
   const distanceKm=(a,b)=>{const r=6371,toRad=v=>v*Math.PI/180,dLat=toRad(b.latitude-a.latitude),dLon=toRad(b.longitude-a.longitude),lat1=toRad(a.latitude),lat2=toRad(b.latitude);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 2*r*Math.asin(Math.sqrt(h));};
-  return items.filter(item=>(mode==='all'||item.mode===mode)&&(category==='all'||item.category===category)&&(!city||normalize(item.city)===normalize(city))&&(!favorites||favorites.has(item.id))&&(!center||!radiusKm||(Number.isFinite(Number(item.latitude))&&Number.isFinite(Number(item.longitude))&&distanceKm(center,{latitude:Number(item.latitude),longitude:Number(item.longitude)})<=radiusKm))&&words.every(word=>normalize(item.title+' '+item.description+' '+item.city).includes(word)))
+  return items.filter(item=>(mode==='all'||item.mode===mode)&&(category==='all'||item.category===category)&&(!city||normalize(item.city)===normalize(city))&&(!favorites||favorites.has(item.id))&&(!center||!radiusKm||(item.latitude!=null&&item.longitude!=null&&String(item.latitude).trim()!==''&&String(item.longitude).trim()!==''&&Number.isFinite(Number(item.latitude))&&Number.isFinite(Number(item.longitude))&&Math.abs(Number(item.latitude))<=90&&Math.abs(Number(item.longitude))<=180&&distanceKm(center,{latitude:Number(item.latitude),longitude:Number(item.longitude)})<=radiusKm))&&words.every(word=>normalize(item.title+' '+item.description+' '+item.city).includes(word)))
     .sort((a,b)=>sort==='priceAsc'?a.price_cents-b.price_cents:sort==='priceDesc'?b.price_cents-a.price_cents:new Date(b.created_at)-new Date(a.created_at));
 }
 export function createMarketplaceStore(client){
