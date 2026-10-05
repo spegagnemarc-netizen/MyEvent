@@ -1434,7 +1434,7 @@
   <div class="adminTopbar"><header class="adminHeader">
    <h2 style="margin:0">🛡️ MyEvent Admin</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button>
   </header>
-  <nav id="myeventAdminNav" aria-label="Rubriques administration" style="display:flex;overflow-x:auto;gap:8px;padding:12px 0">
+  <nav id="myeventAdminNav" aria-label="Rubriques administration" tabindex="0" style="display:flex;overflow-x:auto;gap:8px;padding:12px 0">
    <button type="button" data-admin-tab="overview" aria-current="page">Tableau de bord</button>
    <button type="button" data-admin-tab="content">Affiliation</button>
    <button type="button" data-admin-tab="users">Utilisateurs</button>
@@ -1502,7 +1502,7 @@
   </div>
   <div data-admin-view="statistics" hidden>
    <h3>Statistiques</h3><p>Indicateurs internes MyEvent. Aucune conversion affiliée n’est inventée : seules les données réellement disponibles sont affichées.</p>
-   <div id="myeventAdminStatistics" class="adminStatsGrid" aria-live="polite"></div>
+   <div id="myeventAdminStatistics" class="adminStatsGrid" aria-live="polite"></div><p class="adminMobileHint">Les chiffres sont des données internes MyEvent. Les revenus ou conversions partenaires ne seront ajoutés que lorsqu’une source réelle sera disponible.</p>
   </div>
   <div data-admin-view="partners" hidden>
    <h3>Partenaires</h3><p>Le registre central conserve l'état et les notes de chaque partenaire. Les clés API restent sur le serveur ; activer un registre ne met pas une intégration en ligne.</p>
@@ -1525,8 +1525,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=4">
-<script src="js/admin-runtime.js?v=8" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=5">
+<script src="js/admin-runtime.js?v=9" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
