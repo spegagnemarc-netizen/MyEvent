@@ -39,3 +39,12 @@ test('Admin V3 centralizes reports, statistics and current partner registry',()=
  for(const provider of ['hotels_com','expedia','abritel','omio','ticketnetwork','viator','tiqets','awin']) assert.match(sql,new RegExp(provider));
  assert.match(html,/Aucune conversion affiliée n’est inventée/);
 });
+
+
+test('Admin V3 prepares owner enrollment without hardcoding an account',()=>{
+ assert.match(sql,/myevent_admin_identity/);
+ assert.match(sql,/OWNER_AUTH_UUID/);
+ assert.match(sql,/platform_admins\(user_id,role\)/);
+ assert.doesNotMatch(sql,/40621412-0f4c-4bed-85b6-fac57d3b3144/);
+ assert.doesNotMatch(js,/40621412-0f4c-4bed-85b6-fac57d3b3144/);
+});
