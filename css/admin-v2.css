@@ -33,3 +33,30 @@
 #myeventAdminPanel .adminReservationFilters button[aria-pressed=true]{border-color:var(--myevent-accent,#fa7642);box-shadow:0 0 0 1px var(--myevent-accent,#fa7642)}
 
 #myeventAdminPanel .adminStatsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0 24px}
+
+#myeventAdminPanel .adminMobileHint{color:#aab6c9;font-size:.9rem;line-height:1.45}
+#myeventAdminPanel .adminCard{overflow:hidden}
+#myeventAdminPanel .adminCard small{display:block}
+#myeventAdminPanel .adminActions select{min-height:44px;flex:1 1 150px}
+@media(max-width:600px){
+ #myeventAdminPanel{padding-left:10px!important;padding-right:10px!important}
+ #myeventAdminPanel .adminTopbar{margin:0 -2px}
+ #myeventAdminPanel .adminHeader{padding:8px 0}
+ #myeventAdminPanel .adminHeader h2{font-size:20px}
+ #myeventAdminPanel #myeventAdminNav{margin:0 -10px;padding:10px 10px 14px;scroll-padding-inline:10px}
+ #myeventAdminNav button{min-height:44px;padding:9px 13px}
+ #myeventAdminPanel [data-admin-view] h3{margin-top:18px}
+ #myeventAdminPanel .adminStatsGrid,#myeventAdminStats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ #myeventAdminPanel .myeventAdminStat{min-width:0;padding:12px!important}
+ #myeventAdminPanel .myeventAdminStat span{font-size:.82rem;overflow-wrap:anywhere}
+ #myeventAdminPanel .myeventAdminStat strong{font-size:1.45rem}
+ #myeventAdminPanel .adminSearch{width:100%;margin:12px 0}
+ #myeventAdminPanel .adminReservationFilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ #myeventAdminPanel .adminReservationFilters button{min-width:0;padding:8px 5px;font-size:.84rem}
+ #myeventAdminPanel .adminActions{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+ #myeventAdminPanel .adminActions button,#myeventAdminPanel .adminActions select{width:100%;min-width:0}
+}
+@media(max-width:340px){
+ #myeventAdminPanel .adminStatsGrid,#myeventAdminStats{grid-template-columns:1fr!important}
+ #myeventAdminPanel .adminReservationFilters{grid-template-columns:1fr}
+}
