@@ -1472,7 +1472,7 @@
   <div data-admin-view="users" hidden>
    <h3>Utilisateurs</h3><p>Profils et dates d'inscription. Les comptes administrateurs sont protégés.</p>
    <label class="adminSearch">Rechercher un utilisateur<input type="search" data-admin-search="users" placeholder="Nom, pseudo ou UUID"></label>
-   <div id="myeventAdminUsers" class="adminList" aria-live="polite"></div>
+   <div id="myeventAdminUsers" class="adminList" aria-live="polite"></div><section id="myeventAdminUserDetail" class="adminUserDetail" hidden aria-live="polite"><div class="adminUserDetailHead"><h4>Fiche utilisateur</h4><button type="button" id="myeventAdminUserDetailClose" class="secondary">✕ Fermer</button></div><div id="myeventAdminUserDetailBody"></div></section>
   </div>
   <div data-admin-view="reservations" hidden>
    <h3>Réservations</h3><p>Supervision des réservations personnelles et rattachées aux événements. Les justificatifs privés ne sont jamais affichés ici.</p>
@@ -1525,8 +1525,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=5">
-<script src="js/admin-runtime.js?v=9" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=6">
+<script src="js/admin-runtime.js?v=10" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
