@@ -1451,6 +1451,10 @@
   <div data-admin-view="overview">
    <h3>Vue d'ensemble</h3><p id="myeventAdminGate" role="status"></p>
    <div id="myeventAdminStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0"></div>
+   <section class="adminDashboardSection"><h4>À traiter</h4><div id="myeventAdminAttention" class="adminQuickGrid"></div></section>
+   <section class="adminDashboardSection"><h4>Accès rapides</h4><div class="adminQuickGrid">
+    <button type="button" data-admin-jump="users">👥 Utilisateurs</button><button type="button" data-admin-jump="reservations">🧾 Réservations</button><button type="button" data-admin-jump="reports">🚩 Signalements</button><button type="button" data-admin-jump="partners">🤝 Partenaires</button>
+   </div></section>
    <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
    <p style="opacity:.75">Données consultées via une fonction Supabase réservée au super_admin.</p>
   </div>
@@ -1525,8 +1529,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=6">
-<script src="js/admin-runtime.js?v=10" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=7">
+<script src="js/admin-runtime.js?v=11" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
