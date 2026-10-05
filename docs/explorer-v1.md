@@ -1,6 +1,6 @@
 # Explorer V1 — 5 octobre 2026
 
-Raccourci boussole dans le carrousel supérieur, page autonome `explorer.html`, aucune création d’événement imposée. Les widgets sont importés depuis les fragments canoniques de `index.html` dans une page partenaire indépendante. Aucune seconde définition des identifiants affiliés : Hotels.com, Expedia Séjours/Vols, Abritel, Omio et TicketNetwork restent identiques. Les activités utilisent l’API Viator existante.
+Raccourci boussole dans le carrousel supérieur, page autonome `explorer.html`, aucune création d’événement imposée. Les pages partenaires statiques sont générées depuis les fragments canoniques de `index.html` par `npm run generate:explorer`. Le chargeur officiel Expedia doit être présent avant DOMContentLoaded ; l’injection tardive a été remplacée après validation navigateur. Aucune seconde définition manuelle des identifiants affiliés : Hotels.com, Expedia Séjours/Vols, Abritel, Omio et TicketNetwork restent identiques. Les activités utilisent l’API Viator existante.
 
 ## Réservations personnelles
 
@@ -33,3 +33,5 @@ La suspension reste verrouillée tant que la migration d’activation du hook Po
 Tests du formulaire sans événement, consentement, rattachement unique, nettoyage au changement de session, absence de schéma et justificatif invalide. Tests SQL locaux des politiques propriétaire/membre/extérieur/anonyme, retrait d’accès, conservation du justificatif et suppression de l’événement. Tests des partenaires, de l’import de lien et des sept onglets administratifs, dont requêtes tardives, recontrôle du Profil et erreurs serveur.
 
 Build Preview : plafond de 12 fonctions conservé. Les vérifications authentifiées de la nouvelle origine Preview nécessitent la connexion du compte B sur cette origine ; la session d’une ancienne Preview n’est pas transférée. Le rendu à largeur iPhone ne constitue pas un test sur un appareil Safari réel.
+
+Contrôle navigateur authentifié avec B : réservation Abritel enregistrée sans événement, préremplissage des dates/destination/voyageurs, lien affilié exact, persistance après rechargement, rattachement à l’événement fictif de B visible dans sa timeline, puis retrait conservant la réservation personnelle. Donnée fictive « TEST EXPLORER B - RESERVATION PERSONNELLE » conservée pour validation. Défaut de catégorie initiale corrigé : hébergement par défaut et détection des partenaires voyage connue prioritaire ; les liens de restaurants inconnus conservent le choix restaurant. Capture à 390 pixels conservée dans le rapport local.

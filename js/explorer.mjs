@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id),api=window.MyEventReservationLink,personal=window.MyEventPersonalReservations;
 const labels={restaurant:'Restaurants',accommodation:'Hébergements',transport:'Transports',activity:'Activités et loisirs',ticket:'Spectacles et billetterie',nearby:'Autour de moi'};
-let client,account,store,rows=[],events=[],editing=null,map,layer,category='restaurant',generation=0;
+let client,account,store,rows=[],events=[],editing=null,map,layer,category='accommodation',generation=0;
 const releases=new Set();
 function clear(){generation++;rows=[];events=[];editing=null;for(const release of releases)release();releases.clear();$('bookings').replaceChildren();$('bookingDialog').close();$('bookingForm').reset();}
 function error(e){$('account').textContent=e.message||String(e);}
@@ -41,7 +41,7 @@ function open(row=null){
  $('formTitle').textContent=row?'Modifier ma réservation':'Ajouter une réservation';$('bookingDialog').showModal();
 }
 $('add').onclick=()=>open();$('cancel').onclick=()=>{$('bookingDialog').close();editing=null;};
-$('extract').onclick=()=>{try{const f=$('bookingForm').elements,d=api.extract(f.original_url.value.trim());for(const key of ['name','destination','from','start','end','travelers'])f.namedItem(key).value=d[key]||'';if(['transport','accommodation'].includes(f.kind.value))f.kind.value=d.kind;$('provider').textContent=`${d.provider} · seules les informations présentes dans le lien sont reprises.`;}catch(e){$('formNotice').textContent=e.message;}};
+$('extract').onclick=()=>{try{const f=$('bookingForm').elements,d=api.extract(f.original_url.value.trim());for(const key of ['name','destination','from','start','end','travelers'])f.namedItem(key).value=d[key]||'';if(['Hotels.com','Expedia','Abritel','Omio'].includes(d.provider)||['transport','accommodation'].includes(f.kind.value))f.kind.value=d.kind;$('provider').textContent=`${d.provider} · seules les informations présentes dans le lien sont reprises.`;}catch(e){$('formNotice').textContent=e.message;}};
 $('bookingForm').onsubmit=async e=>{
  e.preventDefault();const uid=account?.id;if(!uid)return;const f=e.target.elements,id=editing?.id,old=editing?.details;$('save').disabled=true;
  try{if(!f.consent.checked)throw Error('Confirme les informations.');const input=Object.fromEntries(new FormData(e.target));input.geo_verified=f.geo_verified.checked;input.confirmed_by_user=f.confirmed_by_user.checked;input.kind=f.kind.value==='transport'?'transport':'accommodation';

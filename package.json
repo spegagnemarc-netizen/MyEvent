@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "generate:explorer": "node scripts/generate-explorer-partners.cjs",
     "test:marketplace": "node --test tests/marketplace.test.mjs && node tests/marketplace-rls.mjs",
     "test:games": "node --test tests/invitation-context.test.mjs tests/game-session.test.mjs && node tests/games-rls.mjs",
     "preview:games": "node tests/games-preview.mjs"
