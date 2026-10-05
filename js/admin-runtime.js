@@ -207,8 +207,11 @@ function renderReports(rows){for(const kind of ['event','listing']){
  }if(!target.childElementCount)target.append(item('p','Aucun signalement.'));
 }}
 function renderConfig(rows,target,kind){for(const row of rows){
- const key=kind==='partner'?row.provider:row.key,card=item('article',null,'adminCard');card.append(item('h4',kind==='partner'?row.label:row.description),item('small',key+' · '+(row.enabled?'Activé':'Désactivé')));
- if(kind==='partner')card.append(item('p',row.notes||'Aucune note · les clés API restent sur le serveur.'));
+ const key=kind==='partner'?row.provider:row.key,card=item('article',null,'adminCard');
+ let status=row.enabled?'Actif':'Non actif';
+ if(kind==='partner'&&!row.enabled&&/attente|demande|valider|pending/i.test(row.notes||''))status='En attente';
+ card.append(item('h4',kind==='partner'?row.label:row.description),item('small',key+' · '+status));
+ if(kind==='partner'){const badge=item('span',status,'adminPartnerStatus '+(status==='Actif'?'isActive':status==='En attente'?'isPending':'isInactive'));card.append(badge,item('p',row.notes||'Aucune note · les clés API restent sur le serveur.'));}
  const actions=item('div',null,'adminActions');
  const save=(enabled,notes)=>mutate(()=>rpc('myevent_admin_config',{p_kind:kind,p_key:key,p_enabled:enabled,p_notes:notes}),'Configuration enregistrée dans le journal.');
  actions.append(actionButton(row.enabled?'Désactiver':'Activer',async()=>{if(!mutationBusy&&window.confirm('Confirmer le réglage '+key+' ?'))await save(!row.enabled,kind==='partner'?row.notes:'');}));
