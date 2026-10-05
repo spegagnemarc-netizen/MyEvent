@@ -9,7 +9,7 @@ declare v_personal bigint := 0; v_event_res bigint := 0;
 begin
  perform public.myevent_admin_guard();
  if to_regclass('public.personal_reservations') is not null then
-  execute 'select count(*), count(*) filter (where event_id is not null) from public.personal_reservations'
+  execute 'select count(*) filter (where event_id is null), count(*) filter (where event_id is not null) from public.personal_reservations'
    into v_personal,v_event_res;
  end if;
  return jsonb_build_object(
