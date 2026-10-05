@@ -4,6 +4,8 @@ Date: 2026-10-05. Branche: `refactor-final`.
 
 Ce document est un plan de préparation. Il n'autorise ni migration distante, ni promotion Vercel, ni modification de `main`.
 
+Mise à jour après audit réel : [catalogue comparé, variables, autorisations et retour arrière](audit-production-explorer-admin-2026-10-05.md). Les conclusions factuelles de cet audit priment sur les étapes conditionnelles ci-dessous : Admin V1 et un propriétaire existent déjà en Production ; la migration Admin V3 est absente de TEST aussi ; 004 n'est activée dans aucun environnement et reste une étape séparée.
+
 ## Verdict
 
 La branche n'est pas encore à promouvoir telle quelle en production. Le code Explorer/Admin V3 est préparé, mais le schéma et la configuration Production doivent être contrôlés puis alignés explicitement.
@@ -15,7 +17,7 @@ La branche n'est pas encore à promouvoir telle quelle en production. Le code Ex
 3. **Admin** — vérifier si 001/002/003/004 sont déjà présentes avant toute exécution. 003/004 comportent des contrôles et ne doivent pas être rejouées aveuglément.
 4. **Explorer** — `202610050001_personal_reservations.sql` est requise en Production avant Explorer. Elle a été validée sur TEST mais n'est pas documentée comme installée en Production.
 5. **Admin V3** — appliquer ensuite `202610050002_admin_v3_dashboard_reservations.sql`. Elle dépend des objets Admin V2 et tolère l'absence de `personal_reservations` pour les lectures, mais Explorer lui-même exige 001.
-6. **Super Admin** — seulement après validation des migrations, inscrire le compte propriétaire dans `platform_admins` par une opération SQL séparée et explicitement autorisée. Aucun UUID propriétaire ne doit être hardcodé dans le dépôt.
+6. **Super Admin** — vérifier d'abord le propriétaire déjà enregistré ; une nouvelle attribution éventuelle exige une opération SQL séparée explicitement autorisée. Aucun UUID propriétaire ne doit être hardcodé dans le dépôt.
 
 ## Ordre de déploiement recommandé
 
@@ -24,7 +26,7 @@ La branche n'est pas encore à promouvoir telle quelle en production. Le code Ex
 - Corriger les variables Vercel Production manquantes sans toucher aux secrets non concernés.
 - Appliquer uniquement les migrations réellement absentes, dans l'ordre de dépendance: Admin 001/002/003/004 si nécessaires, Explorer 001, Admin V3 002.
 - Vérifier les RPC Admin avec un compte non-admin: refus attendu.
-- Inscrire le propriétaire Super Admin par SQL séparé; vérifier `myevent_admin_identity()`, puis l'accès aux rubriques sans exposer `auth.users` au navigateur.
+- Vérifier le propriétaire Super Admin existant avec `myevent_admin_identity()`, puis l'accès aux rubriques sans exposer `auth.users` au navigateur. Ne pas réattribuer aveuglément son rôle.
 - Déployer la branche candidate sans modifier `main` tant que les contrôles ne sont pas terminés; effectuer les tests iPhone/Safari et desktop.
 - Après validation explicite, seulement alors décider de la promotion publique.
 

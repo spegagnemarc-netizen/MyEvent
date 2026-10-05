@@ -33,10 +33,10 @@ where schemaname='public' and tablename in (
  'admin_app_settings','personal_reservations')
 order by tablename,policyname;
 
-select provider,label,enabled
-from public.admin_partner_registry
-where to_regclass('public.admin_partner_registry') is not null
-order by provider;
+-- A WHERE existence check cannot protect a FROM on a missing relation.
+select to_regclass('public.admin_partner_registry') is not null as partner_registry_available;
+-- Only when the preceding result is true, run separately:
+-- select provider,label,enabled from public.admin_partner_registry order by provider;
 
 -- Owner enrollment status: run only after replacing the placeholder locally.
 -- Do NOT commit a real owner UUID to this file.

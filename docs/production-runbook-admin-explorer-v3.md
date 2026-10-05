@@ -2,6 +2,8 @@
 
 Aucune commande de ce document ne vaut autorisation de modifier Production.
 
+Audit réel du 5 octobre : voir [les écarts exacts et les gates](audit-production-explorer-admin-2026-10-05.md). Production possède déjà Admin V1 et un administrateur ; Admin V3 reste absent des deux bases. Valider d'abord sa migration corrigée sur TEST. Aucun hook 004 n'est actif : sa mise en service est une étape séparée, pas un prérequis automatique à Explorer.
+
 ## Gate 1 — avant SQL
 
 - Conserver l'URL/SHA du déploiement public stable.
@@ -32,7 +34,7 @@ Compte utilisateur normal:
 - `myevent_is_admin()` renvoie false;
 - RPC protégées Admin refusées.
 
-Seulement ensuite, et après autorisation explicite, inscrire le compte propriétaire dédié dans `platform_admins`. Vérifier `myevent_admin_identity()`: `is_admin=true`, `role=super_admin`, `account_active=true`.
+Vérifier d'abord que l'administrateur déjà enregistré correspond au propriétaire réel, puis `myevent_admin_identity()`: `is_admin=true`, `role=super_admin`, `account_active=true`. Inscrire un nouveau compte uniquement si nécessaire et après autorisation explicite ; ne jamais retirer le propriétaire préexistant.
 
 ## Gate 4 — validation Admin
 
@@ -47,5 +49,5 @@ La Production publique n'est changée qu'après validation explicite de cette ca
 ## Rollback
 
 - Web: revenir au déploiement public stable conservé au Gate 1.
-- Rôle propriétaire: supprimer uniquement son entrée `platform_admins` si le problème est limité aux droits Admin.
-- SQL: utiliser sauvegarde/restauration ou procédure de rollback spécifique; ne pas tenter de corriger une base par un simple revert Git.
+- Rôle propriétaire: retirer uniquement une attribution nouvelle expressément identifiée, jamais l'entrée préexistante.
+- SQL: restaurer les définitions et droits touchés depuis le snapshot en conservant les données ; vérifier les contraintes fournisseurs avant restauration. Une restauration complète impose un arrêt des écritures et la récupération des données post-sauvegarde. Voir le plan détaillé lié ci-dessus ; un revert Git ne restaure pas la base.

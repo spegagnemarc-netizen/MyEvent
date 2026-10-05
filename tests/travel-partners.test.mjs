@@ -30,7 +30,7 @@ test('existing Transport and Omio, manual accommodation and other scripts remain
  const base=execFileSync('git',['show','d876c6581c0d40d10ec697191916c91395a99b1a:index.html'],{encoding:'utf8'});
  const oldDom=new JSDOM(base),newDom=new JSDOM(html);
  for(const id of ['myeventOmioSection','m58TransportForm','m58TransportSearchBox','m58AccommodationForm'])assert.equal(newDom.window.document.getElementById(id).outerHTML,oldDom.window.document.getElementById(id).outerHTML,id);
- assert.equal(execFileSync('git',['diff','dd0d50241a4ec05ea760c92e153cde012af71c0d','--','server','lib','supabase','vercel.json',':(exclude)supabase/migrations/202610050001_personal_reservations.sql'],{encoding:'utf8'}),'');
+ assert.equal(execFileSync('git',['diff','dd0d50241a4ec05ea760c92e153cde012af71c0d','--','server','lib','supabase','vercel.json',':(exclude)supabase/migrations/202610050001_personal_reservations.sql',':(exclude)supabase/migrations/202610050002_admin_v3_dashboard_reservations.sql',':(exclude)supabase/admin/production-readiness-v3.sql'],{encoding:'utf8'}),'');
  const searchBase=execFileSync('git',['show','dd0d50241a4ec05ea760c92e153cde012af71c0d:api/search-places.js'],{encoding:'utf8'});
  // Explorer needs explicit accuracy metadata. Existing search/affiliate behavior is unchanged.
  assert.equal(readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8').replace(',locationApproximate:!!location.approximate','').replaceAll('\r\n','\n'),searchBase.replaceAll('\r\n','\n'));

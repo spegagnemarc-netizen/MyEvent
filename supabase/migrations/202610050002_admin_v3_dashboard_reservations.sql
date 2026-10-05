@@ -88,7 +88,7 @@ grant execute on function public.myevent_admin_reservations(text,text,int) to au
 
 
 -- Reconcile the registry without assuming PostgreSQL's historical CHECK constraint name.
-do $ declare r record; begin
+do $$ declare r record; begin
  for r in
   select c.conname from pg_constraint c
   join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
@@ -97,7 +97,7 @@ do $ declare r record; begin
  loop
   execute format('alter table public.admin_partner_registry drop constraint %I',r.conname);
  end loop;
-end $;
+end $$;
 alter table public.admin_partner_registry add constraint admin_partner_registry_provider_check
  check (provider in ('getyourguide','viator','booking','ticketnetwork','fnac_spectacles',
  'hotels_com','expedia','abritel','omio','tiqets','awin'));
@@ -116,14 +116,14 @@ insert into public.admin_partner_registry(provider,label,enabled,notes) values
 on conflict(provider) do update set label=excluded.label,notes=excluded.notes,updated_at=now();
 
 -- Extend the legacy affiliate-content catalogue to the providers currently managed by MyEvent.
-do $ declare r record; begin
+do $$ declare r record; begin
  for r in
   select c.conname from pg_constraint c
   join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
   where n.nspname='public' and t.relname='admin_partner_content' and c.contype='c'
    and pg_get_constraintdef(c.oid) ilike '%provider%'
  loop execute format('alter table public.admin_partner_content drop constraint %I',r.conname); end loop;
-end $;
+end $$;
 alter table public.admin_partner_content add constraint admin_partner_content_provider_check
  check (provider in ('getyourguide','viator','booking','ticketnetwork','fnac_spectacles',
  'hotels_com','expedia','abritel','omio','tiqets','awin'));
@@ -131,7 +131,7 @@ alter table public.admin_partner_content add constraint admin_partner_content_pr
 create or replace function public.myevent_admin_partner_content_save(
  p_provider text,p_kind text,p_title text,p_city text default '',p_external_id text default '',
  p_affiliate_url text default '',p_campaign text default '',p_enabled boolean default false,p_id uuid default null
-) returns uuid language plpgsql security definer set search_path='' as $
+) returns uuid language plpgsql security definer set search_path='' as $$
 declare v_id uuid;
 begin
  perform public.myevent_admin_guard();
@@ -153,7 +153,7 @@ begin
   if v_id is null then raise exception 'Contenu introuvable' using errcode='P0002'; end if;
  end if;
  return v_id;
-end $;
+end $$;
 revoke all on function public.myevent_admin_partner_content_save(text,text,text,text,text,text,text,boolean,uuid) from public,anon;
 grant execute on function public.myevent_admin_partner_content_save(text,text,text,text,text,text,text,boolean,uuid) to authenticated;
 
