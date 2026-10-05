@@ -29,3 +29,13 @@ test('Admin V3 does not hardcode the production owner UUID',()=>{
  assert.equal(js.includes(owner),false);
  assert.equal(sql.includes(owner),false);
 });
+
+
+test('Admin V3 centralizes reports, statistics and current partner registry',()=>{
+ assert.match(html,/data-admin-tab="reports"/);
+ assert.match(html,/data-admin-tab="statistics"/);
+ assert.match(js,/myevent_admin_statistics/);
+ assert.match(js,/renderCentralReports/);
+ for(const provider of ['hotels_com','expedia','abritel','omio','ticketnetwork','viator','tiqets','awin']) assert.match(sql,new RegExp(provider));
+ assert.match(html,/Aucune conversion affiliée n’est inventée/);
+});
