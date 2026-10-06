@@ -4,6 +4,7 @@
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
+  let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
@@ -229,12 +230,13 @@
   }
   function initializeViewer() {
     const el = document.createElement('div'); el.id = 'socialStoryViewer'; el.className = 'socialStoryViewer'; el.hidden = true;
-    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><div class="storyInteractions"><button type="button" class="storyLike" data-story="like" aria-label="Aimer la Story" aria-pressed="false">♡ <span>0</span></button><button type="button" class="storyLikers" data-story="likers" hidden>Voir les likes</button><form class="storyReply"><input maxlength="3750" placeholder="Répondre à la Story…" aria-label="Répondre à la Story"><button type="submit">Envoyer</button></form><p class="storyInteractionStatus" role="status"></p></div><div class="storyLikersPanel" hidden><button type="button" data-story="hide-likers" aria-label="Fermer la liste">✕</button><h3>J’aime</h3><div class="storyLikersList"></div></div><div class="storyOwnerActions"><button type="button" class="storyAddNew" data-story="add">＋ Nouvelle story</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button></div>';
+    el.innerHTML = '<div class="storyProgress"><span></span></div><div class="storyHeader"><b></b><button type="button" data-story="close" aria-label="Fermer">✕</button></div><div class="storyMedia"></div><button type="button" class="storyMusicBadge" data-story="music" hidden></button><p class="storyCaption"></p><button type="button" class="storyPrevious" data-story="previous" aria-label="Story précédente">‹</button><button type="button" class="storyNext" data-story="next" aria-label="Story suivante">›</button><div class="storyInteractions"><button type="button" class="storyLike" data-story="like" aria-label="Aimer la Story" aria-pressed="false">♡ <span>0</span></button><button type="button" class="storyLikers" data-story="likers" hidden>Voir les likes</button><form class="storyReply"><input maxlength="3750" placeholder="Répondre à la Story…" aria-label="Répondre à la Story"><button type="submit">Envoyer</button></form><p class="storyInteractionStatus" role="status"></p></div><div class="storyLikersPanel" hidden><button type="button" data-story="hide-likers" aria-label="Fermer la liste">✕</button><h3>J’aime</h3><div class="storyLikersList"></div></div><div class="storyOwnerActions"><button type="button" class="storyAddNew" data-story="add">＋ Nouvelle story</button><button type="button" class="storyDelete" data-story="delete">Supprimer</button></div>';
     document.body.append(el);
     el.addEventListener('click', e => { const action = e.target.closest('[data-story]')?.dataset.story;
       if(action === 'close') closeViewer(); if(action === 'previous') showStory(viewerIndex - 1);
       if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory();
       if(action === 'like') toggleStoryLike(); if(action === 'likers') showStoryLikers();
+      if(action === 'music'){const item=storyRows[viewerIndex];if(item?.music_track)window.MyEventMusic?.openPlayer(item.music_track,[item.music_track]);}
       if(action === 'hide-likers') el.querySelector('.storyLikersPanel').hidden=true; });
     el.querySelector('.storyReply').addEventListener('submit',replyToStory);
     let touchX = 0; el.addEventListener('touchstart',e => { touchX=e.changedTouches[0].clientX; },{passive:true});
@@ -291,6 +293,9 @@
     const item=storyRows[index], el=$('socialStoryViewer'); el.hidden=false; document.body.style.overflow='hidden';
     el.querySelector('.storyHeader b').textContent=profileName(item.profile);
     el.querySelector('.storyCaption').textContent=item.caption || '';
+    const musicBadge=el.querySelector('.storyMusicBadge');
+    if(item.music_track){musicBadge.hidden=false;musicBadge.textContent='♫ '+(item.music_track.title||'Musique')+(item.music_track.artist?' · '+item.music_track.artist:'');}
+    else {musicBadge.hidden=true;musicBadge.textContent='';}
     const own=item.author_id===context().user?.id; el.querySelector('.storyDelete').hidden=!own; el.querySelector('.storyAddNew').hidden=!own;
     el.querySelector('.storyReply').hidden=own;el.querySelector('.storyReply input').value='';
     el.querySelector('.storyLikers').hidden=!own;el.querySelector('.storyLikersPanel').hidden=true;
@@ -315,7 +320,7 @@
   async function loadStories() {
     const {sb,user}=context(); if(!sb || !user)return;
     try {
-      const rows=check(await sb.from('social_stories').select('id,author_id,media_path,media_type,caption,created_at,expires_at')
+      const rows=check(await sb.from('social_stories').select('id,author_id,media_path,media_type,caption,music_track_id,music_track:music_tracks(id,provider,provider_track_id,title,artist,thumbnail_url),created_at,expires_at')
         .gt('expires_at',new Date().toISOString()).order('created_at',{ascending:true}).limit(100))||[];
       const profiles=await profilesFor(rows.map(r=>r.author_id));
       const previous=storyRows;
@@ -363,6 +368,24 @@
     },{once:true});
     return frame;
   }
+  async function selectStoryMusic(track) {
+    const {sb}=context(); if(!sb||!track)return;
+    const ensure=window.MyEventMusic?.ensureTrack;if(!ensure)throw new Error('MyEvent Music n’est pas encore prêt.');
+    const id=await ensure(sb,track);storyMusicTrack={...track,id};
+    const preview=$('storyMusicSelected');preview.hidden=false;
+    preview.querySelector('strong').textContent=track.title||'Morceau';preview.querySelector('small').textContent=track.artist||'';
+    $('storyMusicResults').replaceChildren();$('storyMusicSearchPanel').hidden=true;
+  }
+  async function searchStoryMusic(){
+    const q=$('storyMusicSearchInput').value.trim();if(q.length<2){$('storyCreateStatus').textContent='Écris au moins 2 caractères.';return;}
+    const ticket=++storyMusicRequest;$('storyCreateStatus').textContent='Recherche musique…';
+    try{const r=await fetch('/api/search-music?q='+encodeURIComponent(q)),data=await r.json();if(!r.ok)throw new Error(data.error||'Recherche indisponible');if(ticket!==storyMusicRequest)return;
+      storyMusicResults=data.items||[];const box=$('storyMusicResults');box.replaceChildren();
+      storyMusicResults.forEach((track,index)=>{const b=document.createElement('button');b.type='button';b.className='storyMusicResult';
+        const img=document.createElement('img');img.src=track.thumbnail_url||'';img.alt='';const meta=document.createElement('span');const title=document.createElement('strong');title.textContent=track.title||'Morceau';const artist=document.createElement('small');artist.textContent=track.artist||'';meta.append(title,artist);b.append(img,meta);b.onclick=()=>selectStoryMusic(storyMusicResults[index]).catch(e=>$('storyCreateStatus').textContent=e.message);box.append(b);});
+      $('storyCreateStatus').textContent=storyMusicResults.length?storyMusicResults.length+' résultat(s)':'Aucun résultat.';
+    }catch(e){$('storyCreateStatus').textContent='Musique : '+e.message;}
+  }
   async function publishStory(file) {
     const {sb,user}=context(); if(!sb || !user || !file) return;
     if(!/^(image\/(jpeg|png|webp)|video\/(mp4|quicktime|webm))$/.test(file.type)||file.size>50*1024*1024)
@@ -371,19 +394,23 @@
     const path=`${user.id}/${crypto.randomUUID()}.${extension}`;
     check(await sb.storage.from('story-media').upload(path,file,{contentType:file.type,upsert:false}));
     try { check(await sb.from('social_stories').insert({author_id:user.id,media_path:path,
-      media_type:file.type.startsWith('video/')?'video':'image', caption:$('storyCaptionInput')?.value?.trim()||''})); }
+      media_type:file.type.startsWith('video/')?'video':'image', caption:$('storyCaptionInput')?.value?.trim()||'',music_track_id:storyMusicTrack?.id||null})); }
     catch(e) { await sb.storage.from('story-media').remove([path]); throw e; }
     await loadStories();
   }
   function createStory() {
-    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';
+    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';storyMusicTrack=null;storyMusicResults=[];
+    $('storyMusicSelected').hidden=true;$('storyMusicSearchPanel').hidden=true;$('storyMusicResults').replaceChildren();$('storyMusicSearchInput').value='';$('storyCreateStatus').textContent='';
   }
   function setupCreation() {
     const sheet=document.createElement('div'); sheet.id='storyCreateSheet'; sheet.className='storyCreateSheet'; sheet.hidden=true;
-    sheet.innerHTML='<div><h3>Ma Story</h3><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra MyEvent</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
+    sheet.innerHTML='<div><h3>Ma Story</h3><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><div id="storyMusicSelected" class="storyMusicSelected" hidden><span><strong></strong><small></small></span><button type="button" id="storyMusicRemove" aria-label="Retirer la musique">×</button></div><button type="button" id="storyAddMusic">🎵 Ajouter une musique</button><div id="storyMusicSearchPanel" class="storyMusicSearchPanel" hidden><div><input id="storyMusicSearchInput" type="search" placeholder="Rechercher un morceau…"><button type="button" id="storyMusicSearchBtn">Rechercher</button></div><div id="storyMusicResults" class="storyMusicResults"></div></div><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra MyEvent</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
     document.body.append(sheet);
     $('storyCloseSheet').onclick=()=>sheet.hidden=true;
     $('storyPickFile').onclick=()=>$('storyFile').click();
+    $('storyAddMusic').onclick=()=>{$('storyMusicSearchPanel').hidden=!$('storyMusicSearchPanel').hidden;if(!$('storyMusicSearchPanel').hidden)$('storyMusicSearchInput').focus();};
+    $('storyMusicSearchBtn').onclick=searchStoryMusic;$('storyMusicSearchInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchStoryMusic();}};
+    $('storyMusicRemove').onclick=()=>{storyMusicTrack=null;$('storyMusicSelected').hidden=true;};
     $('storyUseCamera').onclick=()=>{storyMode=true;sheet.hidden=true; $('socialBottomCreate')?.click();};
     $('storyFile').onchange=async e=>{const file=e.target.files?.[0]; if(!file)return;
       $('storyCreateStatus').textContent='Publication…';
