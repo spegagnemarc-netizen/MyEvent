@@ -4,7 +4,7 @@
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
-  let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0, storyMusicStart = 0, storyMusicDuration = 15, pendingStoryFile = null, storyMusicStopTimer = null;
+  let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0, storyMusicStart = 0, storyMusicDuration = 15, pendingStoryFile = null, pendingStoryPreviewUrl = '', storyMusicStopTimer = null;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
@@ -371,10 +371,10 @@
   async function selectStoryMusic(track) {
     const {sb}=context(); if(!sb||!track)return;
     const ensure=window.MyEventMusic?.ensureTrack;if(!ensure)throw new Error('MyEvent Music n’est pas encore prêt.');
-    const id=await ensure(sb,track);storyMusicTrack={...track,id};storyMusicStart=0;storyMusicDuration=15;
+    const id=await ensure(sb,track);window.MyEventMusicPlayback?.stop();storyMusicTrack={...track,id};storyMusicStart=0;storyMusicDuration=15;
     const preview=$('storyMusicSelected');preview.hidden=false;
     preview.querySelector('strong').textContent=track.title||'Morceau';preview.querySelector('small').textContent=track.artist||'';
-    $('storyMusicResults').replaceChildren();$('storyMusicSearchPanel').hidden=true;
+    $('storyMusicResults').replaceChildren();$('storyMusicSearchPanel').hidden=true;$('storyCreateStatus').textContent='Musique ajoutée à la Story. Choisis maintenant le passage.';
     const editor=$('storyMusicExcerpt');if(editor){editor.hidden=false;$('storyMusicStart').max=String(Math.max(0,(Number(track.duration_seconds)||300)-5));$('storyMusicStart').value=String(storyMusicStart);$('storyMusicDuration').value=String(storyMusicDuration);$('storyMusicExcerptValue').textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';}
   }
   async function searchStoryMusic(){
@@ -399,13 +399,18 @@
     catch(e) { await sb.storage.from('story-media').remove([path]); throw e; }
     await loadStories();
   }
+  function setPendingStoryFile(file){
+    pendingStoryFile=file||null;if(pendingStoryPreviewUrl){URL.revokeObjectURL(pendingStoryPreviewUrl);pendingStoryPreviewUrl='';}
+    const host=$('storyMediaPreview');if(!host)return;host.replaceChildren();host.hidden=!file;$('storyPublish').hidden=!file;
+    if(!file)return;pendingStoryPreviewUrl=URL.createObjectURL(file);const media=document.createElement(file.type.startsWith('video/')?'video':'img');media.src=pendingStoryPreviewUrl;media.alt='Aperçu de la Story';if(media.tagName==='VIDEO'){media.controls=true;media.playsInline=true;}host.append(media);
+  }
   function createStory() {
-    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';storyMusicTrack=null;storyMusicResults=[];storyMusicStart=0;storyMusicDuration=15;pendingStoryFile=null;
+    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';storyMusicTrack=null;storyMusicResults=[];storyMusicStart=0;storyMusicDuration=15;setPendingStoryFile(null);
     $('storyMusicSelected').hidden=true;$('storyMusicExcerpt').hidden=true;$('storyMusicSearchPanel').hidden=true;$('storyMusicResults').replaceChildren();$('storyMusicSearchInput').value='';$('storyCreateStatus').textContent='';
   }
   function setupCreation() {
     const sheet=document.createElement('div'); sheet.id='storyCreateSheet'; sheet.className='storyCreateSheet'; sheet.hidden=true;
-    sheet.innerHTML='<div><h3>Ma Story</h3><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><div id="storyMusicSelected" class="storyMusicSelected" hidden><span><strong></strong><small></small></span><button type="button" id="storyMusicRemove" aria-label="Retirer la musique">×</button></div><button type="button" id="storyAddMusic">🎵 Ajouter une musique</button><div id="storyMusicExcerpt" class="storyMusicExcerpt" hidden><label>Début de l’extrait <input id="storyMusicStart" type="range" min="0" max="300" value="0" step="1"></label><label>Durée <select id="storyMusicDuration"><option value="15">15 s</option><option value="30">30 s</option></select></label><strong id="storyMusicExcerptValue">Début 0 s · 15 s</strong><button type="button" id="storyMusicPreview">▶ Écouter l’extrait</button></div><div id="storyMusicSearchPanel" class="storyMusicSearchPanel" hidden><div><input id="storyMusicSearchInput" type="search" placeholder="Rechercher un morceau…"><button type="button" id="storyMusicSearchBtn">Rechercher</button></div><div id="storyMusicResults" class="storyMusicResults"></div></div><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra MyEvent</button><button type="button" id="storyPublish" hidden>Publier la Story</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
+    sheet.innerHTML='<div><h3>Ma Story</h3><div id="storyMediaPreview" class="storyMediaPreview" hidden></div><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><div id="storyMusicSelected" class="storyMusicSelected" hidden><span><strong></strong><small></small></span><button type="button" id="storyMusicRemove" aria-label="Retirer la musique">×</button></div><button type="button" id="storyAddMusic">🎵 Ajouter une musique</button><div id="storyMusicExcerpt" class="storyMusicExcerpt" hidden><label>Début de l’extrait <input id="storyMusicStart" type="range" min="0" max="300" value="0" step="1"></label><label>Durée <select id="storyMusicDuration"><option value="15">15 s</option><option value="30">30 s</option></select></label><strong id="storyMusicExcerptValue">Début 0 s · 15 s</strong><button type="button" id="storyMusicPreview">▶ Écouter l’extrait</button></div><div id="storyMusicSearchPanel" class="storyMusicSearchPanel" hidden><div><input id="storyMusicSearchInput" type="search" placeholder="Rechercher un morceau…"><button type="button" id="storyMusicSearchBtn">Rechercher</button></div><div id="storyMusicResults" class="storyMusicResults"></div></div><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra MyEvent</button><button type="button" id="storyPublish" hidden>Publier la Story</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
     document.body.append(sheet);
     $('storyCloseSheet').onclick=()=>sheet.hidden=true;
     $('storyPickFile').onclick=()=>$('storyFile').click();
@@ -415,16 +420,16 @@
     const updateExcerpt=()=>{storyMusicStart=Number($('storyMusicStart').value)||0;storyMusicDuration=Number($('storyMusicDuration').value)||15;$('storyMusicExcerptValue').textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';};
     $('storyMusicStart').oninput=updateExcerpt;$('storyMusicDuration').onchange=updateExcerpt;
     $('storyMusicPreview').onclick=()=>{if(!storyMusicTrack)return;updateExcerpt();const playback=window.MyEventMusicPlayback;if(!playback)return;clearTimeout(storyMusicStopTimer);playback.select(storyMusicTrack,[storyMusicTrack]);playback.seekTo?.(storyMusicStart);playback.play();storyMusicStopTimer=setTimeout(()=>playback.stop(),storyMusicDuration*1000);};
-    $('storyPublish').onclick=async()=>{if(!pendingStoryFile)return;const b=$('storyPublish');b.disabled=true;$('storyCreateStatus').textContent='Publication…';try{await publishStory(pendingStoryFile);pendingStoryFile=null;sheet.hidden=true;}catch(err){$('storyCreateStatus').textContent=err.message;}finally{b.disabled=false;}};
+    $('storyPublish').onclick=async()=>{if(!pendingStoryFile)return;const b=$('storyPublish');b.disabled=true;$('storyCreateStatus').textContent='Publication…';try{await publishStory(pendingStoryFile);setPendingStoryFile(null);sheet.hidden=true;}catch(err){$('storyCreateStatus').textContent=err.message;}finally{b.disabled=false;}};
     $('storyUseCamera').onclick=()=>{storyMode=true;sheet.hidden=true; $('socialBottomCreate')?.click();};
-    $('storyFile').onchange=e=>{const file=e.target.files?.[0];if(!file)return;pendingStoryFile=file;$('storyPublish').hidden=false;$('storyCreateStatus').textContent='Photo/vidéo prête. Ajoute ou modifie la musique puis publie.';e.target.value='';};
+    $('storyFile').onchange=e=>{const file=e.target.files?.[0];if(!file)return;setPendingStoryFile(file);$('storyCreateStatus').textContent='Photo/vidéo prête. Ajoute ou modifie la musique puis publie.';e.target.value='';};
     $('socialCreateStory')?.addEventListener('click',createStory);
     // Capture phase routes the existing camera's Publish button to Story while in Story mode.
     $('cameraPublishBtn')?.addEventListener('click',async e=>{
       if(!storyMode)return; e.stopImmediatePropagation(); e.preventDefault();
       const src=$('myeventCapturedImage')?.src; if(!src?.startsWith('data:image/'))return;
       const button=$('cameraPublishBtn'); button.disabled=true;
-      try {pendingStoryFile=new File([await(await fetch(src)).blob()],'story.jpg',{type:'image/jpeg'});storyMode=false;$('cameraCloseBtn')?.click();sheet.hidden=false;$('storyPublish').hidden=false;$('storyCreateStatus').textContent='Photo prête. Ajoute ou modifie la musique puis publie.';
+      try {setPendingStoryFile(new File([await(await fetch(src)).blob()],'story.jpg',{type:'image/jpeg'}));storyMode=false;$('cameraCloseBtn')?.click();sheet.hidden=false;$('storyCreateStatus').textContent='Photo prête. Ajoute ou modifie la musique puis publie.';
       } catch(err) {alert('Story impossible : '+err.message);} finally {button.disabled=false;}
     },true);
     $('myeventCameraModal')?.addEventListener('camera-closed',()=>{storyMode=false;});
