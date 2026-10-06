@@ -236,7 +236,7 @@
       if(action === 'close') closeViewer(); if(action === 'previous') showStory(viewerIndex - 1);
       if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory();
       if(action === 'like') toggleStoryLike(); if(action === 'likers') showStoryLikers();
-      if(action === 'music'){const item=storyRows[viewerIndex];if(item?.music_track)window.MyEventMusic?.openPlayer(item.music_track,[item.music_track]);}
+      if(action === 'music'){const item=storyRows[viewerIndex];if(item?.music_track)window.MyEventMusicPlayback?.play(item.music_track,[item.music_track]);}
       if(action === 'hide-likers') el.querySelector('.storyLikersPanel').hidden=true; });
     el.querySelector('.storyReply').addEventListener('submit',replyToStory);
     let touchX = 0; el.addEventListener('touchstart',e => { touchX=e.changedTouches[0].clientX; },{passive:true});
