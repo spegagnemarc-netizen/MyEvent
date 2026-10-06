@@ -172,9 +172,10 @@
       e.preventDefault();set(startFactor*distance(e.touches)/startDistance);
     },{passive:false});
     preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
-    let cameraMusicTrack=null,cameraMusicResults=[],cameraMusicRequest=0;
-    function clearCameraMusic(){window.MyEventMusicPlayback?.stop();cameraMusicTrack=null;cameraMusicResults=[];$s('cameraMusicSide')?.classList.remove('active');}
-    function setCameraMusic(track){cameraMusicTrack=track||null;$s('cameraMusicSide')?.classList.toggle('active',!!track);}
+    let cameraMusicTrack=null,cameraMusicResults=[],cameraMusicRequest=0,cameraMusicStart=0,cameraMusicDuration=15,cameraMusicConfirmed=false,cameraMusicStopTimer=null;
+    function publishCameraMusicSelection(){window.MyEventCameraMusicSelection=cameraMusicConfirmed&&cameraMusicTrack?{track:cameraMusicTrack,start_seconds:cameraMusicStart,duration_seconds:cameraMusicDuration}:null;window.dispatchEvent(new CustomEvent('camera-music-change',{detail:window.MyEventCameraMusicSelection}));}
+    function clearCameraMusic(){clearTimeout(cameraMusicStopTimer);window.MyEventMusicPlayback?.stop();cameraMusicTrack=null;cameraMusicResults=[];cameraMusicStart=0;cameraMusicDuration=15;cameraMusicConfirmed=false;publishCameraMusicSelection();$s('cameraMusicSide')?.classList.remove('active');}
+    function setCameraMusic(track){cameraMusicTrack=track||null;cameraMusicStart=0;cameraMusicDuration=15;cameraMusicConfirmed=false;publishCameraMusicSelection();$s('cameraMusicSide')?.classList.toggle('active',!!track);}
     async function searchCameraMusic(query,results,note){
       const q=query.trim();if(q.length<2){note.textContent='Écris au moins 2 caractères.';return;}
       const ticket=++cameraMusicRequest;note.textContent='Recherche MyEvent Music…';
@@ -266,11 +267,20 @@
         const go=document.createElement('button');go.type='button';go.textContent='Rechercher';search.append(input,go);content.appendChild(search);
         const fields=document.createElement('div');fields.className='cameraMusicFields';
         const name=document.createElement('p');name.textContent=cameraMusicTrack?(cameraMusicTrack.title||'Morceau')+(cameraMusicTrack.artist?' · '+cameraMusicTrack.artist:''):'Aucun morceau sélectionné';fields.appendChild(name);
-        const preview=document.createElement('button');preview.type='button';preview.textContent='▶ Écouter';preview.disabled=!cameraMusicTrack;fields.appendChild(preview);
-        const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer le son';remove.disabled=!cameraMusicTrack;fields.appendChild(remove);content.appendChild(fields);
+        const excerpt=document.createElement('div');excerpt.className='storyMusicExcerpt';excerpt.hidden=!cameraMusicTrack;
+        const maxStart=Math.max(0,(Number(cameraMusicTrack?.duration_seconds)||300)-5);
+        excerpt.innerHTML='<label>Début de l’extrait <input data-camera-music-start type="range" min="0" max="'+maxStart+'" value="'+cameraMusicStart+'" step="1"></label><label>Durée <select data-camera-music-duration><option value="15">15 s</option><option value="30">30 s</option></select></label><strong data-camera-music-value></strong>';
+        const start=excerpt.querySelector('[data-camera-music-start]'),duration=excerpt.querySelector('[data-camera-music-duration]'),value=excerpt.querySelector('[data-camera-music-value]');
+        duration.value=String(cameraMusicDuration);
+        const updateExcerpt=()=>{cameraMusicStart=Number(start.value)||0;cameraMusicDuration=Number(duration.value)||15;cameraMusicConfirmed=false;publishCameraMusicSelection();value.textContent='Début '+cameraMusicStart+' s · '+cameraMusicDuration+' s';};
+        updateExcerpt();start.addEventListener('input',updateExcerpt);duration.addEventListener('change',updateExcerpt);fields.appendChild(excerpt);
+        const preview=document.createElement('button');preview.type='button';preview.textContent='▶ Prévisualiser l’extrait';preview.disabled=!cameraMusicTrack;fields.appendChild(preview);
+        const use=document.createElement('button');use.type='button';use.textContent=cameraMusicConfirmed?'✓ Son utilisé':'✓ Utiliser ce son';use.disabled=!cameraMusicTrack;fields.appendChild(use);
+        const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer le son';remove.hidden=!cameraMusicConfirmed;fields.appendChild(remove);content.appendChild(fields);
         const results=document.createElement('div');results.className='storyMusicResults';content.appendChild(results);
         go.addEventListener('click',()=>searchCameraMusic(input.value,results,note));input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchCameraMusic(input.value,results,note);}});
-        preview.addEventListener('click',()=>{if(!cameraMusicTrack)return;window.MyEventMusicPlayback?.play(cameraMusicTrack,[cameraMusicTrack]);});
+        preview.addEventListener('click',()=>{if(!cameraMusicTrack)return;updateExcerpt();const playback=window.MyEventMusicPlayback;if(!playback)return;clearTimeout(cameraMusicStopTimer);playback.select(cameraMusicTrack,[cameraMusicTrack]);playback.seekTo?.(cameraMusicStart);playback.play();cameraMusicStopTimer=setTimeout(()=>playback.stop(),cameraMusicDuration*1000);});
+        use.addEventListener('click',()=>{if(!cameraMusicTrack)return;updateExcerpt();cameraMusicConfirmed=true;publishCameraMusicSelection();$s('cameraMusicSide')?.classList.add('active');closePanel();});
         remove.addEventListener('click',()=>{clearCameraMusic();closePanel();openPanel('music',$s('cameraMusicSide'));});
       }
     }
