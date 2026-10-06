@@ -172,9 +172,20 @@
       e.preventDefault();set(startFactor*distance(e.touches)/startDistance);
     },{passive:false});
     preview?.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;});
-    let cameraMusicFile=null,cameraMusicUrl='',cameraMusicAudio=null,cameraMusicVolume=.7;
-    function clearCameraMusic(){if(cameraMusicAudio){cameraMusicAudio.pause();cameraMusicAudio.src='';}if(cameraMusicUrl)URL.revokeObjectURL(cameraMusicUrl);cameraMusicFile=null;cameraMusicUrl='';cameraMusicAudio=null;$s('cameraMusicSide')?.classList.remove('active');}
-    function setCameraMusic(file){clearCameraMusic();cameraMusicFile=file;cameraMusicUrl=URL.createObjectURL(file);cameraMusicAudio=new Audio(cameraMusicUrl);cameraMusicAudio.preload='metadata';cameraMusicAudio.volume=cameraMusicVolume;cameraMusicAudio.loop=true;$s('cameraMusicSide')?.classList.add('active');}
+    let cameraMusicTrack=null,cameraMusicResults=[],cameraMusicRequest=0;
+    function clearCameraMusic(){window.MyEventMusicPlayback?.stop();cameraMusicTrack=null;cameraMusicResults=[];$s('cameraMusicSide')?.classList.remove('active');}
+    function setCameraMusic(track){cameraMusicTrack=track||null;$s('cameraMusicSide')?.classList.toggle('active',!!track);}
+    async function searchCameraMusic(query,results,note){
+      const q=query.trim();if(q.length<2){note.textContent='Écris au moins 2 caractères.';return;}
+      const ticket=++cameraMusicRequest;note.textContent='Recherche MyEvent Music…';
+      try{const r=await fetch('/api/search-music?q='+encodeURIComponent(q)),data=await r.json();if(!r.ok)throw new Error(data.error||'Recherche indisponible');if(ticket!==cameraMusicRequest)return;
+        cameraMusicResults=data.items||[];results.replaceChildren();
+        cameraMusicResults.forEach(track=>{const b=document.createElement('button');b.type='button';b.className='storyMusicResult';
+          const img=document.createElement('img');img.src=track.thumbnail_url||'';img.alt='';const meta=document.createElement('span'),strong=document.createElement('strong'),small=document.createElement('small');strong.textContent=track.title||'Morceau';small.textContent=track.artist||'';meta.append(strong,small);b.append(img,meta);
+          b.addEventListener('click',()=>{setCameraMusic(track);window.MyEventMusicPlayback?.select(track,[track]);closePanel();openPanel('music',$s('cameraMusicSide'));});results.appendChild(b);});
+        note.textContent=cameraMusicResults.length?cameraMusicResults.length+' résultat(s) MyEvent Music':'Aucun résultat.';
+      }catch(error){note.textContent='Musique : '+error.message;}
+    }
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
     const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide','cameraTimerSide','cameraRatioSide'];
     function closePanel(){
@@ -232,7 +243,7 @@
       const descriptions={
         ai:'Traitement IA à connecter. La commande existante est disponible après une photo.',
         stickers:'Emoji · Stickers · Texte · Décorations : à venir.',
-        music:'Le catalogue et le module Musique MyEvent ne sont pas encore connectés.'
+        music:'Recherche et lecture via MyEvent Music.'
       };
       const note=document.createElement('p');note.textContent=descriptions[kind];content.appendChild(note);
       if(kind==='stickers'){
@@ -249,18 +260,17 @@
         content.appendChild(row);
       }
       if(kind==='music'){
-        note.textContent='Choisis un fichier audio présent sur ton iPhone. Tu peux l’écouter et régler son volume avant de l’utiliser.';
-        const picker=document.createElement('input');picker.type='file';picker.accept='audio/*';picker.hidden=true;content.appendChild(picker);
-        const choose=document.createElement('button');choose.type='button';choose.textContent=cameraMusicFile?'♫ Changer de son':'♫ Choisir un son';content.appendChild(choose);
+        note.textContent='Recherche un morceau dans MyEvent Music. Aucun fichier audio local n’est nécessaire.';
+        const search=document.createElement('div');search.className='cameraMusicSearch';
+        const input=document.createElement('input');input.type='search';input.placeholder='Rechercher un morceau…';
+        const go=document.createElement('button');go.type='button';go.textContent='Rechercher';search.append(input,go);content.appendChild(search);
         const fields=document.createElement('div');fields.className='cameraMusicFields';
-        const name=document.createElement('p');name.textContent=cameraMusicFile?cameraMusicFile.name:'Aucun son sélectionné';fields.appendChild(name);
-        const preview=document.createElement('button');preview.type='button';preview.textContent=cameraMusicAudio&&!cameraMusicAudio.paused?'⏸ Pause':'▶ Écouter';preview.disabled=!cameraMusicFile;fields.appendChild(preview);
-        const volume=document.createElement('label');volume.innerHTML='Volume <input type="range" min="0" max="100" value="'+Math.round(cameraMusicVolume*100)+'">';fields.appendChild(volume);
-        const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer le son';remove.disabled=!cameraMusicFile;fields.appendChild(remove);content.appendChild(fields);
-        choose.addEventListener('click',()=>picker.click());
-        picker.addEventListener('change',()=>{const file=picker.files?.[0];picker.value='';if(!file)return;if(!file.type.startsWith('audio/')){note.textContent='Ce fichier n’est pas un son compatible.';return;}setCameraMusic(file);closePanel();openPanel('music',$s('cameraMusicSide'));});
-        preview.addEventListener('click',async()=>{if(!cameraMusicAudio)return;if(cameraMusicAudio.paused){try{await cameraMusicAudio.play();preview.textContent='⏸ Pause';}catch(error){note.textContent='Lecture impossible sur cet appareil.';}}else{cameraMusicAudio.pause();preview.textContent='▶ Écouter';}});
-        volume.querySelector('input').addEventListener('input',e=>{cameraMusicVolume=Number(e.target.value)/100;if(cameraMusicAudio)cameraMusicAudio.volume=cameraMusicVolume;});
+        const name=document.createElement('p');name.textContent=cameraMusicTrack?(cameraMusicTrack.title||'Morceau')+(cameraMusicTrack.artist?' · '+cameraMusicTrack.artist:''):'Aucun morceau sélectionné';fields.appendChild(name);
+        const preview=document.createElement('button');preview.type='button';preview.textContent='▶ Écouter';preview.disabled=!cameraMusicTrack;fields.appendChild(preview);
+        const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer le son';remove.disabled=!cameraMusicTrack;fields.appendChild(remove);content.appendChild(fields);
+        const results=document.createElement('div');results.className='storyMusicResults';content.appendChild(results);
+        go.addEventListener('click',()=>searchCameraMusic(input.value,results,note));input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchCameraMusic(input.value,results,note);}});
+        preview.addEventListener('click',()=>{if(!cameraMusicTrack)return;window.MyEventMusicPlayback?.play(cameraMusicTrack,[cameraMusicTrack]);});
         remove.addEventListener('click',()=>{clearCameraMusic();closePanel();openPanel('music',$s('cameraMusicSide'));});
       }
     }
