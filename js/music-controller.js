@@ -39,6 +39,7 @@
     }catch(e){message(e.message);}
   }
   function step(delta){const index=queue.findIndex(t=>current&&session.key(t)===session.key(current));const next=queue[index+delta];if(next){select(next,queue);play();window.dispatchEvent(new CustomEvent('music-track-change',{detail:next}));}else message('Fin de la file.');}
+  function seekTo(seconds){const position=Math.max(0,Number(seconds)||0);session.update({position});if(ready&&player){player.seekTo(position,true);return true;}return false;}
   function stop(){remember();generation++;player?.destroy();player=null;ready=false;playing=false;current=null;host.hidden=true;host.querySelector('#musicVideoHost').innerHTML='<div id="musicVideo"></div>';}
   host.addEventListener('click',e=>{const action=e.target.closest('[data-transport]')?.dataset.transport;if(action==='open')window.MyEventMusic?.openPlayer(current,queue);if(action==='previous')step(-1);if(action==='next')step(1);if(action==='toggle')playing?player.pauseVideo():play();if(action==='stop')stop();});
   host.querySelector('input').addEventListener('change',e=>{if(ready){player.seekTo(Number(e.target.value),true);remember();}});
@@ -47,5 +48,5 @@
   window.addEventListener('music-user-change',()=>{generation++;player?.destroy();player=null;ready=false;playing=false;current=null;queue=[];host.hidden=true;});
   const camera=document.getElementById('myeventCameraModal');
   if(camera)new MutationObserver(()=>{if(camera.classList.contains('open')){stop();}else if(current)host.hidden=false;}).observe(camera,{attributes:true,attributeFilter:['class']});
-  window.MyEventMusicPlayback={select,play,stop,previous:()=>step(-1),next:()=>step(1),get current(){return current;},get playing(){return playing;},capabilities:{youtube:{seek:true,download:false,background:false,mix:false}}};
+  window.MyEventMusicPlayback={select,play,seekTo,stop,previous:()=>step(-1),next:()=>step(1),get current(){return current;},get playing(){return playing;},capabilities:{youtube:{seek:true,download:false,background:false,mix:false}}};
 })();
