@@ -429,7 +429,7 @@
       if(!storyMode)return; e.stopImmediatePropagation(); e.preventDefault();
       const src=$('myeventCapturedImage')?.src; if(!src?.startsWith('data:image/'))return;
       const button=$('cameraPublishBtn'); button.disabled=true;
-      try {setPendingStoryFile(new File([await(await fetch(src)).blob()],'story.jpg',{type:'image/jpeg'}));storyMode=false;$('cameraCloseBtn')?.click();sheet.hidden=false;$('storyCreateStatus').textContent='Photo prête. Ajoute ou modifie la musique puis publie.';
+      try {setPendingStoryFile(new File([await(await fetch(src)).blob()],'story.jpg',{type:'image/jpeg'}));const cameraMusic=window.MyEventCameraMusicSelection;if(cameraMusic?.track){await selectStoryMusic(cameraMusic.track);storyMusicStart=Math.max(0,Number(cameraMusic.start_seconds)||0);storyMusicDuration=[15,30].includes(Number(cameraMusic.duration_seconds))?Number(cameraMusic.duration_seconds):15;const start=$('storyMusicStart'),duration=$('storyMusicDuration'),value=$('storyMusicExcerptValue');if(start)start.value=String(storyMusicStart);if(duration)duration.value=String(storyMusicDuration);if(value)value.textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';}storyMode=false;$('cameraCloseBtn')?.click();sheet.hidden=false;$('storyCreateStatus').textContent=cameraMusic?.track?'Photo prête avec musique. Vérifie puis publie.':'Photo prête. Ajoute ou modifie la musique puis publie.';
       } catch(err) {alert('Story impossible : '+err.message);} finally {button.disabled=false;}
     },true);
     $('myeventCameraModal')?.addEventListener('camera-closed',()=>{storyMode=false;});
