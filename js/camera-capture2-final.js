@@ -47,7 +47,8 @@
     const filterItems=[
       ['original','Original'],['naturel','Naturel'],['vif','Vif'],['froid','Froid'],['chaud','Chaud'],['nb','N&B'],['vintage','Vintage'],['cinema','Cinéma']
     ];
-    strip.innerHTML=filterItems.map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><canvas class="thumb" width="108" height="132" aria-hidden="true"></canvas><small>'+x[1]+'</small></button>').join('');
+    const filterIcons={original:'◯',naturel:'●',vif:'✹',froid:'❄',chaud:'☀',nb:'◐',vintage:'◍',cinema:'▰'};
+    strip.innerHTML=filterItems.map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+filterIcons[x[0]]+'</span><small>'+x[1]+'</small></button>').join('');
     const filterHost=modal.querySelector('#cameraPanelContent');
     if(filterHost) filterHost.appendChild(strip);
     modal.cameraFilterStrip=strip;
@@ -92,40 +93,8 @@
       }
       context.putImageData(pixels,0,0);return output;
     };
-    let thumbnailFrame=0;
-    function renderFilterThumbnails(){
-      cancelAnimationFrame(thumbnailFrame);
-      thumbnailFrame=requestAnimationFrame(()=>{
-        const video=modal.querySelector('#myeventCameraVideo'),image=modal.querySelector('#myeventCapturedImage');
-        const previewActive=modal.dataset.cameraState==='preview'&&image?.naturalWidth;const source=previewActive?image:(video?.readyState>=2&&video.videoWidth?video:null);
-        if(!source)return;
-        strip.querySelectorAll('.cameraFilterChip').forEach(button=>{
-          const canvas=button.querySelector('canvas'),ctx=canvas?.getContext('2d',{willReadFrequently:true});
-          if(!ctx)return;
-          const sw=source.videoWidth||source.naturalWidth||source.width,sh=source.videoHeight||source.naturalHeight||source.height;
-          if(!sw||!sh)return;
-          const scale=Math.max(canvas.width/sw,canvas.height/sh),dw=sw*scale,dh=sh*scale;
-          ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(source,(canvas.width-dw)/2,(canvas.height-dh)/2,dw,dh);
-          const recipe=recipes[button.dataset.filter]||[];
-          if(!recipe.length)return;
-          const pixels=ctx.getImageData(0,0,canvas.width,canvas.height),data=pixels.data,clamp=v=>Math.min(255,Math.max(0,v));
-          for(let i=0;i<data.length;i+=4){let r=data[i],g=data[i+1],b=data[i+2];
-            for(const [kind,amount] of recipe){
-              if(kind==='brightness'){r*=amount;g*=amount;b*=amount;}
-              else if(kind==='contrast'){r=(r-127.5)*amount+127.5;g=(g-127.5)*amount+127.5;b=(b-127.5)*amount+127.5;}
-              else if(kind==='saturate'||kind==='grayscale'){const saturation=kind==='grayscale'?1-amount:amount,luma=.2126*r+.7152*g+.0722*b;r=luma+(r-luma)*saturation;g=luma+(g-luma)*saturation;b=luma+(b-luma)*saturation;}
-              else if(kind==='warmth'){r+=amount*.75;b-=amount*.75;}
-              else if(kind==='sepia'){const red=r,green=g,blue=b;r=red*(1-amount)+(.393*red+.769*green+.189*blue)*amount;g=green*(1-amount)+(.349*red+.686*green+.168*blue)*amount;b=blue*(1-amount)+(.272*red+.534*green+.131*blue)*amount;}
-              r=clamp(r);g=clamp(g);b=clamp(b);
-            }data[i]=r;data[i+1]=g;data[i+2]=b;
-          }ctx.putImageData(pixels,0,0);
-        });
-      });
-    }
-    video?.addEventListener('loadeddata',renderFilterThumbnails);
-    modal.addEventListener('camera-stream-ready',()=>setTimeout(renderFilterThumbnails,180));
-    modal.addEventListener('camera-preview-ready',renderFilterThumbnails);
-    modal.addEventListener('camera-retake',()=>setTimeout(renderFilterThumbnails,120));
+    // Keep the filter picker lightweight and reliable on iPhone Safari.
+    // Live video-to-canvas thumbnails are intentionally avoided here because Safari can return blank frames.
     function setFilter(name){
       selectedFilter=Object.hasOwn(recipes,name)?name:'original';
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>{const active=b.dataset.filter===selectedFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
@@ -134,7 +103,6 @@
       if(img)img.style.filter='none'; // The preview file already contains the filter.
       modal.dispatchEvent(new CustomEvent('camera-filter-change',{detail:{filter:selectedFilter}}));
       strip.querySelector('.cameraFilterChip.active')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-      renderFilterThumbnails();
     }
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
