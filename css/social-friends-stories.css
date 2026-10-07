@@ -260,3 +260,41 @@
 .storyCreateSheet .storyMusicResult img{width:44px;height:44px;object-fit:cover;border-radius:8px}.storyCreateSheet .storyMusicResult span{display:flex;min-width:0;flex-direction:column}.storyCreateSheet .storyMusicResult strong,.storyCreateSheet .storyMusicResult small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #socialStoryViewer .storyMusicBadge{position:absolute;z-index:6;left:50%;bottom:calc(22% + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:82%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 12px;border:1px solid #ffffff66;border-radius:18px;background:#080b10d9;color:#fff}
 #socialStoryViewer .storyMusicBadge[hidden]{display:none!important}
+
+
+/* iPhone Story composer: keep portrait previews and controls inside the viewport. */
+.storyCreateSheet{
+  box-sizing:border-box;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  place-items:start center;
+}
+.storyCreateSheet>div{
+  box-sizing:border-box;
+  width:min(100%,560px);
+  max-width:100%;
+  max-height:none;
+  margin:auto 0;
+}
+.storyMediaPreview{
+  width:100%;
+  max-height:min(48dvh,420px);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+}
+.storyMediaPreview[hidden]{display:none!important}
+.storyMediaPreview img,.storyMediaPreview video{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:min(48dvh,420px);
+  object-fit:contain;
+}
+@supports not (height:1dvh){
+  .storyMediaPreview,.storyMediaPreview img,.storyMediaPreview video{max-height:48vh}
+}
