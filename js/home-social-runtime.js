@@ -326,13 +326,10 @@
         return;
       }
       const enable=!button.classList.contains('active');
-      try{
-        await track.applyConstraints({advanced:[{torch:enable}]});
-        button.classList.toggle('active',enable);button.setAttribute('aria-pressed',String(enable));
-        button.setAttribute('aria-label',enable?'Désactiver le flash':'Activer le flash');
-      }catch(error){
-        button.classList.remove('active');button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Flash matériel indisponible');
-      }
+      // Arm the rear flash here; fire the torch only during capture.
+      button.classList.toggle('active',enable);button.setAttribute('aria-pressed',String(enable));
+      button.dataset.hardwareFlashArmed=enable?'1':'0';
+      button.setAttribute('aria-label',enable?'Désactiver le flash':'Activer le flash');
     });
     $s('cameraRetouchBtn')?.addEventListener('click',()=>openPanel('retouch',$s('cameraRetouchSide')||$s('cameraRetouchBtn')));
     $s('cameraTimerBtn')?.addEventListener('click',()=>openPanel('timer',$s('cameraTimerSide')));
@@ -441,7 +438,7 @@
       if(flash){
         const available=!!caps?.torch;
         const screenFlash=myeventFacingMode==='user'&&!available;
-        flash.disabled=!available&&!screenFlash;flash.classList.remove('active');flash.setAttribute('aria-pressed','false');cameraModal.classList.remove('cameraScreenFlashArmed');
+        flash.disabled=!available&&!screenFlash;flash.classList.remove('active');flash.setAttribute('aria-pressed','false');flash.dataset.hardwareFlashArmed='0';cameraModal.classList.remove('cameraScreenFlashArmed');
         flash.setAttribute('aria-label',available?'Activer le flash':(screenFlash?'Activer le flash écran':'Flash matériel indisponible'));
       }
       cameraModal.dispatchEvent(new Event('camera-stream-ready'));
@@ -525,9 +522,13 @@
       }
     }
     const revision=resetCameraPreview(),c=document.createElement('canvas');
+    const flashButton=$s('cameraFlashBtn'),track=myeventCameraStream?.getVideoTracks?.()[0];
     const screenFlash=cameraModal.classList.contains('cameraScreenFlashArmed')&&myeventFacingMode==='user';
+    const hardwareFlash=myeventFacingMode==='environment'&&flashButton?.dataset.hardwareFlashArmed==='1'&&track?.readyState==='live';
     if(screenFlash){cameraModal.classList.add('cameraScreenFlashFire');await new Promise(resolve=>setTimeout(resolve,140));}
+    if(hardwareFlash){try{await track.applyConstraints({advanced:[{torch:true}]});await new Promise(resolve=>setTimeout(resolve,180));}catch(error){}}
     cameraModal.cameraDrawFrame(c);
+    if(hardwareFlash){try{await track.applyConstraints({advanced:[{torch:false}]});}catch(error){}}
     if(screenFlash){setTimeout(()=>cameraModal.classList.remove('cameraScreenFlashFire'),90);}
     cameraSourceCanvas=c;renderCameraPhoto(revision);
   }
