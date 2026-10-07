@@ -124,3 +124,16 @@
 
 /* Keep the camera settings control interactive when older cached markup still provides it. */
 #myeventCameraModal details.cameraGlassSettings,#myeventCameraModal .cameraProPreview>.cameraGlassSettings{visibility:visible;pointer-events:auto}
+
+
+/* Photo-style filter filmstrip: real thumbnails generated locally from the current camera frame. */
+#myeventCameraModal .cameraCreativePanel[data-kind="filters"]{left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));max-height:none;overflow:hidden;border-left:0;border-right:0;border-radius:22px 22px 0 0;padding:10px 0 12px;background:rgba(10,10,12,.72)!important}
+#myeventCameraModal .cameraCreativePanel[data-kind="filters"] header{padding:0 14px 7px}
+#myeventCameraModal .cameraCreativePanel[data-kind="filters"] #cameraPanelContent{overflow:hidden}
+#myeventCameraModal .cameraFilterFilmstrip{gap:8px;padding:5px max(14px,calc(50vw - 54px)) 4px;scroll-padding-inline:calc(50vw - 54px);scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain}
+#myeventCameraModal .cameraFilterFilmstrip::-webkit-scrollbar{display:none}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip{flex:0 0 82px;width:82px;min-height:116px;padding:0!important;gap:5px;justify-content:flex-start;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;scroll-snap-align:center}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip .thumb{display:block;width:78px;height:92px;object-fit:cover;border-radius:10px;background:#222;border:2px solid transparent;box-sizing:border-box;filter:none!important}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip small{font-size:10px;font-weight:800;color:#fff;white-space:nowrap;text-shadow:0 1px 4px #000}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip.active .thumb{border:3px solid #fff;box-shadow:0 0 0 2px rgba(255,106,52,.78)}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip.active{transform:translateY(-3px)}
