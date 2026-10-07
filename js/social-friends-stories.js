@@ -5,7 +5,7 @@
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
-  let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0, storyMusicStart = 0, storyMusicDuration = 15, pendingStoryFile = null, pendingStoryPreviewUrl = '', storyMusicStopTimer = null;
+  let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0, storyMusicStart = 0, storyMusicDuration = 15, storyDisplayDuration = 10, pendingStoryFile = null, pendingStoryPreviewUrl = '', storyMusicStopTimer = null;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
   let thumbnailExpiryTimer = null;
@@ -303,11 +303,13 @@
     el.querySelector('.storyLike').dataset.liked='false';el.querySelector('.storyLike').setAttribute('aria-pressed','false');
     el.querySelector('.storyLike').firstChild.textContent='♡ ';el.querySelector('.storyLike span').textContent='…';storyInteractionStatus('');
     refreshStoryLike(item.id);
+    clearTimeout(storyMusicStopTimer);window.MyEventMusicPlayback?.stop();
+    if(item.music_track){const playback=window.MyEventMusicPlayback;if(playback){try{playback.select(item.music_track,[item.music_track]);playback.seekTo?.(Number(item.music_start_seconds)||0);const playResult=playback.play();if(playResult?.catch)playResult.catch(()=>{});storyMusicStopTimer=setTimeout(()=>playback.stop(),Math.max(5,Number(item.music_duration_seconds)||15)*1000);}catch(_){/* iOS may require a user gesture; badge remains available. */}}}
     const media=document.createElement(item.media_type==='video'?'video':'img'); media.src=item.url;
     if(item.media_type==='video') { media.autoplay=true; media.playsInline=true; media.addEventListener('ended',()=>showStory(viewerIndex+1),{once:true}); }
     el.querySelector('.storyMedia').replaceChildren(media);
     const progress=el.querySelector('.storyProgress span'); progress.style.width='0%';
-    const tick=()=>{if(el.hidden||storyRows[viewerIndex]?.id!==item.id)return; const duration=item.media_type==='video' ? Math.min(30000,media.duration*1000||15000) : 5000;
+    const tick=()=>{if(el.hidden||storyRows[viewerIndex]?.id!==item.id)return; const duration=item.media_type==='video' ? Math.min(30000,media.duration*1000||15000) : Math.max(5000,(Number(item.display_duration_seconds)||10)*1000);
       if(el.querySelector('.storyReply input')===document.activeElement||!el.querySelector('.storyLikersPanel').hidden){startedAt+=100;storyTimer=setTimeout(tick,100);return;}
       const ratio=Math.min(1,(Date.now()-startedAt)/duration); progress.style.width=(ratio*100)+'%';
       if(ratio>=1)showStory(viewerIndex+1); else storyTimer=setTimeout(tick,100);}; tick();
@@ -321,7 +323,7 @@
   async function loadStories() {
     const {sb,user}=context(); if(!sb || !user)return;
     try {
-      const rows=check(await sb.from('social_stories').select('id,author_id,media_path,media_type,caption,music_track_id,music_start_seconds,music_duration_seconds,music_track:music_tracks(id,provider,provider_track_id,title,artist,thumbnail_url),created_at,expires_at')
+      const rows=check(await sb.from('social_stories').select('id,author_id,media_path,media_type,caption,music_track_id,music_start_seconds,music_duration_seconds,display_duration_seconds,music_track:music_tracks(id,provider,provider_track_id,title,artist,thumbnail_url),created_at,expires_at')
         .gt('expires_at',new Date().toISOString()).order('created_at',{ascending:true}).limit(100))||[];
       const profiles=await profilesFor(rows.map(r=>r.author_id));
       const previous=storyRows;
@@ -396,7 +398,7 @@
     const path=`${user.id}/${crypto.randomUUID()}.${extension}`;
     check(await sb.storage.from('story-media').upload(path,file,{contentType:file.type,upsert:false}));
     try { check(await sb.from('social_stories').insert({author_id:user.id,media_path:path,
-      media_type:file.type.startsWith('video/')?'video':'image', caption:$('storyCaptionInput')?.value?.trim()||'',music_track_id:storyMusicTrack?.id||null,music_start_seconds:storyMusicTrack?storyMusicStart:0,music_duration_seconds:storyMusicTrack?storyMusicDuration:15})); }
+      media_type:file.type.startsWith('video/')?'video':'image', caption:$('storyCaptionInput')?.value?.trim()||'',music_track_id:storyMusicTrack?.id||null,music_start_seconds:storyMusicTrack?storyMusicStart:0,music_duration_seconds:storyMusicTrack?storyMusicDuration:15,display_duration_seconds:storyDisplayDuration})); }
     catch(e) { await sb.storage.from('story-media').remove([path]); throw e; }
     await loadStories();
   }
@@ -406,7 +408,7 @@
     if(!file)return;pendingStoryPreviewUrl=URL.createObjectURL(file);const media=document.createElement(file.type.startsWith('video/')?'video':'img');media.src=pendingStoryPreviewUrl;media.alt='Aperçu de la Story';if(media.tagName==='VIDEO'){media.controls=true;media.playsInline=true;}host.append(media);
   }
   function createStory() {
-    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';storyMusicTrack=null;storyMusicResults=[];storyMusicStart=0;storyMusicDuration=15;setPendingStoryFile(null);
+    const sheet=$('storyCreateSheet'); sheet.hidden=false; $('storyCaptionInput').value='';storyMusicTrack=null;storyMusicResults=[];storyMusicStart=0;storyMusicDuration=15;storyDisplayDuration=10;setPendingStoryFile(null);
     $('storyMusicSelected').hidden=true;$('storyMusicExcerpt').hidden=true;$('storyMusicSearchPanel').hidden=true;$('storyMusicResults').replaceChildren();$('storyMusicSearchInput').value='';$('storyCreateStatus').textContent='';
   }
   function setupCreation() {
@@ -419,7 +421,7 @@
     $('storyMusicSearchBtn').onclick=searchStoryMusic;$('storyMusicSearchInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();searchStoryMusic();}};
     $('storyMusicRemove').onclick=()=>{storyMusicTrack=null;$('storyMusicSelected').hidden=true;$('storyMusicExcerpt').hidden=true;window.MyEventMusicPlayback?.stop();};
     const updateExcerpt=()=>{storyMusicStart=Number($('storyMusicStart').value)||0;storyMusicDuration=Number($('storyMusicDuration').value)||15;$('storyMusicExcerptValue').textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';};
-    $('storyMusicStart').oninput=updateExcerpt;$('storyMusicDuration').onchange=updateExcerpt;
+    $('storyMusicStart').oninput=updateExcerpt;$('storyMusicDuration').onchange=()=>{updateExcerpt();storyDisplayDuration=storyMusicDuration;$('storyDisplayDuration').value=String(storyDisplayDuration);};$('storyDisplayDuration').onchange=()=>{storyDisplayDuration=Number($('storyDisplayDuration').value)||10;};
     $('storyMusicPreview').onclick=()=>{if(!storyMusicTrack)return;updateExcerpt();const playback=window.MyEventMusicPlayback;if(!playback)return;clearTimeout(storyMusicStopTimer);playback.select(storyMusicTrack,[storyMusicTrack]);playback.seekTo?.(storyMusicStart);playback.play();storyMusicStopTimer=setTimeout(()=>playback.stop(),storyMusicDuration*1000);};
     $('storyPublish').onclick=async()=>{if(!pendingStoryFile)return;const b=$('storyPublish');b.disabled=true;$('storyCreateStatus').textContent='Publication…';try{await publishStory(pendingStoryFile);setPendingStoryFile(null);sheet.hidden=true;}catch(err){$('storyCreateStatus').textContent=err.message;}finally{b.disabled=false;}};
     $('storyUseCamera').onclick=()=>{storyMode=true;sheet.hidden=true; $('socialBottomCreate')?.click();};
