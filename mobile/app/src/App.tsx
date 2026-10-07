@@ -1,5 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {Alert,Linking,Modal,Pressable,StyleSheet,Text,View} from 'react-native';
+import {Alert,BackHandler,Linking,Modal,Pressable,StyleSheet,Text,View} from 'react-native';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {WebView} from 'react-native-webview';
 import {File} from 'expo-file-system';
@@ -9,6 +9,7 @@ import {CameraScreen} from './camera/CameraScreen';
 import type {CapturedMedia} from './camera/contract';
 import {MAX_PHOTO_BYTES,trustedNavigation} from './bridge/protocol.mjs';
 import {photoActionScript} from './bridge/photo-action.mjs';
+import {handleAndroidBack} from './bridge/android-back.mjs';
 import {cameraTriggerScript,cameraTriggerMessage,openWebCameraScript,releaseCameraTriggerScript} from './bridge/camera-trigger.mjs';
 
 export default function App(){
@@ -19,6 +20,14 @@ export default function App(){
   const actionIds=useRef(new Map<string,string>());
   const pending=useRef<{id:string;action:'publish'|'event';timer:ReturnType<typeof setTimeout>;resolve:()=>void;reject:(reason:Error)=>void}|null>(null);
   const [camera,setCamera]=useState(false),[url,setUrl]=useState(WEB_URL),[loaded,setLoaded]=useState(false),[status,setStatus]=useState('');
+  const canGoBack=useRef(false);
+  useEffect(()=>{
+    const subscription=BackHandler.addEventListener('hardwareBackPress',()=>handleAndroidBack({
+      cameraOpen:nativeOpen.current,transferPending:!!pending.current,canGoBack:canGoBack.current,
+      closeCamera:closeNativeCamera,goBack:()=>web.current?.goBack()
+    }));
+    return ()=>subscription.remove();
+  },[]);
   function cancelTransfer(message:string){
     const transfer=pending.current;pending.current=null;
     if(transfer){clearTimeout(transfer.timer);transfer.reject(new Error(message));}
@@ -39,7 +48,7 @@ export default function App(){
     web.current?.injectJavaScript(releaseCameraTriggerScript(WEB_ORIGIN));
   }
   async function usePhoto(photo:CapturedMedia,action:'publish'|'event'){
-    if(!loaded || !trustedNavigation(url,WEB_ORIGIN))throw new Error('Chargez l’accueil MyEvent TEST avant l’import.');
+    if(!loaded || !trustedNavigation(url,WEB_ORIGIN))throw new Error('Chargez l’accueil MyEvent avant l’import.');
     const navigationToken=triggerToken.current;
     const file=new File(photo.uri);
     if(!file.exists || file.size>MAX_PHOTO_BYTES)throw new Error('Photo trop volumineuse (4 Mo maximum).');
@@ -60,13 +69,13 @@ export default function App(){
     setCamera(false);
   }
   return <SafeAreaProvider><SafeAreaView style={styles.screen}>
-    <View style={styles.bar}><Text style={styles.title}>MyEvent · TEST</Text>{!triggerReady&&<Pressable accessibilityRole="button" onPress={openNativeCamera} style={styles.button}><Text style={styles.title}>Caméra ME</Text></Pressable>}</View>
+    <View style={styles.bar}><Text style={styles.title}>{__DEV__?'MyEvent · TEST':'MyEvent'}</Text>{__DEV__&&!triggerReady&&<Pressable accessibilityRole="button" onPress={openNativeCamera} style={styles.button}><Text style={styles.title}>Caméra ME</Text></Pressable>}</View>
     {!!status&&<Text style={styles.status}>{status}</Text>}
     <WebView ref={web} source={{uri:WEB_URL}} style={{flex:1}} sharedCookiesEnabled thirdPartyCookiesEnabled={false} javaScriptEnabled allowsInlineMediaPlayback geolocationEnabled setSupportMultipleWindows
       onLoadStart={()=>{setLoaded(false);setTriggerReady(false);triggerToken.current=uuid.v4();nativeOpen.current=false;setCamera(false);cancelTransfer('Navigation en cours, transfert annulé.');}}
       onLoadEnd={()=>{setLoaded(true);web.current?.injectJavaScript(cameraTriggerScript(WEB_ORIGIN,triggerToken.current));}}
-      onNavigationStateChange={navigation=>setUrl(navigation.url)}
-      onError={()=>{setLoaded(false);setTriggerReady(false);cancelTransfer('Connexion MyEvent TEST perdue.');setStatus('Connexion à MyEvent TEST impossible.');}}
+      onNavigationStateChange={navigation=>{setUrl(navigation.url);canGoBack.current=navigation.canGoBack;}}
+      onError={()=>{setLoaded(false);setTriggerReady(false);cancelTransfer('Connexion MyEvent perdue.');setStatus('Connexion à MyEvent impossible.');}}
       onShouldStartLoadWithRequest={request=>{
         if(trustedNavigation(request.url,WEB_ORIGIN))return true;
         // Partner iframes stay embedded; only top-level external navigation opens the system browser.

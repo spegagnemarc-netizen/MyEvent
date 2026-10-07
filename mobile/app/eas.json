@@ -1,5 +1,11 @@
 {
   "build": {
+    "release-private": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "env": {"MYEVENT_BUILD_PROFILE": "release"},
+      "android": {"buildType": "apk", "withoutCredentials": true}
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
