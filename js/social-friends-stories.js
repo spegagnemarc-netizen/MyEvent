@@ -4,7 +4,7 @@
   const decodeEntities = value => { const el=document.createElement('textarea'); el.innerHTML=String(value||''); return el.value; };
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
-  let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
+  let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0, storyAudioWaiting = false;
   let storyMusicTrack = null, storyMusicResults = [], storyMusicRequest = 0, storyMusicStart = 0, storyMusicDuration = 15, storyDisplayDuration = 10, pendingStoryFile = null, pendingStoryPreviewUrl = '', storyMusicStopTimer = null;
   const initialMyStoryBubble = $('socialMyStory')?.querySelector('.socialStoryBubble');
   const defaultMyStoryContent = [...(initialMyStoryBubble?.childNodes || [])].map(node => node.cloneNode(true));
@@ -237,7 +237,7 @@
       if(action === 'close') closeViewer(); if(action === 'previous') showStory(viewerIndex - 1);
       if(action === 'next') showStory(viewerIndex + 1); if(action === 'add'){closeViewer();createStory();} if(action === 'delete') deleteStory();
       if(action === 'like') toggleStoryLike(); if(action === 'likers') showStoryLikers();
-      if(action === 'music'){const item=storyRows[viewerIndex],playback=window.MyEventMusicPlayback;if(item?.music_track&&playback){clearTimeout(storyMusicStopTimer);playback.select(item.music_track,[item.music_track]);playback.seekTo?.(item.music_start_seconds||0);playback.play();storyMusicStopTimer=setTimeout(()=>playback.stop(),Math.max(5,item.music_duration_seconds||15)*1000);}}
+      if(action === 'music'){const item=storyRows[viewerIndex],playback=window.MyEventMusicPlayback;if(item?.music_track&&playback){clearTimeout(storyMusicStopTimer);storyAudioWaiting=true;playback.select(item.music_track,[item.music_track]);playback.seekTo?.(item.music_start_seconds||0);playback.play();}}
       if(action === 'hide-likers') el.querySelector('.storyLikersPanel').hidden=true; });
     el.querySelector('.storyReply').addEventListener('submit',replyToStory);
     let touchX = 0; el.addEventListener('touchstart',e => { touchX=e.changedTouches[0].clientX; },{passive:true});
@@ -248,7 +248,7 @@
       if(e.key==='Escape')closeViewer(); if(e.key==='ArrowRight')showStory(viewerIndex+1);
       if(e.key==='ArrowLeft')showStory(viewerIndex-1); });
   }
-  function closeViewer() { clearTimeout(storyTimer); clearTimeout(storyMusicStopTimer); window.MyEventMusicPlayback?.stop(); interactionTicket++; const el=$('socialStoryViewer'); el.hidden=true; el.querySelector('.storyMedia').replaceChildren(); document.body.style.overflow=''; }
+  function closeViewer() { clearTimeout(storyTimer); clearTimeout(storyMusicStopTimer); storyAudioWaiting=false; window.MyEventMusicPlayback?.stop(); interactionTicket++; const el=$('socialStoryViewer'); el.hidden=true; el.querySelector('.storyMedia').replaceChildren(); document.body.style.overflow=''; }
   async function refreshStoryLike(id,ticket=interactionTicket) {
     const {sb}=context(); if(!sb)return;
     try {const data=check(await sb.rpc('story_like_summary',{target_story:id}));
@@ -303,17 +303,29 @@
     el.querySelector('.storyLike').dataset.liked='false';el.querySelector('.storyLike').setAttribute('aria-pressed','false');
     el.querySelector('.storyLike').firstChild.textContent='♡ ';el.querySelector('.storyLike span').textContent='…';storyInteractionStatus('');
     refreshStoryLike(item.id);
-    clearTimeout(storyMusicStopTimer);window.MyEventMusicPlayback?.stop();
-    if(item.music_track){const playback=window.MyEventMusicPlayback;if(playback){try{playback.select(item.music_track,[item.music_track]);playback.seekTo?.(Number(item.music_start_seconds)||0);const playResult=playback.play();if(playResult?.catch)playResult.catch(()=>{});storyMusicStopTimer=setTimeout(()=>playback.stop(),Math.max(5,Number(item.music_duration_seconds)||15)*1000);}catch(_){/* iOS may require a user gesture; badge remains available. */}}}
+    clearTimeout(storyMusicStopTimer);window.MyEventMusicPlayback?.stop();storyAudioWaiting=!!item.music_track;
+    if(item.music_track){const playback=window.MyEventMusicPlayback;if(playback){try{playback.select(item.music_track,[item.music_track]);playback.seekTo?.(Number(item.music_start_seconds)||0);playback.play();}catch(_){storyAudioWaiting=true;musicBadge.textContent='🔊 Activer le son · '+decodeEntities(item.music_track.title||'Musique');}}}
     const media=document.createElement(item.media_type==='video'?'video':'img'); media.src=item.url;
     if(item.media_type==='video') { media.autoplay=true; media.playsInline=true; media.addEventListener('ended',()=>showStory(viewerIndex+1),{once:true}); }
     el.querySelector('.storyMedia').replaceChildren(media);
     const progress=el.querySelector('.storyProgress span'); progress.style.width='0%';
     const tick=()=>{if(el.hidden||storyRows[viewerIndex]?.id!==item.id)return; const duration=item.media_type==='video' ? Math.min(30000,media.duration*1000||15000) : Math.max(5000,(Number(item.display_duration_seconds)||10)*1000);
-      if(el.querySelector('.storyReply input')===document.activeElement||!el.querySelector('.storyLikersPanel').hidden){startedAt+=100;storyTimer=setTimeout(tick,100);return;}
+      if(storyAudioWaiting||el.querySelector('.storyReply input')===document.activeElement||!el.querySelector('.storyLikersPanel').hidden){startedAt+=100;storyTimer=setTimeout(tick,100);return;}
       const ratio=Math.min(1,(Date.now()-startedAt)/duration); progress.style.width=(ratio*100)+'%';
       if(ratio>=1)showStory(viewerIndex+1); else storyTimer=setTimeout(tick,100);}; tick();
   }
+  window.addEventListener('myevent-music-playback-state',e=>{
+    const el=$('socialStoryViewer'),item=storyRows[viewerIndex];
+    if(!el||el.hidden||!item?.music_track)return;
+    const badge=el.querySelector('.storyMusicBadge'),state=e.detail?.state;
+    if(state==='playing'){
+      storyAudioWaiting=false;startedAt=Date.now();
+      badge.textContent='♫ '+decodeEntities(item.music_track.title||'Musique')+(item.music_track.artist?' · '+decodeEntities(item.music_track.artist):'');
+      clearTimeout(storyMusicStopTimer);storyMusicStopTimer=setTimeout(()=>window.MyEventMusicPlayback?.stop(),Math.max(5,Number(item.music_duration_seconds)||15)*1000);
+    }else if(state==='blocked'||state==='error'){
+      storyAudioWaiting=true;badge.hidden=false;badge.textContent='🔊 Activer le son · '+decodeEntities(item.music_track.title||'Musique');
+    }
+  });
   async function deleteStory() {
     const item=storyRows[viewerIndex], {sb,user}=context(); if(!item || item.author_id!==user?.id)return;
     try { check(await sb.from('social_stories').delete().eq('id',item.id)); closeViewer();
