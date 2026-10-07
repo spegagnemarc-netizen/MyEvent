@@ -1,6 +1,7 @@
 /* Social friends and 24-hour stories. Uses the existing authenticated Supabase client. */
 (() => {
   const $ = id => document.getElementById(id);
+  const decodeEntities = value => { const el=document.createElement('textarea'); el.innerHTML=String(value||''); return el.value; };
   const context = () => window.myeventCameraContext?.() || {};
   let activeId = null, channel = null, refreshTimer = null, storyTimer = null, stripExpiryTimer = null;
   let storyRows = [], viewerIndex = 0, storyMode = false, startedAt = 0, interactionTicket = 0;
@@ -294,7 +295,7 @@
     el.querySelector('.storyHeader b').textContent=profileName(item.profile);
     el.querySelector('.storyCaption').textContent=item.caption || '';
     const musicBadge=el.querySelector('.storyMusicBadge');
-    if(item.music_track){musicBadge.hidden=false;musicBadge.textContent='♫ '+(item.music_track.title||'Musique')+(item.music_track.artist?' · '+item.music_track.artist:'');}
+    if(item.music_track){musicBadge.hidden=false;musicBadge.textContent='♫ '+decodeEntities(item.music_track.title||'Musique')+(item.music_track.artist?' · '+decodeEntities(item.music_track.artist):'');}
     else {musicBadge.hidden=true;musicBadge.textContent='';}
     const own=item.author_id===context().user?.id; el.querySelector('.storyDelete').hidden=!own; el.querySelector('.storyAddNew').hidden=!own;
     el.querySelector('.storyReply').hidden=own;el.querySelector('.storyReply input').value='';
@@ -373,7 +374,7 @@
     const ensure=window.MyEventMusic?.ensureTrack;if(!ensure)throw new Error('MyEvent Music n’est pas encore prêt.');
     const id=await ensure(sb,track);window.MyEventMusicPlayback?.stop();storyMusicTrack={...track,id};storyMusicStart=0;storyMusicDuration=15;
     const preview=$('storyMusicSelected');preview.hidden=false;
-    preview.querySelector('strong').textContent=track.title||'Morceau';preview.querySelector('small').textContent=track.artist||'';
+    preview.querySelector('strong').textContent=decodeEntities(track.title||'Morceau');preview.querySelector('small').textContent=decodeEntities(track.artist||'');
     $('storyMusicResults').replaceChildren();$('storyMusicSearchPanel').hidden=true;$('storyCreateStatus').textContent='Musique ajoutée à la Story. Choisis maintenant le passage.';
     const editor=$('storyMusicExcerpt');if(editor){editor.hidden=false;$('storyMusicStart').max=String(Math.max(0,(Number(track.duration_seconds)||300)-5));$('storyMusicStart').value=String(storyMusicStart);$('storyMusicDuration').value=String(storyMusicDuration);$('storyMusicExcerptValue').textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';}
   }
@@ -383,7 +384,7 @@
     try{const r=await fetch('/api/search-music?q='+encodeURIComponent(q)),data=await r.json();if(!r.ok)throw new Error(data.error||'Recherche indisponible');if(ticket!==storyMusicRequest)return;
       storyMusicResults=data.items||[];const box=$('storyMusicResults');box.replaceChildren();
       storyMusicResults.forEach((track,index)=>{const b=document.createElement('button');b.type='button';b.className='storyMusicResult';
-        const img=document.createElement('img');img.src=track.thumbnail_url||'';img.alt='';const meta=document.createElement('span');const title=document.createElement('strong');title.textContent=track.title||'Morceau';const artist=document.createElement('small');artist.textContent=track.artist||'';meta.append(title,artist);b.append(img,meta);b.onclick=()=>selectStoryMusic(storyMusicResults[index]).catch(e=>$('storyCreateStatus').textContent=e.message);box.append(b);});
+        const img=document.createElement('img');img.src=track.thumbnail_url||'';img.alt='';const meta=document.createElement('span');const title=document.createElement('strong');title.textContent=decodeEntities(track.title||'Morceau');const artist=document.createElement('small');artist.textContent=decodeEntities(track.artist||'');meta.append(title,artist);b.append(img,meta);b.onclick=()=>selectStoryMusic(storyMusicResults[index]).catch(e=>$('storyCreateStatus').textContent=e.message);box.append(b);});
       $('storyCreateStatus').textContent=storyMusicResults.length?storyMusicResults.length+' résultat(s)':'Aucun résultat.';
     }catch(e){$('storyCreateStatus').textContent='Musique : '+e.message;}
   }
