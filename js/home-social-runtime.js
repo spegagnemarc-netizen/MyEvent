@@ -313,8 +313,16 @@
       const button=e.currentTarget,track=myeventCameraStream?.getVideoTracks?.()[0];
       let caps;try{caps=track?.getCapabilities?.();}catch(error){}
       if(!track||track.readyState!=='live'||!caps?.torch){
-        button.classList.remove('active');button.setAttribute('aria-pressed','false');
-        button.setAttribute('aria-label',myeventFacingMode==='user'?'Flash matériel indisponible avec la caméra avant':'Flash matériel indisponible');
+        // iOS/Safari often exposes no torch control, especially on the front camera.
+        // Keep the flash useful by falling back to a white-screen selfie flash.
+        if(myeventFacingMode==='user'){
+          const enable=!button.classList.contains('active');
+          button.classList.toggle('active',enable);button.setAttribute('aria-pressed',String(enable));
+          cameraModal.classList.toggle('cameraScreenFlashArmed',enable);
+          button.setAttribute('aria-label',enable?'Désactiver le flash écran':'Activer le flash écran');
+        }else{
+          button.classList.remove('active');button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Flash matériel indisponible');
+        }
         return;
       }
       const enable=!button.classList.contains('active');
@@ -432,8 +440,9 @@
       const flash=$s('cameraFlashBtn');let caps;try{caps=videoTrack?.getCapabilities?.();}catch(error){}
       if(flash){
         const available=!!caps?.torch;
-        flash.disabled=!available;flash.classList.remove('active');flash.setAttribute('aria-pressed','false');
-        flash.setAttribute('aria-label',available?'Activer le flash':(myeventFacingMode==='user'?'Flash matériel indisponible avec la caméra avant':'Flash matériel indisponible'));
+        const screenFlash=myeventFacingMode==='user'&&!available;
+        flash.disabled=!available&&!screenFlash;flash.classList.remove('active');flash.setAttribute('aria-pressed','false');cameraModal.classList.remove('cameraScreenFlashArmed');
+        flash.setAttribute('aria-label',available?'Activer le flash':(screenFlash?'Activer le flash écran':'Flash matériel indisponible'));
       }
       cameraModal.dispatchEvent(new Event('camera-stream-ready'));
     }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
@@ -516,7 +525,10 @@
       }
     }
     const revision=resetCameraPreview(),c=document.createElement('canvas');
+    const screenFlash=cameraModal.classList.contains('cameraScreenFlashArmed')&&myeventFacingMode==='user';
+    if(screenFlash){cameraModal.classList.add('cameraScreenFlashFire');await new Promise(resolve=>setTimeout(resolve,140));}
     cameraModal.cameraDrawFrame(c);
+    if(screenFlash){setTimeout(()=>cameraModal.classList.remove('cameraScreenFlashFire'),90);}
     cameraSourceCanvas=c;renderCameraPhoto(revision);
   }
   $s('cameraShutterBtn')?.addEventListener('click',()=>{
