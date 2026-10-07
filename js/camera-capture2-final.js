@@ -97,7 +97,7 @@
       cancelAnimationFrame(thumbnailFrame);
       thumbnailFrame=requestAnimationFrame(()=>{
         const video=modal.querySelector('#myeventCameraVideo'),image=modal.querySelector('#myeventCapturedImage');
-        const source=image?.style.display!=='none'&&image?.naturalWidth?image:(video?.readyState>=2?video:null);
+        const previewActive=modal.dataset.cameraState==='preview'&&image?.naturalWidth;const source=previewActive?image:(video?.readyState>=2&&video.videoWidth?video:null);
         if(!source)return;
         strip.querySelectorAll('.cameraFilterChip').forEach(button=>{
           const canvas=button.querySelector('canvas'),ctx=canvas?.getContext('2d',{willReadFrequently:true});
@@ -123,6 +123,7 @@
       });
     }
     video?.addEventListener('loadeddata',renderFilterThumbnails);
+    modal.addEventListener('camera-stream-ready',()=>setTimeout(renderFilterThumbnails,180));
     modal.addEventListener('camera-preview-ready',renderFilterThumbnails);
     modal.addEventListener('camera-retake',()=>setTimeout(renderFilterThumbnails,120));
     function setFilter(name){
