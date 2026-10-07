@@ -17,14 +17,14 @@ const paid = {
   data: { object: { id: 'cs_local_fixture', payment_status: 'paid', metadata: { fund_entry_id: id } } },
 };
 
-function setup({ url = 'https://aaaaaaaaaaaaaaaaaaaa.supabase.co', env = {}, response, networkError = false } = {}) {
+function setup({ url = 'https://ahyyknfjsielnqyoxqgh.supabase.co', env = {}, response, networkError = false } = {}) {
   const calls = [], logs = [], rows = new Map([[id, { id, status: 'pending', amount: 0.5 }]]);
   const module = { exports: {} };
   vm.runInNewContext(source, {
     require, module, Buffer, URL, supabaseEnvironment,
     process: { env: {
       STRIPE_SECRET_KEY: 'sk_test_local_fixture_not_a_real_key', STRIPE_WEBHOOK_SECRET: secret,
-      VERCEL_ENV:'preview',MYEVENT_TEST_SUPABASE_REF:'aaaaaaaaaaaaaaaaaaaa',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',
+      VERCEL_ENV:'preview',MYEVENT_TEST_SUPABASE_REF:'ahyyknfjsielnqyoxqgh',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',
       SUPABASE_URL: url, SUPABASE_SERVICE_ROLE_KEY: 'local_service_fixture', ...env,
     } },
     console: Object.fromEntries(['log', 'warn', 'error'].map(level => [level, (...args) => logs.push(args)])),
@@ -58,7 +58,7 @@ function setup({ url = 'https://aaaaaaaaaaaaaaaaaaaa.supabase.co', env = {}, res
 
 for (const suffix of ['', '/', '///', '/rest/v1', '/rest/v1/', '/rest/v1///']) {
   test(`signed paid event uses exactly one REST prefix (${suffix || 'root'})`, async () => {
-    const ctx = setup({ url: `  https://aaaaaaaaaaaaaaaaaaaa.supabase.co${suffix}\r\n` });
+    const ctx = setup({ url: `  https://ahyyknfjsielnqyoxqgh.supabase.co${suffix}\r\n` });
     const res = await ctx.invoke();
     assert.equal(res.statusCode, 200);
     assert.equal(ctx.calls[0].url.pathname, '/rest/v1/event_fund_entries');
@@ -108,8 +108,8 @@ test('GET, missing or invalid signatures are rejected without Supabase access', 
 });
 
 test('missing configuration and unsafe URL shapes fail without requesting a malformed route', async () => {
-  for (const url of ['', 'bad-url', 'http://project.supabase.co', 'https://aaaaaaaaaaaaaaaaaaaa.supabase.co/wrong',
-    'https://aaaaaaaaaaaaaaaaaaaa.supabase.co/?key=private', 'https://aaaaaaaaaaaaaaaaaaaa.supabase.co/#fragment',
+  for (const url of ['', 'bad-url', 'http://project.supabase.co', 'https://ahyyknfjsielnqyoxqgh.supabase.co/wrong',
+    'https://ahyyknfjsielnqyoxqgh.supabase.co/?key=private', 'https://ahyyknfjsielnqyoxqgh.supabase.co/#fragment',
     'https://name:private@project.supabase.co']) {
     const ctx = setup({ url });
     assert.equal((await ctx.invoke()).statusCode, 500);

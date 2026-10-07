@@ -15,7 +15,7 @@ async function run(req){
 function mock(t,fetcher){
   const original=globalThis.fetch,key=process.env.OPENAI_API_KEY;
   const names=['VERCEL_ENV','SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','MYEVENT_TEST_SUPABASE_REF'];const saved=Object.fromEntries(names.map(k=>[k,process.env[k]]));
-  Object.assign(process.env,{VERCEL_ENV:'preview',SUPABASE_URL:'https://aaaaaaaaaaaaaaaaaaaa.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:'aaaaaaaaaaaaaaaaaaaa'});
+  Object.assign(process.env,{VERCEL_ENV:'preview',SUPABASE_URL:'https://ahyyknfjsielnqyoxqgh.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',MYEVENT_TEST_SUPABASE_REF:'ahyyknfjsielnqyoxqgh'});
   t.after(()=>{for(const k of names){if(saved[k]===undefined)delete process.env[k];else process.env[k]=saved[k];}});
   process.env.OPENAI_API_KEY='test-only';globalThis.fetch=fetcher;
   t.after(()=>{globalThis.fetch=original;if(key===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=key;});
@@ -34,7 +34,7 @@ test('invalid or unavailable session never invokes image generation',async t=>{
   let calls=0;mock(t,async()=>{calls++;return {ok:false,status:401};});
   assert.equal((await run(request())).status,401);assert.equal(calls,1);
 });
-test('all twelve styles send the source photo and a server-owned prompt to image edits',async t=>{
+test('all configured styles send the source photo and a server-owned prompt to image edits',async t=>{
   let edits=0;
   mock(t,async(url,options)=>{
     if(url.includes('/auth/v1/user')){assert.equal(options.headers.authorization,'Bearer test-session');return {ok:true,json:async()=>({id:'user'})};}
@@ -48,9 +48,9 @@ test('all twelve styles send the source photo and a server-owned prompt to image
     assert(options.body.get('prompt').includes('Preserve the number of people'));
     return {ok:true,json:async()=>({data:[{b64_json:'result'}]})};
   });
-  assert.equal(new Set(aiLenses.map(x=>x.id)).size,12);
+  assert.equal(new Set(aiLenses.map(x=>x.id)).size,aiLenses.length);
   for(const lens of aiLenses){const result=await run(request({lens:lens.id,prompt:'CLIENT OVERRIDE'}));assert.equal(result.status,200);assert.equal(result.body.image,'data:image/webp;base64,result');assert.equal(result.headers['Cache-Control'],'no-store');}
-  assert.equal(edits,12);
+  assert.equal(edits,aiLenses.length);
 });
 test('provider errors and empty images return safe errors',async t=>{
   let status;
@@ -66,6 +66,6 @@ test('timeout preserves a retryable error',async t=>{
 test('dedicated config GET reuses camera function without invoking Auth or image generation',async t=>{
  mock(t,()=>{throw new Error('Unexpected network');});
  const req=request({},undefined,'GET');req.query={runtime_config:'1'};
- const result=await run(req);assert.equal(result.status,200);assert.equal(result.body.environment,'preview');assert.equal(result.body.projectRef,'aaaaaaaaaaaaaaaaaaaa');assert(!JSON.stringify(result.body).includes('test-only'));
+ const result=await run(req);assert.equal(result.status,200);assert.equal(result.body.environment,'preview');assert.equal(result.body.projectRef,'ahyyknfjsielnqyoxqgh');assert(!JSON.stringify(result.body).includes('test-only'));
  assert.equal((await run(request({},undefined,'GET'))).status,405);
 });

@@ -305,7 +305,6 @@ const ready=setInterval(()=>{
 const profile=$('profileSettingsCard');
 if(profile)new MutationObserver(()=>{if(profile.classList.contains('profileSettingsVisible'))check();}).observe(profile,{attributes:true,attributeFilter:['class']});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
+$('myeventAdminUserDetailClose')?.addEventListener('click',()=>{const box=$('myeventAdminUserDetail');if(box)box.hidden=true;});
 window.addEventListener('pageshow',()=>check());
 })();
-
-$('myeventAdminUserDetailClose')?.addEventListener('click',()=>{const box=$('myeventAdminUserDetail');if(box)box.hidden=true;});

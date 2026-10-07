@@ -34,12 +34,12 @@
       finally { if(epoch===this.epoch){this.refreshing=false;if(this.refreshAgain){this.refreshAgain=false;this.refresh();}} }
     }
     async act(action,data={}) {
-      await this.rpc('game_action',{target_room:this.roomId,action,data:{revision:this.state?.room.revision,...data}});
+      await this.rpc(this.endpoint('action'),{target_room:this.roomId,action,data:{revision:this.state?.room.revision,...data}});
       await this.refresh();
     }
     async create(options,target_event=null) { const id=await this.rpc(this.endpoint('create'),{options,target_event});await this.connect(id); }
     async join(code) { const id=await this.rpc(this.endpoint('join'),{invitation_code:code});await this.connect(id);window.myeventInvitations?.clear('game'); }
-    async leave() { await this.rpc('game_action',{target_room:this.roomId,action:'leave'});this.disconnect(); }
+    async leave() { await this.rpc(this.endpoint('action'),{target_room:this.roomId,action:'leave'});this.disconnect(); }
     disconnect() {
       this.epoch++; clearInterval(this.poll);clearInterval(this.pulse);
       if(this.channel)this.context().sb?.removeChannel(this.channel);

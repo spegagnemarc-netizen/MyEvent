@@ -3,7 +3,9 @@ const {JSDOM}=createRequire(import.meta.url)('jsdom');
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-const section=html.match(/<section id="myeventAdminPanel"[\s\S]*?<\/section>/)?.[0];assert.ok(section);
+// V3 contains nested sections: parse the complete dialog instead of stopping at its first child.
+const sourceDom=new JSDOM(html),section=sourceDom.window.document.getElementById('myeventAdminPanel')?.outerHTML;
+sourceDom.window.close();assert.ok(section);
 const dom=new JSDOM('<!doctype html><html><body><div id="profileSettingsCard"><button id="myeventAdminEntry" hidden></button></div>'+section+'</body></html>',{runScripts:'outside-only',url:'https://preview.example.test/'});
 const {window}=dom;const doc=window.document;window.HTMLElement.prototype.scrollIntoView=function(){};
 const wait=ms=>new Promise(r=>setTimeout(r,ms));const click=selector=>doc.querySelector(selector).click();
@@ -22,6 +24,8 @@ window.sb={auth:{getUser:async()=>({data:{user:{id:currentId}}}),onAuthStateChan
  }};
 window.eval(await readFile(new URL('../js/admin-runtime.js',import.meta.url),'utf8'));
 await wait(500);assert.equal(doc.getElementById('myeventAdminEntry').hidden,false);
+const userDetail=doc.getElementById('myeventAdminUserDetail');userDetail.hidden=false;
+click('#myeventAdminUserDetailClose');assert.equal(userDetail.hidden,true);
 click('#myeventAdminEntry');await wait(30);assert.equal(doc.getElementById('myeventAdminPanel').hidden,false);
 assert.match(doc.getElementById('myeventAdminGate').textContent,/verrouillées/);
 for(const tab of ['content','users','events','marketplace','partners','settings']){click('[data-admin-tab='+tab+']');await wait(20);assert.equal(doc.querySelector('[data-admin-tab='+tab+']').getAttribute('aria-current'),'page');assert.equal(doc.querySelector('[data-admin-view='+tab+']').hidden,false);}
