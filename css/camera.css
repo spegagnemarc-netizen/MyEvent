@@ -137,3 +137,7 @@
 #myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip small{font-size:10px;font-weight:800;color:#fff;white-space:nowrap;text-shadow:0 1px 4px #000}
 #myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip.active .thumb{border:3px solid #fff;box-shadow:0 0 0 2px rgba(255,106,52,.78)}
 #myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip.active{transform:translateY(-3px)}
+
+/* Selfie flash fallback for browsers that do not expose the hardware torch. */
+#myeventCameraModal.cameraScreenFlashFire:after{content:'';position:fixed;inset:0;z-index:999;background:#fff;pointer-events:none;animation:cameraScreenFlash .25s ease-out forwards}
+@keyframes cameraScreenFlash{0%,55%{opacity:1}100%{opacity:0}}
