@@ -403,7 +403,7 @@
     }catch(e){$('storyCreateStatus').textContent='Musique : '+e.message;}
   }
   async function publishStory(file) {
-    const {sb,user}=context(); if(!sb || !user || !file) return;
+    const {sb,user}=context(); if(!sb || !user) throw new Error('Connecte-toi pour publier ta Story.'); if(!file) throw new Error('Choisis une photo ou une vidéo.');
     if(!/^(image\/(jpeg|png|webp)|video\/(mp4|quicktime|webm))$/.test(file.type)||file.size>50*1024*1024)
       throw new Error('Photo ou vidéo non prise en charge (50 Mo maximum).');
     const extension=({ 'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'})[file.type];
@@ -415,7 +415,7 @@
     await loadStories();
   }
   function setPendingStoryFile(file){
-    pendingStoryFile=file||null;if(pendingStoryPreviewUrl){URL.revokeObjectURL(pendingStoryPreviewUrl);pendingStoryPreviewUrl='';}
+    $('storyMediaPreview')?.querySelector('video')?.pause();pendingStoryFile=file||null;if(pendingStoryPreviewUrl){URL.revokeObjectURL(pendingStoryPreviewUrl);pendingStoryPreviewUrl='';}
     const host=$('storyMediaPreview');if(!host)return;host.replaceChildren();host.hidden=!file;$('storyPublish').hidden=!file;
     if(!file)return;pendingStoryPreviewUrl=URL.createObjectURL(file);const media=document.createElement(file.type.startsWith('video/')?'video':'img');media.src=pendingStoryPreviewUrl;media.alt='Aperçu de la Story';if(media.tagName==='VIDEO'){media.controls=true;media.playsInline=true;}host.append(media);
   }
@@ -439,13 +439,18 @@
     $('storyUseCamera').onclick=()=>{storyMode=true;sheet.hidden=true; $('socialBottomCreate')?.click();};
     $('storyFile').onchange=e=>{const file=e.target.files?.[0];if(!file)return;setPendingStoryFile(file);$('storyCreateStatus').textContent='Photo/vidéo prête. Ajoute ou modifie la musique puis publie.';e.target.value='';};
     $('socialCreateStory')?.addEventListener('click',createStory);
-    // Capture phase routes the existing camera's Publish button to Story while in Story mode.
+    window.myeventPrepareCameraStory=async function(file,cameraMusic){
+      if(!file)throw new Error('Aucun média prêt.');
+      createStory();setPendingStoryFile(file);
+      if(cameraMusic?.track){await selectStoryMusic(cameraMusic.track);storyMusicStart=Math.max(0,Number(cameraMusic.start_seconds)||0);storyMusicDuration=[15,30].includes(Number(cameraMusic.duration_seconds))?Number(cameraMusic.duration_seconds):15;$('storyMusicStart').value=String(storyMusicStart);$('storyMusicDuration').value=String(storyMusicDuration);$('storyMusicExcerptValue').textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';}
+      storyMode=false;sheet.hidden=false;$('storyCreateStatus').textContent='Média prêt. Vérifie la légende et la musique, puis confirme « Publier la Story ».';
+    };
+    // Story entry retains its original explicit publication step, for photos and videos.
     $('cameraPublishBtn')?.addEventListener('click',async e=>{
-      if(!storyMode)return; e.stopImmediatePropagation(); e.preventDefault();
-      const src=$('myeventCapturedImage')?.src; if(!src?.startsWith('data:image/'))return;
-      const button=$('cameraPublishBtn'); button.disabled=true;
-      try {setPendingStoryFile(new File([await(await fetch(src)).blob()],'story.jpg',{type:'image/jpeg'}));const cameraMusic=window.MyEventCameraMusicSelection;if(cameraMusic?.track){await selectStoryMusic(cameraMusic.track);storyMusicStart=Math.max(0,Number(cameraMusic.start_seconds)||0);storyMusicDuration=[15,30].includes(Number(cameraMusic.duration_seconds))?Number(cameraMusic.duration_seconds):15;const start=$('storyMusicStart'),duration=$('storyMusicDuration'),value=$('storyMusicExcerptValue');if(start)start.value=String(storyMusicStart);if(duration)duration.value=String(storyMusicDuration);if(value)value.textContent='Début '+storyMusicStart+' s · '+storyMusicDuration+' s';}storyMode=false;$('cameraCloseBtn')?.click();sheet.hidden=false;$('storyCreateStatus').textContent=cameraMusic?.track?'Photo prête avec musique. Vérifie puis publie.':'Photo prête. Ajoute ou modifie la musique puis publie.';
-      } catch(err) {alert('Story impossible : '+err.message);} finally {button.disabled=false;}
+      if(!storyMode)return;e.stopImmediatePropagation();e.preventDefault();
+      const button=$('cameraPublishBtn');button.disabled=true;
+      try{const file=await $('myeventCameraModal')?.cameraGetMediaFile?.();if(!file)return;await window.myeventPrepareCameraStory(file,window.MyEventCameraMusicSelection);$('cameraCloseBtn')?.click();}
+      catch(err){alert('Story impossible : '+err.message);}finally{button.disabled=false;}
     },true);
     $('myeventCameraModal')?.addEventListener('camera-closed',()=>{storyMode=false;});
   }

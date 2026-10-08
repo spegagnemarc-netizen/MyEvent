@@ -13,7 +13,7 @@
     const settings=document.createElement('details');
     settings.className='cameraGlassSettings';
     settings.innerHTML='<summary aria-label="Réglages caméra">⚙</summary><label for="cameraControlOpacity">Transparence des boutons <output id="cameraControlOpacityValue">35 %</output></label><input id="cameraControlOpacity" type="range" min="15" max="70" step="1" value="35" aria-describedby="cameraControlOpacityValue">';
-    right.appendChild(settings);
+    right.appendChild(settings);modal.cameraSettingsElement=settings;
     const opacityInput=settings.querySelector('input'), opacityValue=settings.querySelector('output');
     const opacityKey='myeventCameraControlOpacity';
     function applyOpacity(value){
@@ -36,11 +36,14 @@
     retake.addEventListener('click',()=>modal.dispatchEvent(new Event('camera-retake')));
     sheet.appendChild(retake);
 
-    // Tier switch: visual test now; later bind to the real subscription flag.
-    const tier=document.createElement('div');
-    tier.className='cameraTierSwitch';
-    tier.innerHTML='<button type="button" data-tier="free" class="active">GRATUIT</button><button type="button" data-tier="premium">♛ PREMIUM</button>';
+    // Informational tiers: selecting a badge never grants a subscription.
+    const tier=document.createElement('div');tier.className='cameraTierSwitch';
+    tier.innerHTML='<span>GRATUIT · PHOTO & VIDÉO</span>';
     sheet.querySelector('.cameraProTop').appendChild(tier);
+    const decorations=window.createCameraAnnotations(modal);
+    modal.cameraRenderDecorations=decorations.render;
+    modal.cameraRenderStickers=decorations.panel;
+    const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.id='cameraSettingsBtn';settingsButton.className='cameraProIcon';settingsButton.textContent='⚙';settingsButton.setAttribute('aria-label','Réglages caméra');sheet.querySelector('.cameraProTopRight').append(settingsButton);
 
     const strip=document.createElement('div');
     strip.className='cameraFilterStrip cameraFilterFilmstrip';
@@ -59,10 +62,10 @@
     let selectedFilter='original';
     const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
     let beautyAmount=0;
-    modal.cameraRenderPhoto=function(source){
+    modal.cameraRenderPhoto=function(source,filter=selectedFilter){
       const output=document.createElement('canvas');output.width=source.width;output.height=source.height;
       const context=output.getContext('2d');context.drawImage(source,0,0);
-      const recipe=[...recipes[selectedFilter]];
+      const recipe=[...(recipes[filter]||recipes.original)];
       if(retouch.brightness!==100)recipe.push(['brightness',retouch.brightness/100]);
       if(retouch.contrast!==100)recipe.push(['contrast',retouch.contrast/100]);
       if(retouch.saturate!==100)recipe.push(['saturate',retouch.saturate/100]);
@@ -93,13 +96,44 @@
       }
       context.putImageData(pixels,0,0);return output;
     };
+    modal.cameraRefreshFilterThumbs=function(){
+      const raw=modal.cameraGetPhotoSource?.();
+      const source=document.createElement('canvas');
+      if(raw){const scale=Math.min(1,160/Math.max(raw.width,raw.height));source.width=Math.max(1,Math.round(raw.width*scale));source.height=Math.max(1,Math.round(raw.height*scale));source.getContext('2d').drawImage(raw,0,0,source.width,source.height);}
+      else if(modal.querySelector('#myeventCameraVideo')?.readyState>=2)modal.cameraDrawFrame?.(source,160);
+      else return;
+      if(!source.width||!source.height)return;
+      strip.querySelectorAll('.cameraFilterChip').forEach(button=>{const old=button.querySelector('.thumb'),img=document.createElement('img');img.className='thumb';img.alt='';img.src=modal.cameraRenderPhoto(source,button.dataset.filter).toDataURL('image/jpeg',.8);old?.replaceWith(img);});
+    };
     // Keep the filter picker lightweight and reliable on iPhone Safari.
-    // Live video-to-canvas thumbnails are intentionally avoided here because Safari can return blank frames.
+    // Thumbnails are prepared only on panel opening, after a decoded frame is available.
     function setFilter(name){
       selectedFilter=Object.hasOwn(recipes,name)?name:'original';
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>{const active=b.dataset.filter===selectedFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
       const video=modal.querySelector('#myeventCameraVideo'),img=modal.querySelector('#myeventCapturedImage');
-      if(video){const live=[...recipes[selectedFilter]];if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);if(beautyAmount>0){const t=beautyAmount/100;live.push(['brightness',1+.055*t],['contrast',1-.025*t],['saturate',1-.045*t]);}video.style.filter=live.filter(([k])=>k!=='warmth').map(([kind,value])=>kind+'('+value+')').join(' ')||'none';}
+      if(video&&modal.dataset.mediaKind!=='video'&&modal.dataset.captureMode!=='video'){
+        const live=[...recipes[selectedFilter]];
+        if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);
+        if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);
+        if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);
+        if(retouch.warmth!==0)live.push(['warmth',retouch.warmth]);
+        if(beautyAmount>0){const t=beautyAmount/100;live.push(['brightness',1+.055*t],['contrast',1-.025*t],['saturate',1-.045*t],['warmth',3*t]);}
+        const ns='http://www.w3.org/2000/svg';
+        let svg=modal.querySelector('#cameraLiveFilterSVG');
+        if(!svg){svg=document.createElementNS(ns,'svg');svg.id='cameraLiveFilterSVG';svg.setAttribute('width','0');svg.setAttribute('height','0');svg.setAttribute('aria-hidden','true');svg.style.position='absolute';modal.append(svg);}
+        svg.replaceChildren();const filter=document.createElementNS(ns,'filter');filter.id='cameraLivePhotoFilter';filter.setAttribute('color-interpolation-filters','sRGB');svg.append(filter);
+        for(const [kind,amount] of live){
+          if(['brightness','contrast','warmth'].includes(kind)){
+            const step=document.createElementNS(ns,'feComponentTransfer');
+            for(const channel of ['R','G','B']){const fn=document.createElementNS(ns,'feFunc'+channel);fn.setAttribute('type','linear');fn.setAttribute('slope',kind==='warmth'?'1':String(amount));fn.setAttribute('intercept',String(kind==='contrast'?.5*(1-amount):kind==='warmth'?(channel==='R'?amount*.75/255:channel==='B'?-amount*.75/255:0):0));step.append(fn);}filter.append(step);
+          }else{
+            const step=document.createElementNS(ns,'feColorMatrix');
+            if(kind==='sepia'){const t=amount;step.setAttribute('type','matrix');step.setAttribute('values',[(1-t)+.393*t,.769*t,.189*t,0,0,.349*t,(1-t)+.686*t,.168*t,0,0,.272*t,.534*t,(1-t)+.131*t,0,0,0,0,0,1,0].join(' '));}
+            else{step.setAttribute('type','saturate');step.setAttribute('values',String(kind==='grayscale'?1-amount:amount));}filter.append(step);
+          }
+        }
+        video.style.filter=live.length?'url(#cameraLivePhotoFilter)':'none';
+      }
       if(img)img.style.filter='none'; // The preview file already contains the filter.
       modal.dispatchEvent(new CustomEvent('camera-filter-change',{detail:{filter:selectedFilter}}));
       strip.querySelector('.cameraFilterChip.active')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
@@ -159,12 +193,7 @@
     lensStrip.querySelectorAll('.cameraLens').forEach(button=>button.addEventListener('click',()=>selectLens(button)));
     modal.addEventListener('camera-closed',()=>{panelRequest++;const none=lensStrip.querySelector('.cameraLens[data-lens=""]');if(none){lensStrip.querySelectorAll('.cameraLens').forEach(x=>x.classList.toggle('active',x===none));}});
 
-    tier.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
-      const premium=btn.dataset.tier==='premium';
-      tier.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));
-      sheet.classList.toggle('cameraPremiumMode',premium);
-      // Gold is reserved for selected IA/Premium controls.
-    }));
+
 
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCameraV2); else initCameraV2();

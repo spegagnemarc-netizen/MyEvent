@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 (async()=>{
-const browser=await chromium.launch({headless:true,channel:'msedge'});const page=await browser.newPage({viewport:{width:390,height:844}});page.setDefaultTimeout(10000);
+const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}: {channel:'msedge'})});const page=await browser.newPage({viewport:{width:390,height:844}});page.setDefaultTimeout(10000);
 const root=path.resolve(__dirname,'..'),errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.route('**/*',async route=>{
  const u=new URL(route.request().url());if(u.hostname!=='myevent.test')return route.abort();
@@ -12,8 +12,8 @@ await page.route('**/*',async route=>{
 });
 await page.goto('http://myevent.test/');
 await page.evaluate(()=>{let el=document.getElementById('socialBottomNav');while(el){el.style.setProperty('display','block','important');el=el.parentElement;}window.myeventCameraContext=()=>({sb:{auth:{getSession:async()=>({data:{session:{access_token:'fake'}}})}}});});
-await page.addScriptTag({url:'/js/camera-capture2-final.js'});await page.addScriptTag({url:'/js/home-social-runtime.js'});
-await page.locator('#socialBottomCreate').click();await page.locator('#cameraAiSide').click();await page.locator('[data-ai-generate]').waitFor();assert(await page.locator('[data-ai-generate]').isDisabled());
+await page.addScriptTag({url:'/js/camera-annotations.js'});await page.addScriptTag({url:'/js/camera-capture2-final.js'});await page.addScriptTag({url:'/js/home-social-runtime.js'});
+await page.locator('#socialBottomCreate').evaluate(e=>e.click());await page.locator('#cameraPlusBtn').click();await page.getByRole('button',{name:'IA photo',exact:true}).click();await page.locator('[data-ai-generate]').waitFor();assert(await page.locator('[data-ai-generate]').isDisabled());
 const images=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=360;c.height=640;const x=c.getContext('2d');x.fillStyle='red';x.fillRect(0,0,360,640);const original=c.toDataURL('image/jpeg');x.fillStyle='blue';x.fillRect(0,0,360,640);return {original,result:c.toDataURL('image/webp')};});
 await page.locator('#cameraFileInput').setInputFiles({name:'photo.jpg',mimeType:'image/jpeg',buffer:Buffer.from(images.original.split(',')[1],'base64')});
 await page.waitForFunction(()=>document.getElementById('myeventCameraModal').dataset.cameraState==='preview');
