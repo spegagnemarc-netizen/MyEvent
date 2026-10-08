@@ -79,10 +79,10 @@ test('manual opens outings for same event, late read cannot reopen another event
   assert.ok(stopped);assert.deepEqual(opened,[['outings',true]]);assert.equal(c.event.id,'A');
   handler({preventDefault(){},stopPropagation(){}});c.event={id:'B'};resolveRead(null);await new Promise(r=>setImmediate(r));assert.equal(opened.length,1);
 });
-test('client search only calls Viator and retains affiliate URL; stale response discarded',async()=>{
+test('client aggregated search retains affiliate URL and discards stale responses',async()=>{
   const start=outings.indexOf('async function searchOutings(){');const end=outings.indexOf('\n(function(){',start);
-  const calls=[];let responseResolve;const c=vm.createContext({event:{id:'A'},outingSearchVersion:0,outingResultsData:[],getActivitySearchCenter:async()=>({lat:44.56,lon:6.08}),$:()=>({value:'5'}),fetch:async url=>{calls.push(url);return new Promise(r=>responseResolve=r)},renderOutingResults(){},loadSelectedOuting:async()=>{},msg(){}});
+  const calls=[];let responseResolve;const c=vm.createContext({AbortSignal,renderOutingResultsMap(){},event:{id:'A'},outingSearchVersion:0,outingResultsData:[],getActivitySearchCenter:async()=>({lat:44.56,lon:6.08}),$:()=>({value:'5'}),fetch:async url=>{calls.push(url);return new Promise(r=>responseResolve=r)},renderOutingResults(){},loadSelectedOuting:async()=>{},msg(){}});
   vm.runInContext(outings.slice(start,end),c);let pending=c.searchOutings();await new Promise(r=>setImmediate(r));responseResolve({ok:true,json:async()=>({results:[{...product,name:product.title,website:productUrl,lat:44.56,lon:6.08}]})});await pending;
-  assert.equal(calls.length,1);assert.match(calls[0],/^\/api\/search-places\?mode=viator&/);assert.equal(c.outingResultsData[0].website,productUrl);
+  assert.equal(calls.length,1);assert.match(calls[0],/^\/api\/search-places\?mode=outings&/);assert.equal(c.outingResultsData[0].website,productUrl);
   pending=c.searchOutings();await new Promise(r=>setImmediate(r));c.event={id:'B'};responseResolve({ok:true,json:async()=>({results:[]})});await pending;assert.equal(c.outingResultsData.length,1);
 });

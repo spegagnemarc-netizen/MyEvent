@@ -2471,7 +2471,9 @@ function cancelVoiceFromGesture(){
   setVoiceCancelHint(false);
 }
 
+let voiceStarting=false;
 async function toggleVoiceRecording(){
+  if(voiceStarting)return;
   if(!event||!user){alert('Connecte-toi et sélectionne un événement.');return}
   const btn=$('voiceBtn');
   if(mediaRecorder && mediaRecorder.state==='recording'){
@@ -2487,6 +2489,7 @@ async function toggleVoiceRecording(){
     return;
   }
   clearVoicePreview();
+  voiceStarting=true;const voiceEventId=event.id,voiceUserId=user.id;
   try{
     // Le navigateur/iOS mémorise l'autorisation au niveau du site. On ne redemande
     // pas inutilement une permission si elle est déjà accordée.
@@ -2498,7 +2501,15 @@ async function toggleVoiceRecording(){
         if(e?.message==='Accès au micro refusé dans les réglages du navigateur.')throw e;
       }
     }
-    voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    stopVoiceStream();
+    window.dispatchEvent(new Event('myevent-release-camera-microphone'));
+    try{voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});}
+    catch(error){
+      if(!['NotReadableError','AbortError'].includes(error.name))throw error;
+      await new Promise(resolve=>setTimeout(resolve,200));
+      voiceStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    }
+    if(event?.id!==voiceEventId||user?.id!==voiceUserId)throw Error('L’événement a changé. Réessaie dans la discussion choisie.');
     const mime=pickVoiceMime();
     mediaRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
     voiceChunks=[];
@@ -2525,7 +2536,7 @@ async function toggleVoiceRecording(){
     btn.classList.add('recording');
     btn.textContent='⏺️';
     const cancel=$('cancelRecordingBtn');if(cancel)cancel.classList.add('hidden');
-  }catch(e){stopVoiceStream();mediaRecorder=null;resetVoiceRecordingUi();alert('Micro inaccessible : '+(e.message||String(e)));}
+  }catch(e){stopVoiceStream();mediaRecorder=null;resetVoiceRecordingUi();alert('Micro inaccessible : '+(e.message||String(e)));}finally{voiceStarting=false;}
 }
 async function sendVoice(){
   if(!voiceBlob||!event||!user)return;
@@ -3693,7 +3704,7 @@ async function loadWeather(){
   const root=$('weatherContent');
   if(!root)return;
   if(!event){root.innerHTML='<p class="muted">Sélectionne un événement pour afficher la météo.</p>';return}
-  const place=(event.location||'').trim();
+  const weatherEvent={...event};const place=(weatherEvent.location||'').trim();
   if(!place){root.innerHTML='<p class="muted">Ajoute un lieu à l’événement pour obtenir la météo.</p>';return}
   root.innerHTML='<p class="muted">🌍 Recherche du lieu et des prévisions…</p>';
   try{
@@ -3716,17 +3727,16 @@ async function loadWeather(){
     }
     const rr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&forecast_days=16');
     if(!rr.ok)throw new Error('Prévisions indisponibles');
-    const d=await rr.json(),c=d.current||{},day=d.daily||{},code=c.weather_code??0,targetDate=event.event_date?new Date(event.event_date):null;
-    let idx=0;
-    if(targetDate&&Array.isArray(day.time)){
-      const td=targetDate.toLocaleDateString('en-CA',{timeZone:d.timezone||'UTC'});
-      const found=day.time.findIndex(x=>x===td);if(found>=0)idx=found;
-    }
+    const d=await rr.json(),day=d.daily||{},date=String(weatherEvent.event_date||'').slice(0,10);
+    if(event?.id!==weatherEvent.id)return;
+    const idx=Array.isArray(day.time)?day.time.indexOf(date):-1;
+    if(idx<0){root.textContent='Prévision indisponible pour la date de cet événement. Les prévisions couvrent au maximum 16 jours.';return;}
+    const code=day.weather_code?.[idx],targetDate=new Date(date+'T12:00:00');
     const tmin=day.temperature_2m_min?.[idx],tmax=day.temperature_2m_max?.[idx],pop=day.precipitation_probability_max?.[idx],wmax=day.wind_speed_10m_max?.[idx];
     const eventTxt=targetDate?' pour le '+targetDate.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):'';
-    const days=(day.time||[]).slice(0,7).map((date,i)=>'<div class="weatherDay"><b>'+weatherDateLabel(date)+'</b><span>'+(weatherIcons[day.weather_code?.[i]]||'🌤️')+'</span><span>'+Math.round(day.temperature_2m_max?.[i]??0)+'° / '+Math.round(day.temperature_2m_min?.[i]??0)+'°</span><span>🌧️ '+(day.precipitation_probability_max?.[i]??0)+'%</span></div>').join('');
+    const days=(day.time||[]).slice(idx,idx+7).map((date,offset)=>{const i=idx+offset;return '<div class="weatherDay"><b>'+weatherDateLabel(date)+'</b><span>'+(weatherIcons[day.weather_code?.[i]]||'🌤️')+'</span><span>'+Math.round(day.temperature_2m_max?.[i]??0)+'° / '+Math.round(day.temperature_2m_min?.[i]??0)+'°</span><span>🌧️ '+(day.precipitation_probability_max?.[i]??0)+'%</span></div>';}).join('');
     const locationLine=coords?'📍 '+placeLabel+(admin?', '+admin:'')+' · GPS '+lat.toFixed(5)+', '+lon.toFixed(5):'📍 '+placeLabel+(admin?', '+admin:'');
-    root.innerHTML='<div class="muted">'+locationLine+eventTxt+'</div><div class="weatherNow"><div class="weatherIcon">'+(weatherIcons[code]||'🌤️')+'</div><div><div class="weatherTemp">'+Math.round(c.temperature_2m??tmax??0)+'°C</div><div class="weatherMeta"><span>'+(weatherLabels[code]||'Conditions actuelles')+'</span><span>💨 '+Math.round(c.wind_speed_10m??wmax??0)+' km/h · 🌧️ '+Math.round((c.precipitation??0)*10)/10+' mm</span></div></div></div><div class="weatherHint muted">Prévision pour la date de l’événement : <b>'+Math.round(tmax??0)+'° / '+Math.round(tmin??0)+'°</b> · pluie '+(pop??0)+'% · vent jusqu’à '+Math.round(wmax??0)+' km/h</div><div class="weatherForecast">'+days+'</div>';
+    root.innerHTML='<div class="muted">'+esc(locationLine+eventTxt)+'</div><div class="weatherNow"><div class="weatherIcon">'+(weatherIcons[code]||'🌤️')+'</div><div><div class="weatherTemp">'+(tmax==null?'—':Math.round(tmax))+'°C maximum</div><div class="weatherMeta"><span>'+(weatherLabels[code]||'Prévisions de l’événement')+'</span><span>💨 '+Math.round(wmax)+' km/h · 🌧️ '+(pop??'—')+'%</span></div></div></div><div class="weatherHint muted">Prévision pour la date de l’événement : <b>'+Math.round(tmax??0)+'° / '+Math.round(tmin??0)+'°</b> · pluie '+(pop??0)+'% · vent jusqu’à '+Math.round(wmax??0)+' km/h</div><div class="weatherForecast">'+days+'</div>';
   }catch(e){root.innerHTML='<p class="muted">⚠️ '+(e.message||'Impossible de charger la météo.')+'</p>'}
 }
 

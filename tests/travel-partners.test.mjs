@@ -27,13 +27,14 @@ test('per-widget failure and authenticated recovery do not change another partne
  assert.equal(d.querySelector('#m58AccommodationExpediaSlot .myeventEgStatus').hidden,false);assert.equal(d.querySelectorAll('.myeventEgRetry:not([hidden])').length,3);dom.window.close();
 });
 test('existing Transport and Omio, manual accommodation and other scripts remain unchanged',()=>{
- const base=execFileSync('git',['show','d876c6581c0d40d10ec697191916c91395a99b1a:index.html'],{encoding:'utf8'});
+ const base=execFileSync('git',['show','7d487ed8c4f0898c69f908d01f80b3b8351f26ca:index.html'],{encoding:'utf8'});
  const oldDom=new JSDOM(base),newDom=new JSDOM(html);
  for(const id of ['myeventOmioSection','m58TransportForm','m58TransportSearchBox','m58AccommodationForm'])assert.equal(newDom.window.document.getElementById(id).outerHTML,oldDom.window.document.getElementById(id).outerHTML,id);
  // Backend, configuration and migrations evolved after the Hotels-only commit.
  // Existing routes and their method/security behavior have dedicated travel-routing tests.
- const searchBase=execFileSync('git',['show','dd0d50241a4ec05ea760c92e153cde012af71c0d:api/search-places.js'],{encoding:'utf8'});
- // Explorer needs explicit accuracy metadata. Existing search/affiliate behavior is unchanged.
- assert.equal(readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8').replace(',locationApproximate:!!location.approximate','').replaceAll('\r\n','\n'),searchBase.replaceAll('\r\n','\n'));
+ const searchBase=execFileSync('git',['show','7d487ed8c4f0898c69f908d01f80b3b8351f26ca:api/search-places.js'],{encoding:'utf8'});
+ // Geoapify and aggregated routes are new; the Viator implementation must remain intact.
+ const viatorPart=s=>s.slice(s.indexOf('let viatorDestinationCache'),s.indexOf('module.exports =')).replaceAll('\r\n','\n');
+ assert.equal(viatorPart(readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8')),viatorPart(searchBase));
  oldDom.window.close();newDom.window.close();
 });

@@ -634,41 +634,36 @@
     }
     openPanel('ai',source);
   });
-  let pendingCameraEventPhoto='';
   function openCameraEventDestination(){
-    if(!myeventCapturedDataUrl){
-      cameraPlaceholder.textContent='Prends ou importe une photo avant de l’ajouter à un événement.';
-      cameraPlaceholder.style.display='grid';return;
-    }
-    pendingCameraEventPhoto=myeventCapturedDataUrl;
-    closeMyEventCamera();
-    const events=$s('eventsCard');
-    if(events){events.open=true;events.scrollIntoView({behavior:'smooth',block:'start'});}
-    const list=$s('eventList');
-    list?.setAttribute('data-camera-photo-pending','true');
+    if(document.querySelector('.myeventCameraEventDialog'))return;
+    if(!myeventCapturedDataUrl){alert('Prends ou importe une photo avant de l’ajouter à un événement.');return;}
+    const photo=myeventCapturedDataUrl,dialog=document.createElement('dialog');dialog.className='myeventCameraEventDialog';
+    const title=document.createElement('h3');title.textContent='Ajouter la photo à un événement';
+    const select=document.createElement('select');select.setAttribute('aria-label','Événement');select.append(new Option('Choisir un événement',''));
+    for(const card of document.querySelectorAll('#eventList .eventCard[data-event-id]'))select.append(new Option(card.querySelector('.eventCardTopInfo b')?.textContent||'Événement',card.dataset.eventId));
+    const status=document.createElement('p');status.setAttribute('role','status');
+    const add=document.createElement('button');add.type='button';add.textContent='Ajouter à cet événement';add.disabled=true;
+    const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Annuler';
+    select.onchange=()=>{add.disabled=!select.value;};cancel.onclick=()=>dialog.close();
+    dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+    dialog.addEventListener('cancel',e=>{if(select.disabled)e.preventDefault();});
+    add.onclick=async()=>{
+      const id=select.value;if(!id)return;
+      add.disabled=true;select.disabled=true;cancel.disabled=true;status.textContent='Enregistrement de la photo…';
+      try{
+        if(typeof window.myeventAttachCameraPhoto!=='function')throw Error('Enregistrement des souvenirs indisponible.');
+        await window.myeventAttachCameraPhoto(id,photo);
+        closeMyEventCamera();dialog.close();
+        globalThis.dispatchEvent(new CustomEvent('myevent-camera-photo-attached',{detail:{eventId:id}}));
+        alert('Photo ajoutée aux souvenirs de « '+select.selectedOptions[0].textContent+' » ✓');
+        if(typeof selectEvent==='function')await selectEvent(id).catch(()=>{});
+      }catch(error){status.textContent='Impossible d’ajouter la photo : '+(error?.message||String(error));add.disabled=false;select.disabled=false;cancel.disabled=false;}
+    };
+    dialog.append(title,select,status,add,cancel);document.body.append(dialog);dialog.showModal();
+    if(select.options.length===1)status.textContent='Aucun événement disponible. Crée ou rejoins un événement puis réessaie.';
   }
-  $s('eventList')?.addEventListener('click',async ev=>{
-    if(!pendingCameraEventPhoto)return;
-    const card=ev.target.closest('.eventCard');
-    if(!card||ev.target.closest('.eventCardMenu,.eventCardSettings'))return;
-    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
-    const id=card.dataset.eventId;if(!id)return;
-    const photo=pendingCameraEventPhoto;
-    card.setAttribute('aria-busy','true');
-    try{
-      if(typeof window.myeventAttachCameraPhoto!=='function')throw new Error('Enregistrement des souvenirs indisponible.');
-      await window.myeventAttachCameraPhoto(id,photo);
-      pendingCameraEventPhoto='';$s('eventList')?.removeAttribute('data-camera-photo-pending');
-      card.removeAttribute('aria-busy');
-      const name=card.querySelector('.eventCardTopInfo b')?.textContent||'cet événement';
-      globalThis.dispatchEvent(new CustomEvent('myevent-camera-photo-attached',{detail:{eventId:id}}));
-      alert('Photo ajoutée aux souvenirs de « '+name+' » ✓');
-    }catch(error){
-      card.removeAttribute('aria-busy');
-      alert('Impossible d’ajouter la photo : '+(error?.message||String(error)));
-    }
-  },true);
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
+  window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
@@ -1205,13 +1200,13 @@
     const current='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m';
     const daily='weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset';
     const hourly='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m';
-    const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current='+current+'&daily='+daily+'&hourly='+hourly+'&forecast_days=7&timezone=auto';
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&current='+current+'&daily='+daily+'&hourly='+hourly+'&forecast_days=16&timezone=auto';
     const r=await fetch(u); if(!r.ok)throw new Error('Météo indisponible');
     return r.json();
   }
-  function renderDetailedWeather(body,d,label,mode){
+  function renderDetailedWeather(body,d,label,mode,dayIndex=0){
     const cur=d.current||{}, daily=d.daily||{}, hourly=d.hourly||{};
-    const days=(daily.time||[]).slice(0,7).map((t,i)=>{
+    const days=(daily.time||[]).map((t,i)=>{
       const date=new Date(t+'T12:00:00');
       const weekend=[0,6].includes(date.getDay());
       return '<button type="button" class="myeventWeatherDay" data-weather-day="'+i+'"><b>'+dayName(date)+'</b><span>'+(wx[daily.weather_code?.[i]]||'🌤️')+'</span><small>'+weatherValue(daily.temperature_2m_min?.[i],'°')+' / '+weatherValue(daily.temperature_2m_max?.[i],'°')+'</small><small>🌧️ '+weatherValue(daily.precipitation_probability_max?.[i],'%')+(weekend?' · week-end':'')+'</small></button>';
@@ -1227,9 +1222,12 @@
     body.querySelectorAll('[data-weather-day]').forEach(b=>b.addEventListener('click',()=>showDay(Number(b.dataset.weatherDay))));
     body.querySelector('[data-weather-mode="gps"]')?.addEventListener('click',()=>loadWeatherMode('gps',body));
     body.querySelector('[data-weather-mode="event"]')?.addEventListener('click',()=>loadWeatherMode('event',body));
-    showDay(0);
+    showDay(dayIndex);
+    if(mode==='event'){const title=document.createElement('p');title.textContent=label;body.querySelector('.myeventWeatherNow')?.replaceWith(title);}
   }
+  let weatherLoadRun=0;
   async function loadWeatherMode(mode,body){
+    const run=++weatherLoadRun;const weatherEvent=mode==='event'&&typeof event!=='undefined'&&event?{...event}:null;
     body.innerHTML='<div class="myeventWeatherLoading">🌤️ Chargement de la météo…</div>';
     try{
       let lat,lon,label;
@@ -1242,8 +1240,18 @@
         const pos=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:300000}));
         lat=pos.coords.latitude;lon=pos.coords.longitude;label='📍 Météo de ta position GPS';
       }
-      renderDetailedWeather(body,await fetchDetailedWeather(lat,lon),label,mode);
+      const data=await fetchDetailedWeather(lat,lon);let dayIndex=0;
+      if(mode==='event'){
+        if(typeof event==='undefined'||event?.id!==weatherEvent?.id||run!==weatherLoadRun)return;
+        const date=String(weatherEvent?.event_date||'').slice(0,10);
+        dayIndex=data.daily?.time?.indexOf(date)??-1;
+        if(dayIndex<0)throw Error('Prévision indisponible pour la date de cet événement. Les prévisions couvrent au maximum 16 jours.');
+        label+=' · '+date;
+      }
+      if(run!==weatherLoadRun)return;
+      renderDetailedWeather(body,data,label,mode,dayIndex);
     }catch(e){
+      if(run!==weatherLoadRun)return;
       const msg=mode==='gps'&&e?.code===1?'Autorise la localisation pour afficher ta météo.':(e?.message||'Impossible de charger la météo pour le moment.');
       body.innerHTML='<div class="myeventWeatherMode"><button type="button" data-weather-mode="gps">📍 Ma position</button><button type="button" data-weather-mode="event">📅 Mon événement</button></div><div class="myeventWeatherLoading">⚠️ '+msg+'</div>';
       body.querySelector('[data-weather-mode="gps"]')?.addEventListener('click',()=>loadWeatherMode('gps',body));

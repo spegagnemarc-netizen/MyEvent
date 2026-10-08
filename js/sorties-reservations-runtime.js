@@ -233,30 +233,15 @@ function renderOutingResults(){
   if(status)status.textContent=arr.length+' résultat'+(arr.length>1?'s':'');
 
   el.innerHTML=arr.slice(0,30).map(p=>{
-    const price=Number.isFinite(Number(p.price))&&Number(p.price)>0?eur(Number(p.price)):'Tarif à vérifier';
-    const isViator=p.source==='viator';
-    const cat=outingCategory(p.type);
-    const typeLabel=cat==='restaurant'?'Restaurant':cat==='culture'?'Culture':cat==='nature'?'Nature':'Activité';
     const selected=isSelectedOuting(p);
 
     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'">'+
-      (p.image?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:9px">':'')+
-      '<div class="outingCardTop"><div class="outingName">'+
-        (locationIcons[p.type]||'🎯')+' '+esc(p.name)+
-        (selected?' <span class="outingSelectedBadge">⭐ Sélectionnée</span>':'')+
-      '</div><div class="outingDistance">'+(p.distance!=null?Number(p.distance).toFixed(1)+' km':'')+'</div></div>'+
-      '<div class="outingMeta"><span class="outingChip">'+typeLabel+'</span>'+
-        '<span class="outingChip">💶 '+price+(Number.isFinite(Number(p.price))&&Number(p.price)>0?' / pers.':'')+'</span>'+
-        '<span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div>'+
-      (isViator&&p.description?'<p class="muted">'+esc(p.description)+'</p>':'')+
-      '<div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div>'+
-      (isViator&&p.rating?'<div class="muted" style="margin-top:5px">⭐ '+esc(Number(p.rating).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1}))+(p.reviewCount?' · '+esc(Number(p.reviewCount).toLocaleString('fr-FR'))+' avis':'')+' · Viator</div>':'')+
+      window.MyEventPlaceCard.content(p)+
       '<div class="outingActionsRow">'+
         '<button type="button" '+(selected?'class="secondary"':'')+' data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">'+
           (selected?'🔄 Changer de sortie':'⭐ Ajouter à l’événement')+
         '</button>'+
         (p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+
-        (p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">'+(isViator?'🎟️ Réserver sur Viator':'↗️ Site')+'</a>':'')+
       '</div></div>';
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';
 }
@@ -492,10 +477,10 @@ async function searchOutings(){
 
   const km=Number($('outingRadius')?.value||5);
   const maxBudget=Number($('outingMaxBudget')?.value||0)||0;
-  const viatorApi='/api/search-places?mode=viator&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&count=60'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
+  const viatorApi='/api/search-places?mode=outings&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&count=60'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
 
   try{
-    const response=await fetch(viatorApi,{headers:{Accept:'application/json'}});
+    const response=await fetch(viatorApi,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(55000)});
     const data=await response.json().catch(()=>null);
 
     if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
@@ -516,6 +501,7 @@ async function searchOutings(){
 
     renderOutingResults();
     renderOutingResultsMap(geo);
+    if(data.warnings?.length)msg('outingMsg',data.warnings.join(' '),'muted');
 
     if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
     await loadSelectedOuting();
@@ -1211,7 +1197,7 @@ async function generateAiOutingPlan(){
   try{
     const geo=await getActivitySearchCenter();
     if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.');
-    const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
+    const r=await fetch('/api/search-places?mode=outings&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(55000)});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
     const candidates=(d.results||[]).map((p,i)=>({
@@ -1222,12 +1208,13 @@ async function generateAiOutingPlan(){
       lat:Number(p.lat),lon:Number(p.lon),
       price_per_person:Number.isFinite(Number(p.price))&&Number(p.price)>0?Number(p.price):null,
       price_is_estimate:false,
-      website:p.website||null,phone:p.phone||null,
+      website:p.website||null,phone:p.phone||null,source:p.source||null,
       distance_km:Number.isFinite(Number(p.distance))?Number(p.distance):null
     })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).slice(0,120);
     const restaurants=candidates.filter(x=>x.type==='restaurant');
     const activities=candidates.filter(x=>x.type!=='restaurant');
-    if(!restaurants.length||!activities.length)throw new Error('Je ne trouve pas assez de lieux pour composer restaurant + activité dans ce rayon. Essaie un rayon plus large.');
+    if(candidates.length<2)throw new Error('Pas assez de lieux disponibles pour composer un parcours. Essaie un rayon plus large.');
+    if(d.warnings?.length)msg('aiPlanMsg',d.warnings.join(' ')+' Le parcours utilise les lieux disponibles.','muted');
     $('aiPlanStatus').textContent='🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
     const token=(await sb.auth.getSession()).data?.session?.access_token||'';
     const ar=await fetch('/api/generate-outing-plan',{
@@ -1238,7 +1225,7 @@ async function generateAiOutingPlan(){
         event_date:event.event_date||null,
         event_location:event.location||'',
         people,budget_per_person:budget||null,
-        requested_steps:steps,
+        requested_steps:Math.min(steps,candidates.length),
         start_time:startTime||null,
         meal_type:mealType,
         meal_time:mealTime||null,

@@ -66,6 +66,7 @@ export default async function handler(req, res) {
         id: String(c.id || `c${i}`),
         name: String(c.name || '').slice(0, 180),
         type: String(c.type || 'activity'),
+        source: ['geoapify','viator','getyourguide','openstreetmap'].includes(c.source)?c.source:null,
         address: String(c.address || '').slice(0, 240),
         lat: Number(c.lat),
         lon: Number(c.lon),
@@ -130,9 +131,9 @@ ${request || 'sortie conviviale et équilibrée'}
 
 OBJECTIF :
 
-- Combiner obligatoirement un restaurant ET une ou plusieurs activités.
+- Combiner restaurant et activités lorsque les deux types sont disponibles. Sinon produire un parcours partiel à partir des seuls types disponibles, en signalant les éléments manquants.
 - Produire entre 2 et 5 étapes.
-- Une étape doit être un restaurant.
+- Inclure un restaurant uniquement si un candidat restaurant est fourni.
 - Les autres étapes doivent être des activités, culture ou nature.
 - Éviter les trajets absurdes.
 - Privilégier les lieux proches les uns des autres.
@@ -392,7 +393,7 @@ ${JSON.stringify(safeCandidates)}
                         source:
                           isEstimate
                             ? 'ai_estimate'
-                            : 'openstreetmap'
+                            : candidate.source
                       };
                     })
                     .filter(Boolean)
@@ -410,8 +411,8 @@ ${JSON.stringify(safeCandidates)}
 
             if (
               steps.length !== requestedSteps ||
-              !hasRestaurant ||
-              !hasActivity
+              (safeCandidates.some(c=>c.type==='restaurant')&&!hasRestaurant) ||
+              (safeCandidates.some(c=>c.type!=='restaurant')&&!hasActivity)
             ) {
               return null;
             }

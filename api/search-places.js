@@ -6,12 +6,13 @@ function send(res, status, body) {
   res.status(status);
   res.setHeader(
     'Cache-Control',
-    's-maxage=180, stale-while-revalidate=600'
+    status>=400?'no-store':'s-maxage=180, stale-while-revalidate=600'
   );
   return res.json(body);
 }
 
 function number(value) {
+  if(value===null||value===undefined||String(value).trim()==='')return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -321,7 +322,7 @@ function buildPhotonUrl(
 }
 
 
-async function fetchNearbyOverpass(lat,lon,radius){
+async function fetchNearbyOverpass(lat,lon,radius,timeoutMs=22000){
   const meters=Math.round(radius*1000);
   const clauses=[
     'nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|cinema|theatre|arts_centre|bowling_alley|community_centre)$"]',
@@ -330,7 +331,7 @@ async function fetchNearbyOverpass(lat,lon,radius){
     'nwr["sport"]'
   ];
   const query='[out:json][timeout:18];('+clauses.map(x=>x+'(around:'+meters+','+lat+','+lon+');').join('')+');out center 350;';
-  const response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(22000)});
+  const response=await fetch('https://overpass.kumi.systems/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(timeoutMs)});
   if(!response.ok)throw new Error('Overpass HTTP '+response.status);
   const data=await response.json();
   return {features:(data.elements||[]).map(el=>{
@@ -631,6 +632,29 @@ module.exports =
         req.query.mode ||
         'nearby'
       ).toLowerCase();
+
+    if (mode === 'outings') {
+      const lat=number(req.query.lat),lon=number(req.query.lon),radius=number(req.query.radius)??5;
+      if(lat===null||lon===null||Math.abs(lat)>90||Math.abs(lon)>180||![5,20,50,100].includes(radius))return send(res,400,{error:'Coordonnées ou rayon invalide.'});
+      const {searchRestaurants}=require('../lib/geoapify-restaurants');
+      async function osmActivities(){
+        let data;
+        try{data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}catch(_){data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}
+        return {results:data.features.map(normalizeFeature).filter(p=>p&&p.name&&!['restaurant','cafe','fast_food','bar','pub'].includes(p.type)).map(p=>({...p,distance:distanceKm(lat,lon,p.lat,p.lon),source:'openstreetmap'}))};
+      }
+      async function bounded(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Provider timeout')),18000);})]);}finally{clearTimeout(timer);}}
+      const sources=await Promise.allSettled([searchRestaurants({lat,lon,radius}),bounded(searchViator(req,lat,lon)),osmActivities()]);
+      const buckets=sources.map(s=>s.status==='fulfilled'?s.value.results:[]),results=[];
+      for(let i=0;i<Math.max(...buckets.map(b=>b.length));i++)for(const bucket of buckets)if(bucket[i])results.push(bucket[i]);
+      const warnings=sources.flatMap((s,i)=>s.status==='rejected'?[['Restaurants','Activités Viator','Lieux OpenStreetMap'][i]+' temporairement indisponibles.']:[]);
+      return send(res,sources.every(s=>s.status==='rejected')?503:200,{results,count:results.length,radius,warnings,partial:warnings.length>0,fallbackUsed:sources.some(s=>s.status==='fulfilled'&&s.value.fallbackUsed)});
+    }
+
+    if (mode === 'restaurant') {
+      const {searchRestaurants}=require('../lib/geoapify-restaurants');
+      try { return send(res,200,await searchRestaurants({lat:number(req.query.lat),lon:number(req.query.lon),radius:number(req.query.radius)??5})); }
+      catch(error){return send(res,error.status||502,{error:error.message});}
+    }
 
     if (mode === 'viator') {
       const lat = number(req.query.lat);

@@ -1,0 +1,10 @@
+/* Shared by Explorer partner pages and the event modules. */
+.myeventEgSlot,#myeventOmioSection,#myeventExpediaFlightsSection{box-sizing:border-box;width:100%;max-width:575px;min-width:0;margin-inline:auto;overflow-wrap:anywhere}
+.myeventEgSlot .eg-widget,.myeventEgSlot iframe,[data-omio-widget],[data-omio-widget] form,[data-omio-widget] iframe{box-sizing:border-box;width:100%!important;max-width:100%!important;min-width:0!important}
+.myeventPartnerSelector{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.myeventPartnerSelector button{max-width:100%}
+
+.myeventCameraEventDialog{box-sizing:border-box;width:min(92vw,460px);max-height:85dvh;overflow:auto;background:#132333;color:#fff;border:1px solid #547089;border-radius:18px;padding:20px}
+.myeventCameraEventDialog::backdrop{background:#000a}
+.myeventCameraEventDialog select{box-sizing:border-box;width:100%;min-width:0;margin-bottom:12px}
+.myeventCameraEventDialog button{max-width:100%;margin:6px 6px 0 0}
