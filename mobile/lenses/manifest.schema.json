@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MyEvent Lens V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "label", "tracking", "asset", "sha256", "scale"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9-]{1,64}$"},
+    "label": {"type": "string", "minLength": 1, "maxLength": 100},
+    "tracking": {"const": "face"},
+    "asset": {"type": "string", "pattern": "^[a-zA-Z0-9_-]+\\.usdz$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "scale": {"type": "number", "minimum": 0.01, "maximum": 10}
+  }
+}

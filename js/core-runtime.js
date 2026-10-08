@@ -461,6 +461,19 @@ async function login(){
   }catch(e){msg('authmsg',e.message||String(e),'err')}
 }
 
+async function requestPasswordRecovery(){
+  const button=$('forgotPasswordBtn');if(button.disabled)return;
+  const email=$('email').value.trim();
+  if(!email||!$('email').checkValidity()){msg('authmsg','Renseigne une adresse email valide.','err');return;}
+  button.disabled=true;msg('authmsg','Envoi du lien…');
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:new URL('reset-password.html',location.origin).href});
+    if(error)throw error;
+    msg('authmsg','Si cette adresse correspond à un compte, un lien de récupération sera envoyé. Vérifie aussi les indésirables.','ok');
+  }catch{msg('authmsg','Impossible d’envoyer le lien pour le moment. Réessaie plus tard.','err');}
+  finally{button.disabled=false;}
+}
+
 function renderProfile(p){
 const name=p?.display_name||p?.username||user?.email?.split('@')[0]||'Membre';
 $('profileName').value=p?.display_name||name;
@@ -3532,6 +3545,7 @@ $('connectBtn').addEventListener('click',connect);
 window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
+$('forgotPasswordBtn').addEventListener('click',requestPasswordRecovery);
 function showLocationMap(lat,lon){
   const map=$('createLocationMap'), frame=$('createLocationMapFrame'), link=$('createLocationMapLink');
   if(!map||!frame||!link)return;
