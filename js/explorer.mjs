@@ -52,6 +52,7 @@ $('bookingForm').onsubmit=async e=>{
  }catch(e){$('formNotice').textContent=e.message;}finally{$('save').disabled=false;}
 };
 const frames=new Map();
+window.addEventListener('message',e=>{if(e.origin!==location.origin||e.data?.type!=='myevent-partner-height')return;const h=Number(e.data.height);if(!Number.isFinite(h)||h<100||h>50000)return;for(const f of frames.values())if(e.source===f.contentWindow){f.style.height=Math.max(640,h)+'px';f.setAttribute('scrolling','no');}});
 for(const b of document.querySelectorAll('[data-category]'))b.onclick=()=>{
  category=b.dataset.category;for(const other of document.querySelectorAll('[data-category]'))other.setAttribute('aria-pressed',String(other===b));$('search').hidden=false;$('categoryTitle').textContent=labels[category];
  $('nearbyControls').hidden=['accommodation','transport','ticket'].includes(category);$('partnerHost').hidden=!$('nearbyControls').hidden;
