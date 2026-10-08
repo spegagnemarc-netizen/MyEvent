@@ -6,5 +6,5 @@ module.exports=async function(req,res){
   const q=req.body||{};let error;try{error=validate(q);}catch(_){error='Indique des dates valides.';}
   if(error)return res.status(400).json({error});
   try{return res.status(200).json(await createAccommodationService().search(q));}
-  catch(_){return res.status(502).json({error:'Le fournisseur est temporairement indisponible. Réessaie plus tard.'});}
+  catch(e){const message=/^(Authentification Sabre CERT refusée|Disponibilité Sabre CERT refusée) \(HTTP \d{3}\)\.$/.test(e.message)?e.message:e.name==='TimeoutError'?'Sabre CERT ne répond pas dans le délai prévu. Réessaie.':'Le fournisseur est temporairement indisponible. Réessaie plus tard.';return res.status(502).json({error:message});}
 };
