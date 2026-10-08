@@ -1,4 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {JSDOM} from 'jsdom';
+test('HTTP 502 displays safe diagnostics and clears them before a later network failure',async()=>{
+ const dom=new JSDOM('<div id="m58AccommodationSearchBox"><div id="partner">Affiliate widget</div></div>',{url:'https://preview.example',runScripts:'outside-only'}),w=dom.window;w.AbortSignal=globalThis.AbortSignal;
+ w.fetch=async()=>({ok:false,json:async()=>({error:'Configuration Sabre CERT invalide.',code:'SABRE_CERT_BASE_INVALID',diagnostics:{stage:'configuration'}})});
+ w.eval(fs.readFileSync('js/hotel-search.js','utf8'));w.document.dispatchEvent(new w.Event('DOMContentLoaded'));const form=w.document.querySelector('form');form.elements.destination.value='Paris';form.elements.checkIn.value='2026-11-10';form.elements.checkOut.value='2026-11-12';
+ const submit=async()=>{form.dispatchEvent(new w.Event('submit',{cancelable:true}));await new Promise(r=>setTimeout(r,10));};await submit();
+ assert.match(w.document.querySelector('[role=status]').textContent,/Configuration/);assert.doesNotMatch(w.document.querySelector('[role=status]').textContent,/0 hôtel/);assert.equal(w.document.querySelector('details').hidden,false);assert.match(w.document.querySelector('pre').textContent,/configuration/);assert.ok(w.document.querySelector('#partner'));
+ w.fetch=async()=>{throw Error('Network failure');};await submit();assert.equal(w.document.querySelector('details').hidden,true);assert.equal(w.document.querySelector('pre').textContent,'');dom.window.close();
+});
 test('unavailable CERT search hides the hotel count while a successful empty search keeps it',async()=>{
  const dom=new JSDOM('<div id="m58AccommodationSearchBox"><div id="partner">Affiliate widget</div></div>',{url:'https://preview.example',runScripts:'outside-only'}),w=dom.window;
  w.AbortSignal=globalThis.AbortSignal;
