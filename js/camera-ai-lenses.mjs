@@ -49,6 +49,7 @@ export function createAILenses(modal){
     }
   }
   function render(target){
+    const requested=aiLenses.find(lens=>lens.id===modal.cameraRequestedAILens);if(requested&&!controller){selected=requested.id;group=requested.group;}delete modal.cameraRequestedAILens;
     host=target;host.replaceChildren();
     const panel=document.createElement('div');panel.className='cameraAILenses';
     const tabs=document.createElement('div');tabs.className='cameraAppearanceCategories';tabs.setAttribute('aria-label','Styles IA');

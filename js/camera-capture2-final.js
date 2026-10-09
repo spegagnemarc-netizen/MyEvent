@@ -9,6 +9,7 @@
     const right=modal.querySelector('.cameraSideTools.right');
     const left=modal.querySelector('.cameraSideTools.left');
     if(!sheet||!preview||!right||!left) return;
+    sheet.append(right);
 
     const settings=document.createElement('details');
     settings.className='cameraGlassSettings';
@@ -60,7 +61,7 @@
         const panel=modal.querySelector('#cameraCreativePanel'),actions=modal.querySelector('#cameraCapturedActions');
         const compact=height<450;
         const start=sheet.querySelector('.cameraProTop').getBoundingClientRect().bottom+(compact?44:54);
-        let end=actions?.classList.contains('open')?actions.getBoundingClientRect().top-8:top+height-110;
+        let end=actions?.classList.contains('open')?Math.min(actions.getBoundingClientRect().top-8,right.getBoundingClientRect().top-8):top+height-110;
         if(panel&&!panel.hidden&&!compact)end=Math.min(end,panel.getBoundingClientRect().top-8);
         const availableHeight=Math.max(40,end-start),availableWidth=Math.max(40,compact&&!panel.hidden?panel.getBoundingClientRect().left-16:modal.clientWidth-16);
         const scale=Math.min(availableWidth/source.width,availableHeight/source.height),width=source.width*scale,photoHeight=source.height*scale;
@@ -80,6 +81,9 @@
     const decorations=window.createCameraAnnotations(modal);
     modal.cameraRenderDecorations=decorations.render;
     modal.cameraRenderStickers=decorations.panel;
+    modal.cameraRenderSignatures=decorations.signatures;
+    const signatureButton=document.createElement('button');signatureButton.type='button';signatureButton.id='cameraSignatureSide';signatureButton.className='cameraSideTool';signatureButton.innerHTML='✍<small>Signature</small>';right.append(signatureButton);
+    const textButton=document.createElement('button');textButton.type='button';textButton.id='cameraTextSide';textButton.className='cameraSideTool';textButton.innerHTML='T<small>Texte</small>';textButton.onclick=()=>modal.querySelector('#cameraStickerSide').click();right.append(textButton);
     const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.id='cameraSettingsBtn';settingsButton.className='cameraProIcon';settingsButton.textContent='⚙';settingsButton.setAttribute('aria-label','Réglages caméra');sheet.querySelector('.cameraProTopRight').append(settingsButton);
     const aiAccess=document.createElement('button');aiAccess.type='button';aiAccess.className='cameraIAAccess';aiAccess.id='cameraIAAccess';aiAccess.textContent='✨ IA';aiAccess.setAttribute('aria-label','Ouvrir les outils IA');
     aiAccess.addEventListener('click',()=>modal.querySelector('#cameraAiSide')?.click());sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
@@ -88,7 +92,7 @@
     strip.className='cameraFilterStrip cameraFilterFilmstrip';
     const filterItems=[
       ['original','Original'],['naturel','Naturel'],['vif','Vif'],['froid','Froid'],['chaud','Chaud'],['nb','N&B'],['vintage','Vintage'],['cinema','Cinéma'],
-      ['doux','Doux'],['soleil','Soleil'],['pastel','Pastel'],['noir','Noir'],['argent','Argent'],['sepia','Sépia'],['ambre','Ambre'],['polaire','Polaire'],['mat','Mat'],['eclat','Éclat'],['retro','Rétro'],['crepuscule','Crépuscule']
+      ['doux','Lumineux'],['soleil','Soleil'],['pastel','Pastel'],['noir','Noir'],['argent','Argent'],['sepia','Sépia'],['ambre','Ambre'],['polaire','Polaire'],['mat','Mat'],['eclat','Éclat'],['retro','Rétro'],['crepuscule','Nuit']
     ];
     const filterIcons={original:'◯',naturel:'●',vif:'✹',froid:'❄',chaud:'☀',nb:'◐',vintage:'◍',cinema:'▰'};
     strip.innerHTML=filterItems.map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+(filterIcons[x[0]]||'◯')+'</span><small>'+x[1]+'</small></button>').join('');
@@ -104,13 +108,14 @@
       argent:[['grayscale',1],['contrast',.92],['brightness',1.12]],sepia:[['sepia',1]],ambre:[['sepia',.3],['warmth',20],['contrast',1.05]],
       polaire:[['warmth',-25],['saturate',.8],['brightness',1.06]],mat:[['contrast',.78],['saturate',.88]],eclat:[['contrast',1.18],['saturate',1.32]],
       retro:[['sepia',.6],['saturate',.75],['contrast',.86]],crepuscule:[['warmth',-10],['brightness',.85],['contrast',1.15]]};
-    let selectedFilter='original';
+    let selectedFilter='original',filterIntensity=1;
+    const filterRecipe=name=>(recipes[name]||recipes.original).map(([kind,value])=>[kind,['brightness','contrast','saturate'].includes(kind)?1+(value-1)*filterIntensity:value*filterIntensity]);
     const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
     let beautyAmount=0;
     modal.cameraRenderPhoto=function(source,filter=selectedFilter){
       const output=document.createElement('canvas');output.width=source.width;output.height=source.height;
       const context=output.getContext('2d');context.drawImage(source,0,0);
-      const recipe=[...(recipes[filter]||recipes.original)];
+      const recipe=filterRecipe(filter);
       if(retouch.brightness!==100)recipe.push(['brightness',retouch.brightness/100]);
       if(retouch.contrast!==100)recipe.push(['contrast',retouch.contrast/100]);
       if(retouch.saturate!==100)recipe.push(['saturate',retouch.saturate/100]);
@@ -157,7 +162,7 @@
       strip.querySelectorAll('.cameraFilterChip').forEach(b=>{const active=b.dataset.filter===selectedFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
       const video=modal.querySelector('#myeventCameraVideo'),img=modal.querySelector('#myeventCapturedImage');
       if(video&&modal.dataset.mediaKind!=='video'&&modal.dataset.captureMode!=='video'){
-        const live=[...recipes[selectedFilter]];
+        const live=filterRecipe(selectedFilter);
         if(retouch.brightness!==100)live.push(['brightness',retouch.brightness/100]);
         if(retouch.contrast!==100)live.push(['contrast',retouch.contrast/100]);
         if(retouch.saturate!==100)live.push(['saturate',retouch.saturate/100]);
@@ -186,6 +191,13 @@
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
     modal.cameraGetFilter=()=>selectedFilter;
+    modal.cameraRenderFilters=host=>{
+      const groups={'Naturel':['original','naturel','doux'],'Ambiance':['chaud','froid','cinema','soleil','crepuscule'],'Couleur':['vif','pastel','ambre','polaire'],'Noir et blanc':['nb','noir','argent'],'Créatif':['vintage','sepia','mat','eclat','retro']};
+      const tabs=document.createElement('div');tabs.className='cameraFilterCategories';
+      for(const [label,ids] of [['Tous',filterItems.map(x=>x[0])],...Object.entries(groups)]){const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-pressed',String(label==='Tous'));button.onclick=()=>{strip.querySelectorAll('[data-filter]').forEach(b=>b.hidden=!ids.includes(b.dataset.filter));tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));};tabs.append(button);}
+      strip.querySelectorAll('[data-filter]').forEach(b=>b.hidden=false);
+      const label=document.createElement('label');label.className='cameraRetouchControl';label.textContent='Intensité du filtre';const range=document.createElement('input');range.type='range';range.min='0';range.max='100';range.value=String(filterIntensity*100);range.setAttribute('aria-label','Intensité du filtre');range.oninput=()=>{filterIntensity=Number(range.value)/100;setFilter(selectedFilter);modal.cameraRefreshFilterThumbs();};label.append(range);host.append(tabs,strip,label);modal.cameraRefreshFilterThumbs();
+    };
     modal.cameraSetBeauty=value=>{beautyAmount=Math.min(100,Math.max(0,Number(value)||0));setFilter(selectedFilter);};
     modal.cameraGetBeauty=()=>beautyAmount;
     modal.cameraSetRetouch=(key,value)=>{
@@ -212,7 +224,7 @@
     // The small UI module loads on opening Apparence; MediaPipe loads on an effect.
     modal.cameraRenderAppearance=function(host){
       const request=++panelRequest;host.textContent='Ouverture d’Apparence…';
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=ai-lenses-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       appearanceLoading.then(controller=>{
         if(request===panelRequest&&modal.classList.contains('open')&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')controller.renderPanel(host);
       }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
@@ -227,7 +239,7 @@
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);
     function ensureAppearance(){
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=ai-lenses-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       return appearanceLoading;
     }
     function selectLens(button){

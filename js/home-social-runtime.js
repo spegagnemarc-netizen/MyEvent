@@ -188,7 +188,7 @@
       }catch(error){note.textContent='Musique : '+error.message;}
     }
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
-    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
+    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraSignatureSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
     function closePanel(){
       if(panel)panel.hidden=true;
       buttons.forEach(id=>{const b=$s(id);b?.classList.remove('active');b?.setAttribute('aria-expanded','false');});
@@ -198,12 +198,13 @@
       if(!panel.hidden&&panel.dataset.kind===kind){closePanel();return;}
       closePanel();const settings=sheet?.querySelector('.cameraGlassSettings');if(settings)settings.open=false;panel.hidden=false;panel.dataset.kind=kind;
       source?.classList.add('active');source?.setAttribute('aria-expanded','true');
-      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Effets / Filtres',appearance:'Apparence',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
+      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
       title.textContent=names[kind];
       content.replaceChildren();
       if(cameraMode==='video'||cameraVideoFile){
-        if(['filters','beauty','retouch','appearance','stickers','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
+        if(['filters','beauty','retouch','appearance','stickers','signatures','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
       }
+      if(kind==='signatures'){$s('myeventCameraModal').cameraRenderSignatures?.(content);return;}
       if(kind==='stickers'){$s('myeventCameraModal').cameraRenderStickers?.(content);return;}
       if(kind==='settings'||kind==='plus'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
@@ -213,7 +214,7 @@
         if(kind==='settings'){const settings=$s('myeventCameraModal').cameraSettingsElement;if(settings){settings.open=true;content.append(settings);}}
         return;
       }
-      if(kind==='filters'){const filters=$s('myeventCameraModal').cameraFilterStrip;if(filters)content.appendChild(filters);$s('myeventCameraModal').cameraRefreshFilterThumbs?.();return;}
+      if(kind==='filters'){$s('myeventCameraModal').cameraRenderFilters?.(content);return;}
       if(kind==='beauty'){
         const modal=$s('myeventCameraModal'),current=modal.cameraGetBeauty?.()??0;
         const note=document.createElement('p');note.textContent='Réglage Beauté indépendant des filtres. Il ajuste progressivement lumière, contraste, saturation et chaleur.';content.appendChild(note);
@@ -283,7 +284,7 @@
         remove.addEventListener('click',()=>{clearCameraMusic();closePanel();openPanel('music',$s('cameraMusicSide'));});
       }
     }
-    buttons.filter(id=>!['cameraTimerSide','cameraRatioSide','cameraBeautySide','cameraRetouchSide'].includes(id)).forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraMusicSide:'music'})[id],e.currentTarget)));
+    buttons.filter(id=>!['cameraTimerSide','cameraRatioSide','cameraBeautySide','cameraRetouchSide'].includes(id)).forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraSignatureSide:'signatures',cameraMusicSide:'music'})[id],e.currentTarget)));
     $s('cameraPanelClose')?.addEventListener('click',closePanel);
     document.addEventListener('click',e=>{if(e.target.closest('#cameraSettingsBtn'))openPanel('settings',e.target.closest('#cameraSettingsBtn'));});
     let cameraGridActive=false;
@@ -489,7 +490,7 @@
   }
   let cameraAILensesLoading;
   cameraModal.cameraRenderAI=function(host){
-    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
+    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs?v=camera-v22-1').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
     cameraAILensesLoading.then(ui=>{if(cameraModal.classList.contains('open')&&$s('cameraCreativePanel')?.dataset.kind==='ai')ui.render(host);}).catch(()=>{host.textContent='Impossible de charger les filtres IA. Réessaie.';});
   };
   cameraModal.cameraGetAIPhoto=function(){
