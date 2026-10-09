@@ -1,4 +1,6 @@
 /* MyEvent camera layout and glass controls. This file consolidates the camera overrides. */
+#myeventCameraModal .cameraTierSwitch{display:none!important}
+#myeventCameraModal[data-capture-mode="video"] #cameraIAAccess,#myeventCameraModal[data-media-kind="video"] #cameraIAAccess{display:none!important}
 #myeventCameraModal{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:100dvh!important;padding:0!important;margin:0!important;background:#000!important;color:#fff!important;z-index:99999!important;--camera-control-opacity:.35}
 #myeventCameraModal .cameraProSheet{width:100vw!important;max-width:none!important;height:100dvh!important;min-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;isolation:isolate}
 #myeventCameraModal .cameraProSheet:before{display:none!important}

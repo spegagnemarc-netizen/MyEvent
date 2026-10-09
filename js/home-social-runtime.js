@@ -449,7 +449,14 @@
     const revision=resetCameraPreview();stopMyEventCamera();cameraPlaceholder.style.display='grid';
     if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder.innerHTML='<strong>Caméra non disponible ici</strong><span>Utilise « Galerie » pour prendre un selfie.</span>';return;}
     try{
-      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:cameraMode==='video'});
+      const constraints={video:{facingMode:myeventFacingMode,width:{ideal:1280},height:{ideal:1280}},audio:cameraMode==='video'};
+      let stream;
+      try{stream=await navigator.mediaDevices.getUserMedia(constraints);}
+      catch(error){
+        if(!constraints.audio||!['NotAllowedError','NotFoundError','NotReadableError'].includes(error.name))throw error;
+        if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+        stream=await navigator.mediaDevices.getUserMedia({...constraints,audio:false});
+      }
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')){stream.getTracks().forEach(t=>t.stop());return;}
       myeventCameraStream=stream;cameraVideo.srcObject=stream;
       const videoTrack=stream.getVideoTracks()[0];cameraZoom.setTrack(videoTrack);cameraPlaceholder.style.display='none';cameraVideo.play().catch(()=>{});
@@ -464,6 +471,8 @@
         flash.setAttribute('aria-label',available?'Activer le flash':(screenFlash?'Activer le flash écran':'Flash matériel indisponible'));
       }
       cameraVideo.style.filter=cameraMode==='video'?'none':cameraVideo.style.filter;
+      cameraModal.cameraSetFilter?.(cameraModal.cameraGetFilter?.());
+      if(cameraMode==='video')$s('cameraMediaStatus').textContent=stream.getAudioTracks().length?'Vidéo originale · 60 s maximum':'Vidéo sans son · micro indisponible · 60 s maximum';
       cameraModal.dispatchEvent(new Event('camera-stream-ready'));
     }catch(e){if(revision===cameraRevision){cameraPlaceholder.style.display='grid';cameraPlaceholder.innerHTML='<strong>Autorisation caméra nécessaire</strong><span>Autorise l’appareil photo ou utilise « Galerie ».</span>';}}
   }
@@ -573,9 +582,6 @@
       if(!myeventCameraStream||typeof MediaRecorder==='undefined'){
         cameraPlaceholder.textContent='Enregistrement vidéo indisponible sur ce navigateur.';cameraPlaceholder.style.display='grid';return;
       }
-      if(!myeventCameraStream.getAudioTracks().length){
-        startMyEventCamera();cameraPlaceholder.textContent='Autorise le micro puis appuie de nouveau pour enregistrer.';cameraPlaceholder.style.display='grid';return;
-      }
       const revision=cameraRevision;
       try{
         const preferred=['video/mp4','video/webm;codecs=vp8,opus','video/webm'].find(type=>MediaRecorder.isTypeSupported?.(type));
@@ -593,7 +599,7 @@
         recorder.start(1000);$s('cameraShutterBtn')?.classList.add('recording');
         $s('cameraShutterBtn')?.setAttribute('aria-label','Arrêter l’enregistrement');
         recordingTimer=setTimeout(()=>{if(recorder.state==='recording')recorder.stop();},60000);
-        $s('cameraMediaStatus').textContent='Enregistrement en cours · appuie pour arrêter (60 s max).';
+        $s('cameraMediaStatus').textContent='Enregistrement '+(myeventCameraStream.getAudioTracks().length?'':'sans son ')+'en cours · appuie pour arrêter (60 s max).';
       }catch(e){cameraPlaceholder.textContent='Impossible de démarrer l’enregistrement vidéo.';cameraPlaceholder.style.display='grid';}
       return;
     }
@@ -618,8 +624,8 @@
     cameraImg.style.display='none';cameraVideo.style.display='none';cameraPlaceholder.style.display='none';
     cameraModal.dataset.cameraState='preview';cameraModal.dataset.mediaKind='video';
     $s('cameraCapturedActions')?.classList.add('open');
-    ['cameraPublishBtn','cameraAttachEventBtn'].forEach(id=>{const b=$s(id);if(b)b.hidden=true;});
-    $s('cameraMediaStatus').textContent='Aperçu vidéo · Story ou enregistrement. Ajout vidéo à un événement : à venir.';
+    $s('cameraPublishBtn').hidden=true;$s('cameraAttachEventBtn').hidden=false;
+    $s('cameraMediaStatus').textContent='Aperçu vidéo originale · Story, événement ou enregistrement · sans effets photo.';
     cameraModal.dispatchEvent(new Event('camera-preview-ready'));
   }
   $s('cameraDownloadBtn')?.addEventListener('click',()=>{
@@ -701,9 +707,9 @@
   });
   function openCameraEventDestination(){
     if(document.querySelector('.myeventCameraEventDialog'))return;
-    if(!myeventCapturedDataUrl){alert('Prends ou importe une photo avant de l’ajouter à un événement.');return;}
-    const photo=myeventCapturedDataUrl,dialog=document.createElement('dialog');dialog.className='myeventCameraEventDialog';
-    const title=document.createElement('h3');title.textContent='Ajouter la photo à un événement';
+    if(!myeventCapturedDataUrl&&!cameraVideoFile){alert('Prends ou importe une photo ou une vidéo avant de l’ajouter à un événement.');return;}
+    const photo=cameraVideoFile||myeventCapturedDataUrl,isVideo=!!cameraVideoFile,dialog=document.createElement('dialog');dialog.className='myeventCameraEventDialog';
+    const title=document.createElement('h3');title.textContent='Ajouter '+(isVideo?'la vidéo':'la photo')+' à un événement';
     const select=document.createElement('select');select.setAttribute('aria-label','Événement');select.append(new Option('Choisir un événement',''));
     for(const card of document.querySelectorAll('#eventList .eventCard[data-event-id]'))select.append(new Option(card.querySelector('.eventCardTopInfo b')?.textContent||'Événement',card.dataset.eventId));
     const status=document.createElement('p');status.setAttribute('role','status');
@@ -714,13 +720,13 @@
     dialog.addEventListener('cancel',e=>{if(select.disabled)e.preventDefault();});
     add.onclick=async()=>{
       const id=select.value;if(!id)return;
-      add.disabled=true;select.disabled=true;cancel.disabled=true;status.textContent='Enregistrement de la photo…';
+      add.disabled=true;select.disabled=true;cancel.disabled=true;status.textContent='Enregistrement '+(isVideo?'de la vidéo':'de la photo')+'…';
       try{
         if(typeof window.myeventAttachCameraPhoto!=='function')throw Error('Enregistrement des souvenirs indisponible.');
         await window.myeventAttachCameraPhoto(id,photo);
         closeMyEventCamera();dialog.close();
         globalThis.dispatchEvent(new CustomEvent('myevent-camera-photo-attached',{detail:{eventId:id}}));
-        alert('Photo ajoutée aux souvenirs de « '+select.selectedOptions[0].textContent+' » ✓');
+        alert((isVideo?'Vidéo ajoutée':'Photo ajoutée')+' aux souvenirs de « '+select.selectedOptions[0].textContent+' » ✓');
         if(typeof selectEvent==='function')await selectEvent(id).catch(()=>{});
       }catch(error){status.textContent='Impossible d’ajouter la photo : '+(error?.message||String(error));add.disabled=false;select.disabled=false;cancel.disabled=false;}
     };
