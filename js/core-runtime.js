@@ -2829,12 +2829,14 @@ window.myeventAttachCameraPhoto=async function(eventId,dataUrl){
   if(!eventId||!dataUrl||!user)throw new Error('Photo ou événement manquant.');
   const r=await sb.from('events').select('id').eq('id',eventId).maybeSingle();
   if(r.error||!r.data)throw new Error('Cet événement n’est pas accessible.');
-  const response=await fetch(dataUrl),blob=await response.blob();
-  if(!blob.type.startsWith('image/'))throw new Error('La capture n’est pas une image valide.');
-  const path=String(eventId)+'/'+user.id+'/'+crypto.randomUUID()+'-camera.jpg';
-  const up=await sb.storage.from('event-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
+  const blob=dataUrl instanceof Blob?dataUrl:await(await fetch(dataUrl)).blob();
+  const type=blob.type.split(';')[0],extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};
+  if(!extensions[type]||!blob.size||blob.size>50*1024*1024)throw new Error('Photo ou vidéo non prise en charge ou supérieure à 50 Mo.');
+  const mediaType=type.startsWith('video/')?'video':'image';
+  const path=String(eventId)+'/'+user.id+'/'+crypto.randomUUID()+'-camera.'+extensions[type];
+  const up=await sb.storage.from('event-media').upload(path,blob,{upsert:false,contentType:type});
   if(up.error)throw up.error;
-  const ins=await sb.from('media').insert({event_id:eventId,user_id:user.id,storage_path:path,media_type:'image'}).select('id').single();
+  const ins=await sb.from('media').insert({event_id:eventId,user_id:user.id,storage_path:path,media_type:mediaType}).select('id').single();
   if(ins.error){await sb.storage.from('event-media').remove([path]);throw ins.error;}
   rememberLocalCreated('media',ins.data?.id);
   if(event&&String(event.id)===String(eventId))await loadMedia();

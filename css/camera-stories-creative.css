@@ -1,0 +1,91 @@
+/* Single Stories + Creative interface. All controls call the existing camera. */
+#myeventCameraModal{--camera-accent:#ff782f;--camera-glass:rgba(12,14,18,var(--camera-control-opacity,.42));font-family:system-ui,-apple-system,sans-serif}
+#myeventCameraModal .cameraProSheet{position:relative;background:#08090c!important}
+#myeventCameraModal .cameraProPreview{position:absolute!important;inset:0!important;height:100%!important;z-index:0;overflow:hidden!important}
+#myeventCameraModal .cameraProPreview #myeventCameraVideo{inset:0!important;margin:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0}
+#myeventCameraModal .cameraProPreview #myeventCapturedImage{z-index:0}
+#myeventCameraModal .cameraProSheet:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,#0006 0%,transparent 24%,transparent 58%,#0005 77%,#000d 100%)}
+#myeventCameraModal .cameraProTop{position:absolute;inset:0 0 auto;height:auto!important;min-height:0!important;padding:calc(12px + env(safe-area-inset-top)) 14px 12px!important;z-index:12}
+#myeventCameraModal .cameraProTitle{display:none!important}
+#myeventCameraModal :is(.cameraProIcon,.cameraIAAccess){width:38px;height:38px;min-height:38px;border-radius:50%!important;border:1px solid #ffffff30!important;background:var(--camera-glass)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:white;font-size:18px}
+#myeventCameraModal #cameraIAAccess{display:none!important}
+#myeventCameraModal .cameraTierSwitch{display:none!important}
+#myeventCameraModal .cameraSideTools.left{position:absolute;display:flex!important;flex-direction:column!important;top:calc(78px + env(safe-area-inset-top))!important;left:12px!important;gap:9px!important;z-index:10}
+#myeventCameraModal .cameraSideTools.right,#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.right{position:absolute!important;top:calc(78px + env(safe-area-inset-top))!important;right:12px!important;left:auto!important;bottom:calc(242px + env(safe-area-inset-bottom))!important;width:42px;gap:9px!important;justify-content:flex-start!important;padding:0;z-index:10}
+#myeventCameraModal .cameraSideTool{width:40px!important;min-height:40px!important;flex:0 0 40px!important;border-radius:13px!important;background:var(--camera-glass)!important;border:1px solid #ffffff26!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 2px 12px #0002!important}
+#myeventCameraModal .cameraSideTool small{font-size:8px!important}
+#myeventCameraModal .cameraSideTool.active{border-color:var(--camera-accent)!important;color:#ffb17c!important}
+#myeventCameraModal #cameraAiSide,#myeventCameraModal .cameraGlassSettings,#myeventCameraModal .cameraFaceGuide{display:none!important}
+#myeventCameraModal .cameraProModes{position:absolute;left:8px;right:8px;bottom:calc(104px + env(safe-area-inset-bottom));padding:5px 0!important;gap:clamp(6px,3vw,22px)!important;z-index:11}
+#myeventCameraModal .cameraProModes .cameraModeBtn{position:relative;border:0!important;background:transparent!important;padding:8px 2px 12px!important;font-size:10px!important;letter-spacing:.4px;color:#fffd!important;border-radius:0!important}
+#myeventCameraModal .cameraProModes .cameraModeBtn.active{color:#ffb33c!important;font-weight:800}
+#myeventCameraModal .cameraProModes .cameraModeBtn.active:after{display:block!important;content:""!important;position:absolute;bottom:4px;left:30%;right:30%;height:2px;background:#ffb33c;border-radius:2px}
+#myeventCameraModal .cameraProBottom{position:absolute;left:0;right:0;bottom:0;z-index:12;padding:8px 22px calc(18px + env(safe-area-inset-bottom))!important;grid-template-columns:1fr 84px 1fr!important}
+#myeventCameraModal #cameraShutterBtn{width:76px!important;height:76px!important;border:3px solid white!important;background:#1119!important;box-shadow:0 0 0 4px #ff672b55,0 0 23px #ff5e2b9c!important}
+#myeventCameraModal #cameraShutterBtn span{width:62px!important;height:62px!important;border:2px solid #ff9b65!important;background:#101015!important}
+#myeventCameraModal #cameraShutterBtn.recording{border-color:white!important;box-shadow:none!important}
+#myeventCameraModal #cameraShutterBtn.recording span{width:28px!important;height:28px!important;border:0!important;border-radius:7px!important;clip-path:none!important;background:#ff3038!important}
+#myeventCameraModal #cameraShutterBtn.recording span img{visibility:hidden}
+#myeventCameraModal .cameraProRoundAction span{width:42px!important;height:42px!important;border:1px solid #ffffff45!important;border-radius:13px;background:var(--camera-glass)!important;font-size:23px;overflow:hidden}
+#myeventCameraModal #cameraFlipBtn span{border-radius:50%}
+#myeventCameraModal .cameraProRoundAction small{font-size:10px!important;margin-top:5px}
+#myeventCameraModal .cameraLensStrip{display:none!important}
+#myeventCameraModal .cameraQuickFilters{position:absolute;left:12px;right:12px;bottom:calc(153px + env(safe-area-inset-bottom));display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;touch-action:pan-x;z-index:11;padding:4px 0}
+#myeventCameraModal .cameraQuickFilters button{flex:0 0 53px;display:grid;gap:5px;padding:0;border:0;color:white;background:transparent;font-size:9px;scroll-snap-align:center}
+#myeventCameraModal .cameraQuickFilters img{width:53px;height:67px;object-fit:cover;border-radius:10px;border:1px solid #ffffff50;box-sizing:border-box;background:#25262a}
+#myeventCameraModal .cameraQuickFilters button[aria-pressed="true"]{color:#ffb33c}
+#myeventCameraModal .cameraQuickFilters button[aria-pressed="true"] img{border:2px solid #ffb33c;box-shadow:0 0 8px #ff9b3544}
+#myeventCameraModal[data-capture-mode="video"] .cameraQuickFilters,#myeventCameraModal[data-camera-state="preview"] .cameraQuickFilters,#myeventCameraModal[data-camera-state="processing"] .cameraQuickFilters{display:none!important}
+#myeventCameraModal .cameraCreativePanel,#myeventCameraModal[data-camera-state="preview"] .cameraCreativePanel,#myeventCameraModal[data-camera-state="preview"] .cameraCreativePanel[data-kind="filters"]{position:absolute;left:0;right:0;top:auto;bottom:0;width:auto;max-height:min(54%,460px);padding:24px 16px calc(20px + env(safe-area-inset-bottom));border:1px solid #ffffff30;border-bottom:0;border-radius:26px 26px 0 0;background:#111319ed!important;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:30;box-sizing:border-box;animation:cameraSheetEnter .18s ease-out}
+#myeventCameraModal .cameraCreativePanel:before{content:"";position:absolute;top:9px;left:calc(50% - 20px);width:40px;height:4px;background:#ffffff55;border-radius:3px}
+#myeventCameraModal .cameraCreativePanel header{position:sticky;top:-24px;background:#111319;z-index:2;padding:5px 0 10px;font-size:14px}
+#myeventCameraModal .cameraCreativePanel header button{min-width:36px;min-height:36px}
+#myeventCameraModal .cameraPanelChoices{gap:10px}
+#myeventCameraModal .cameraPanelChoices button{min-width:52px;min-height:44px;border-radius:14px;background:#ffffff09}
+#myeventCameraModal .cameraRetouchControl{font-size:12px}
+#myeventCameraModal input[type="range"]{accent-color:#ff9239;min-height:32px}
+#myeventCameraModal .cameraFilterChip .thumb{width:62px!important;height:86px!important;object-fit:cover;border-radius:11px}
+#myeventCameraModal .cameraFilterFilmstrip{padding:10px 0!important;scroll-padding-inline:0;align-items:start}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip{width:66px;flex:0 0 66px;min-height:110px}
+#myeventCameraModal .cameraFilterChip{flex-basis:66px;min-height:108px}
+#myeventCameraModal .cameraFilterChip.active{color:#ffb33c!important}
+#myeventCameraModal .cameraFilterChip.active .thumb{border:2px solid #ffb33c}
+#myeventCameraModal[data-camera-state="preview"] .cameraProModes,#myeventCameraModal[data-camera-state="preview"] .cameraProBottom,#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.left{display:none!important}
+#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.right{top:auto!important;bottom:calc(158px + env(safe-area-inset-bottom))!important;left:12px!important;right:12px!important;width:auto;flex-direction:row!important;justify-content:center!important;overflow-x:auto;overflow-y:hidden;gap:7px!important}
+#myeventCameraModal[data-camera-state="preview"] #cameraBeautySide{display:none!important}
+#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.right .cameraSideTool{flex:0 0 43px!important}
+#myeventCameraModal[data-camera-state="preview"] #cameraCapturedActions.open,#myeventCameraModal[data-camera-state="preview"]:not([data-camera-editing="validated"])[data-media-kind="photo"] #cameraCapturedActions.open{display:grid!important;position:absolute;left:12px!important;right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;grid-template-columns:1fr 1fr;padding:0;background:none!important;border:0!important;gap:8px;z-index:22}
+#myeventCameraModal #cameraCapturedActions button{min-width:0;min-height:39px;font-size:11px;border:1px solid #ffffff40!important;border-radius:15px!important;background:#11151ac7!important;color:white!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#myeventCameraModal #cameraCapturedActions #cameraPublishBtn{grid-column:1;grid-row:1;min-height:54px;background:linear-gradient(135deg,#ff8e32,#ff5922)!important;border-color:#ffad65!important;font-size:14px;font-weight:750}
+#myeventCameraModal #cameraAttachEventBtn{grid-column:2;grid-row:1;min-height:54px;font-weight:650}
+#myeventCameraModal #cameraStoryBtn{grid-column:1;grid-row:2}
+#myeventCameraModal #cameraDownloadBtn{grid-column:2;grid-row:2}
+#myeventCameraModal[data-camera-state="preview"] .cameraDecorationTools,#myeventCameraModal[data-camera-editing="validated"] .cameraDecorationTools{bottom:calc(119px + env(safe-area-inset-bottom))!important;z-index:23}
+#myeventCameraModal .cameraDecorationTools button{min-height:32px;font-size:10px;padding:5px 9px}
+#myeventCameraModal .cameraMediaStatus{top:calc(66px + env(safe-area-inset-top))!important;left:60px;right:60px;font-size:10px}
+#myeventCameraModal .cameraRecordingClock{position:absolute;top:calc(19px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:13;background:#fc3447;color:white;border-radius:16px;padding:6px 12px;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums}
+#myeventCameraModal .cameraRecordingClock[hidden]{display:none}
+#myeventCameraModal .cameraGalleryThumb{width:100%;height:100%;object-fit:cover}
+#myeventCameraModal .cameraGalleryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:12px}
+#myeventCameraModal .cameraGalleryGrid button{padding:0;aspect-ratio:1;border-radius:12px;overflow:hidden}
+#myeventCameraModal .cameraGalleryGrid button[hidden]{display:none}
+#myeventCameraModal .cameraGalleryGrid img,#myeventCameraModal .cameraGalleryGrid video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+#myeventCameraModal .cameraGalleryImport{width:100%;min-height:44px;color:#ffb33c!important}
+#myeventCameraModal .cameraZoomChoices{position:absolute;bottom:calc(255px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border:1px solid #ffffff20;border-radius:24px;background:var(--camera-glass);z-index:11;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#myeventCameraModal .cameraZoomChoices button{border:0;border-radius:50%;width:34px;height:34px;color:white;background:transparent;font-size:11px}
+#myeventCameraModal .cameraZoomChoices button[aria-pressed="true"]{color:#ffb33c;border:1px solid #ffb33c;background:#ffad3012}
+#myeventCameraModal .cameraZoomChoices[hidden],#myeventCameraModal .cameraZoomChoices button[hidden],#myeventCameraModal[data-camera-state="preview"] .cameraZoomChoices{display:none!important}
+#myeventCameraModal .cameraCreativePanel[data-kind="settings"] .cameraPanelChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+#myeventCameraModal .cameraCreativePanel[data-kind="settings"] .cameraPanelChoices button{min-height:70px;background:#ffffff09;border:1px solid #ffffff17}
+#myeventCameraModal .cameraAppearanceOverlay,#myeventCameraModal .cameraAppearanceWarp{z-index:2}
+#myeventCameraModal .cameraAppearanceOverlay,#myeventCameraModal .cameraAppearanceWarp{top:var(--camera-top,0px);bottom:auto;left:0;width:100%!important;height:var(--camera-height,100dvh)!important;margin:0;object-fit:cover}
+#myeventCameraModal[data-capture-mode="video"] #cameraTimerSide,#myeventCameraModal[data-capture-mode="video"] #cameraRatioSide{display:none!important}
+#myeventCameraModal[data-capture-mode="video"] .cameraZoomChoices{bottom:calc(153px + env(safe-area-inset-bottom))}
+#myeventCameraModal .cameraProBottom .cameraProRoundAction{background:transparent!important;box-shadow:none!important}
+#myeventCameraModal button{font-family:inherit;font-weight:500}
+#myeventCameraModal .cameraFilterFilmstrip .cameraFilterChip small{display:block;font-weight:500}
+#myeventCameraModal[data-camera-state="preview"] .cameraDecorationTools button{font-weight:500}
+#myeventCameraModal[data-media-kind="video"] .cameraSideTools.left{display:none!important}
+@keyframes cameraSheetEnter{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){#myeventCameraModal .cameraCreativePanel{animation:none}}
+@media(max-height:520px){#myeventCameraModal .cameraQuickFilters{left:68px;right:68px;bottom:115px}#myeventCameraModal .cameraQuickFilters img{height:40px}#myeventCameraModal .cameraSideTools.right{bottom:130px!important;gap:5px!important}#myeventCameraModal .cameraCreativePanel,#myeventCameraModal[data-camera-state="preview"] .cameraCreativePanel,#myeventCameraModal[data-camera-state="preview"] .cameraCreativePanel[data-kind="filters"]{max-height:75%;left:20%;right:20%}#myeventCameraModal .cameraProModes{bottom:92px}#myeventCameraModal #cameraShutterBtn{width:66px!important;height:66px!important}#myeventCameraModal #cameraShutterBtn span{width:52px!important;height:52px!important}}

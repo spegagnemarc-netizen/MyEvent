@@ -1,5 +1,4 @@
-// MyEvent WebGL2 face warp proof-of-concept.
-// Kept isolated so the validated camera remains unchanged until integration.
+// Local WebGL2 geometry deformation shared by the live view and the exported photo.
 const VERTEX=`#version 300 es
 in vec2 a_position;
 out vec2 v_uv;
@@ -49,19 +48,20 @@ export class FaceWarpRenderer{
   this.u={};for(const n of ['u_image','u_leftEye','u_rightEye','u_face','u_mouth','u_nose','u_eye','u_faceWarp','u_mouthWarp','u_noseWarp','u_aspect'])this.u[n]=gl.getUniformLocation(program,n);
   gl.uniform1i(this.u.u_image,0);
  }
- render(source,marks,effect,width=source.width,height=source.height){
+ render(source,marks,effect,width=source.width,height=source.height,intensity=1){
   if(!marks||marks.length<468)return false;
-  const gl=this.gl,w=Math.max(1,width|0),h=Math.max(1,height|0);this.canvas.width=w;this.canvas.height=h;
+  const gl=this.gl,w=Math.max(1,width|0),h=Math.max(1,height|0);if(this.canvas.width!==w)this.canvas.width=w;if(this.canvas.height!==h)this.canvas.height=h;
   gl.viewport(0,0,w,h);gl.useProgram(this.program);gl.bindTexture(gl.TEXTURE_2D,this.texture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
   gl.uniform2fv(this.u.u_leftEye,uv(marks,468));gl.uniform2fv(this.u.u_rightEye,uv(marks,473));gl.uniform2fv(this.u.u_face,uv(marks,1));gl.uniform2fv(this.u.u_mouth,uv(marks,13));gl.uniform2fv(this.u.u_nose,uv(marks,4));
   const t=p(marks,13),bt=p(marks,14),a=p(marks,61),b=p(marks,291);
   const openness=Math.hypot(bt.x-t.x,bt.y-t.y)/Math.max(.001,Math.hypot(b.x-a.x,b.y-a.y));
   const eye=effect==='big-eyes'?.58:effect==='toon-face'?.48:effect==='wild-face'?.42:0;
-  const face=effect==='puffy-face'?.42:effect==='toon-face'?.28:effect==='wild-face'?.38:0;
-  const mouth=effect==='reactive-mouth'?Math.min(.68,Math.max(.12,(openness-.02)*4.6)):effect==='toon-face'?.28:effect==='wild-face'?.5:effect==='pig-face'?.24:0;
+  const face=effect==='big-head'?.64:effect==='small-face'?-.55:effect==='funny-mirror'?-.45:effect==='puffy-face'?.42:effect==='toon-face'?.28:effect==='wild-face'?.38:0;
+  const mouth=effect==='funny-mirror'?.55:effect==='reactive-mouth'?Math.min(.68,Math.max(.12,(openness-.02)*4.6)):effect==='toon-face'?.28:effect==='wild-face'?.5:effect==='pig-face'?.24:0;
   const nose=effect==='pig-face'?.64:effect==='wild-face'?.22:0;
-  gl.uniform1f(this.u.u_eye,eye);gl.uniform1f(this.u.u_faceWarp,face);gl.uniform1f(this.u.u_mouthWarp,mouth);gl.uniform1f(this.u.u_noseWarp,nose);
+  const strength=Number.isFinite(intensity)?Math.min(1,Math.max(0,intensity)):1;
+  gl.uniform1f(this.u.u_eye,eye*strength);gl.uniform1f(this.u.u_faceWarp,face*strength);gl.uniform1f(this.u.u_mouthWarp,mouth*strength);gl.uniform1f(this.u.u_noseWarp,nose*strength);
   gl.uniform1f(this.u.u_aspect,w/h);gl.drawArrays(gl.TRIANGLES,0,6);return true;
  }
  close(){const gl=this.gl;if(!gl)return;gl.deleteTexture(this.texture);gl.deleteBuffer(this.buffer);gl.deleteProgram(this.program);this.gl=null;}

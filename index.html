@@ -42,10 +42,12 @@
 
 
 
-<script src="js/camera-capture2-final.js?v=camera-ai-lenses-1"></script>
+<script src="js/camera-annotations.js?v=camera-final-1"></script>
+<script src="js/camera-capture2-final.js?v=camera-final-1"></script>
 
   <link rel="stylesheet" href="css/inline-extracted.css?v=member-identity-v2">
-  <link rel="stylesheet" href="css/camera.css?v=settings-overlay-fix-2">
+  <link rel="stylesheet" href="css/camera.css?v=camera-v2-publish-1">
+<link rel="stylesheet" href="css/camera-stories-creative.css?v=camera-final-1">
 <link rel="stylesheet" href="css/music-workspace.css?v=playlists-image-v1">
   <link rel="stylesheet" href="css/marketplace-entry.css?v=accent-v3">
 <!-- GetYourGuide official partner widget and analytics -->
@@ -179,10 +181,10 @@
   <div id="socialGlobalNotificationsView" class="socialPeople" style="display:none"><p>Ouvre Notifications pour retrouver ton activité sociale.</p></div>
 
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
-    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra selfie MyEvent">
+    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
       <div class="cameraProTop">
         <button type="button" class="cameraProIcon" id="cameraCloseBtn" aria-label="Fermer">✕</button>
-        <div class="cameraProTitle"><span id="cameraModeTitle">SELFIE</span><small id="cameraQualityLabel">Auto</small></div>
+        <div class="cameraProTitle"><span id="cameraModeTitle">PHOTO</span><small id="cameraQualityLabel">Auto</small></div>
         <div class="cameraProTopRight">
           <button type="button" class="cameraProIcon" id="cameraFlashBtn" aria-label="Flash">⚡</button>
           <button type="button" class="cameraProIcon" id="cameraGridBtn" aria-label="Grille">▦</button>
@@ -203,14 +205,18 @@
           <button type="button" class="cameraSideTool" id="cameraAiSide" aria-controls="cameraCreativePanel" aria-expanded="false">✨<small>IA</small></button>
           <button type="button" class="cameraSideTool" id="cameraBeautySide">☺<small>Beauté</small></button>
           <button type="button" class="cameraSideTool" id="cameraRetouchSide">✦<small>Retouches</small></button>
-          <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Effets / Filtres</small></button>
-          <button type="button" class="cameraSideTool" id="cameraAppearanceSide">◈<small>Apparence</small></button>
-          <button type="button" class="cameraSideTool" id="cameraStickerSide">✳<small>Stickers / Plus</small></button>
+          <button type="button" class="cameraSideTool" id="cameraFilterSide">◉<small>Filtres</small></button>
+          <button type="button" class="cameraSideTool" id="cameraAppearanceSide">🤩<small>Effets</small></button>
+          <button type="button" class="cameraSideTool" id="cameraStickerSide">✳<small>Stickers</small></button>
+          <button type="button" class="cameraSideTool" id="cameraSignatureSide">✍<small>Signature</small></button>
+          <button type="button" class="cameraSideTool" id="cameraTextSide">T<small>Texte</small></button>
         </div>
         <div class="cameraFaceGuide" aria-hidden="true"></div>
         <div class="cameraFocusDot" id="cameraFocusDot" aria-hidden="true"></div>
-        <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Prépare ton selfie</strong><span>Place ton visage dans le cadre.</span></div>
+        <div class="cameraPlaceholder" id="cameraPlaceholder"><strong>Ouverture de la caméra…</strong><span>Autorise l’appareil photo pour commencer.</span></div>
         <img id="myeventCapturedImage" alt="Photo capturée" style="display:none">
+        <video id="myeventCapturedVideo" controls playsinline hidden aria-label="Aperçu vidéo"></video>
+        <p id="cameraMediaStatus" role="status" class="cameraMediaStatus"></p>
         <div class="cameraZoomIndicator" id="cameraZoomIndicator" aria-live="off"></div>
         <div class="cameraCountdown" id="cameraCountdown" aria-live="assertive" hidden></div>
         <div class="cameraLevelIndicator" id="cameraLevelIndicator" aria-hidden="true" hidden><span></span></div>
@@ -242,10 +248,12 @@
         <button type="button" id="cameraEventBtn">🎉 <b>Événement</b><small>Créer</small></button>
       </div>
 
-      <input id="cameraFileInput" type="file" accept="image/*" style="display:none">
+      <input id="cameraFileInput" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" style="display:none">
       <div class="cameraCaptured cameraProCaptured" id="cameraCapturedActions">
-        <button type="button" id="cameraPublishBtn">🚀 Publier</button>
+        <button type="button" id="cameraStoryBtn">Ma Story</button>
+        <button type="button" id="cameraPublishBtn">Publier</button>
         <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
+        <button type="button" id="cameraDownloadBtn">Enregistrer</button>
       </div>
       <div class="cameraHint cameraProHint" id="cameraHint">Selfie MyEvent · photo non publiée tant que tu ne valides pas.</div>
     </div>
@@ -343,7 +351,7 @@
     <button type="button" class="active navHome" data-bottom-tab="feed"><span class="bottomIcon"><img src="assets/ui/home-orange.svg" alt=""></span><span class="bottomLabel">Accueil</span></button>
     <button type="button" class="navMarket" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon"><img src="assets/ui/market-bags.svg" alt=""></span><span class="bottomLabel">Marketplace</span></button>
     <button type="button" class="navGames" data-bottom-tab="games"><span class="bottomIcon"><img src="assets/ui/games-purple.svg" alt=""></span><span class="bottomLabel">Jeux</span></button>
-    <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Caméra MyEvent" aria-label="Ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
+    <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Photo ME" aria-label="Photo ME — ouvrir la caméra"><img src="assets/camera-me-logo.jpeg" alt=""></button>
     <button type="button" class="navEvents" data-bottom-tab="events"><span class="bottomIcon"><img src="assets/ui/calendar-star.svg" alt=""></span><span class="bottomLabel">Événements</span></button>
     <button type="button" class="navMusic" data-bottom-tab="music"><span class="bottomIcon"><img src="assets/ui/music-pink.svg" alt=""></span><span class="bottomLabel">Musique</span></button>
     <button type="button" class="navProfile" data-bottom-tab="profile"><span class="bottomIcon"><img src="assets/ui/profile-white.svg" alt=""></span><span class="bottomLabel">Profil</span></button>
@@ -1097,7 +1105,7 @@
 
 
 <script src="js/invitation-context.js?v=1"></script>
-<script src="js/core-runtime.js?v=environment-v22"></script>
+<script src="js/core-runtime.js?v=camera-v2-publish-1"></script>
 
 
 <script src="js/discussion-runtime.js"></script>
@@ -1229,12 +1237,12 @@
 
 
 
-<script src="js/home-social-runtime.js?v=stories-toggle-1"></script>
+<script src="js/home-social-runtime.js?v=camera-final-1"></script>
 <script src="js/feed-interactions.js?v=feed-reactions-1"></script>
 <script src="js/event-social-feed.js?v=feed-reactions-1"></script>
 <link rel="stylesheet" href="css/event-social-feed.css?v=feed-reactions-1">
 <link rel="stylesheet" href="css/social-friends-stories.css?v=stories-toggle-1">
-<script src="js/social-friends-stories.js?v=stories-toggle-1"></script>
+<script src="js/social-friends-stories.js?v=camera-final-1"></script>
 <script src="js/music-session.js?v=1"></script>
 <script src="js/music-controller.js?v=1"></script>
 <script src="js/music-runtime.js?v=music-10"></script>

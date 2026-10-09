@@ -1,0 +1,61 @@
+// Local real browser touch events and JPEG pixels; no remote storage writes.
+const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+(async()=>{
+ const engine=process.env.TEST_BROWSER==='webkit'?webkit:chromium;
+ const browser=await engine.launch({headless:true,...(engine===chromium?{executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}: {})});
+ const page=await browser.newPage({viewport:{width:390,height:744},hasTouch:true,isMobile:true});page.setDefaultTimeout(10000);
+ const root=path.resolve(__dirname,'..'),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',route=>{const u=new URL(route.request().url());if(['blob:','data:'].includes(u.protocol))return route.continue();if(u.hostname!=='myevent.test')return route.abort();const file=path.resolve(root,u.pathname.slice(1)||'index.html');if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return route.fulfill({status:404,body:''});let body=fs.readFileSync(file);if(file.endsWith('index.html'))body=body.toString().replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');return route.fulfill({body,contentType:file.endsWith('.html')?'text/html':file.endsWith('.css')?'text/css':/\.m?js$/.test(file)?'text/javascript':'application/octet-stream'});});
+ await page.goto('http://myevent.test/');
+ await page.evaluate(()=>{
+  let el=document.getElementById('socialBottomNav');while(el){el.style.setProperty('display','block','important');el=el.parentElement;}
+  const banner=document.createElement('div');banner.id='myeventEnvironmentBanner';banner.style.cssText='position:fixed;inset:0 0 auto;height:52px;z-index:2147483646;background:#ffdb70;pointer-events:none';banner.textContent='MYEVENT TEST';document.body.append(banner);
+ });
+ for(const script of ['camera-annotations.js','camera-capture2-final.js','home-social-runtime.js','social-friends-stories.js'])await page.addScriptTag({url:'/js/'+script});
+ await page.locator('#socialBottomCreate').evaluate(e=>e.click());
+ const original=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=640;c.height=960;const ctx=c.getContext('2d'),g=ctx.createLinearGradient(0,0,640,960);g.addColorStop(0,'#123456');g.addColorStop(.5,'#683722');g.addColorStop(1,'#21493d');ctx.fillStyle=g;ctx.fillRect(0,0,c.width,c.height);return c.toDataURL('image/png');});
+ await page.locator('#cameraFileInput').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from(original.split(',')[1],'base64')});
+ const ready=async()=>{try{await page.waitForFunction(()=>document.getElementById('myeventCameraModal').dataset.cameraState==='preview');}catch(e){console.error(await page.evaluate(()=>({state:document.getElementById('myeventCameraModal').dataset.cameraState,placeholder:document.getElementById('cameraPlaceholder').textContent,img:document.getElementById('myeventCapturedImage').src.slice(0,60)})),errors);throw e;}};await ready();
+ await page.locator('#cameraFilterSide').click();assert.equal(await page.locator('.cameraFilterChip img').count(),20);
+ const thumbs=await page.locator('.cameraFilterChip img').evaluateAll(els=>els.map(e=>e.src));assert.equal(new Set(thumbs).size,20);
+ const ids=await page.locator('.cameraFilterChip').evaluateAll(els=>els.map(e=>e.dataset.filter));
+ for(const id of ids){await page.evaluate(id=>document.getElementById('myeventCameraModal').cameraSetFilter(id),id);await ready();
+  const error=await page.evaluate(async()=>{const m=document.getElementById('myeventCameraModal'),file=await m.cameraGetMediaFile(),image=new Image();image.src=URL.createObjectURL(file);await image.decode();const c=m.cameraCropExport(m.cameraRenderPhoto(m.cameraGetPhotoSource())),ctx=c.getContext('2d'),expected=ctx.getImageData(0,0,c.width,c.height).data;ctx.drawImage(image,0,0);const actual=ctx.getImageData(0,0,c.width,c.height).data;let sum=0;for(let i=0;i<actual.length;i+=4)for(let j=0;j<3;j++)sum+=Math.abs(actual[i+j]-expected[i+j]);URL.revokeObjectURL(image.src);return sum/(c.width*c.height*3);});assert(error<3,`${id} JPEG error ${error}`);
+ }
+ await page.evaluate(()=>document.getElementById('myeventCameraModal').cameraSetFilter('original'));await ready();await page.locator('#cameraPanelClose').click();
+ await page.locator('#cameraStickerSide').click();await page.getByLabel('Texte sur la photo',{exact:true}).fill('MyEvent');await page.getByRole('button',{name:'Ajouter le texte',exact:true}).click();await ready();await page.locator('#cameraPanelClose').click();await page.waitForTimeout(80);
+ const bounds=()=>page.evaluate(()=>{const m=document.getElementById('myeventCameraModal'),c=document.createElement('canvas');c.width=640;c.height=960;m.cameraRenderDecorations(c);const data=c.getContext('2d').getImageData(0,0,640,960).data;let minX=640,minY=960,maxX=0,maxY=0;for(let i=0;i<data.length;i+=4)if(data[i+3]){const x=i/4%640,y=Math.floor(i/4/640);minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}return {x:(minX+maxX)/2,y:(minY+maxY)/2,w:maxX-minX,h:maxY-minY};});
+ const before=await bounds(),layer=page.locator('.cameraDecorationLayer');let box=await layer.boundingBox();
+ const center={x:box.x+before.x/640*box.width,y:box.y+before.y/960*box.height};
+ const cdp=engine===chromium?await page.context().newCDPSession(page):null;
+ async function touches(type,points){if(cdp)await cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({id:i+1,x:p.x,y:p.y,radiusX:2,radiusY:2,force:1}))});else await layer.evaluate((el,{type,points})=>{const name={touchStart:'pointerdown',touchMove:'pointermove',touchEnd:'pointerup'}[type];points.forEach((p,i)=>el.dispatchEvent(new PointerEvent(name,{pointerId:i+1,pointerType:'touch',clientX:p.x,clientY:p.y,bubbles:true})));},{type,points});}
+ if(cdp){await touches('touchStart',[center]);await touches('touchMove',[{x:center.x+45,y:center.y+30}]);await touches('touchEnd',[]);}else{await page.mouse.move(center.x,center.y);await page.mouse.down();await page.mouse.move(center.x+45,center.y+30);await page.mouse.up();}
+ await ready();const moved=await bounds();assert(moved.x>before.x+20&&moved.y>before.y+20,'touch drag moves export coordinates');
+ box=await layer.boundingBox();const at={x:box.x+moved.x/640*box.width,y:box.y+moved.y/960*box.height};
+ if(cdp){await touches('touchStart',[{x:at.x-12,y:at.y},{x:at.x+12,y:at.y}]);await touches('touchMove',[{x:at.x,y:at.y-23},{x:at.x,y:at.y+23}]);await touches('touchEnd',[]);}else{await touches('touchStart',[{x:at.x-12,y:at.y},{x:at.x+12,y:at.y}]);await touches('touchMove',[{x:at.x,y:at.y-23},{x:at.x,y:at.y+23}]);await touches('touchEnd',[{x:at.x,y:at.y-23},{x:at.x,y:at.y+23}]);}
+ await ready();const rotated=await bounds();assert(rotated.h>moved.w*1.6&&rotated.w<rotated.h,'pinch enlarges and rotates exported text 90 degrees');
+ await page.getByRole('button',{name:'Modifier',exact:true}).click();await page.getByLabel('Modifier le contenu').fill('TEST');await page.getByRole('button',{name:'Appliquer le texte',exact:true}).click();await ready();
+ await page.getByRole('button',{name:'Ajouter le sticker 🎉',exact:true}).click();await ready();assert.equal(await page.getByLabel('Élément à modifier').locator('option').count(),2);
+ await page.getByLabel('Élément à modifier').selectOption('0');assert.equal(await page.getByLabel('Modifier le contenu').inputValue(),'TEST');
+ await page.getByLabel('Élément à modifier').selectOption('1');await page.getByRole('button',{name:'Supprimer cet élément',exact:true}).click();await ready();assert.equal(await page.getByLabel('Élément à modifier').locator('option').count(),1);
+ await page.locator('#cameraPanelClose').click();
+ const error=await page.evaluate(async()=>{const m=document.getElementById('myeventCameraModal'),file=await m.cameraGetMediaFile(),image=new Image();image.src=URL.createObjectURL(file);await image.decode();const c=m.cameraCropExport(m.cameraRenderDecorations(m.cameraRenderPhoto(m.cameraGetPhotoSource()))),ctx=c.getContext('2d'),expected=ctx.getImageData(0,0,c.width,c.height).data;ctx.drawImage(image,0,0);const actual=ctx.getImageData(0,0,c.width,c.height).data;let sum=0;for(let i=0;i<actual.length;i+=4)for(let j=0;j<3;j++)sum+=Math.abs(actual[i+j]-expected[i+j]);URL.revokeObjectURL(image.src);return sum/(c.width*c.height*3);});assert(error<3,'export matches preview renderer without selection frame');
+ for(const [width,height] of [[320,568],[375,667],[390,744],[430,832],[844,390]]){
+  await page.setViewportSize({width,height});await page.waitForTimeout(100);
+  for(const panel of [false,true]){if(panel)await page.locator('#cameraFilterSide').click();await page.waitForTimeout(80);
+   const result=await page.evaluate(()=>{const image=document.getElementById('myeventCapturedImage').getBoundingClientRect(),layer=document.querySelector('.cameraDecorationLayer').getBoundingClientRect(),banner=document.getElementById('myeventEnvironmentBanner').getBoundingClientRect(),panel=document.getElementById('cameraCreativePanel'),actions=document.getElementById('cameraCapturedActions').getBoundingClientRect();return {overflow:document.documentElement.scrollWidth>innerWidth,image:{x:image.x,y:image.y,bottom:image.bottom,height:image.height},aligned:Math.abs(layer.x-image.x)<1&&Math.abs(layer.y-image.y)<1,banner:banner.bottom,end:!panel.hidden&&innerHeight>=450?panel.getBoundingClientRect().top:actions.top,buttons:[...document.querySelectorAll('#cameraCapturedActions button')].filter(b=>!b.hidden).map(b=>{const r=b.getBoundingClientRect();return r.bottom<=innerHeight&&r.x>=0&&r.right<=innerWidth;})};});
+   assert(!result.overflow&&result.aligned&&result.buttons.every(Boolean));assert(result.image.height>=40,JSON.stringify(result));if(panel)await page.locator('#cameraPanelClose').click();
+  }
+ }
+ await page.setViewportSize({width:390,height:744});await page.waitForTimeout(100);
+ assert(!(await page.locator('.cameraTierSwitch').isVisible()));assert(!(await page.locator('#cameraIAAccess').isVisible()));
+ await page.screenshot({path:path.join(root,'work/camera-v21-editor.png')});
+ await page.locator('#cameraFilterSide').click();await page.waitForTimeout(100);await page.screenshot({path:path.join(root,'work/camera-v21-filters.png')});await page.locator('#cameraPanelClose').click();
+ await page.getByRole('button',{name:'Terminé',exact:true}).click();
+ const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#cameraDownloadBtn').click()]);assert.equal(download.suggestedFilename(),'MyEvent-photo.jpg');const savedFile=fs.readFileSync(await download.path());const exportedBytes=await page.evaluate(async()=>[...new Uint8Array(await(await document.getElementById('myeventCameraModal').cameraGetMediaFile()).arrayBuffer())]);assert(savedFile.equals(Buffer.from(exportedBytes)),'download uses exact edited JPEG');
+ await page.locator('#cameraStoryBtn').click();await page.locator('#storyMediaPreview img').waitFor();assert(await page.locator('#storyPublish').isVisible());
+ await page.locator('#storyCloseSheet').click();await page.locator('#socialBottomCreate').evaluate(e=>e.click());await page.locator('#cameraFileInput').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from(original.split(',')[1],'base64')});await ready();
+ await page.evaluate(()=>{window.feedSaves=[];window.myeventPublishCameraPost=async image=>{feedSaves.push(image);return {id:'local-test'};};window.myeventLoadCameraPosts=async()=>[];window.alert=()=>{};});await page.getByRole('button',{name:'Terminé',exact:true}).click();await page.locator('#cameraPublishBtn').click();await page.waitForFunction(()=>feedSaves.length===1);assert(await page.locator('[data-camera-post-id="local-test"] img').isVisible());
+ assert.deepEqual(errors,[]);await browser.close();console.log('PASS V2.1: 20 distinct photo thumbnails and JPEG recipes/original, Chromium native touches / WebKit pointer-event gestures, independent selection/edit/delete, transformed JPEG pixel parity, banner + panel + 320/375/390/430/landscape layout, single Stories/Creative interface without preview tiers, exact saved JPEG, Story + mocked feed handoff, zero JS errors.');
+})().catch(e=>{console.error(e);process.exit(1);});

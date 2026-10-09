@@ -1,10 +1,10 @@
 import {FaceEngine} from './camera-face-engine.mjs';
-import {categories,effects,hasEffects,drawAppearance,selectedWarp} from './camera-appearance-renderer.mjs?v=ai-lenses-1';
-import {FaceWarpRenderer} from './camera-face-warp.mjs';
+import {categories,effects,hasEffects,drawAppearance,selectedWarp} from './camera-appearance-renderer.mjs?v=camera-v22-1';
+import {FaceWarpRenderer} from './camera-face-warp.mjs?v=camera-v22-1';
 
 export function createAppearance(modal){
   const video=modal.querySelector('#myeventCameraVideo'),sheet=modal.querySelector('.cameraProSheet');
-  let selection={fun:null,glasses:null,accessories:null,makeup:null},category='glasses';
+  let selection={fun:null,glasses:null,accessories:null,makeup:null},category='fun',intensity=1;
   let engine=null,overlay=null,warpCanvas=null,warpRenderer=null,frame=null,notice=null,timer=0,epoch=0,photoEpoch=0,busy=false,lastVideoTime=-1;
   let interval=1000/12,average=0,cache=new WeakMap(),failed=false,status='Choisis un effet local.';
   function setStatus(text){
@@ -47,8 +47,8 @@ export function createAppearance(modal){
       if(generation!==epoch||!active()||modal.dataset.cameraState!=='viewfinder')return;
       overlay.width=frame.width;overlay.height=frame.height;
       const warp=selectedWarp(selection);
-      if(points&&warp){if(!warpRenderer)warpRenderer=new FaceWarpRenderer(warpCanvas);warpRenderer.render(frame,points,warp,frame.width,frame.height);warpCanvas.hidden=false;}else if(warpCanvas)warpCanvas.hidden=true;
-      drawAppearance(overlay.getContext('2d'),points,selection,overlay.width,overlay.height);overlay.hidden=!points;
+      if(points&&warp){if(!warpRenderer)warpRenderer=new FaceWarpRenderer(warpCanvas);warpRenderer.render(modal.cameraRenderPhoto(frame),points,warp,frame.width,frame.height,intensity);warpCanvas.hidden=false;}else if(warpCanvas)warpCanvas.hidden=true;
+      drawAppearance(overlay.getContext('2d'),points,selection,overlay.width,overlay.height,intensity);overlay.hidden=!points;
       setStatus(points?'Apparence locale active':'Aucun visage détecté — effet masqué.');
       // Start near 12 Hz. Spend at most ~55% of time on inference; fallback caps at 8 Hz.
       const elapsed=warmed?Math.min(1000,performance.now()-started):0;average=average?average*.8+elapsed*.2:elapsed;
@@ -61,7 +61,7 @@ export function createAppearance(modal){
   }
   function setLens(id){selection.fun=id||null;changed();modal.dispatchEvent(new CustomEvent('camera-lens-state',{detail:{lens:selection.fun}}));}
   function changed(){
-    photoEpoch++;failed=false;cache=new WeakMap();stopLive();
+    photoEpoch++;failed=false;stopLive();
     if(!hasEffects(selection)){release();setStatus('Aucun effet Apparence.');}
     else{ensureSurfaces();setStatus('Recherche du visage…');schedule();}
     modal.dispatchEvent(new CustomEvent('camera-appearance-change',{detail:{...selection}}));
@@ -77,23 +77,34 @@ export function createAppearance(modal){
       choices.replaceChildren();
       row.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.category===category)));
       if(!effects[category]){
-        message.textContent='Les transformations IA sont disponibles après la prise dans IA photo.';choices.hidden=false;
-        const ai=document.createElement('button');ai.type='button';ai.textContent='Découvrir les filtres IA';
-        ai.addEventListener('click',()=>document.getElementById('cameraAiSide')?.click());choices.appendChild(ai);return;
+        message.textContent='Cartoon 3D et Manga : traitement IA après capture, service payant et configuration serveur requis. Aucun effet 3D en direct.';choices.hidden=false;
+        for(const [id,label,icon] of [['toon','Cartoon 3D','🧸'],['manga','Style manga','🖋']]){const ai=document.createElement('button');ai.type='button';ai.className='cameraAppearanceEffect';ai.setAttribute('aria-label',label+' IA · après photo');ai.innerHTML='<span class="cameraAppearanceThumb">'+icon+'</span><span>'+label+'</span><small>IA · après photo</small>';ai.onclick=()=>{modal.cameraRequestedAILens=id;document.getElementById('cameraAiSide')?.click();};choices.append(ai);}return;
       }
       choices.hidden=false;message.textContent=status;
+      // Illustrative thumbnails are calculated locally; they do not pretend to be live selfies.
+      const base=document.createElement('canvas');base.width=base.height=120;const ctx=base.getContext('2d');
+      ctx.fillStyle='#2b2434';ctx.fillRect(0,0,120,120);ctx.fillStyle='#dfaa80';ctx.beginPath();ctx.ellipse(60,65,33,43,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#3b2422';ctx.beginPath();ctx.ellipse(60,26,34,12,0,0,Math.PI*2);ctx.fill();
+      for(const x of [46,74]){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(x,55,8,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#241d29';ctx.beginPath();ctx.arc(x,55,3.5,0,Math.PI*2);ctx.fill();}
+      ctx.strokeStyle='#8f393e';ctx.lineWidth=3;ctx.beginPath();ctx.arc(60,78,12,0,Math.PI);ctx.stroke();
+      const landmarks=Array.from({length:478},()=>({x:.5,y:.55}));for(const [i,x,y] of [[33,.31,.46],[263,.69,.46],[468,.38,.46],[473,.62,.46],[10,.5,.25],[4,.5,.59],[13,.5,.68],[14,.5,.72],[61,.40,.68],[291,.60,.68]])landmarks[i]={x,y};
+      const warpThumb=document.createElement('canvas');let thumbnailRenderer=null;try{if(category==='fun')thumbnailRenderer=new FaceWarpRenderer(warpThumb);}catch(error){/* The effect itself reports unsupported WebGL when selected. */}
       for(const [id,label,glyph] of [[null,'Aucun','∅'],...effects[category]]){
-        const button=document.createElement('button');button.type='button';button.className='cameraAppearanceEffect';button.setAttribute('aria-pressed',String(selection[category]===id));
+        const button=document.createElement('button');button.type='button';button.className='cameraAppearanceEffect';button.dataset.effect=id||'';button.setAttribute('aria-pressed',String(selection[category]===id));
         const thumb=document.createElement('span');thumb.className='cameraAppearanceThumb';thumb.setAttribute('aria-hidden','true');thumb.textContent=glyph;
+        if(id){const c=document.createElement('canvas');c.width=c.height=120;const context=c.getContext('2d');context.drawImage(base,0,0);const choice={[category]:id};
+          if(thumbnailRenderer){thumbnailRenderer.render(base,landmarks,id,120,120,1);context.drawImage(warpThumb,0,0);}drawAppearance(context,landmarks,choice,120,120);
+          const image=document.createElement('img');image.alt='';image.src=c.toDataURL('image/png');thumb.replaceChildren(image);
+        }
         const caption=document.createElement('span');caption.textContent=label;button.append(thumb,caption);
         button.addEventListener('click',()=>{selection[category]=id;changed();showChoices();});choices.appendChild(button);
       }
+      thumbnailRenderer?.close();
     }
-    for(const [id,label] of categories){
+    for(const [id,label] of categories.filter(([id])=>effects[id])){
       const button=document.createElement('button');button.type='button';button.dataset.category=id;button.textContent=label+(effects[id]||id==='creative-ai'?'':' · bientôt');
       button.addEventListener('click',()=>{category=id;showChoices();modal.dispatchEvent(new CustomEvent('camera-appearance-select',{detail:{category:id,connected:!!effects[id]}}));});row.appendChild(button);
     }
-    host.append(row,choices,message,reset);showChoices();
+    const label=document.createElement('label');label.className='cameraRetouchControl';label.textContent='Intensité des effets locaux';const range=document.createElement('input');range.type='range';range.min='0';range.max='100';range.value=String(intensity*100);range.setAttribute('aria-label','Intensité des effets locaux');range.oninput=()=>{intensity=Number(range.value)/100;changed();};label.append(range);host.append(row,choices,label,message,reset);showChoices();
   }
   async function compose(source,output){
     stopLive();const generation=++photoEpoch;
@@ -112,8 +123,8 @@ export function createAppearance(modal){
         cache.set(source,points);
       }
       const warp=selectedWarp(chosen);
-      if(points&&warp){const photoWarp=document.createElement('canvas'),renderer=new FaceWarpRenderer(photoWarp);try{renderer.render(output,points,warp,output.width,output.height);output.getContext('2d').drawImage(photoWarp,0,0);}finally{renderer.close();photoWarp.width=photoWarp.height=0;}}
-      drawAppearance(output.getContext('2d'),points,chosen,output.width,output.height);
+      if(points&&warp){const photoWarp=document.createElement('canvas'),renderer=new FaceWarpRenderer(photoWarp);try{renderer.render(output,points,warp,output.width,output.height,intensity);output.getContext('2d').drawImage(photoWarp,0,0);}finally{renderer.close();photoWarp.width=photoWarp.height=0;}}
+      drawAppearance(output.getContext('2d'),points,chosen,output.width,output.height,intensity);
       setStatus(points?'Effets locaux intégrés à la photo.':'Aucun visage détecté : photo conservée sans Apparence.');
       return output;
     }catch(error){
