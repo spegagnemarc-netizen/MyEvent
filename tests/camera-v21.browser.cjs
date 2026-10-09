@@ -49,10 +49,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   }
  }
  await page.setViewportSize({width:390,height:744});await page.waitForTimeout(100);
- await page.getByRole('button',{name:'Premium',exact:true}).click();assert.equal(await page.locator('#myeventCameraModal').getAttribute('data-camera-tier'),'premium');assert(await page.getByText('Aperçu · offre à venir',{exact:true}).isVisible());assert.equal(await page.locator('.cameraPremiumCrown').count(),1);
- const premium=await page.locator('#cameraIAAccess').evaluate(e=>getComputedStyle(e).borderColor);assert.equal(premium,'rgb(214, 184, 102)');
- await page.screenshot({path:path.join(root,'work/camera-v21-premium.png')});await page.locator('#myeventCameraModal').getByRole('button',{name:'Gratuit',exact:true}).click();
- await page.locator('#cameraIAAccess').click();await page.locator('.cameraAIOverview').waitFor();assert(await page.getByText('Suppression d’objets',{exact:true}).isVisible());assert(await page.getByText('Arrière-plan personnalisé',{exact:true}).isVisible());assert.equal(await page.locator('.cameraAIFeature').count(),5);assert.equal(await page.locator('#myeventCameraModal').getAttribute('data-camera-tier'),'free');await page.screenshot({path:path.join(root,'work/camera-v21-ia.png')});await page.locator('#cameraPanelClose').click();
+ assert(!(await page.locator('.cameraTierSwitch').isVisible()));assert(!(await page.locator('#cameraIAAccess').isVisible()));
  await page.screenshot({path:path.join(root,'work/camera-v21-editor.png')});
  await page.locator('#cameraFilterSide').click();await page.waitForTimeout(100);await page.screenshot({path:path.join(root,'work/camera-v21-filters.png')});await page.locator('#cameraPanelClose').click();
  await page.getByRole('button',{name:'Terminé',exact:true}).click();
@@ -60,5 +57,5 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('#cameraStoryBtn').click();await page.locator('#storyMediaPreview img').waitFor();assert(await page.locator('#storyPublish').isVisible());
  await page.locator('#storyCloseSheet').click();await page.locator('#socialBottomCreate').evaluate(e=>e.click());await page.locator('#cameraFileInput').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from(original.split(',')[1],'base64')});await ready();
  await page.evaluate(()=>{window.feedSaves=[];window.myeventPublishCameraPost=async image=>{feedSaves.push(image);return {id:'local-test'};};window.myeventLoadCameraPosts=async()=>[];window.alert=()=>{};});await page.getByRole('button',{name:'Terminé',exact:true}).click();await page.locator('#cameraPublishBtn').click();await page.waitForFunction(()=>feedSaves.length===1);assert(await page.locator('[data-camera-post-id="local-test"] img').isVisible());
- assert.deepEqual(errors,[]);await browser.close();console.log('PASS V2.1: 20 distinct photo thumbnails and JPEG recipes/original, Chromium native touches / WebKit pointer-event gestures, independent selection/edit/delete, transformed JPEG pixel parity, banner + panel + 320/375/390/430/landscape layout, free/Premium styling without entitlement changes, IA availability labels, exact saved JPEG, Story + mocked feed handoff, zero JS errors.');
+ assert.deepEqual(errors,[]);await browser.close();console.log('PASS V2.1: 20 distinct photo thumbnails and JPEG recipes/original, Chromium native touches / WebKit pointer-event gestures, independent selection/edit/delete, transformed JPEG pixel parity, banner + panel + 320/375/390/430/landscape layout, single Stories/Creative interface without preview tiers, exact saved JPEG, Story + mocked feed handoff, zero JS errors.');
 })().catch(e=>{console.error(e);process.exit(1);});

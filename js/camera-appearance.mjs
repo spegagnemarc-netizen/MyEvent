@@ -100,7 +100,7 @@ export function createAppearance(modal){
       }
       thumbnailRenderer?.close();
     }
-    for(const [id,label] of categories){
+    for(const [id,label] of categories.filter(([id])=>effects[id])){
       const button=document.createElement('button');button.type='button';button.dataset.category=id;button.textContent=label+(effects[id]||id==='creative-ai'?'':' · bientôt');
       button.addEventListener('click',()=>{category=id;showChoices();modal.dispatchEvent(new CustomEvent('camera-appearance-select',{detail:{category:id,connected:!!effects[id]}}));});row.appendChild(button);
     }

@@ -10,6 +10,7 @@
     const left=modal.querySelector('.cameraSideTools.left');
     if(!sheet||!preview||!right||!left) return;
     sheet.append(right);
+    sheet.append(left);
 
     const settings=document.createElement('details');
     settings.className='cameraGlassSettings';
@@ -56,7 +57,7 @@
       const height=Math.max(200,(viewport?.height||innerHeight)-(top-viewportTop));
       const safeBottom=parseFloat(style.getPropertyValue('--camera-safe-bottom'))||0;
       const safeLeft=parseFloat(style.getPropertyValue('--camera-safe-left'))||0,safeRight=parseFloat(style.getPropertyValue('--camera-safe-right'))||0;
-      const visibleWidth=Math.max(1,modal.clientWidth-safeLeft-safeRight),visibleHeight=Math.max(1,height-56-safeBottom);
+      const visibleWidth=Math.max(1,modal.clientWidth-safeLeft-safeRight),visibleHeight=Math.max(1,height);
       const scale=Math.max(visibleWidth/source.width,visibleHeight/source.height),width=source.width*scale,photoHeight=source.height*scale;
       const left=safeLeft+(visibleWidth-width)/2,photoTop=top+(visibleHeight-photoHeight)/2;
       return {top,height,left,photoTop,width,photoHeight,crop:{x:(safeLeft-left)/scale,y:(top-photoTop)/scale,width:visibleWidth/scale,height:visibleHeight/scale},scale};
@@ -204,6 +205,51 @@
     strip.querySelectorAll('.cameraFilterChip').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
     modal.cameraSetFilter=setFilter;
     modal.cameraGetFilter=()=>selectedFilter;
+    // A single live filmstrip, with thumbnails from the actual camera frame.
+    const quick=document.createElement('div');quick.className='cameraQuickFilters';quick.setAttribute('aria-label','Aperçus des filtres');
+    for(const [id,label] of filterItems.filter(([id])=>['original','naturel','vif','cinema','nb','retro','crepuscule'].includes(id))){
+      const button=document.createElement('button');button.type='button';button.dataset.quickFilter=id;button.disabled=true;button.setAttribute('aria-pressed',String(id==='original'));
+      const thumb=document.createElement('img');thumb.alt='';const name=document.createElement('span');name.textContent=label;button.append(thumb,name);
+      button.onclick=()=>setFilter(id);quick.append(button);
+    }
+    sheet.append(quick);
+    const originalRefresh=modal.cameraRefreshFilterThumbs;
+    modal.cameraRefreshFilterThumbs=()=>{
+      originalRefresh();
+      for(const button of quick.querySelectorAll('button')){const thumb=strip.querySelector('[data-filter="'+button.dataset.quickFilter+'"] img');if(thumb){button.querySelector('img').src=thumb.src;button.disabled=false;}}
+    };
+    modal.addEventListener('camera-filter-change',()=>quick.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.quickFilter===selectedFilter))));
+    modal.querySelector('#myeventCameraVideo').addEventListener('loadeddata',()=>modal.cameraRefreshFilterThumbs());
+    modal.addEventListener('camera-preview-ready',()=>modal.cameraRefreshFilterThumbs());
+    modal.addEventListener('camera-closed',()=>quick.querySelectorAll('button').forEach(button=>{button.disabled=true;button.querySelector('img').removeAttribute('src');}));
+
+    const clock=document.createElement('output');clock.className='cameraRecordingClock';clock.hidden=true;clock.setAttribute('aria-label','Durée de la vidéo');sheet.append(clock);
+    let recordingStarted=0,clockTimer=0;
+    function updateClock(){const seconds=Math.floor((performance.now()-recordingStarted)/1000);clock.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
+    new MutationObserver(()=>{const recording=modal.querySelector('#cameraShutterBtn').classList.contains('recording');clock.hidden=!recording;clearInterval(clockTimer);if(recording){recordingStarted=performance.now();updateClock();clockTimer=setInterval(updateClock,500);}}).observe(modal.querySelector('#cameraShutterBtn'),{attributes:true,attributeFilter:['class']});
+
+    // Only real media from this session; the device library uses its native picker.
+    const recent=[];let galleryGeneration=0,galleryRequest=0;
+    modal.addEventListener('camera-source-reset',()=>{galleryGeneration++;galleryRequest++;});
+    modal.addEventListener('camera-preview-ready',async()=>{
+      const generation=galleryGeneration,request=++galleryRequest;
+      const file=await modal.cameraGetMediaFile?.();if(!file||request!==galleryRequest)return;
+      const index=recent.findIndex(item=>item.generation===generation);
+      const item={file,generation,url:URL.createObjectURL(file)};
+      if(index>=0){URL.revokeObjectURL(recent[index].url);recent[index]=item;}else recent.unshift(item);
+      while(recent.length>6||recent.reduce((sum,item)=>sum+item.file.size,0)>100*1024*1024){const old=recent.pop();URL.revokeObjectURL(old.url);}
+      if(!file.type.startsWith('video/')){const span=modal.querySelector('#cameraGalleryBtn span');span.replaceChildren();const image=document.createElement('img');image.className='cameraGalleryThumb';image.alt='Dernière photo';image.src=item.url;span.append(image);}
+    });
+    modal.cameraRenderGallery=host=>{
+      host.replaceChildren();modal.querySelector('#cameraPanelTitle').textContent='Galerie';
+      const pick=document.createElement('button');pick.type='button';pick.className='cameraGalleryImport';pick.textContent='Ouvrir la galerie de l’appareil';pick.onclick=()=>modal.querySelector('#cameraFileInput').click();host.append(pick);
+      const note=document.createElement('p');note.textContent=recent.length?'Photos et vidéos de cette session':'Choisis une photo ou une vidéo sur ton appareil.';host.append(note);
+      const tabs=document.createElement('div');tabs.className='cameraFilterCategories';const grid=document.createElement('div');grid.className='cameraGalleryGrid';
+      for(const [type,label] of [['all','Toutes'],['image/','Photos'],['video/','Vidéos']]){const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-pressed',String(type==='all'));button.onclick=()=>{grid.querySelectorAll('button').forEach(tile=>tile.hidden=type!=='all'&&!tile.dataset.type.startsWith(type));tabs.querySelectorAll('button').forEach(tab=>tab.setAttribute('aria-pressed',String(tab===button)));};tabs.append(button);}
+      for(const item of recent){const button=document.createElement('button');button.type='button';button.dataset.type=item.file.type;button.setAttribute('aria-label','Choisir '+(item.file.type.startsWith('video/')?'la vidéo':'la photo'));const media=document.createElement(item.file.type.startsWith('video/')?'video':'img');media.src=item.url;if(media.tagName==='VIDEO'){media.muted=true;media.playsInline=true;media.preload='metadata';}else media.alt='Photo de cette session';button.append(media);button.onclick=()=>modal.cameraSelectMediaFile?.(item.file);grid.append(button);}
+      host.append(tabs,grid);
+    };
+    window.addEventListener('pagehide',()=>{clearInterval(clockTimer);recent.splice(0).forEach(item=>URL.revokeObjectURL(item.url));});
     modal.cameraRenderFilters=host=>{
       const groups={'Naturel':['original','naturel','doux'],'Ambiance':['chaud','froid','cinema','soleil','crepuscule'],'Couleur':['vif','pastel','ambre','polaire'],'Noir et blanc':['nb','noir','argent'],'Créatif':['vintage','sepia','mat','eclat','retro']};
       const tabs=document.createElement('div');tabs.className='cameraFilterCategories';
@@ -237,7 +283,7 @@
     // The small UI module loads on opening Apparence; MediaPipe loads on an effect.
     modal.cameraRenderAppearance=function(host){
       const request=++panelRequest;host.textContent='Ouverture d’Apparence…';
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-fix-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-final-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       appearanceLoading.then(controller=>{
         if(request===panelRequest&&modal.classList.contains('open')&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')controller.renderPanel(host);
       }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
@@ -252,7 +298,7 @@
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);
     function ensureAppearance(){
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-fix-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-final-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       return appearanceLoading;
     }
     function selectLens(button){

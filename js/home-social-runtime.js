@@ -137,8 +137,13 @@
     const video=$s('myeventCameraVideo');
     const preview=sheet?.querySelector('.cameraProPreview'), indicator=$s('cameraZoomIndicator');
     let factor=1, track=null, hardware=false, startDistance=0, startFactor=1, hideTimer, zoomRequest=0;
+    const zoomControls=document.createElement('div');zoomControls.className='cameraZoomChoices';zoomControls.setAttribute('aria-label','Zoom');
+    for(const value of [1,2,3]){const button=document.createElement('button');button.type='button';button.textContent=value+'×';button.dataset.zoom=String(value);button.onclick=()=>set(value);zoomControls.append(button);}sheet?.append(zoomControls);
     const distance=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
     function display(){
+      const bounds=zoomBounds(),videoMode=$s('myeventCameraModal').dataset.captureMode==='video';
+      zoomControls.hidden=videoMode&&!hardware;
+      zoomControls.querySelectorAll('button').forEach(button=>{const value=Number(button.dataset.zoom);button.hidden=value<bounds.min||value>bounds.max;button.setAttribute('aria-pressed',String(Math.abs(factor-value)<.1));});
       if(!indicator)return;
       indicator.textContent=factor.toFixed(1)+'×';indicator.classList.add('visible');
       clearTimeout(hideTimer);hideTimer=setTimeout(()=>indicator.classList.remove('visible'),850);
@@ -150,7 +155,7 @@
           if(z&&Number.isFinite(z.min)&&Number.isFinite(z.max))return {min:z.min,max:z.max};
         }catch(e){}
       }
-      return {min:1,max:3};
+      return {min:1,max:$s('myeventCameraModal').dataset.captureMode==='video'?1:3};
     }
     function set(value){
       const bounds=zoomBounds();
@@ -208,11 +213,12 @@
       if(kind==='text'){$s('myeventCameraModal').cameraRenderText?.(content);return;}
       if(kind==='signatures'){$s('myeventCameraModal').cameraRenderSignatures?.(content);return;}
       if(kind==='stickers'){$s('myeventCameraModal').cameraRenderStickers?.(content);return;}
+      if(kind==='gallery'){$s('myeventCameraModal').cameraRenderGallery?.(content);return;}
       if(kind==='settings'||kind==='plus'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
-        const actions=kind==='settings'?[['Minuteur','cameraTimerSide'],['Ratio','cameraRatioSide'],['Grille','cameraGridSide'],['Niveau','cameraLevelSide'],['Qualité','cameraQualityBtn']]:[['Texte & stickers','cameraStickerSide'],['Filtres','cameraFilterSide'],['Retouches','cameraRetouchSide'],['Beauté','cameraBeautySide'],['Apparence','cameraAppearanceSide'],['IA photo','cameraAiSide'],['Musique','cameraMusicSide']];
-        actions.forEach(([label,id])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{closePanel();$s(id)?.click();};row.append(b);});content.append(row);
-        const note=document.createElement('p');note.textContent=kind==='plus'?'Gratuit : capture et retouches locales. IA : service payant existant, après confirmation. Premium : offre future, aucun abonnement activé ici. Portrait : aide au cadrage par détection du visage, sans flou de profondeur. Effets vidéo : à venir.':'Zoom par pincement : optique selon l’appareil, sinon recadrage numérique. Le ratio et les filtres s’appliquent à la photo ; la vidéo conserve le cadrage natif.';content.append(note);
+        const actions=kind==='settings'?[['Flash','cameraFlashBtn'],['Minuteur','cameraTimerSide'],['Ratio','cameraRatioSide'],['Grille','cameraGridSide'],['Niveau','cameraLevelSide'],['Qualité','cameraQualityBtn']]:[['Texte & stickers','cameraStickerSide'],['Filtres','cameraFilterSide'],['Retouches','cameraRetouchSide'],['Beauté','cameraBeautySide'],['Effets amusants','cameraAppearanceSide'],['Musique','cameraMusicSide']];
+        actions.forEach(([label,id])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!$s(id)?.disabled||(cameraMode==='video'&&['cameraTimerSide','cameraRatioSide'].includes(id));b.onclick=()=>{closePanel();$s(id)?.click();};row.append(b);});content.append(row);
+        const note=document.createElement('p');note.textContent=kind==='plus'?'Décore et transforme tes photos. Portrait utilise la détection du visage, sans flou de profondeur. Les vidéos sont enregistrées sans effets photo.':'Pince pour zoomer : zoom matériel selon l’appareil, sinon recadrage numérique pour les photos. La vidéo conserve le cadrage natif.';content.append(note);
         if(kind==='settings'){const settings=$s('myeventCameraModal').cameraSettingsElement;if(settings){settings.open=true;content.append(settings);}}
         return;
       }
@@ -639,12 +645,16 @@
   });
   $s('cameraGalleryBtn')?.addEventListener('click',()=>{
     if(cameraModal.dataset.cameraState==='processing'||mediaRecorder?.state==='recording')return;
-    cameraFile?.click();
+    cameraZoom.openPanel('gallery',$s('cameraGalleryBtn'));
   });
   cameraFile?.addEventListener('change',()=>{
     const file=cameraFile.files?.[0];
     cameraFile.value='';
+    selectCameraMediaFile(file);
+  });
+  function selectCameraMediaFile(file){
     if(!file)return;
+    cameraZoom.closePanel();
     if(file.type.startsWith('video/')){showCameraVideo(file);return;}
     if(!file.type.startsWith('image/')){
       cameraPlaceholder.textContent='Choisis une photo ou une vidéo dans ta galerie.';
@@ -682,7 +692,8 @@
       cameraPlaceholder.style.display='grid';
     };
     source.src=objectUrl;
-  });
+  }
+  cameraModal.cameraSelectMediaFile=selectCameraMediaFile;
   $s('cameraFlipBtn')?.addEventListener('click',()=>{
     if(mediaRecorder?.state==='recording'||cameraModal.dataset.cameraState==='processing')return;
     myeventFacingMode=myeventFacingMode==='user'?'environment':'user';

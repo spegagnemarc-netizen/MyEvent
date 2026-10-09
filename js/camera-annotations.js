@@ -101,7 +101,7 @@
       host.replaceChildren();
       const note=document.createElement('p');note.textContent='Déplace au doigt. Avec deux doigts : agrandis et tourne. Ferme ce panneau pour éditer toute la photo.';host.append(note);
       if(!modal.cameraHasPhoto?.()){note.textContent='Prends ou importe une photo. La décoration vidéo est à venir.';return;}
-      const create=(value,kind,style)=>{if(!value.trim()||items.length>=12)return;const offset=(items.length%5-2)*9;items.push({text:value.trim(),kind,signature:style,x:50+offset,y:50+offset,size:kind==='sticker'?14:7,rotation:0,color:'#ffffff',opacity:1});selected=items.length-1;changed();panel(host,mode);};
+      const create=(value,kind,style)=>{if(!value.trim()||items.length>=12)return;const offset=(items.length%5-2)*9;items.push({text:value.trim(),kind,signature:style,x:50,y:50+offset,size:kind==='sticker'?14:7,rotation:0,color:'#ffffff',opacity:1});selected=items.length-1;changed();panel(host,mode);};
       if(mode==='signatures'){
         const gallery=document.createElement('div');gallery.className='cameraSignatureGallery';
         for(const [style,name] of Object.entries(signatureNames)){
