@@ -38,27 +38,72 @@
 
     // Informational tiers: selecting a badge never grants a subscription.
     const tier=document.createElement('div');tier.className='cameraTierSwitch';
-    tier.innerHTML='<span>GRATUIT · PHOTO & VIDÉO</span>';
+    tier.setAttribute('aria-label','Apparence de la caméra');
+    tier.innerHTML='<button type="button" data-tier="free" aria-pressed="true">Gratuit</button><button type="button" data-tier="premium" aria-pressed="false"><svg class="cameraPremiumCrown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l5 4 4-7 4 7 5-4-2 12H5z"/></svg> Premium</button><small class="cameraTierNotice">Apparence uniquement</small>';
+    modal.dataset.cameraTier='free';
+    tier.querySelectorAll('[data-tier]').forEach(button=>button.addEventListener('click',()=>{
+      modal.dataset.cameraTier=button.dataset.tier;
+      tier.querySelectorAll('[data-tier]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+      tier.querySelector('.cameraTierNotice').textContent=button.dataset.tier==='premium'?'Aperçu · offre à venir':'Apparence uniquement';
+      modal.dispatchEvent(new Event('camera-editor-layout'));
+    }));
     sheet.querySelector('.cameraProTop').appendChild(tier);
+    let layoutFrame=0;
+    function layoutEditor(){
+      layoutFrame=0;if(!modal.classList.contains('open'))return;
+      const viewport=window.visualViewport,banner=document.getElementById('myeventEnvironmentBanner');
+      const viewportTop=viewport?.offsetTop||0,top=Math.max(viewportTop,banner?.getBoundingClientRect().bottom||0);
+      const height=Math.max(200,(viewport?.height||innerHeight)-(top-viewportTop));
+      modal.style.setProperty('--camera-top',top+'px');modal.style.setProperty('--camera-height',height+'px');
+      if(modal.cameraHasPhoto?.()){
+        const source=modal.cameraGetPhotoSource(),image=modal.querySelector('#myeventCapturedImage');
+        const panel=modal.querySelector('#cameraCreativePanel'),actions=modal.querySelector('#cameraCapturedActions');
+        const compact=height<450;
+        const start=sheet.querySelector('.cameraProTop').getBoundingClientRect().bottom+(compact?44:54);
+        let end=actions?.classList.contains('open')?actions.getBoundingClientRect().top-8:top+height-110;
+        if(panel&&!panel.hidden&&!compact)end=Math.min(end,panel.getBoundingClientRect().top-8);
+        const availableHeight=Math.max(40,end-start),availableWidth=Math.max(40,compact&&!panel.hidden?panel.getBoundingClientRect().left-16:modal.clientWidth-16);
+        const scale=Math.min(availableWidth/source.width,availableHeight/source.height),width=source.width*scale,photoHeight=source.height*scale;
+        const left=8+(availableWidth-width)/2,photoTop=start+(availableHeight-photoHeight)/2;
+        for(const [key,value] of Object.entries({left,top:photoTop,width,height:photoHeight}))image.style.setProperty('--photo-'+key,value+'px');
+      }
+      modal.dispatchEvent(new Event('camera-editor-layout'));
+    }
+    function scheduleLayout(){if(!layoutFrame)layoutFrame=requestAnimationFrame(layoutEditor);}
+    const resize=new ResizeObserver(scheduleLayout);resize.observe(sheet);resize.observe(modal.querySelector('#cameraCapturedActions'));resize.observe(modal.querySelector('#cameraCreativePanel'));
+    let observedBanner=null;function observeBanner(){const banner=document.getElementById('myeventEnvironmentBanner');if(banner&&banner!==observedBanner){observedBanner=banner;resize.observe(banner);scheduleLayout();}}
+    new MutationObserver(observeBanner).observe(document.body,{childList:true});observeBanner();
+    new MutationObserver(scheduleLayout).observe(modal,{attributes:true,attributeFilter:['class','data-camera-state','data-media-kind']});
+    new MutationObserver(scheduleLayout).observe(modal.querySelector('#cameraCreativePanel'),{attributes:true,attributeFilter:['hidden','data-kind']});
+    window.addEventListener('resize',scheduleLayout);window.visualViewport?.addEventListener('resize',scheduleLayout);window.visualViewport?.addEventListener('scroll',scheduleLayout);
+    modal.addEventListener('camera-preview-ready',scheduleLayout);
     const decorations=window.createCameraAnnotations(modal);
     modal.cameraRenderDecorations=decorations.render;
     modal.cameraRenderStickers=decorations.panel;
     const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.id='cameraSettingsBtn';settingsButton.className='cameraProIcon';settingsButton.textContent='⚙';settingsButton.setAttribute('aria-label','Réglages caméra');sheet.querySelector('.cameraProTopRight').append(settingsButton);
+    const aiAccess=document.createElement('button');aiAccess.type='button';aiAccess.className='cameraIAAccess';aiAccess.id='cameraIAAccess';aiAccess.textContent='✨ IA';aiAccess.setAttribute('aria-label','Ouvrir les outils IA');
+    aiAccess.addEventListener('click',()=>modal.querySelector('#cameraAiSide')?.click());sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
 
     const strip=document.createElement('div');
     strip.className='cameraFilterStrip cameraFilterFilmstrip';
     const filterItems=[
-      ['original','Original'],['naturel','Naturel'],['vif','Vif'],['froid','Froid'],['chaud','Chaud'],['nb','N&B'],['vintage','Vintage'],['cinema','Cinéma']
+      ['original','Original'],['naturel','Naturel'],['vif','Vif'],['froid','Froid'],['chaud','Chaud'],['nb','N&B'],['vintage','Vintage'],['cinema','Cinéma'],
+      ['doux','Doux'],['soleil','Soleil'],['pastel','Pastel'],['noir','Noir'],['argent','Argent'],['sepia','Sépia'],['ambre','Ambre'],['polaire','Polaire'],['mat','Mat'],['eclat','Éclat'],['retro','Rétro'],['crepuscule','Crépuscule']
     ];
     const filterIcons={original:'◯',naturel:'●',vif:'✹',froid:'❄',chaud:'☀',nb:'◐',vintage:'◍',cinema:'▰'};
-    strip.innerHTML=filterItems.map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+filterIcons[x[0]]+'</span><small>'+x[1]+'</small></button>').join('');
+    strip.innerHTML=filterItems.map((x,i)=>'<button type="button" class="cameraFilterChip '+(i===0?'active':'')+'" data-filter="'+x[0]+'"><span class="thumb">'+(filterIcons[x[0]]||'◯')+'</span><small>'+x[1]+'</small></button>').join('');
     const filterHost=modal.querySelector('#cameraPanelContent');
     if(filterHost) filterHost.appendChild(strip);
     modal.cameraFilterStrip=strip;
 
     // Shared definitions for CSS live preview and pixel-based JPEG rendering.
     // No CanvasRenderingContext2D.filter dependency (including iPhone Safari).
-    const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],vif:[['saturate',1.22],['contrast',1.08]],froid:[['warmth',-12],['contrast',1.03]],chaud:[['warmth',14],['saturate',1.06]],nb:[['grayscale',1],['contrast',1.08]],vintage:[['sepia',.42],['contrast',.94],['saturate',.9]],cinema:[['contrast',1.12],['saturate',.88],['warmth',5]]};
+    const recipes={original:[],naturel:[['brightness',1.03],['saturate',.96]],vif:[['saturate',1.22],['contrast',1.08]],froid:[['warmth',-12],['contrast',1.03]],chaud:[['warmth',14],['saturate',1.06]],nb:[['grayscale',1],['contrast',1.08]],vintage:[['sepia',.42],['contrast',.94],['saturate',.9]],cinema:[['contrast',1.12],['saturate',.88],['warmth',5]],
+      doux:[['contrast',.88],['brightness',1.06]],soleil:[['warmth',22],['brightness',1.06],['saturate',1.12]],
+      pastel:[['saturate',.72],['contrast',.88],['brightness',1.08]],noir:[['grayscale',1],['contrast',1.4],['brightness',.92]],
+      argent:[['grayscale',1],['contrast',.92],['brightness',1.12]],sepia:[['sepia',1]],ambre:[['sepia',.3],['warmth',20],['contrast',1.05]],
+      polaire:[['warmth',-25],['saturate',.8],['brightness',1.06]],mat:[['contrast',.78],['saturate',.88]],eclat:[['contrast',1.18],['saturate',1.32]],
+      retro:[['sepia',.6],['saturate',.75],['contrast',.86]],crepuscule:[['warmth',-10],['brightness',.85],['contrast',1.15]]};
     let selectedFilter='original';
     const retouch={brightness:100,contrast:100,saturate:100,warmth:0};
     let beautyAmount=0;

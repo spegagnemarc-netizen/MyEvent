@@ -70,7 +70,11 @@ export function createAILenses(modal){
     const generateButton=document.createElement('button');generateButton.type='button';generateButton.dataset.aiGenerate='';generateButton.addEventListener('click',generate);
     const original=document.createElement('button');original.type='button';original.dataset.aiOriginal='';original.textContent='Revenir à l’original';original.addEventListener('click',()=>{modal.cameraRestoreAIPhoto?.();message='Photo d’origine restaurée.';refresh();});
     const stop=document.createElement('button');stop.type='button';stop.dataset.aiCancel='';stop.textContent='Annuler';stop.addEventListener('click',()=>{cancel();message='Annulé. Ta photo est conservée.';refresh();});
-    actions.append(generateButton,original,stop);panel.append(tabs,choices,note,status,actions);host.appendChild(panel);refresh();
+    actions.append(generateButton,original,stop);const overview=document.createElement('div');overview.className='cameraAIOverview';
+    const info=document.createElement('p');info.textContent='Service IA existant · photo uniquement · connexion et configuration serveur requises. Consulter ce panneau ne lance aucun traitement.';overview.append(info);
+    const features=[['Amélioration photo','Styles Portrait existants : Studio pro et Cinéma.'],['Retouches','Styles Beauté existants : Éclat naturel, Glamour et Festival.'],['Styles créatifs','Styles IA disponibles ci-dessous, après confirmation.'],['Suppression d’objets','À venir · indisponible.'],['Arrière-plan personnalisé','À venir · indisponible. Certains styles existants modifient le décor, sans éditeur de fond.']];
+    for(const [label,detail] of features){const row=document.createElement('div');row.className='cameraAIFeature';const title=document.createElement('strong');title.textContent=label;const description=document.createElement('span');description.textContent=detail;row.append(title,description);overview.append(row);}
+    panel.append(overview,tabs,choices,note,status,actions);host.appendChild(panel);refresh();
   }
   modal.addEventListener('camera-source-reset',cancel);
   modal.addEventListener('camera-closed',cancel);

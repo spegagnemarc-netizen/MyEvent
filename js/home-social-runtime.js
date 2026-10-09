@@ -164,7 +164,7 @@
       }else if(video)video.style.transform=`scale(${factor})`;
     }
     preview?.addEventListener('touchstart',e=>{
-      if(e.touches.length!==2||e.target.closest('button, input, .cameraCreativePanel'))return;
+      if($s('myeventCameraModal').cameraHasPhoto?.()||e.touches.length!==2||e.target.closest('button, input, .cameraCreativePanel'))return;
       startDistance=distance(e.touches);startFactor=factor;e.preventDefault();
     },{passive:false});
     preview?.addEventListener('touchmove',e=>{
@@ -417,7 +417,7 @@
     $s('cameraCapturedActions')?.classList.remove('open');
     return cameraRevision;
   }
-  function showCameraPreview(data,revision){
+  function showCameraPreview(data,revision,previewData=data){
     if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
     cameraImg.onload=()=>{
       if(revision!==cameraRevision||!cameraModal.classList.contains('open')||!cameraImg.naturalWidth)return;
@@ -429,7 +429,7 @@
       $s('cameraCapturedActions')?.classList.add('open');
     };
     cameraImg.onerror=()=>{if(revision===cameraRevision)resetCameraPreview();};
-    cameraImg.src=data;
+    cameraImg.src=previewData;
   }
   function stopMyEventCamera(){
     if(mediaRecorder){mediaRecorder.onstop=null;mediaRecorder.ondataavailable=null;mediaRecorder.onerror=null;if(mediaRecorder.state==='recording')mediaRecorder.stop();mediaRecorder=null;}
@@ -479,8 +479,9 @@
       let output=cameraModal.cameraRenderPhoto?cameraModal.cameraRenderPhoto(source):source;
       if(!cameraAISourceCanvas&&cameraModal.cameraComposeAppearance)output=await cameraModal.cameraComposeAppearance(source,output);
       if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
+      const previewData=output.toDataURL('image/jpeg',.9);
       if(cameraModal.cameraRenderDecorations)output=cameraModal.cameraRenderDecorations(output);
-      showCameraPreview(output.toDataURL('image/jpeg',.9),revision);
+      showCameraPreview(output.toDataURL('image/jpeg',.9),revision,previewData);
     }catch(error){
       if(revision!==cameraRevision||error.name==='AbortError')return;
       resetCameraPreview();cameraPlaceholder.textContent='Impossible de préparer la photo. Réessaie ou utilise Galerie.';cameraPlaceholder.style.display='grid';
