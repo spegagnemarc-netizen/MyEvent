@@ -188,7 +188,7 @@
       }catch(error){note.textContent='Musique : '+error.message;}
     }
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
-    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraSignatureSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
+    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraSignatureSide','cameraTextSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
     function closePanel(){
       if(panel)panel.hidden=true;
       buttons.forEach(id=>{const b=$s(id);b?.classList.remove('active');b?.setAttribute('aria-expanded','false');});
@@ -196,14 +196,16 @@
     function openPanel(kind,source){
       if(!panel||!content)return;
       if(!panel.hidden&&panel.dataset.kind===kind){closePanel();return;}
+      $s('myeventCameraModal').cameraResumeEdit?.();
       closePanel();const settings=sheet?.querySelector('.cameraGlassSettings');if(settings)settings.open=false;panel.hidden=false;panel.dataset.kind=kind;
       source?.classList.add('active');source?.setAttribute('aria-expanded','true');
-      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
+      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',text:'Texte',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
       title.textContent=names[kind];
       content.replaceChildren();
       if(cameraMode==='video'||cameraVideoFile){
-        if(['filters','beauty','retouch','appearance','stickers','signatures','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
+        if(['filters','beauty','retouch','appearance','stickers','signatures','text','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
       }
+      if(kind==='text'){$s('myeventCameraModal').cameraRenderText?.(content);return;}
       if(kind==='signatures'){$s('myeventCameraModal').cameraRenderSignatures?.(content);return;}
       if(kind==='stickers'){$s('myeventCameraModal').cameraRenderStickers?.(content);return;}
       if(kind==='settings'||kind==='plus'){
@@ -284,7 +286,12 @@
         remove.addEventListener('click',()=>{clearCameraMusic();closePanel();openPanel('music',$s('cameraMusicSide'));});
       }
     }
-    buttons.filter(id=>!['cameraTimerSide','cameraRatioSide','cameraBeautySide','cameraRetouchSide'].includes(id)).forEach(id=>$s(id)?.addEventListener('click',e=>openPanel(({cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraSignatureSide:'signatures',cameraMusicSide:'music'})[id],e.currentTarget)));
+    // Delegation also covers controls created after this parser-time script executes.
+    $s('myeventCameraModal').addEventListener('click',e=>{
+      const button=e.target.closest('button');if(!button)return;
+      const kinds={cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraSignatureSide:'signatures',cameraTextSide:'text',cameraMusicSide:'music'};
+      if(kinds[button.id])openPanel(kinds[button.id],button);
+    });
     $s('cameraPanelClose')?.addEventListener('click',closePanel);
     document.addEventListener('click',e=>{if(e.target.closest('#cameraSettingsBtn'))openPanel('settings',e.target.closest('#cameraSettingsBtn'));});
     let cameraGridActive=false;
@@ -482,6 +489,7 @@
       if(revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
       const previewData=output.toDataURL('image/jpeg',.9);
       if(cameraModal.cameraRenderDecorations)output=cameraModal.cameraRenderDecorations(output);
+      if(cameraModal.cameraCropExport)output=cameraModal.cameraCropExport(output);
       showCameraPreview(output.toDataURL('image/jpeg',.9),revision,previewData);
     }catch(error){
       if(revision!==cameraRevision||error.name==='AbortError')return;
@@ -490,7 +498,7 @@
   }
   let cameraAILensesLoading;
   cameraModal.cameraRenderAI=function(host){
-    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs?v=camera-v22-1').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
+    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs?v=camera-v22-fix-1').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
     cameraAILensesLoading.then(ui=>{if(cameraModal.classList.contains('open')&&$s('cameraCreativePanel')?.dataset.kind==='ai')ui.render(host);}).catch(()=>{host.textContent='Impossible de charger les filtres IA. Réessaie.';});
   };
   cameraModal.cameraGetAIPhoto=function(){

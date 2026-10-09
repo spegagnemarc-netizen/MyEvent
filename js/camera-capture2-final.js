@@ -49,27 +49,40 @@
       modal.dispatchEvent(new Event('camera-editor-layout'));
     }));
     sheet.querySelector('.cameraProTop').appendChild(tier);
-    let layoutFrame=0;
-    function layoutEditor(){
-      layoutFrame=0;if(!modal.classList.contains('open'))return;
-      const viewport=window.visualViewport,banner=document.getElementById('myeventEnvironmentBanner');
+    let layoutFrame=0,lastCrop='';
+    function viewportGeometry(source){
+      const viewport=window.visualViewport,banner=document.getElementById('myeventEnvironmentBanner'),style=getComputedStyle(modal);
       const viewportTop=viewport?.offsetTop||0,top=Math.max(viewportTop,banner?.getBoundingClientRect().bottom||0);
       const height=Math.max(200,(viewport?.height||innerHeight)-(top-viewportTop));
-      modal.style.setProperty('--camera-top',top+'px');modal.style.setProperty('--camera-height',height+'px');
+      const safeBottom=parseFloat(style.getPropertyValue('--camera-safe-bottom'))||0;
+      const safeLeft=parseFloat(style.getPropertyValue('--camera-safe-left'))||0,safeRight=parseFloat(style.getPropertyValue('--camera-safe-right'))||0;
+      const visibleWidth=Math.max(1,modal.clientWidth-safeLeft-safeRight),visibleHeight=Math.max(1,height-56-safeBottom);
+      const scale=Math.max(visibleWidth/source.width,visibleHeight/source.height),width=source.width*scale,photoHeight=source.height*scale;
+      const left=safeLeft+(visibleWidth-width)/2,photoTop=top+(visibleHeight-photoHeight)/2;
+      return {top,height,left,photoTop,width,photoHeight,crop:{x:(safeLeft-left)/scale,y:(top-photoTop)/scale,width:visibleWidth/scale,height:visibleHeight/scale},scale};
+    }
+    modal.cameraCropExport=source=>{
+      const {crop}=viewportGeometry(source),output=document.createElement('canvas');
+      output.width=Math.max(1,Math.round(crop.width));output.height=Math.max(1,Math.round(crop.height));
+      output.getContext('2d').drawImage(source,crop.x,crop.y,crop.width,crop.height,0,0,output.width,output.height);return output;
+    };
+    function layoutEditor(){
+      layoutFrame=0;if(!modal.classList.contains('open'))return;
+      const source=modal.cameraGetPhotoSource?.();
+      const geometry=viewportGeometry(source||{width:1,height:1});
+      modal.style.setProperty('--camera-top',geometry.top+'px');modal.style.setProperty('--camera-height',geometry.height+'px');
       if(modal.cameraHasPhoto?.()){
-        const source=modal.cameraGetPhotoSource(),image=modal.querySelector('#myeventCapturedImage');
-        const panel=modal.querySelector('#cameraCreativePanel'),actions=modal.querySelector('#cameraCapturedActions');
-        const compact=height<450;
-        const start=sheet.querySelector('.cameraProTop').getBoundingClientRect().bottom+(compact?44:54);
-        let end=actions?.classList.contains('open')?Math.min(actions.getBoundingClientRect().top-8,right.getBoundingClientRect().top-8):top+height-110;
-        if(panel&&!panel.hidden&&!compact)end=Math.min(end,panel.getBoundingClientRect().top-8);
-        const availableHeight=Math.max(40,end-start),availableWidth=Math.max(40,compact&&!panel.hidden?panel.getBoundingClientRect().left-16:modal.clientWidth-16);
-        const scale=Math.min(availableWidth/source.width,availableHeight/source.height),width=source.width*scale,photoHeight=source.height*scale;
-        const left=8+(availableWidth-width)/2,photoTop=start+(availableHeight-photoHeight)/2;
-        for(const [key,value] of Object.entries({left,top:photoTop,width,height:photoHeight}))image.style.setProperty('--photo-'+key,value+'px');
+        const image=modal.querySelector('#myeventCapturedImage'),g=geometry,c=g.crop;
+        for(const [key,value] of Object.entries({left:g.left,top:g.photoTop,width:g.width,height:g.photoHeight}))image.style.setProperty('--photo-'+key,value+'px');
+        image.style.clipPath=`inset(${c.y*g.scale}px ${(source.width-c.x-c.width)*g.scale}px ${(source.height-c.y-c.height)*g.scale}px ${c.x*g.scale}px)`;
+        const key=[source.width,source.height,...Object.values(c)].map(v=>Math.round(v*100)/100).join(':');
+        if(lastCrop&&key!==lastCrop)modal.dispatchEvent(new Event('camera-decoration-change'));lastCrop=key;
       }
       modal.dispatchEvent(new Event('camera-editor-layout'));
     }
+    modal.cameraResumeEdit=()=>{modal.dataset.cameraEditing='active';modal.dispatchEvent(new Event('camera-editor-layout'));};
+    modal.cameraValidateEdit=()=>{modal.dataset.cameraEditing='validated';modal.querySelector('#cameraCreativePanel').hidden=true;modal.dispatchEvent(new Event('camera-editor-layout'));};
+    modal.addEventListener('camera-source-reset',()=>{lastCrop='';modal.dataset.cameraEditing='active';});
     function scheduleLayout(){if(!layoutFrame)layoutFrame=requestAnimationFrame(layoutEditor);}
     const resize=new ResizeObserver(scheduleLayout);resize.observe(sheet);resize.observe(modal.querySelector('#cameraCapturedActions'));resize.observe(modal.querySelector('#cameraCreativePanel'));
     let observedBanner=null;function observeBanner(){const banner=document.getElementById('myeventEnvironmentBanner');if(banner&&banner!==observedBanner){observedBanner=banner;resize.observe(banner);scheduleLayout();}}
@@ -82,8 +95,8 @@
     modal.cameraRenderDecorations=decorations.render;
     modal.cameraRenderStickers=decorations.panel;
     modal.cameraRenderSignatures=decorations.signatures;
-    const signatureButton=document.createElement('button');signatureButton.type='button';signatureButton.id='cameraSignatureSide';signatureButton.className='cameraSideTool';signatureButton.innerHTML='✍<small>Signature</small>';right.append(signatureButton);
-    const textButton=document.createElement('button');textButton.type='button';textButton.id='cameraTextSide';textButton.className='cameraSideTool';textButton.innerHTML='T<small>Texte</small>';textButton.onclick=()=>modal.querySelector('#cameraStickerSide').click();right.append(textButton);
+    modal.cameraRenderText=host=>decorations.panel(host,'text');
+    modal.querySelector('.cameraDecorationTools').prepend(retake);
     const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.id='cameraSettingsBtn';settingsButton.className='cameraProIcon';settingsButton.textContent='⚙';settingsButton.setAttribute('aria-label','Réglages caméra');sheet.querySelector('.cameraProTopRight').append(settingsButton);
     const aiAccess=document.createElement('button');aiAccess.type='button';aiAccess.className='cameraIAAccess';aiAccess.id='cameraIAAccess';aiAccess.textContent='✨ IA';aiAccess.setAttribute('aria-label','Ouvrir les outils IA');
     aiAccess.addEventListener('click',()=>modal.querySelector('#cameraAiSide')?.click());sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
@@ -224,7 +237,7 @@
     // The small UI module loads on opening Apparence; MediaPipe loads on an effect.
     modal.cameraRenderAppearance=function(host){
       const request=++panelRequest;host.textContent='Ouverture d’Apparence…';
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-fix-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       appearanceLoading.then(controller=>{
         if(request===panelRequest&&modal.classList.contains('open')&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')controller.renderPanel(host);
       }).catch(()=>{if(request===panelRequest&&modal.querySelector('#cameraCreativePanel').dataset.kind==='appearance')host.textContent='Apparence indisponible. Ferme puis rouvre ce panneau pour réessayer.';});
@@ -239,7 +252,7 @@
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);
     function ensureAppearance(){
-      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
+      if(!appearanceLoading)appearanceLoading=import('./camera-appearance.mjs?v=camera-v22-fix-1').then(module=>appearance=module.createAppearance(modal)).catch(error=>{appearanceLoading=null;throw error;});
       return appearanceLoading;
     }
     function selectLens(button){

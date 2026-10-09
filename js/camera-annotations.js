@@ -48,13 +48,13 @@
     }
     function render(output){draw(output.getContext('2d'),output.width,output.height);return output;}
     function refresh(){
-      if(!modal.cameraHasPhoto?.()||!photo.naturalWidth||modal.getAttribute('aria-hidden')==='true'){layer.hidden=bar.hidden=true;return;}
+      if(!modal.cameraHasPhoto?.()||!photo.naturalWidth||modal.getAttribute('aria-hidden')==='true'){layer.hidden=true;const video=modal.dataset.mediaKind==='video'&&modal.dataset.cameraState==='preview'&&modal.getAttribute('aria-hidden')!=='true';bar.hidden=!video;edit.hidden=remove.hidden=done.hidden=video;return;}
       const source=modal.cameraGetPhotoSource?.();if(!source)return;
       if(layer.width!==source.width)layer.width=source.width;if(layer.height!==source.height)layer.height=source.height;
       layer.getContext('2d').clearRect(0,0,layer.width,layer.height);
-      const r=photo.getBoundingClientRect();Object.assign(layer.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
+      const r=photo.getBoundingClientRect();Object.assign(layer.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',clipPath:photo.style.clipPath});
       layer.hidden=false;draw(layer.getContext('2d'),layer.width,layer.height,true);
-      bar.hidden=selected<0;bar.style.top=Math.max(0,r.top-42)+'px';
+      bar.hidden=false;done.hidden=false;bar.style.removeProperty('top');edit.disabled=remove.disabled=selected<0;const validated=modal.dataset.cameraEditing==='validated';edit.hidden=remove.hidden=validated;done.textContent=validated?'Modifier la photo':'Terminé';
     }
     const changed=()=>{refresh();modal.dispatchEvent(new Event('camera-decoration-change'));};
     function point(e){const r=layer.getBoundingClientRect();return {x:(e.clientX-r.left)*layer.width/r.width,y:(e.clientY-r.top)*layer.height/r.height};}
@@ -70,7 +70,7 @@
     }
     layer.addEventListener('pointerdown',e=>{
       if(!modal.cameraHasPhoto?.())return;e.preventDefault();e.stopPropagation();
-      if(!pointers.size){selected=hit(point(e));refresh();}
+      if(!pointers.size){modal.cameraResumeEdit?.();selected=hit(point(e));refresh();}
       if(selected<0||pointers.size>=2)return;
       try{layer.setPointerCapture(e.pointerId);}catch(error){/* Safari can cancel capture before this handler completes. */}pointers.set(e.pointerId,point(e));anchor();
     });
@@ -96,7 +96,7 @@
     layer.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
     edit.onclick=()=>{const host=modal.querySelector('#cameraPanelContent'),sheet=modal.querySelector('#cameraCreativePanel');sheet.hidden=false;sheet.dataset.kind=items[selected]?.kind==='signature'?'signatures':'stickers';modal.querySelector('#cameraPanelTitle').textContent='Modifier cet élément';panel(host,sheet.dataset.kind);};
     remove.onclick=()=>{if(selected<0)return;items.splice(selected,1);selected=-1;changed();const sheet=modal.querySelector('#cameraCreativePanel');if(!sheet.hidden&&['stickers','signatures'].includes(sheet.dataset.kind))panel(modal.querySelector('#cameraPanelContent'),sheet.dataset.kind);};
-    done.onclick=()=>{selected=-1;refresh();};
+    done.onclick=()=>{selected=-1;if(modal.dataset.cameraEditing==='validated')modal.cameraResumeEdit?.();else modal.cameraValidateEdit?.();refresh();};
     function panel(host,mode='stickers'){
       host.replaceChildren();
       const note=document.createElement('p');note.textContent='Déplace au doigt. Avec deux doigts : agrandis et tourne. Ferme ce panneau pour éditer toute la photo.';host.append(note);
@@ -114,7 +114,7 @@
         const text=document.createElement('input');text.type='text';text.maxLength=80;text.placeholder='Ton texte…';text.setAttribute('aria-label','Texte sur la photo');
         const add=document.createElement('button');add.type='button';add.textContent='Ajouter le texte';add.onclick=()=>create(text.value,'text');host.append(text,add);
         const stickers=document.createElement('div');stickers.className='cameraPanelChoices';
-        ['❤️','✨','🎉','🥳','👑','🌟','ME'].forEach(value=>{const button=document.createElement('button');button.type='button';button.textContent=value;button.setAttribute('aria-label','Ajouter le sticker '+value);button.onclick=()=>create(value,'sticker');stickers.append(button);});host.append(stickers);
+        ['❤️','✨','🎉','🥳','👑','🌟','ME'].forEach(value=>{const button=document.createElement('button');button.type='button';button.textContent=value;button.setAttribute('aria-label','Ajouter le sticker '+value);button.onclick=()=>create(value,'sticker');stickers.append(button);});if(mode!=='text')host.append(stickers);
       }
       if(items.length>=12){const limit=document.createElement('p');limit.textContent='12 éléments maximum.';host.append(limit);}
       if(!items.length)return;
