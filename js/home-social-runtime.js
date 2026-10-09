@@ -193,7 +193,7 @@
       }catch(error){note.textContent='Musique : '+error.message;}
     }
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
-    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraSignatureSide','cameraTextSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
+    const buttons=['cameraAiSide','cameraBeautySide','cameraRetouchSide','cameraFilterSide','cameraAppearanceSide','cameraStickerSide','cameraSignatureSide','cameraFrameSide','cameraTextSide','cameraMusicSide','cameraTimerSide','cameraRatioSide','cameraSettingsBtn'];
     function closePanel(){
       if(panel)panel.hidden=true;
       buttons.forEach(id=>{const b=$s(id);b?.classList.remove('active');b?.setAttribute('aria-expanded','false');});
@@ -204,19 +204,20 @@
       $s('myeventCameraModal').cameraResumeEdit?.();
       closePanel();const settings=sheet?.querySelector('.cameraGlassSettings');if(settings)settings.open=false;panel.hidden=false;panel.dataset.kind=kind;
       source?.classList.add('active');source?.setAttribute('aria-expanded','true');
-      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',text:'Texte',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
+      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',frames:'Cadres photo',text:'Texte',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
       title.textContent=names[kind];
       content.replaceChildren();
       if(cameraMode==='video'||cameraVideoFile){
-        if(['filters','beauty','retouch','appearance','stickers','signatures','text','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
+        if(['filters','beauty','retouch','appearance','stickers','signatures','frames','text','ai'].includes(kind)){content.textContent='Ces retouches sont disponibles pour les photos. Les effets vidéo sont à venir.';return;}
       }
+      if(kind==='frames'){$s('myeventCameraModal').cameraRenderFrames?.(content);return;}
       if(kind==='text'){$s('myeventCameraModal').cameraRenderText?.(content);return;}
       if(kind==='signatures'){$s('myeventCameraModal').cameraRenderSignatures?.(content);return;}
       if(kind==='stickers'){$s('myeventCameraModal').cameraRenderStickers?.(content);return;}
       if(kind==='gallery'){$s('myeventCameraModal').cameraRenderGallery?.(content);return;}
       if(kind==='settings'||kind==='plus'){
         const row=document.createElement('div');row.className='cameraPanelChoices';
-        const actions=kind==='settings'?[['Flash','cameraFlashBtn'],['Minuteur','cameraTimerSide'],['Ratio','cameraRatioSide'],['Grille','cameraGridSide'],['Niveau','cameraLevelSide'],['Qualité','cameraQualityBtn']]:[['Texte & stickers','cameraStickerSide'],['Filtres','cameraFilterSide'],['Retouches','cameraRetouchSide'],['Beauté','cameraBeautySide'],['Effets amusants','cameraAppearanceSide'],['Musique','cameraMusicSide']];
+        const actions=kind==='settings'?[['Flash','cameraFlashBtn'],['Minuteur','cameraTimerSide'],['Ratio','cameraRatioSide'],['Grille','cameraGridSide'],['Niveau','cameraLevelSide'],['Qualité','cameraQualityBtn']]:[['Cadres','cameraFrameSide'],['Texte & stickers','cameraStickerSide'],['Filtres','cameraFilterSide'],['Retouches','cameraRetouchSide'],['Beauté','cameraBeautySide'],['Effets amusants','cameraAppearanceSide'],['Musique','cameraMusicSide']];
         actions.forEach(([label,id])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!$s(id)?.disabled||(cameraMode==='video'&&['cameraTimerSide','cameraRatioSide'].includes(id));b.onclick=()=>{closePanel();$s(id)?.click();};row.append(b);});content.append(row);
         const note=document.createElement('p');note.textContent=kind==='plus'?'Décore et transforme tes photos. Portrait utilise la détection du visage, sans flou de profondeur. Les vidéos sont enregistrées sans effets photo.':'Pince pour zoomer : zoom matériel selon l’appareil, sinon recadrage numérique pour les photos. La vidéo conserve le cadrage natif.';content.append(note);
         if(kind==='settings'){const settings=$s('myeventCameraModal').cameraSettingsElement;if(settings){settings.open=true;content.append(settings);}}
@@ -295,7 +296,7 @@
     // Delegation also covers controls created after this parser-time script executes.
     $s('myeventCameraModal').addEventListener('click',e=>{
       const button=e.target.closest('button');if(!button)return;
-      const kinds={cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraSignatureSide:'signatures',cameraTextSide:'text',cameraMusicSide:'music'};
+      const kinds={cameraAiSide:'ai',cameraFilterSide:'filters',cameraAppearanceSide:'appearance',cameraStickerSide:'stickers',cameraSignatureSide:'signatures',cameraTextSide:'text',cameraFrameSide:'frames',cameraMusicSide:'music'};
       if(kinds[button.id])openPanel(kinds[button.id],button);
     });
     $s('cameraPanelClose')?.addEventListener('click',closePanel);

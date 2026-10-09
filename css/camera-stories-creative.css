@@ -8,7 +8,7 @@
 #myeventCameraModal .cameraProTop{position:absolute;inset:0 0 auto;height:auto!important;min-height:0!important;padding:calc(12px + env(safe-area-inset-top)) 14px 12px!important;z-index:12}
 #myeventCameraModal .cameraProTitle{display:none!important}
 #myeventCameraModal :is(.cameraProIcon,.cameraIAAccess){width:38px;height:38px;min-height:38px;border-radius:50%!important;border:1px solid #ffffff30!important;background:var(--camera-glass)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:white;font-size:18px}
-#myeventCameraModal #cameraIAAccess{display:none!important}
+#myeventCameraModal #cameraIAAccess{display:inline-flex!important;align-items:center;justify-content:center;font-size:12px}
 #myeventCameraModal .cameraTierSwitch{display:none!important}
 #myeventCameraModal .cameraSideTools.left{position:absolute;display:flex!important;flex-direction:column!important;top:calc(78px + env(safe-area-inset-top))!important;left:12px!important;gap:9px!important;z-index:10}
 #myeventCameraModal .cameraSideTools.right,#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.right{position:absolute!important;top:calc(78px + env(safe-area-inset-top))!important;right:12px!important;left:auto!important;bottom:calc(242px + env(safe-area-inset-bottom))!important;width:42px;gap:9px!important;justify-content:flex-start!important;padding:0;z-index:10}

@@ -40,6 +40,26 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.getByLabel('Élément à modifier').selectOption('0');assert.equal(await page.getByLabel('Modifier le contenu').inputValue(),'TEST');
  await page.getByLabel('Élément à modifier').selectOption('1');await page.getByRole('button',{name:'Supprimer cet élément',exact:true}).click();await ready();assert.equal(await page.getByLabel('Élément à modifier').locator('option').count(),1);
  await page.locator('#cameraPanelClose').click();
+ // V2.3: edited captions, signatures and optional frames survive the same JPEG export.
+ await page.locator('#cameraTextSide').click();
+ await page.getByLabel('Style de bulle',{exact:true}).selectOption('speech');
+ await page.getByLabel('Fond de la bulle',{exact:true}).fill('#ffe066');
+ await page.getByLabel('Fond de la bulle',{exact:true}).dispatchEvent('input');
+ await page.getByLabel('Couleur du texte',{exact:true}).fill('#118ab2');
+ await page.getByLabel('Couleur du texte',{exact:true}).dispatchEvent('input');
+ await page.getByLabel('Ombre',{exact:true}).fill('20');
+ await page.getByLabel('Ombre',{exact:true}).dispatchEvent('input');await ready();
+ for(const kind of ['thought','shout','none','speech']){await page.getByLabel('Style de bulle',{exact:true}).selectOption(kind);await ready();}
+ await page.locator('#cameraPanelClose').click();await page.locator('#cameraSignatureSide').click();await page.getByRole('button',{name:'Signature Cœur',exact:true}).click();
+ await page.getByLabel('Couleur du texte',{exact:true}).fill('#ef476f');await page.getByLabel('Couleur du texte',{exact:true}).dispatchEvent('input');await ready();
+ await page.locator('#cameraPanelClose').click();await page.locator('#cameraFrameSide').click();
+ const frameHashes=[];
+ for(const name of ['Aucun','Simple','Arrondi','Polaroid','Néon','Festif']){await page.getByRole('button',{name,exact:true}).click();await ready();frameHashes.push(await page.evaluate(()=>{const m=document.getElementById('myeventCameraModal'),c=document.createElement('canvas');c.width=640;c.height=960;return m.cameraRenderDecorations(c).toDataURL();}));}
+ assert.equal(new Set(frameHashes).size,6,'all optional frames produce distinct image pixels');
+ await page.getByLabel('Couleur du cadre',{exact:true}).fill('#06d6a0');await page.getByLabel('Couleur du cadre',{exact:true}).dispatchEvent('input');
+ await page.getByLabel('Épaisseur du cadre',{exact:true}).fill('5');await page.getByLabel('Épaisseur du cadre',{exact:true}).dispatchEvent('input');await ready();
+ await page.screenshot({path:path.join(root,'work/camera-v23-frames.png')});
+ await page.locator('#cameraPanelClose').click();await page.locator('#cameraIAAccess').click();assert(await page.getByText('Les retouches et effets de visage ci-dessous fonctionnent localement.',{exact:false}).isVisible());await page.locator('#cameraPanelClose').click();
  const error=await page.evaluate(async()=>{const m=document.getElementById('myeventCameraModal'),file=await m.cameraGetMediaFile(),image=new Image();image.src=URL.createObjectURL(file);await image.decode();const c=m.cameraCropExport(m.cameraRenderDecorations(m.cameraRenderPhoto(m.cameraGetPhotoSource()))),ctx=c.getContext('2d'),expected=ctx.getImageData(0,0,c.width,c.height).data;ctx.drawImage(image,0,0);const actual=ctx.getImageData(0,0,c.width,c.height).data;let sum=0;for(let i=0;i<actual.length;i+=4)for(let j=0;j<3;j++)sum+=Math.abs(actual[i+j]-expected[i+j]);URL.revokeObjectURL(image.src);return sum/(c.width*c.height*3);});assert(error<3,'export matches preview renderer without selection frame');
  for(const [width,height] of [[320,568],[375,667],[390,744],[430,832],[844,390]]){
   await page.setViewportSize({width,height});await page.waitForTimeout(100);
@@ -54,8 +74,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  await page.locator('#cameraFilterSide').click();await page.waitForTimeout(100);await page.screenshot({path:path.join(root,'work/camera-v21-filters.png')});await page.locator('#cameraPanelClose').click();
  await page.getByRole('button',{name:'Terminé',exact:true}).click();
  const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#cameraDownloadBtn').click()]);assert.equal(download.suggestedFilename(),'MyEvent-photo.jpg');const savedFile=fs.readFileSync(await download.path());const exportedBytes=await page.evaluate(async()=>[...new Uint8Array(await(await document.getElementById('myeventCameraModal').cameraGetMediaFile()).arrayBuffer())]);assert(savedFile.equals(Buffer.from(exportedBytes)),'download uses exact edited JPEG');
- await page.locator('#cameraStoryBtn').click();await page.locator('#storyMediaPreview img').waitFor();assert(await page.locator('#storyPublish').isVisible());
+ await page.evaluate(()=>{const card=document.createElement('div');card.className='eventCard';card.dataset.eventId='creative-test';card.innerHTML='<div class="eventCardTopInfo"><b>Créatif</b></div>';document.getElementById('eventList').append(card);window.myeventAttachCameraPhoto=async(id,photo)=>{window.creativeEventImage=photo;throw Error('Test sans écriture');};});
+ await page.locator('#cameraAttachEventBtn').click();await page.getByLabel('Événement',{exact:true}).selectOption('creative-test');await page.getByRole('button',{name:'Ajouter à cet événement',exact:true}).click();await page.getByText('Impossible d’ajouter la photo : Test sans écriture',{exact:true}).waitFor();
+ const eventImage=await page.evaluate(()=>window.creativeEventImage);assert.equal(typeof eventImage,'string');assert(savedFile.equals(Buffer.from(eventImage.split(',')[1],'base64')),'event publication receives the exact decorated JPEG');await page.getByRole('button',{name:'Annuler',exact:true}).click();
+ await page.locator('#cameraStoryBtn').click();await page.locator('#storyMediaPreview img').waitFor();assert(await page.locator('#storyPublish').isVisible());const storyBytes=await page.locator('#storyMediaPreview img').evaluate(async img=>[...new Uint8Array(await(await fetch(img.src)).arrayBuffer())]);assert(savedFile.equals(Buffer.from(storyBytes)),'Story receives the exact decorated JPEG');
  await page.locator('#storyCloseSheet').click();await page.locator('#socialBottomCreate').evaluate(e=>e.click());await page.locator('#cameraFileInput').setInputFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from(original.split(',')[1],'base64')});await ready();
  await page.evaluate(()=>{window.feedSaves=[];window.myeventPublishCameraPost=async image=>{feedSaves.push(image);return {id:'local-test'};};window.myeventLoadCameraPosts=async()=>[];window.alert=()=>{};});await page.getByRole('button',{name:'Terminé',exact:true}).click();await page.locator('#cameraPublishBtn').click();await page.waitForFunction(()=>feedSaves.length===1);assert(await page.locator('[data-camera-post-id="local-test"] img').isVisible());
- assert.deepEqual(errors,[]);await browser.close();console.log('PASS V2.1: 20 distinct photo thumbnails and JPEG recipes/original, Chromium native touches / WebKit pointer-event gestures, independent selection/edit/delete, transformed JPEG pixel parity, banner + panel + 320/375/390/430/landscape layout, single Stories/Creative interface without preview tiers, exact saved JPEG, Story + mocked feed handoff, zero JS errors.');
+ assert.deepEqual(errors,[]);await browser.close();console.log('PASS V2.3: bubbles/colors/shadows/signatures/6 frames and safe IA panel, 20 distinct photo thumbnails and JPEG recipes/original, Chromium native touches / WebKit pointer-event gestures, independent selection/edit/delete, transformed JPEG pixel parity, banner + panel + 320/375/390/430/landscape layout, single Stories/Creative interface without preview tiers, exact saved JPEG, Story + mocked feed handoff, zero JS errors.');
 })().catch(e=>{console.error(e);process.exit(1);});
