@@ -1455,6 +1455,7 @@
    <button type="button" data-admin-tab="statistics">Statistiques</button>
    <button type="button" data-admin-tab="partners">Partenaires</button>
    <button type="button" data-admin-tab="settings">Paramètres</button>
+   <button type="button" data-admin-tab="sabre" id="myeventAdminSabreTab" hidden>Diagnostic Sabre</button>
   </nav>
   </div>
   <p id="myeventAdminMessage" role="status" aria-live="polite"></p>
@@ -1525,6 +1526,21 @@
    <h3>Partenaires</h3><p>Le registre central conserve l'état et les notes de chaque partenaire. Les clés API restent sur le serveur ; activer un registre ne met pas une intégration en ligne.</p>
    <div id="myeventAdminPartners" class="adminList" aria-live="polite"></div>
   </div>
+  <div data-admin-view="sabre" hidden>
+   <h3>Diagnostic Sabre CERT</h3>
+   <p>Appels réels à Sabre CERT, réservés au propriétaire administrateur vérifié côté serveur. Aucun achat ni réservation. Trois diagnostics par dix minutes et par instance serveur.</p>
+   <p>Origine attendue : https://api.cert.platform.sabre.com · OAuth /v2/auth/token · hôtels /v5/get/hotelavail.</p>
+   <form id="myeventAdminSabreForm" class="adminSabreForm">
+    <label>Destination<input name="destination" value="Paris" readonly></label>
+    <label>Arrivée<input name="checkIn" type="date" value="2026-11-10" required></label>
+    <label>Départ<input name="checkOut" type="date" value="2026-11-12" required></label>
+    <label>Adultes<input name="guests" type="number" value="2" readonly></label>
+    <label>Chambres<input name="rooms" type="number" value="1" readonly></label>
+    <label>PCC<select name="pcc"><option value="S5OM">S5OM (lettre O)</option><option value="">Sans PCC explicite</option></select></label>
+    <div class="adminActions"><button type="button" data-sabre-action="connection">Tester la connexion Sabre</button><button type="submit">Rechercher des hôtels</button><button type="button" data-sabre-action="compare">Comparer avec / sans PCC</button></div>
+   </form>
+   <div id="myeventAdminSabreResults" role="status" aria-live="polite">Aucun appel effectué.</div>
+  </div>
   <div data-admin-view="settings" hidden>
    <h3>Paramètres généraux</h3><p>Configuration administrative préparée pour les modules. Son état n'interrompt pas les fonctions existantes tant que chaque module n'y est pas relié.</p>
    <div id="myeventAdminSettings" class="adminList" aria-live="polite"></div>
@@ -1533,7 +1549,7 @@
  </div>
 </section>
 <style>
-#myeventAdminEntry[hidden],#myeventAdminPanel[hidden],#myeventAdminPanel [data-admin-view][hidden],#myeventAdminContentCancel[hidden]{display:none!important}
+#myeventAdminEntry[hidden],#myeventAdminPanel[hidden],#myeventAdminPanel [data-admin-view][hidden],#myeventAdminContentCancel[hidden],#myeventAdminSabreTab[hidden]{display:none!important}
 #myeventAdminPanel input:not([type=checkbox]),#myeventAdminPanel select{width:100%;min-height:46px;box-sizing:border-box}
 #myeventAdminPanel button{min-height:42px}
 #myeventAdminNav button{flex-shrink:0;white-space:nowrap}
@@ -1542,8 +1558,8 @@
 .myeventAdminStat strong{font-size:2rem}
 body.myeventAdminOpen{overflow:hidden}
 </style>
-<link rel="stylesheet" href="css/admin-v2.css?v=8">
-<script src="js/admin-runtime.js?v=12" defer></script>
+<link rel="stylesheet" href="css/admin-v2.css?v=9">
+<script src="js/admin-runtime.js?v=13" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">

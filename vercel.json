@@ -1,5 +1,8 @@
 {
   "functions": {
+    "api/[search].js": {
+      "maxDuration": 180
+    },
     "api/camera-ai.js": {
       "maxDuration": 180
     }
@@ -7,6 +10,10 @@
   "routes": [
     {
       "src": "^/server/search-(accommodation|transport)\\.js$",
+      "status": 404
+    },
+    {
+      "src": "^/server/sabre-admin-(diagnostic\\.js|policy\\.json)$",
       "status": 404
     },
     {

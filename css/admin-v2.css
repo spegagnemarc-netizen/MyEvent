@@ -92,3 +92,9 @@
 #myeventAdminPanel .adminPartnerStatus.isActive{border-color:#65d99b;color:#9af0bd}
 #myeventAdminPanel .adminPartnerStatus.isPending{border-color:#e6bc63;color:#f3d692}
 #myeventAdminPanel .adminPartnerStatus.isInactive{color:#aab6c9}
+/* The existing admin panel owns Safari safe areas and the TEST banner offset. */
+.adminSabreForm{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.adminSabreForm label{display:flex;flex-direction:column;gap:6px;min-width:0}
+.adminSabreForm .adminActions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px}
+#myeventAdminSabreResults{overflow-wrap:anywhere;margin-top:18px}
+.adminSabreImage{display:block;width:100%;max-width:360px;height:auto;border-radius:12px;margin-top:10px}

@@ -5,6 +5,9 @@ const transport = require('../server/search-transport');
 // Dispatch only by pathname: query parameters cannot select another handler.
 module.exports = function handler(req, res) {
   const pathname = String(req.url || '').split('?')[0];
+  if (pathname === '/api/admin-sabre-diagnostic') {
+    return require('../server/sabre-admin-diagnostic')(req, res);
+  }
   if (pathname === '/api/search-accommodation' || pathname === '/api/search-accommodation.js') {
     return accommodation(req, res);
   }

@@ -8,12 +8,19 @@ const contentForm=$('myeventAdminContentForm'),contentList=$('myeventAdminConten
 if(!entry||!panel||!close||!refresh||!message||!nav)return;
 let activeTab='overview',generation=0,identityEpoch=0,currentId=null,authorized=false;
 let checking=null,mutationBusy=false,searchTimer,previousFocus,reservationScope='all';
+let sabreRequest=null,sabrePreview=false;
+const sabreForm=$('myeventAdminSabreForm'),sabreResults=$('myeventAdminSabreResults');
+window.myeventRuntime?.ready.then(config=>{
+ sabrePreview=config.isTest===true&&config.environment==='preview';if($('myeventAdminSabreTab'))$('myeventAdminSabreTab').hidden=!sabrePreview;
+ const banner=$('myeventEnvironmentBanner');if(banner){const fit=()=>{panel.style.top=Math.ceil(banner.getBoundingClientRect().bottom)+'px';};fit();window.addEventListener('resize',fit);if(typeof ResizeObserver==='function')new ResizeObserver(fit).observe(banner);}
+}).catch(()=>{});
 const sameSession=(id,epoch)=>authorized&&currentId===id&&identityEpoch===epoch;
 const notify=(text,state='success')=>{message.textContent=text;message.dataset.state=state;};
 function item(tag,text,className){const el=document.createElement(tag);if(text!=null)el.textContent=String(text);if(className)el.className=className;return el;}
 function stamp(value){return value?new Date(value).toLocaleString('fr-FR'):'—';}
 function hide(){panel.hidden=true;generation++;document.body.classList.remove('myeventAdminOpen');if(previousFocus?.isConnected)previousFocus.focus();}
 function reset(){
+ sabreRequest?.abort();sabreRequest=null;if(sabreResults)sabreResults.textContent='Aucun appel effectué.';
  authorized=false;entry.hidden=true;hide();$('myeventAdminStats').replaceChildren();
  panel.querySelectorAll('.adminList').forEach(el=>el.replaceChildren());contentList?.replaceChildren();
  contentForm?.reset();if(contentForm)delete contentForm.dataset.editId;if(cancelEdit)cancelEdit.hidden=true;
@@ -49,6 +56,47 @@ function tab(name){
  if(authorized&&!panel.hidden)loadTab(name);
 }
 async function rpc(name,args){const {data,error}=await sb.rpc(name,args);if(error)throw error;return data;}
+function renderSabre(data,http){
+ sabreResults.replaceChildren();
+ sabreResults.append(item('p','Diagnostic HTTP '+http+' · '+(data.real===true?'Appel Sabre CERT réel':'Appel Sabre non confirmé')));
+ sabreResults.append(item('p','OAuth : '+(data.oauthHttp?.join(', ')||'non effectué')+' · '+(data.connection==='connected'?'Connexion réussie':'Connexion non confirmée')));
+ if(data.error)sabreResults.append(item('p',(data.code||'Erreur')+' : '+data.error,'adminDanger'));
+ if(data.permissionsError)sabreResults.append(item('p','Refus de permissions Sabre : vérifier les droits CERT auprès du support.'));
+ for(const result of data.cases||[]){
+  const card=item('article',null,'adminCard');card.append(item('h4',result.pcc?'PCC '+result.pcc:'Sans PCC explicite'),item('p','HTTP hôtels : '+(result.http?.join(', ')||'aucune réponse')+' · '+(result.applicationStatus||result.code||result.status||'non confirmé')));
+  if(Number.isInteger(result.hotelCount))card.append(item('p',result.hotelCount+' hôtels affichables retournés'));
+  if(result.error)card.append(item('p',result.error));
+  if(result.permissionsError)card.append(item('p','Accès Sabre refusé (permissions).'));
+  for(const warning of [...(result.warningCodes||[]),...(result.warnings||[])])card.append(item('p',warning));
+  for(const hotel of result.hotels||[]){
+   const h=item('article',null,'adminCard');h.append(item('h4',hotel.name),item('p',hotel.address||'Adresse non fournie'),item('p',hotel.availability||'Disponibilité non fournie'));
+   if(hotel.price!==null&&hotel.price!==undefined&&hotel.currency)h.append(item('p',hotel.price+' '+hotel.currency+' · séjour complet · tarif CERT'));
+   if(Number.isFinite(hotel.distance))h.append(item('p',hotel.distance.toFixed(1)+' km du centre de recherche'));
+   if(hotel.equipment?.length)h.append(item('p',hotel.equipment.join(' · ')));
+   if(hotel.image){try{const u=new URL(hotel.image);if(u.protocol==='https:'&&!u.username&&!u.password){const img=document.createElement('img');img.src=u.href;img.alt=hotel.name;img.loading='lazy';img.referrerPolicy='no-referrer';img.className='adminSabreImage';h.append(img);}}catch{}}
+   card.append(h);
+  }
+  sabreResults.append(card);
+ }
+}
+async function runSabre(action){
+ if(sabreRequest||!sabrePreview||!authorized||!sabreForm||!sabreResults)return;
+ const id=currentId,epoch=identityEpoch,controller=new AbortController();sabreRequest=controller;
+ const buttons=[...sabreForm.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
+ const timer=setTimeout(()=>controller.abort(),110000);
+ sabreResults.textContent='Vérification administrateur puis appel réel Sabre CERT…';
+ try{
+  if(!await check()||!sameSession(id,epoch))return;
+  const {data,error}=await sb.auth.getSession();const session=data?.session;
+  if(error||!session?.access_token||session.user?.id!==id)throw new Error('Session non confirmée. Reconnecte-toi.');
+  const body={action,destination:'Paris',type:'hotel',guests:2,rooms:1,checkIn:sabreForm.elements.checkIn.value,checkOut:sabreForm.elements.checkOut.value,pcc:sabreForm.elements.pcc.value};
+  const response=await fetch('/api/admin-sabre-diagnostic',{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store',credentials:'same-origin',signal:controller.signal});
+  const result=await response.json();if(sameSession(id,epoch))renderSabre(result,response.status);
+ }catch(error){if(sameSession(id,epoch))sabreResults.textContent=error.name==='AbortError'?'Délai dépassé : résultat Sabre non confirmé.':'Diagnostic indisponible. Vérifie ta session et réessaie.';}
+ finally{clearTimeout(timer);if(sabreRequest===controller)sabreRequest=null;buttons.forEach(b=>b.disabled=false);}
+}
+sabreForm?.addEventListener('submit',event=>{event.preventDefault();if(sabreForm.reportValidity())runSabre('search');});
+sabreForm?.querySelectorAll('[data-sabre-action]').forEach(button=>button.addEventListener('click',()=>{if(button.dataset.sabreAction==='connection'||sabreForm.reportValidity())runSabre(button.dataset.sabreAction);}));
 function errorText(error){return error?.message||'Connexion interrompue. Réessayez.';}
 async function load(){
  if(!authorized||panel.hidden)return;
@@ -262,6 +310,7 @@ async function loadTab(name){
  if(name==='reservations')return loadReservations();
  if(name==='reports')return loadReports();
  if(name==='statistics')return loadStatistics();
+ if(name==='sabre')return;
  const kinds={users:['users'],events:['events','reports'],marketplace:['listings','reports'],partners:['partners'],settings:['settings','audit']}[name];if(!kinds)return;
  for(const kind of kinds){const target=$(targetIds[kind]);if(target)target.textContent='Chargement…';}
  notify('Chargement de la rubrique…','loading');
