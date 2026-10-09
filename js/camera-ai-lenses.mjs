@@ -12,7 +12,7 @@ export function createAILenses(modal){
     host.querySelector('[data-ai-generate]').textContent=busy?'Transformation en cours…':'Transformer ma photo';
     host.querySelector('[data-ai-cancel]').hidden=!busy;
     host.querySelector('[data-ai-original]').disabled=busy||!ready||!modal.cameraHasAIPhoto?.();
-    host.querySelector('[role="status"]').textContent=message||(ready?'Choisis ton style, puis transforme ta photo.':'Prends ou importe une photo pour essayer ces filtres IA.');
+    host.querySelector('[role="status"]').textContent=message||(ready?'Styles distants — choisis ton style, puis transforme ta photo. Une connexion valide et l’accès serveur au fournisseur sont nécessaires.':'Prends ou importe une photo pour essayer ces filtres IA.');
     host.querySelector('.cameraAILenses').setAttribute('aria-busy',String(busy));
   }
   async function generate(){
@@ -73,7 +73,7 @@ export function createAILenses(modal){
     const stop=document.createElement('button');stop.type='button';stop.dataset.aiCancel='';stop.textContent='Annuler';stop.addEventListener('click',()=>{cancel();message='Annulé. Ta photo est conservée.';refresh();});
     actions.append(generateButton,original,stop);const overview=document.createElement('div');overview.className='cameraAIOverview';
     const info=document.createElement('p');info.textContent='Service IA existant · photo uniquement · connexion et configuration serveur requises. Consulter ce panneau ne lance aucun traitement.';overview.append(info);
-    const features=[['Amélioration photo','Styles Portrait existants : Studio pro et Cinéma.'],['Retouches','Styles Beauté existants : Éclat naturel, Glamour et Festival.'],['Styles créatifs','Styles IA disponibles ci-dessous, après confirmation.'],['Suppression d’objets','À venir · indisponible.'],['Arrière-plan personnalisé','À venir · indisponible. Certains styles existants modifient le décor, sans éditeur de fond.']];
+    const features=[['Amélioration photo','Styles Portrait existants : Studio pro et Cinéma.'],['Retouches','Styles Beauté existants : Éclat naturel, Glamour et Festival.'],['Styles créatifs','Styles IA disponibles ci-dessous, après confirmation.'],['Limites','Aucun outil de suppression d’objets ou d’arrière-plan personnalisé. Les styles peuvent modifier le décor.']];
     for(const [label,detail] of features){const row=document.createElement('div');row.className='cameraAIFeature';const title=document.createElement('strong');title.textContent=label;const description=document.createElement('span');description.textContent=detail;row.append(title,description);overview.append(row);}
     panel.append(overview,tabs,choices,note,status,actions);host.appendChild(panel);refresh();
   }

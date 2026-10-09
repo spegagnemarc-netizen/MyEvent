@@ -514,7 +514,7 @@
   }
   let cameraAILensesLoading;
   cameraModal.cameraRenderAI=function(host){
-    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs?v=camera-v22-fix-1').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
+    if(!cameraAILensesLoading)cameraAILensesLoading=import('./camera-ai-lenses.mjs?v=camera-feed-ai-1').then(m=>m.createAILenses(cameraModal)).catch(error=>{cameraAILensesLoading=null;throw error;});
     cameraAILensesLoading.then(ui=>{if(cameraModal.classList.contains('open')&&$s('cameraCreativePanel')?.dataset.kind==='ai')ui.render(host);}).catch(()=>{host.textContent='Impossible de charger les filtres IA. Réessaie.';});
   };
   cameraModal.cameraGetAIPhoto=function(){
@@ -751,7 +751,7 @@
     if(!item?.image)return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
-    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:250px;max-height:250px;object-fit:cover;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
+    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
     post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);

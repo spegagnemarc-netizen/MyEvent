@@ -3278,8 +3278,8 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard.nearbyCard{display:flex!important;border:1.5px solid var(--myevent-accent)!important;background:linear-gradient(145deg,rgba(var(--myevent-accent-rgb),.2),#11161e)!important;box-shadow:0 0 9px rgba(var(--myevent-accent-rgb),.28)!important;color:#fff!important}
 #socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(var(--myevent-accent-rgb),.65))}
 
-/* MyEvent Home V55.8 — compact photo feed cards */
-#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{height:250px!important;max-height:250px!important;object-fit:cover!important}
+/* Camera feed: preserve the complete published JPEG, including vertical annotations. */
+#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{display:block;width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostHead{padding-top:10px!important;padding-bottom:6px!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostText{padding-top:5px!important;padding-bottom:8px!important}
 
