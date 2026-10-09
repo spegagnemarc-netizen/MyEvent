@@ -62,6 +62,7 @@
       const left=safeLeft+(visibleWidth-width)/2,photoTop=top+(visibleHeight-photoHeight)/2;
       return {top,height,left,photoTop,width,photoHeight,crop:{x:(safeLeft-left)/scale,y:(top-photoTop)/scale,width:visibleWidth/scale,height:visibleHeight/scale},scale};
     }
+    modal.cameraGetExportCrop=source=>viewportGeometry(source).crop;
     modal.cameraCropExport=source=>{
       const {crop}=viewportGeometry(source),output=document.createElement('canvas');
       output.width=Math.max(1,Math.round(crop.width));output.height=Math.max(1,Math.round(crop.height));
@@ -97,10 +98,16 @@
     modal.cameraRenderStickers=decorations.panel;
     modal.cameraRenderSignatures=decorations.signatures;
     modal.cameraRenderText=host=>decorations.panel(host,'text');
+    modal.cameraRenderFrames=host=>decorations.panel(host,'frames');
+    const framesButton=document.createElement('button');framesButton.type='button';framesButton.id='cameraFrameSide';framesButton.className='cameraSideTool';framesButton.innerHTML='<span aria-hidden="true">▢</span><small>Cadres</small>';framesButton.setAttribute('aria-label','Cadres');right.append(framesButton);
     modal.querySelector('.cameraDecorationTools').prepend(retake);
     const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.id='cameraSettingsBtn';settingsButton.className='cameraProIcon';settingsButton.textContent='⚙';settingsButton.setAttribute('aria-label','Réglages caméra');sheet.querySelector('.cameraProTopRight').append(settingsButton);
     const aiAccess=document.createElement('button');aiAccess.type='button';aiAccess.className='cameraIAAccess';aiAccess.id='cameraIAAccess';aiAccess.textContent='✨ IA';aiAccess.setAttribute('aria-label','Ouvrir les outils IA');
-    aiAccess.addEventListener('click',()=>modal.querySelector('#cameraAiSide')?.click());sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
+    aiAccess.addEventListener('click',()=>{
+      const panel=modal.querySelector('#cameraCreativePanel'),host=modal.querySelector('#cameraPanelContent');panel.hidden=false;panel.dataset.kind='ai-info';modal.querySelector('#cameraPanelTitle').textContent='IA et retouches';host.replaceChildren();
+      const note=document.createElement('p');note.textContent='Les retouches et effets de visage ci-dessous fonctionnent localement. Le service de transformation IA distant existe, mais son activation et son résultat ne sont pas vérifiés : aucune photo n’est envoyée depuis ce panneau.';host.append(note);
+      const choices=document.createElement('div');choices.className='cameraPanelChoices';for(const [label,id] of [['Retouches photo','cameraRetouchSide'],['Effets de visage','cameraAppearanceSide'],['Filtres créatifs','cameraFilterSide']]){const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=()=>{panel.hidden=true;modal.querySelector('#'+id)?.click();};choices.append(button);}host.append(choices);
+    });sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
 
     const strip=document.createElement('div');
     strip.className='cameraFilterStrip cameraFilterFilmstrip';
