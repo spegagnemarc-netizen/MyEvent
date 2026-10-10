@@ -3588,3 +3588,61 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 .myeventEgSlot .eg-widget{width:100%;min-width:0;max-width:575px;margin-inline:auto}
 .myeventEgSlot iframe{display:block;width:100%!important;max-width:100%;min-width:0;border:0;border-radius:12px}
 #myeventExpediaFlightsSection{margin-top:18px;padding:14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;box-sizing:border-box;min-width:0}
+
+/* MyEvent — Découvrir / Pour vous : iPhone compact controls and readable cards.
+   Scoped to the discovery panel; social feed, tabs and event workspace untouched. */
+#socialHome #socialDiscoverView{padding:14px!important;box-sizing:border-box;min-width:0;}
+#socialHome #socialDiscoverView .socialSearch{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;gap:8px!important;margin:0 0 16px!important;
+  padding:0!important;min-width:0!important;
+}
+#socialHome #socialDiscoverView .socialSearch input{
+  width:100%!important;min-width:0!important;min-height:44px!important;
+  margin:0!important;box-sizing:border-box!important;padding:10px 12px!important;
+  font-size:14px!important;border-radius:13px!important;
+}
+#socialHome #socialDiscoverView #socialSearchBtn{
+  width:auto!important;min-width:0!important;max-width:none!important;
+  min-height:44px!important;height:44px!important;
+  margin:0!important;padding:0 13px!important;border-radius:12px!important;
+  font-size:13px!important;font-weight:700!important;line-height:1.1!important;
+  white-space:nowrap!important;box-shadow:none!important;
+}
+#socialHome #socialDiscoverList{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;min-width:0!important;align-items:stretch!important;
+}
+#socialHome #socialDiscoverList .socialEventCard{
+  display:flex!important;flex-direction:column!important;min-width:0!important;
+  min-height:184px!important;margin:0!important;padding:15px!important;
+  box-sizing:border-box!important;border-radius:17px!important;overflow:visible!important;
+  border:1px solid #39434e!important;background:#11171d!important;
+}
+#socialHome #socialDiscoverList .socialEventCard:nth-child(3){grid-column:1/-1!important;min-height:130px!important;}
+#socialHome #socialDiscoverList .socialEventTitle{
+  font-size:16px!important;line-height:1.25!important;font-weight:800!important;
+  margin:0 0 8px!important;overflow-wrap:break-word!important;
+}
+#socialHome #socialDiscoverList .socialEventMeta{
+  font-size:13px!important;line-height:1.4!important;color:#b2bfca!important;
+  margin:0 0 12px!important;overflow-wrap:break-word!important;
+}
+#socialHome #socialDiscoverList .socialEventActions{
+  display:flex!important;align-items:flex-end!important;margin-top:auto!important;
+  padding:0!important;gap:6px!important;
+}
+#socialHome #socialDiscoverList .socialInterestBtn{
+  width:auto!important;min-width:0!important;max-width:100%!important;
+  min-height:36px!important;height:auto!important;padding:8px 12px!important;
+  margin:0!important;border-radius:10px!important;font-size:12px!important;
+  line-height:1.2!important;font-weight:750!important;box-shadow:none!important;
+  white-space:normal!important;text-align:center!important;
+}
+@media(max-width:350px){
+  #socialHome #socialDiscoverView{padding:10px!important;}
+  #socialHome #socialDiscoverList{gap:8px!important;}
+  #socialHome #socialDiscoverList .socialEventCard{padding:11px!important;}
+  #socialHome #socialDiscoverList .socialEventTitle{font-size:14px!important;}
+  #socialHome #socialDiscoverView #socialSearchBtn{padding:0 9px!important;font-size:12px!important;}
+}
