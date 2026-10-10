@@ -82,7 +82,7 @@
    const avatar=original.querySelector('.avatar');if(avatar)button.appendChild(avatar.cloneNode(true));
    else{const a=document.createElement('span');a.className='ewAvatar';a.textContent='👤';button.appendChild(a);}
    const name=document.createElement('strong');name.textContent=original.querySelector('b')?.textContent||'Participant';button.appendChild(name);
-   const role=document.createElement('small');role.textContent=(original.querySelector('.memberInfo span')?.textContent||'Participant').replace('Créateur','Propriétaire');
+   const role=document.createElement('small');role.textContent=(original.querySelector('.memberInfo span')?.textContent||'Participant').split(' · ')[0].replace('Créateur','Propriétaire');
    role.className=role.textContent.includes('Propriétaire')?'ewOwner':role.textContent.includes('Co-organisateur')?'ewCoorganizer':'';
    button.appendChild(role);button.onclick=()=>original.click();target.appendChild(button);
   });

@@ -2,7 +2,7 @@
 #eventsWorkspace[hidden],#eventsWorkspace [hidden]{display:none!important}
 #ewDepot{display:none!important}
 body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav){display:none!important}
-#eventsWorkspace{color:#f5f8fa;background:radial-gradient(ellipse at 60% 0,rgba(12,48,57,.22),transparent 45%),#03090d;padding:18px 0 110px;min-height:75dvh;box-sizing:border-box;text-align:left}
+#eventsWorkspace{color:#f5f8fa;background:radial-gradient(ellipse at 60% 0,rgba(12,48,57,.22),transparent 45%),#03090d;padding:18px 0 110px;min-height:75dvh;box-sizing:border-box;text-align:left;scroll-margin-top:calc(58px + env(safe-area-inset-top))}
 #eventsWorkspace button{font:inherit;cursor:pointer;touch-action:manipulation}
 #eventsWorkspace button:disabled{opacity:.4;cursor:default}
 #eventsWorkspace button:focus-visible,#eventsWorkspace select:focus-visible{outline:2px solid #ffab63;outline-offset:3px}
