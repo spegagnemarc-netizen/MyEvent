@@ -88,3 +88,76 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  #ewToolBody .ewPanel{padding:12px!important}.ewToolHead h2{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){#eventsWorkspace *{scroll-behavior:auto!important}}
+
+/* MyEvent — Finitions de la page Événements */
+
+/* En-tête : titre et bouton côte à côte */
+@media (min-width: 350px) {
+  #eventsWorkspace .ewHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #eventsWorkspace .ewHeader > div {
+    min-width: 0;
+  }
+
+  #eventsWorkspace .ewHeader h1 {
+    font-size: clamp(23px, 6vw, 34px);
+  }
+
+  #eventsWorkspace .ewCreate {
+    font-size: 12px;
+    padding: 11px 12px;
+    white-space: normal;
+    max-width: 150px;
+    text-align: center;
+  }
+}
+
+/* Six outils : trois colonnes sur écran suffisamment large */
+@media (min-width: 390px) {
+  #eventsWorkspace .ewTools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-width: 0;
+    padding: 12px 7px;
+    gap: 7px;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Participants : présentation plus aérée */
+#eventsWorkspace .ewPerson {
+  min-width: 76px;
+  text-align: center;
+}
+
+#eventsWorkspace .ewPerson .avatar,
+#eventsWorkspace .ewAvatar {
+  border-radius: 50%;
+}
+
+/* Programme : cartes plus lisibles */
+#eventsWorkspace .ewProgrammeRow {
+  border-radius: 14px;
+}
+
+#eventsWorkspace .ewSection {
+  margin-bottom: 14px;
+}
