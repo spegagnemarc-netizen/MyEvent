@@ -1,5 +1,6 @@
 /* ===== original inline script 4 ===== */
 let sb=null,user=null,event=null,activeEventRole='member';
+let eventsWorkspaceRows=[];
 let realtimeChannel=null;
 let notificationPollTimer=null;
 
@@ -143,6 +144,7 @@ function showEventTab(name, forceState=null){
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
+  window.myeventEventsWorkspace?.syncTab(name,shouldOpen);
 }
 
 
@@ -647,6 +649,7 @@ async function loadEvents(){
   const map=new Map();
   [...(owned.data||[]),...memberEvents].forEach(e=>map.set(e.id,e));
   const events=Array.from(map.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  eventsWorkspaceRows=events.map(e=>({...e,workspaceRole:e.creator_id===user.id?'owner':roles.get(e.id)||'member'}));
 
   // Le dernier événement reste mémorisé, mais aucune fiche ne s'ouvre automatiquement à la connexion.
   const savedId=event?.id || '';
@@ -2825,6 +2828,12 @@ async function vote(pollId, optionId, button){
 }
 
 window.myeventCameraContext=function(){return {sb,user};};
+window.myeventEventsBridge={
+  context:()=>({sb,user,event,role:activeEventRole,events:eventsWorkspaceRows}),
+  load:loadEvents,select:selectEvent,tab:showEventTab,form:openEventTool,
+  cover:coverDisplayUrl,
+  closeDiscussion:()=>{document.body.classList.remove('discussionFullScreen');syncDiscussionFullscreenPortal(false);},
+};
 window.myeventGameContext=function(){return {sb,user,event};};
 window.myeventMusicContext=function(){return {sb,user,event};};
 
@@ -3531,7 +3540,8 @@ async function logout(){
     activeEventRole='member';
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
-    user=null; event=null;
+    user=null; event=null;eventsWorkspaceRows=[];
+    window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
     $('main').classList.remove('mainVisible');
@@ -3607,6 +3617,7 @@ function openEventTool(id){
   el.classList.remove('hidden');
   el.open=true;
   if(id==='inviteCard') updateInviteUI();
+  window.myeventEventsWorkspace?.showForm(id);
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 ['createEventCard','joinCard','editEventBox','inviteCard'].forEach(id=>{const el=$(id);el?.addEventListener('toggle',()=>{if(!el.open)el.classList.add('hidden')});});
