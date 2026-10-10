@@ -3600,6 +3600,7 @@ $('createEventCard')?.addEventListener('toggle',()=>{
   if($('createEventCard').open) resetCreateEventForm();
 });
 function openEventTool(id){
+  window.myeventOpenEvents?.();
   const el=$(id);
   if(!el)return;
   ['createEventCard','joinCard','editEventBox','inviteCard'].forEach(other=>{if(other!==id && $(other)){ $(other).open=false; $(other).classList.add('hidden'); }});
@@ -3642,6 +3643,7 @@ $('shareEventFeedBtn')?.addEventListener('click',async()=>{
 window.myeventOpenSocialEvent=async function(id){
   if(!id)return;
   await loadEvents();await selectEvent(id);
+  window.myeventOpenEvents?.();
   $('eventsCard').open=true;$('eventsCard').scrollIntoView({behavior:'smooth',block:'start'});
 };
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));

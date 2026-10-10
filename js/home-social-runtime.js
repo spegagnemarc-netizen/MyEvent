@@ -3,12 +3,13 @@
   function $s(id){return document.getElementById(id)}
   const nav=$s('socialNav')||$s('socialBottomNav');
   const views={feed:$s('socialFeedView'),discover:$s('socialDiscoverView'),friends:$s('socialFriendsView'),messages:$s('socialMessagesView'),notifications:$s('socialGlobalNotificationsView')};
-  function tab(name){Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';document.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
+  function tab(name){if($s("eventsCard"))$s("eventsCard").hidden=name!=="events";Object.keys(views).forEach(k=>{if(views[k])views[k].classList.toggle('open',k!=='feed'&&false)});if(views.feed)views.feed.style.display=name==='feed'?'block':'none';if(views.discover)views.discover.style.display=name==='discover'?'block':'none';if(views.friends)views.friends.style.display=name==='friends'?'block':'none';if(views.messages)views.messages.style.display=name==='messages'?'block':'none';document.querySelectorAll('[data-social-tab]').forEach(b=>b.classList.toggle('active',b.dataset.socialTab===name));}
+  window.myeventOpenEvents=()=>{tab("events");const el=$s("eventsCard");if(el){el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"});}};
   nav.addEventListener('click',e=>{const b=e.target.closest('[data-social-tab]');if(b)tab(b.dataset.socialTab)});
   // V54.46 — raccourcis du cadre Mes événements
   $s('socialHeaderMusicBtn')?.addEventListener('click',()=>document.querySelector('#socialBottomNav .navMusic')?.click());
   const headerEvents=$s('socialHeaderEventsBtn');
-  headerEvents?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
+  headerEvents?.addEventListener('click',()=>window.myeventOpenEvents());
   $s('socialHeaderCallBtn')?.addEventListener('click',()=>{const el=$s('groupCallCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{if(typeof callActive!=='undefined' && !callActive)$s('startCallBtn')?.click()},250);}});
   $s('socialHeaderNotificationsBtn')?.addEventListener('click',()=>tab('notifications'));
   $s('socialHeaderMessagesBtn')?.addEventListener('click',()=>tab('messages'));
@@ -22,7 +23,7 @@
   });
   // Story creation is handled by social-friends-stories.js.
   $s('socialBottomCreate')?.addEventListener('click',()=>openMyEventCamera());
-  $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='music')return;if(t==='games'){globalThis.myeventEntertainment?.open?.();return}if(t==='profile'){$s('profileAvatar')?.click();return}if(t==='events'){tab('feed');const el=$s('eventsCard');if(el){el.open=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),20);} $s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));return;}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
+  $s('socialBottomNav')?.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(!b)return;const t=b.dataset.bottomTab;if(t==='music')return;if(t==='games'){globalThis.myeventEntertainment?.open?.();return}if(t==='profile'){$s('profileAvatar')?.click();return}if(t==='events'){window.myeventOpenEvents(); $s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));return;}tab(t==='feed'?'feed':t);$s('socialBottomNav').querySelectorAll('[data-bottom-tab]').forEach(x=>x.classList.toggle('active',x===b));});
   const popularShortcut=document.querySelector('#socialHome .popularCard');
   popularShortcut?.addEventListener('click',()=>{
     const filters=[...document.querySelectorAll('#socialHome .socialFilter')];
@@ -777,7 +778,7 @@
   $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));
   $s('socialGlobalFriendsBtn')?.addEventListener('click',()=>tab('friends'));
-  $s('socialGlobalEventsBtn')?.addEventListener('click',()=>{const el=$s('eventsCard');if(el){el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'})}});
+  $s('socialGlobalEventsBtn')?.addEventListener('click',()=>window.myeventOpenEvents());
   // Profil > Apparence est géré par theme-runtime.js pour tous les écrans.
   tab('feed');
   setInterval(()=>{try{const n=$s('who')?.textContent?.trim();if(n&&n!=='Utilisateur')$s('socialHeaderName').textContent='Bonjour '+n;const a=$s('profileAvatar');const h=$s('socialHeaderAvatar');if(a&&h&&a.querySelector('img'))h.innerHTML=a.innerHTML;else if(a&&h&&a.textContent.trim()&&a.textContent.trim()!=='?')h.textContent=a.textContent.trim()}catch(e){}},1500);
