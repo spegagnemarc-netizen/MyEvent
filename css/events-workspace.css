@@ -279,3 +279,30 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
     line-height: 1.15 !important;
   }
 }
+
+/* MyEvent — typographie compacte des 6 cartes iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTool {
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 5px 4px !important;
+    gap: 4px !important;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 24px !important;
+    height: 24px !important;
+    flex: 0 0 24px !important;
+    font-size: 15px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+  }
+}
