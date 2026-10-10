@@ -513,3 +513,13 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  #eventsWorkspace .ewProgrammeThumb {width:44px;height:44px;font-size:22px;}
  #eventsWorkspace .ewProgrammeCopy strong {font-size:12px;}
 }
+
+/* Navigation Événements simplifiée : 6 outils + 2 sur la page suivante. */
+#eventsWorkspace .ewToolsCarousel{width:100%;overflow:hidden;margin:16px 0;}
+#eventsWorkspace .ewTools{display:flex!important;gap:0!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0!important;-webkit-overflow-scrolling:touch;}
+#eventsWorkspace .ewTools::-webkit-scrollbar{display:none;}
+#eventsWorkspace .ewToolsPage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;align-content:start;}
+#eventsWorkspace .ew-aioutings{--tool:#8e6bff;}
+#eventsWorkspace .ew-fund{--tool:#1cb8a6;}
+#eventsWorkspace .ewTaskActions{display:flex;gap:8px;margin:12px 0;}
+#eventsWorkspace .ewTaskActions button{padding:10px 14px!important;border:1px solid #557484!important;border-radius:12px!important;background:#102632!important;color:white!important;}
