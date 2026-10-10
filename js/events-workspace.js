@@ -5,9 +5,9 @@
  const home=$('socialHome'),legacy=$('eventsCard'),nav=$('socialBottomNav');
  if(!home||!legacy||!bridge||!nav)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€'};
- const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget']];
- const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA'};
+ const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€',music:'♫',games:'🎮'};
+ const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget'],['music','Musique','Playlist de l’événement'],['games','Jeux','Animations du groupe']];
+ const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA',music:'Musique',games:'Jeux'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
  root.setAttribute('aria-label','Événements');
  root.innerHTML=`<div class="ewLanding">
@@ -18,7 +18,7 @@
   <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
   <nav class="ewSections" aria-label="Organisation de l’événement">${[['locations','⌖','Lieux'],['transport','▰','Trajets'],['accommodation','⌂','Hébergement'],['hall','▣','Salle'],['outings','✦','Sorties'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
-  <div class="ewExtras"><button data-tool="notifications">♧ Notifications de l’événement</button><button data-form="joinCard">Rejoindre avec un code</button></div>
+  <div class="ewExtras"><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
@@ -132,7 +132,7 @@
   const ticket=++heroRevision,target=$('ewHero'),e=context().event;
   if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div>';return;}
   const date=Date.parse(e.event_date),upcoming=!Number.isFinite(date)||date>=Date.now(),canManage=['owner','coorganizer'].includes(context().role);
-  target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
+  target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-tool="notifications" class="ewHeroNotifications" aria-label="Notifications de cet événement" title="Notifications">🔔</button><button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
   members().slice(0,4).forEach(row=>{const avatar=row.querySelector('.avatar');if(avatar)target.querySelector('.ewHeroAvatars').appendChild(avatar.cloneNode(true));});
   try{
    let url=e.cover_url?await bridge.cover(e.cover_url):'';
@@ -154,6 +154,11 @@
  }
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}
+  if(key==='music'||key==='games'){
+   const shortcut=nav.querySelector('[data-bottom-tab="'+key+'"]');
+   if(shortcut){shortcut.click();return;}
+   status('La rubrique '+(titles[key]||key)+' est momentanément indisponible.');return;
+  }
   if(key==='discussion'){showScreen(key);bridge.tab('discussion',true);return;}
   showScreen(key);
   if(key==='programme'){renderProgramme(body,true);return;}
