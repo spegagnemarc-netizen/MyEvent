@@ -155,6 +155,12 @@
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}
   if(key==='music'||key==='games'){
+   // Music is opened by its existing home shortcut; this uses the same
+   // initialization path as the working home Music card on iPhone.
+   if(key==='music'){
+    const musicShortcut=$('socialHeaderMusicBtn');
+    if(musicShortcut){close();musicShortcut.click();return;}
+   }
    const shortcut=nav.querySelector('[data-bottom-tab="'+key+'"]');
    if(shortcut){shortcut.click();return;}
    status('La rubrique '+(titles[key]||key)+' est momentanément indisponible.');return;
