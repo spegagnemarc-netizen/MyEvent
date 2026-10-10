@@ -3279,7 +3279,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(var(--myevent-accent-rgb),.65))}
 
 /* Camera feed: preserve the complete published JPEG, including vertical annotations. */
-#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{display:block;width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important}
+#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{display:block;width:100%!important;height:250px!important;max-height:250px!important;aspect-ratio:auto!important;object-fit:cover!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostHead{padding-top:10px!important;padding-bottom:6px!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostText{padding-top:5px!important;padding-bottom:8px!important}
 

@@ -16,3 +16,13 @@
 #socialHome .socialCommentBox .socialCommentDelete{flex:0 0 25px;width:25px!important;padding:1px!important;color:#f77!important;background:transparent!important;border:0!important;font-size:20px}
 #socialHome .socialReactionStatus{font-size:11px;color:#fbb;margin:5px 0}
 #socialHome .socialReactionStatus:empty{display:none}
+
+/* Compact feed preview; the viewer displays the original decorated image. */
+#socialHome .socialPostPhotoButton{display:block;width:100%;padding:0;margin:0;border:0;border-radius:0;background:#080b10;cursor:zoom-in;overflow:hidden}
+#socialHome .socialPostPhotoButton:focus-visible{outline:3px solid var(--accent,#ff7a24);outline-offset:-3px}
+#socialHome .socialPostPhoto{box-sizing:border-box;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035}
+.socialFeedPhotoViewer{box-sizing:border-box;position:fixed;inset:0;width:100%;max-width:none;height:100dvh;max-height:none;margin:0;padding:calc(64px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));border:0;background:#080b10;color:white;overflow:hidden;overscroll-behavior:contain}
+.socialFeedPhotoViewer[open]{display:flex;align-items:center;justify-content:center}
+.socialFeedPhotoViewer::backdrop{background:rgba(0,0,0,.94)}
+.socialFeedPhotoViewer>img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.socialFeedPhotoClose{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;padding:0;border:1px solid #ffffff66;border-radius:50%;background:#20252bee;color:white;font-size:22px;cursor:pointer}

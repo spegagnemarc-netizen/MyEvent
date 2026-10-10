@@ -747,12 +747,36 @@
   }
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
+  let feedPhotoViewer;
+  function openFeedPhoto(photo,opener){
+    if(!feedPhotoViewer){
+      feedPhotoViewer=document.createElement('dialog');feedPhotoViewer.className='socialFeedPhotoViewer';
+      feedPhotoViewer.setAttribute('aria-label','Photo entière');
+      feedPhotoViewer.innerHTML='<button type="button" class="socialFeedPhotoClose" aria-label="Fermer la photo">✕</button><img alt="Photo entière">';
+      document.body.append(feedPhotoViewer);
+      feedPhotoViewer.querySelector('button').onclick=()=>feedPhotoViewer.close();
+      feedPhotoViewer.addEventListener('click',event=>{if(event.target===feedPhotoViewer)feedPhotoViewer.close();});
+    }
+    if(feedPhotoViewer.open)return;
+    const x=window.scrollX,y=window.scrollY,body=document.body,keys=['position','top','left','right','width','overflow'];
+    const saved=keys.map(key=>[key,body.style[key]]),scroll=[];
+    for(let el=opener.parentElement;el;el=el.parentElement)scroll.push([el,el.scrollLeft,el.scrollTop]);
+    feedPhotoViewer.querySelector('img').src=photo.currentSrc||photo.src;
+    feedPhotoViewer.onclose=()=>{
+      saved.forEach(([key,value])=>{body.style[key]=value;});
+      const root=document.documentElement,behavior=root.style.scrollBehavior;root.style.scrollBehavior='auto';
+      scroll.forEach(([el,left,top])=>{el.scrollLeft=left;el.scrollTop=top;});window.scrollTo(x,y);root.style.scrollBehavior=behavior;
+      opener.focus({preventScroll:true});feedPhotoViewer.querySelector('img').removeAttribute('src');
+    };
+    Object.assign(body.style,{position:'fixed',top:-y+'px',left:-x+'px',right:'0',width:'100%',overflow:'hidden'});
+    feedPhotoViewer.showModal();
+  }
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
-    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-    post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
+    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><button type="button" class="socialPostPhotoButton" aria-label="Afficher la photo entière"><img class="socialPostPhoto" alt="Photo MyEvent"></button><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
+    post.querySelector('img').src=item.image;post.querySelector('.socialPostPhotoButton').onclick=event=>openFeedPhoto(post.querySelector('img'),event.currentTarget);post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
