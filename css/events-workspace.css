@@ -211,3 +211,41 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
     text-align: center;
   }
 }
+
+/* MyEvent - cartes outils : lisibilite sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTools {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-width: 0 !important;
+    padding: 10px 6px !important;
+    gap: 6px !important;
+    overflow: hidden;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+    font-size: 18px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
