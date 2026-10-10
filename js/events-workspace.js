@@ -5,8 +5,8 @@
  const home=$('socialHome'),legacy=$('eventsCard'),nav=$('socialBottomNav');
  if(!home||!legacy||!bridge||!nav)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷'};
- const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches']];
+ const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€'};
+ const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget']];
  const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
  root.setAttribute('aria-label','Événements');
@@ -15,9 +15,8 @@
   <nav class="ewTabs" aria-label="Choisir les événements">${[['all','Mes événements'],['upcoming','À venir'],['past','Passés'],['invites','Invitations'],['discover','Découvrir']].map(([key,title])=>`<button data-filter="${key}" aria-pressed="${key==='all'}">${title}</button>`).join('')}</nav>
   <div id="ewEventPicker"></div><p id="ewStatus" role="status" aria-live="polite"></p>
   <div id="ewHero"></div>
-  <div class="ewTools">${tools.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>
-  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
-  <section class="ewSection"><header><h2>👥 Participants <span id="ewMemberCount"></span></h2><button data-form="inviteCard">＋ Inviter</button></header><div id="ewParticipants" class="ewParticipants"></div></section>
+  <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
+  <nav class="ewSections" aria-label="Organisation de l’événement">${[['locations','⌖','Lieux'],['transport','▰','Trajets'],['accommodation','⌂','Hébergement'],['hall','▣','Salle'],['outings','✦','Sorties'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
   <div class="ewExtras"><button data-tool="notifications">♧ Notifications de l’événement</button><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
@@ -151,13 +150,18 @@
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
   root.querySelectorAll('.ewTools button,.ewSections button,.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
-  renderHero();renderMembers();renderProgramme();
+  renderHero();renderProgramme();
  }
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}
   if(key==='discussion'){showScreen(key);bridge.tab('discussion',true);return;}
   showScreen(key);
   if(key==='programme'){renderProgramme(body,true);return;}
+  if(key==='tasks'){
+   const actions=document.createElement('div');actions.className='ewTaskActions';
+   const material=document.createElement('button');material.type='button';material.textContent='🎒 Matériel · Qui apporte quoi ?';material.onclick=()=>openTool('supplies');
+   actions.appendChild(material);body.appendChild(actions);
+  }
   if(key==='documents'){
    const documents=$('messages')?.querySelectorAll('a.chatAttachmentFile')||[];
    body.innerHTML='<p class="ewEmpty">Les documents partagés dans la discussion de cet événement.</p>';
