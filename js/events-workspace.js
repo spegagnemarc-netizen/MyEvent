@@ -88,15 +88,45 @@
   });
  }
  function renderProgramme(target=$('ewProgramme'),full=false){
-  target.replaceChildren();const source=$('eventPlanningTimeline');
-  const rows=source?.querySelectorAll('.inlineEventTimelineItem');
-  if(rows?.length){
-   [...rows].slice(0,full?100:3).forEach(row=>{const clone=row.cloneNode(true);clone.removeAttribute('id');clone.classList.add('ewProgrammeRow');clone.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>row.querySelectorAll('button')[i]?.click());target.appendChild(clone);});
-  }else if(source){
-   const clone=source.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-   clone.querySelectorAll('button').forEach((button,i)=>{button.onclick=()=>source.querySelectorAll('button')[i]?.click();});
-   target.appendChild(clone);
-  }else target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucune activité prévue pour cet événement.':'Choisissez un événement pour retrouver son programme.')+'</p>';
+  target.replaceChildren();
+  const source=$('eventPlanningTimeline');
+  const rows=[...(source?.querySelectorAll('.inlineEventTimelineItem')||[])];
+  if(!rows.length){
+   if(source){const clone=source.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));clone.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>source.querySelectorAll('button')[i]?.click());target.appendChild(clone);}
+   else target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucune activité prévue pour cet événement.':'Choisissez un événement pour retrouver son programme.')+'</p>';
+  }else{
+   rows.slice(0,full?100:3).forEach((row,index)=>{
+    const title=row.querySelector('.inlineEventTimelineName')?.textContent?.trim()||'Activité';
+    const time=row.querySelector('.inlineEventTimelineTime')?.textContent?.trim()||'Date à préciser';
+    const meta=row.querySelector('.inlineEventTimelineMeta')?.textContent?.trim()||'';
+    const icon=row.querySelector('.inlineEventTimelineDot');
+    const card=document.createElement('button');
+    card.type='button';card.className='ewProgrammeCompact';
+    card.setAttribute('aria-label','Détails : '+title);
+    const thumb=document.createElement('span');thumb.className='ewProgrammeThumb';
+    const img=icon?.querySelector('img');
+    if(img){const copy=img.cloneNode(true);copy.removeAttribute('id');copy.alt='';thumb.appendChild(copy);}
+    else thumb.textContent=icon?.textContent?.trim()||'📅';
+    const copy=document.createElement('span');copy.className='ewProgrammeCopy';
+    const date=document.createElement('span');date.className='ewProgrammeDate';date.textContent=time;
+    const name=document.createElement('strong');name.textContent=title;
+    copy.append(date,name);
+    if(meta){const location=document.createElement('span');location.className='ewProgrammeMeta';location.textContent=meta;copy.appendChild(location);}
+    const arrow=document.createElement('span');arrow.className='ewProgrammeChevron';arrow.textContent='›';arrow.setAttribute('aria-hidden','true');
+    card.append(thumb,copy,arrow);
+    card.onclick=()=>{
+     showScreen('programme');
+     body.replaceChildren();
+     const back=document.createElement('button');back.className='ewProgrammeBack';back.type='button';back.textContent='‹ Retour au programme';back.onclick=()=>{showScreen('programme');renderProgramme(body,true);};
+     const heading=document.createElement('h3');heading.className='ewProgrammeDetailTitle';heading.textContent=title;
+     const detail=row.cloneNode(true);detail.removeAttribute('id');detail.classList.add('ewProgrammeDetail');
+     detail.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+     detail.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>row.querySelectorAll('button')[i]?.click());
+     body.append(back,heading,detail);
+    };
+    target.appendChild(card);
+   });
+  }
   if(full){const button=document.createElement('button');button.className='ewCreate';button.textContent='Organiser une activité';button.onclick=()=>openTool('outings');target.appendChild(button);}
  }
  async function renderHero(){
