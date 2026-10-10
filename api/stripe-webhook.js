@@ -71,6 +71,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if(event.data?.object?.metadata?.myevent_kind === "ads_test") {
+      if(["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type) && event.data.object.payment_status === "paid") await require("../server/ads-handler.js").paid(event);
+      return res.status(200).json({received:true});
+    }
     console.log("Stripe event reçu :", event.type);
 
     /*

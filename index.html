@@ -157,6 +157,7 @@
       <p class="muted" id="socialPostMsg"></p>
     </div>
 
+    <label id="myEventAdsPrivacy" class="adPrivacy" hidden><input id="myEventAdsConsent" type="checkbox"> Autoriser la mesure agrégée des annonces MyEvent (facultatif, sans profil publicitaire).</label>
     <div class="socialFeed" id="socialFeed"><p class="muted" id="socialFeedEmpty">Aucune publication pour le moment.</p></div>
   </div>
 
@@ -370,7 +371,7 @@
 
 <div class="card profileSettingsCard" id="profileSettingsCard">
 <div class="myeventProfileHeader"><h2>👤 Mon profil</h2><button type="button" id="closeProfileBtn" class="myeventCloseBtn" title="Réduire le profil">⌄ Réduire</button></div>
-<div style="padding:12px 16px"><button type="button" class="secondary" id="myeventAdminEntry" hidden style="width:100%;min-height:48px">🛡️ Administration MyEvent</button></div>
+<div style="padding:12px 16px"><button type="button" id="myEventAdsEntry" hidden>Publicité professionnelle · TEST</button><button type="button" class="secondary" id="myeventAdminEntry" hidden style="width:100%;min-height:48px">🛡️ Administration MyEvent</button></div>
 <div class="profileEditor">
 <div style="flex:1;min-width:0">
 <div style="flex:1;min-width:0">
@@ -1447,6 +1448,7 @@
   </header>
   <nav id="myeventAdminNav" aria-label="Rubriques administration" tabindex="0" style="display:flex;overflow-x:auto;gap:8px;padding:12px 0">
    <button type="button" data-admin-tab="overview" aria-current="page">Tableau de bord</button>
+   <button type="button" data-admin-tab="ads" id="myEventAdminAdsTab" hidden>Publicités</button>
    <button type="button" data-admin-tab="content">Affiliation</button>
    <button type="button" data-admin-tab="users">Utilisateurs</button>
    <button type="button" data-admin-tab="events">Événements</button>
@@ -1470,6 +1472,7 @@
    <button type="button" id="myeventAdminRefresh">↻ Actualiser</button>
    <p style="opacity:.75">Données consultées via une fonction Supabase réservée au super_admin.</p>
   </div>
+  <div data-admin-view="ads" hidden><h3>Publicités · TEST</h3><div id="myEventAdminAds" class="adWorkspace"></div></div>
   <div data-admin-view="content" hidden>
    <h3>Contenus affiliés</h3>
    <p style="opacity:.75">Gère les contenus éditoriaux liés aux partenaires. Activer un contenu ici ne remplace pas l’intégration technique ni l’activation du partenaire.</p>
@@ -1560,7 +1563,7 @@
 body.myeventAdminOpen{overflow:hidden}
 </style>
 <link rel="stylesheet" href="css/admin-v2.css?v=9">
-<script src="js/admin-runtime.js?v=13" defer></script>
+<script src="js/admin-runtime.js?v=ads-v1-13" defer></script>
 
 <!-- Keep the official widget inside the Transport card on narrow screens. -->
 <style id="myevent-omio-responsive">
@@ -1585,5 +1588,7 @@ body.myeventAdminOpen{overflow:hidden}
     d.body.appendChild(widgetScript);
   })(document);
 </script>
+<section id="myEventAdsPanel" hidden role="dialog" aria-modal="true" aria-label="Publicité professionnelle MyEvent"><div class="adWorkspace"><header><h2>Publicité professionnelle · TEST</h2><button type="button" id="myEventAdsClose">Fermer</button></header><p>Forfaits à configurer. Validation administrative avant paiement Stripe TEST. Aucun paiement réel.</p><div id="myEventAdsPlans" class="adPlans"></div><form id="myEventAdsForm"><label>Entreprise <input name="business" minlength="2" maxlength="100" required></label><label>Titre <input name="title" minlength="2" maxlength="120" required></label><label>Présentation <textarea name="body" minlength="2" maxlength="1000" required></textarea></label><label>Site HTTPS <input name="target_url" type="url" pattern="https://.*" required></label><label>Formule <select name="plan_key" id="myEventAdsPlan" required></select></label><label><input name="professional" type="checkbox" required> Je représente cette activité professionnelle et dispose des droits sur le contenu.</label><button type="submit">Soumettre à validation</button></form><p id="myEventAdsMessage" class="adStatus" role="status"></p><h3>Mes campagnes</h3><div id="myEventAdsCampaigns"></div></div></section>
+<link rel="stylesheet" href="css/ads.css?v=ads-v1"><script src="js/ads-runtime.js?v=ads-v1"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 {
   "functions": {
+    "api/create-payment-session.js": {"maxDuration":30},
     "api/[search].js": {
       "maxDuration": 180
     },
@@ -8,6 +9,7 @@
     }
   },
   "routes": [
+    {"src":"^/server/ads-handler\\.js$","status":404},
     {
       "src": "^/server/search-(accommodation|transport)\\.js$",
       "status": 404
