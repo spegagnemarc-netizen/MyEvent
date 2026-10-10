@@ -481,3 +481,35 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
     line-height: 1.2;
   }
 }
+
+/* Aperçu compact du Programme : détails conservés dans une vue dédiée. */
+#eventsWorkspace .ewProgrammeCompact {
+ display:grid;grid-template-columns:48px minmax(0,1fr) 16px;align-items:center;
+ width:100%;min-width:0;gap:10px;padding:10px 4px;
+ background:transparent;color:inherit;text-align:left;border:0;
+ border-bottom:1px solid rgba(105,155,180,.17);cursor:pointer;
+}
+#eventsWorkspace .ewProgrammeThumb {
+ display:flex;align-items:center;justify-content:center;width:48px;height:48px;
+ border:1px solid #34576a;border-radius:11px;background:#123041;
+ font-size:24px;overflow:hidden;
+}
+#eventsWorkspace .ewProgrammeThumb img {width:100%;height:100%;object-fit:cover;}
+#eventsWorkspace .ewProgrammeCopy {display:flex;flex-direction:column;min-width:0;gap:3px;}
+#eventsWorkspace .ewProgrammeDate {font-size:11px;color:#a6c1d0;}
+#eventsWorkspace .ewProgrammeCopy strong {
+ font-size:13px;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;
+ -webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;
+}
+#eventsWorkspace .ewProgrammeMeta {
+ font-size:11px;color:#9cb4c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#eventsWorkspace .ewProgrammeChevron {font-size:24px;color:#7fa3b8;}
+#eventsWorkspace .ewProgrammeBack {margin:10px 0 16px;padding:9px 12px;border-radius:12px;}
+#eventsWorkspace .ewProgrammeDetailTitle {font-size:17px;line-height:1.3;margin:0 0 14px;}
+#eventsWorkspace .ewProgrammeDetail {max-width:100%;overflow-wrap:anywhere;}
+@media(max-width:600px){
+ #eventsWorkspace .ewProgrammeCompact {grid-template-columns:44px minmax(0,1fr) 12px;gap:8px;padding:9px 2px;}
+ #eventsWorkspace .ewProgrammeThumb {width:44px;height:44px;font-size:22px;}
+ #eventsWorkspace .ewProgrammeCopy strong {font-size:12px;}
+}
