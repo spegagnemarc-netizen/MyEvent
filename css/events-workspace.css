@@ -451,3 +451,33 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
     margin: 4px 0 !important;
   }
 }
+
+/* Correction exclusive du bouton Discussion sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTool.ew-sdiscussion {
+    display: grid !important;
+    grid-template-columns: 24px minmax(0, 1fr) 10px;
+    align-items: center;
+    column-gap: 6px !important;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion .ewToolIcon {
+    width: 24px !important;
+    height: 24px !important;
+    flex: none !important;
+    overflow: visible;
+    font-size: 13px !important;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion strong {
+    display: block;
+    white-space: nowrap;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion small {
+    display: block;
+    white-space: normal;
+    overflow-wrap: normal;
+    line-height: 1.2;
+  }
+}
