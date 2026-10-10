@@ -249,3 +249,33 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
     word-break: normal;
   }
 }
+
+/* MyEvent — cartes outils plus compactes sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTools {
+    gap: 7px !important;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-height: 100px !important;
+    padding: 8px 5px !important;
+    gap: 5px !important;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 17px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+}
