@@ -70,418 +70,6 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #eventsWorkspace .fieldRow{flex-wrap:wrap}#eventsWorkspace .fieldRow>div{min-width:0}
 body.eventsWorkspaceOpen #socialHome{max-width:1000px!important;background:#03090d!important;border:0!important;box-shadow:none!important}
 body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;background:#050b0ff5!important;border-top:1px solid #24404d!important}
-@media(max-width:600px){
- #eventsWorkspace{padding-top:12px;padding-bottom:105px}
- #eventsWorkspace .ewHeader{align-items:flex-start;gap:12px;flex-direction:column;margin-bottom:16px}
- #eventsWorkspace h1{font-size:30px}#eventsWorkspace h1 span{font-size:28px}
- #eventsWorkspace .ewHeader p{font-size:12px}#eventsWorkspace .ewHeader .ewCreate{font-size:14px;padding:10px 15px!important}
- #eventsWorkspace .ewTabs{gap:7px}#eventsWorkspace .ewTabs button{font-size:12px;padding:11px 14px!important}
- .ewHeroTop{padding:13px 14px 0}#eventsWorkspace .ewHeroTop button{font-size:11px;padding:7px 10px!important}
- #eventsWorkspace .ewHeroCard{min-height:220px;border-radius:22px}
- .ewHeroCopy{padding:11px 16px 26px}#eventsWorkspace .ewHeroCopy h2{font-size:25px}.ewHeroCopy p span{font-size:14px}
- .ewTools{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:13px 0}
- #eventsWorkspace .ewTool{padding:12px!important;gap:8px;min-height:94px;border-radius:19px!important}
- .ewToolIcon{width:36px;height:42px;flex-basis:36px;border-radius:11px;font-size:22px}.ewTool strong{font-size:14px}.ewTool small{font-size:10px}.ewArrow{font-size:22px}
- .ewSections{gap:5px;margin:14px 0}#eventsWorkspace .ewSections button{padding:11px 13px!important;font-size:12px}
- .ewSection{padding:15px;border-radius:22px}.ewSection>header{margin-bottom:13px}#eventsWorkspace .ewSection h2{font-size:19px}#eventsWorkspace .ewSection>header button{font-size:11px;padding:8px 11px!important}
- .ewParticipants{gap:10px}#eventsWorkspace .ewPerson{flex-basis:76px}.ewPerson .avatar,.ewAvatar{width:51px!important;height:51px!important;min-width:51px!important}.ewPerson strong{font-size:12px}.ewPerson small{font-size:10px}
- #ewToolBody .ewPanel{padding:12px!important}.ewToolHead h2{font-size:21px}
-}
-@media(prefers-reduced-motion:reduce){#eventsWorkspace *{scroll-behavior:auto!important}}
-
-/* MyEvent — Finitions de la page Événements */
-
-/* En-tête : titre et bouton côte à côte */
-@media (min-width: 350px) {
-  #eventsWorkspace .ewHeader {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-  }
-
-  #eventsWorkspace .ewHeader > div {
-    min-width: 0;
-  }
-
-  #eventsWorkspace .ewHeader h1 {
-    font-size: clamp(23px, 6vw, 34px);
-  }
-
-  #eventsWorkspace .ewCreate {
-    font-size: 12px;
-    padding: 11px 12px;
-    white-space: normal;
-    max-width: 150px;
-    text-align: center;
-  }
-}
-
-/* Six outils : trois colonnes sur écran suffisamment large */
-@media (min-width: 390px) {
-  #eventsWorkspace .ewTools {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  #eventsWorkspace .ewTool {
-    min-width: 0;
-    padding: 12px 7px;
-    gap: 7px;
-  }
-
-  #eventsWorkspace .ewToolIcon {
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
-  }
-
-  #eventsWorkspace .ewTool strong {
-    font-size: 12px;
-    overflow-wrap: anywhere;
-  }
-}
-
-/* Participants : présentation plus aérée */
-#eventsWorkspace .ewPerson {
-  min-width: 76px;
-  text-align: center;
-}
-
-#eventsWorkspace .ewPerson .avatar,
-#eventsWorkspace .ewAvatar {
-  border-radius: 50%;
-}
-
-/* Programme : cartes plus lisibles */
-#eventsWorkspace .ewProgrammeRow {
-  border-radius: 14px;
-}
-
-#eventsWorkspace .ewSection {
-  margin-bottom: 14px;
-}
-
-/* MyEvent — correction en-tête et navigation iPhone */
-@media (max-width: 600px) {
-  #eventsWorkspace .ewHeader {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: center;
-  }
-
-  #eventsWorkspace h1,
-  #eventsWorkspace .ewHeader h1 {
-    font-size: clamp(20px, 5vw, 25px);
-    letter-spacing: -0.5px;
-  }
-
-  #eventsWorkspace h1 span {
-    font-size: 22px;
-  }
-
-  #eventsWorkspace .ewHeader p {
-    font-size: 11px;
-    line-height: 1.3;
-  }
-
-  #eventsWorkspace .ewCreate,
-  #eventsWorkspace .ewHeader .ewCreate {
-    max-width: 125px;
-    padding: 9px 10px !important;
-    font-size: 11px;
-    line-height: 1.2;
-    white-space: normal;
-  }
-
-  #eventsWorkspace .ewTabs {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 3px;
-    overflow: visible;
-  }
-
-  #eventsWorkspace .ewTabs button {
-    min-width: 0;
-    padding: 10px 2px !important;
-    font-size: clamp(8px, 2.1vw, 10px);
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    text-align: center;
-  }
-}
-
-/* MyEvent - cartes outils : lisibilite sur iPhone */
-@media (max-width: 600px) {
-  #eventsWorkspace .ewTools {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  #eventsWorkspace .ewTool {
-    min-width: 0 !important;
-    padding: 10px 6px !important;
-    gap: 6px !important;
-    overflow: hidden;
-  }
-
-  #eventsWorkspace .ewToolIcon {
-    width: 30px !important;
-    height: 30px !important;
-    flex: 0 0 30px !important;
-    font-size: 18px !important;
-  }
-
-  #eventsWorkspace .ewTool strong {
-    font-size: 11px !important;
-    line-height: 1.2 !important;
-    overflow-wrap: normal;
-    word-break: normal;
-    hyphens: none;
-  }
-
-  #eventsWorkspace .ewTool small {
-    font-size: 10px !important;
-    line-height: 1.25 !important;
-    overflow-wrap: normal;
-    word-break: normal;
-  }
-}
-
-/* MyEvent — cartes outils plus compactes sur iPhone */
-@media (max-width: 600px) {
-  #eventsWorkspace .ewTools {
-    gap: 7px !important;
-  }
-
-  #eventsWorkspace .ewTool {
-    min-height: 100px !important;
-    padding: 8px 5px !important;
-    gap: 5px !important;
-  }
-
-  #eventsWorkspace .ewToolIcon {
-    width: 28px !important;
-    height: 28px !important;
-    flex: 0 0 28px !important;
-    font-size: 17px !important;
-  }
-
-  #eventsWorkspace .ewTool strong {
-    font-size: 11px !important;
-    line-height: 1.15 !important;
-  }
-
-  #eventsWorkspace .ewTool small {
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-  }
-}
-
-/* MyEvent — typographie compacte des 6 cartes iPhone */
-@media (max-width: 600px) {
-  #eventsWorkspace .ewTool {
-    min-height: 76px !important;
-    height: auto !important;
-    padding: 5px 4px !important;
-    gap: 4px !important;
-  }
-
-  #eventsWorkspace .ewToolIcon {
-    width: 24px !important;
-    height: 24px !important;
-    flex: 0 0 24px !important;
-    font-size: 15px !important;
-  }
-
-  #eventsWorkspace .ewTool strong {
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-  }
-
-  #eventsWorkspace .ewTool small {
-    font-size: 9px !important;
-    line-height: 1.15 !important;
-  }
-}
-
-/* MyEvent — finitions iPhone : outils, participants, programme */
-@media (max-width: 600px) {
-
-  /* 1. Six cartes : aucun chevauchement */
-  #eventsWorkspace .ewTool {
-    display: flex !important;
-    min-width: 0 !important;
-    min-height: 76px !important;
-    padding: 6px 5px !important;
-    gap: 5px !important;
-    overflow: hidden;
-  }
-
-  #eventsWorkspace .ewToolIcon {
-    flex: 0 0 23px !important;
-    width: 23px !important;
-    height: 23px !important;
-    font-size: 12px !important;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  #eventsWorkspace .ewTool > span:nth-child(2) {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow-wrap: break-word;
-  }
-
-  #eventsWorkspace .ewTool strong {
-    font-size: 10px !important;
-    line-height: 1.2 !important;
-    overflow-wrap: break-word;
-  }
-
-  #eventsWorkspace .ewTool small {
-    font-size: 9px !important;
-    line-height: 1.2 !important;
-    margin-top: 3px !important;
-    overflow-wrap: break-word;
-  }
-
-  #eventsWorkspace .ewArrow {
-    flex: 0 0 9px;
-    margin-left: 0;
-    font-size: 16px !important;
-  }
-
-  /* 2. Participants : noms et rôles séparés */
-  #eventsWorkspace .ewParticipants {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 4px 0 8px;
-  }
-
-  #eventsWorkspace .ewPerson {
-    flex: 0 0 82px;
-    min-width: 82px;
-    gap: 5px;
-  }
-
-  #eventsWorkspace .ewPerson strong {
-    display: block;
-    max-width: 100%;
-    font-size: 11px;
-    line-height: 1.2;
-  }
-
-  #eventsWorkspace .ewPerson small {
-    display: block;
-    width: 100%;
-    font-size: 9px;
-    line-height: 1.25;
-    white-space: normal;
-    overflow-wrap: break-word;
-    text-align: center;
-  }
-
-  /* 3. Programme : aperçu compact */
-  #eventsWorkspace #ewProgramme {
-    min-width: 0;
-  }
-
-  #eventsWorkspace #ewProgramme .ewProgrammeRow {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    padding: 9px 4px 9px 13px;
-    min-width: 0;
-    border-bottom: 1px solid #183441;
-  }
-
-  #eventsWorkspace #ewProgramme .ewProgrammeRow > * {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  #eventsWorkspace #ewProgramme .inlineEventTimelineDot {
-    width: 38px;
-    height: 38px;
-    flex: 0 0 38px;
-    font-size: 19px;
-    border-radius: 9px;
-    overflow: hidden;
-  }
-
-  #eventsWorkspace #ewProgramme .inlineEventTimelineDot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 9px;
-  }
-
-  #eventsWorkspace #ewProgramme .inlineEventTimelineName {
-    font-size: 12px !important;
-    line-height: 1.25 !important;
-    margin: 2px 0 4px !important;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-
-  #eventsWorkspace #ewProgramme .inlineEventTimelineTime,
-  #eventsWorkspace #ewProgramme .inlineEventTimelineMeta {
-    font-size: 10px !important;
-    line-height: 1.3 !important;
-    overflow-wrap: anywhere;
-  }
-
-  #eventsWorkspace #ewProgramme .ewProgrammeRow button {
-    font-size: 10px !important;
-    padding: 5px 7px !important;
-    max-width: 100%;
-    white-space: normal;
-  }
-
-  #eventsWorkspace #ewProgramme .ewProgrammeRow p {
-    font-size: 10px !important;
-    line-height: 1.3 !important;
-    margin: 4px 0 !important;
-  }
-}
-
-/* Correction exclusive du bouton Discussion sur iPhone */
-@media (max-width: 600px) {
-  #eventsWorkspace .ewTool.ew-sdiscussion {
-    display: grid !important;
-    grid-template-columns: 24px minmax(0, 1fr) 10px;
-    align-items: center;
-    column-gap: 6px !important;
-  }
-
-  #eventsWorkspace .ewTool.ew-sdiscussion .ewToolIcon {
-    width: 24px !important;
-    height: 24px !important;
-    flex: none !important;
-    overflow: visible;
-    font-size: 13px !important;
-  }
-
-  #eventsWorkspace .ewTool.ew-sdiscussion strong {
-    display: block;
-    white-space: nowrap;
-  }
-
-  #eventsWorkspace .ewTool.ew-sdiscussion small {
-    display: block;
-    white-space: normal;
-    overflow-wrap: normal;
-    line-height: 1.2;
-  }
-}
-
 /* Aperçu compact du Programme : détails conservés dans une vue dédiée. */
 #eventsWorkspace .ewProgrammeCompact {
  display:grid;grid-template-columns:48px minmax(0,1fr) 16px;align-items:center;
@@ -514,17 +102,55 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  #eventsWorkspace .ewProgrammeCopy strong {font-size:12px;}
 }
 
-/* Navigation Événements simplifiée : 6 outils + 2 sur la page suivante. */
-#eventsWorkspace .ewToolsCarousel{width:100%;overflow:hidden;margin:16px 0;}
-#eventsWorkspace .ewTools{display:flex!important;gap:0!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0!important;-webkit-overflow-scrolling:touch;}
-#eventsWorkspace .ewTools::-webkit-scrollbar{display:none;}
-#eventsWorkspace .ewToolsPage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;align-content:start;}
-#eventsWorkspace .ew-aioutings{--tool:#8e6bff;}
-#eventsWorkspace .ew-fund{--tool:#1cb8a6;}
-#eventsWorkspace .ewTaskActions{display:flex;gap:8px;margin:12px 0;}
-#eventsWorkspace .ewTaskActions button{padding:10px 14px!important;border:1px solid #557484!important;border-radius:12px!important;background:#102632!important;color:white!important;}
 
-/* Event-specific quick actions: retain the existing modules and compact layout. */
-#eventsWorkspace .ew-music{--tool:#e052d8;}
-#eventsWorkspace .ew-games{--tool:#8b64ff;}
-#eventsWorkspace .ewHeroNotifications{position:relative;min-width:38px;min-height:36px;font-size:19px!important;display:inline-flex;align-items:center;justify-content:center;}
+/* One two-page carousel: six existing tools, then four existing tools. */
+#eventsWorkspace .ewToolsCarousel{width:100%;overflow:hidden;margin:14px 0 6px}
+#eventsWorkspace .ewTools{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0;-webkit-overflow-scrolling:touch}
+#eventsWorkspace .ewTools::-webkit-scrollbar{display:none}
+#eventsWorkspace .ewToolsPage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,auto);gap:9px;flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;align-content:start}
+#eventsWorkspace .ew-aioutings{--tool:#758aff}#eventsWorkspace .ew-fund{--tool:#27c4bd}#eventsWorkspace .ew-music{--tool:#bd6251}#eventsWorkspace .ew-games{--tool:#a3ce52}
+#eventsWorkspace .ewCarouselControls{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 12px;color:#9db7c5;font-size:11px}
+#eventsWorkspace .ewCarouselControls button{border:1px solid #42616e;border-radius:50%;background:#0d1e27;color:#c5dae5;width:27px;height:27px;padding:0}
+#eventsWorkspace .ewCarouselControls [aria-current=true]{border-color:#ff954c;color:#ffad6b;background:#46200e}
+#eventsWorkspace .ewHeroNotifications{min-width:32px;display:inline-flex;justify-content:center;align-items:center}
+#eventsWorkspace .ewTaskActions{display:flex;gap:8px;margin:12px 0}
+#eventsWorkspace .ewTaskActions button{padding:10px 14px;border:1px solid #557484;border-radius:12px;background:#102632;color:white}
+#eventsWorkspace .ewProgrammeCompact{position:relative;padding-left:12px}
+#eventsWorkspace .ewProgrammeCompact:before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:5px;background:#2dbbff}
+#eventsWorkspace .ewProgrammeCompact:nth-child(2):before{background:#ff8c42}#eventsWorkspace .ewProgrammeCompact:nth-child(3):before{background:#cd66ff}
+#eventsWorkspace .ewSeeMembers{display:block;margin:8px 0 0 auto;background:transparent;border:0;color:#ffab63;font-size:12px;padding:4px}
+#eventsWorkspace .ewProgrammeDetail{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:600px){
+ #eventsWorkspace{padding-top:12px;padding-bottom:calc(100px + env(safe-area-inset-bottom));min-width:0}
+ #eventsWorkspace .ewHeader{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;margin-bottom:14px}
+ #eventsWorkspace .ewHeader>div{min-width:0}
+ #eventsWorkspace h1{font-size:clamp(19px,5.5vw,25px);letter-spacing:-.6px;margin-bottom:5px;white-space:nowrap}
+ #eventsWorkspace h1 span{font-size:22px}
+ #eventsWorkspace .ewHeader p{font-size:10px;line-height:1.3}
+ #eventsWorkspace .ewHeader .ewCreate{max-width:120px;white-space:normal;font-size:11px;padding:9px 8px!important;line-height:1.25}
+ #eventsWorkspace .ewTabs{display:grid;grid-template-columns:1.35fr .8fr .8fr 1fr 1fr;gap:3px;overflow:visible;padding-bottom:9px;margin-bottom:3px}
+ #eventsWorkspace .ewTabs button{min-width:0;padding:10px 2px!important;font-size:clamp(8px,2.3vw,10px);letter-spacing:-.25px;text-align:center}
+ #ewEventPicker{font-size:11px;margin-bottom:10px;gap:7px}#ewEventPicker select{padding:6px}
+ #eventsWorkspace .ewHeroCard{min-height:190px;border-radius:20px;margin-bottom:12px}
+ .ewHeroTop{padding:11px 12px 0}.ewState{font-size:10px;padding:6px 9px}
+ #eventsWorkspace .ewHeroTop button{font-size:10px;padding:6px 9px!important}
+ .ewHeroCopy{padding:10px 14px 25px}#eventsWorkspace .ewHeroCopy h2{font-size:22px;margin-bottom:10px;overflow-wrap:anywhere}
+ .ewHeroCopy p{font-size:16px;gap:9px;margin:7px 0}.ewHeroCopy p span{font-size:12px}
+ #eventsWorkspace .ewHeroBottom button{font-size:12px}
+ .ewHeroAvatars .avatar{width:29px!important;height:29px!important;min-width:29px!important;font-size:18px}
+ #eventsWorkspace .ewTool{display:grid;grid-template-columns:24px minmax(0,1fr);gap:5px;align-content:center;min-height:76px;padding:6px 5px!important;border-radius:15px!important}
+ #eventsWorkspace .ewToolsPage{gap:7px}
+ #eventsWorkspace .ewToolIcon{width:24px;height:24px;flex-basis:24px;font-size:14px;border-radius:8px}
+ #eventsWorkspace .ewTool>span:nth-child(2){min-width:0}
+ #eventsWorkspace .ewTool strong{font-size:10px;line-height:1.2;overflow-wrap:normal}
+ #eventsWorkspace .ewTool small{font-size:9px;line-height:1.2;margin-top:3px;overflow-wrap:normal}
+ #eventsWorkspace .ewTool .ewArrow{display:none}
+ .ewSections{gap:5px;margin:12px 0}#eventsWorkspace .ewSections button{font-size:11px;padding:10px 12px!important}
+ .ewSection{padding:13px;border-radius:20px;margin:12px 0}.ewSection>header{margin-bottom:11px}
+ #eventsWorkspace .ewSection h2{font-size:18px}#eventsWorkspace .ewSection>header button{font-size:11px;padding:7px 10px!important}
+ .ewParticipants{gap:7px;padding-bottom:4px}#eventsWorkspace .ewPerson{flex-basis:68px;min-width:68px;gap:3px}
+ .ewPerson .avatar,.ewAvatar{width:46px!important;height:46px!important;min-width:46px!important;font-size:25px}
+ .ewPerson strong{font-size:11px;max-width:68px}.ewPerson small{font-size:9px;line-height:1.15;white-space:normal}
+ #ewToolBody .ewPanel{padding:12px!important}.ewToolHead{gap:10px}.ewToolHead h2{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){#eventsWorkspace *{scroll-behavior:auto!important}}

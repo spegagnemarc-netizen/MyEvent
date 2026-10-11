@@ -27,13 +27,28 @@ test('Owner/coorganizer edit; participant keeps functional tools without edit',a
  for(const role of ['owner','coorganizer','member']){
   const {w,count,dom}=fixture(role);await w.myeventEventsWorkspace.open();await flush();
   assert.equal(!!w.document.querySelector('#ewHero [data-form="editEventBox"]'),role!=='member');
-  assert.equal(w.document.querySelectorAll('.ewTool').length,6);
+  assert.equal(w.document.querySelectorAll('.ewTool').length,10);
   assert.equal(w.document.querySelector('#ewHero h2').textContent,'<Événement réel>');
   await w.myeventEventsWorkspace.openTool('polls');assert.equal(count(),1);
   assert.equal(w.document.querySelector('[data-panel="polls"]').parentElement.id,'ewToolBody');
   w.myeventEventsWorkspace.close();assert.equal(w.document.querySelector('[data-panel="polls"]').parentElement.id,'ewDepot');
   dom.window.close();
  }
+});
+
+test('Ten existing tools remain in six/four pages with participants and secondary navigation',async()=>{
+ const {w,dom}=fixture();await w.myeventEventsWorkspace.open();await flush();
+ const pages=[...w.document.querySelectorAll('.ewToolsPage')];
+ assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,4]);
+ assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games']);
+ assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','supplies','transport','documents']);
+ assert.equal(w.document.querySelector('#ewParticipants strong').textContent,'Alice');
+ assert.equal(w.document.querySelector('#ewParticipants small').textContent,'Propriétaire');
+ for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport']){
+  await w.myeventEventsWorkspace.openTool(key);
+  assert(w.document.querySelector('#ewToolBody .ewPanel'),key+' opens its original panel');
+ }
+ dom.window.close();
 });
 test('Empty state disables event actions and creation remains available',async()=>{
  const {w,dom}=fixture('member',false);await w.myeventEventsWorkspace.open();await flush();
