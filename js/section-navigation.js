@@ -14,15 +14,15 @@
   const h=document.createElement('header');h.className='meSectionHeader';h.dataset.sectionHeader=section;
   const brand=document.createElement('div');brand.className='meSectionBrand';brand.append('My');const accent=document.createElement('span');accent.textContent='Event';brand.append(accent);
   const row=document.createElement('div');row.className='meSectionTitleRow';
-  const back=document.createElement('button');back.type='button';back.className='meSectionBack';back.textContent='←';back.setAttribute('aria-label','Retour');back.title='Retour';back.onclick=()=>api.back();
   const title=document.createElement('h1');title.textContent=names[section];
   const close=document.createElement('button');close.type='button';close.className='meSectionClose';close.textContent='×';close.setAttribute('aria-label','Fermer et revenir à l’accueil');close.title='Fermer';close.onclick=()=>api.close();
-  row.append(back,title,close);h.append(brand,row);return h;
+  row.append(title,close);h.append(brand,row);return h;
  }
  function hideOther(section){
   if(section!=='events')window.myeventEventsWorkspace?.close();
   if(section!=='music'&&document.getElementById('musicHome')?.classList.contains('open'))window.MyEventMusic?.closeMusic();
   if(section!=='games'&&document.getElementById('entertainmentLounge')?.classList.contains('open'))window.myeventEntertainment?.close();
+  document.body.classList.toggle('profileSectionOpen',section==='profile');
   if(section!=='profile')window.myeventProfileNavigation?.close();
  }
  async function render(s){
@@ -69,12 +69,12 @@
  function mount(){
   ready=true;
   for(const [section,id] of [['events','eventsWorkspace'],['music','musicHome'],['profile','profileSettingsCard']]){
-   const root=document.getElementById(id);if(root){root.prepend(header(section));if(section==='profile'){const settings=document.createElement('button');settings.type='button';settings.className='secondary';settings.textContent='Paramètres et apparence';settings.onclick=()=>{visit('profile','settings');document.getElementById('myeventAppearanceCard')?.scrollIntoView({block:'start'});};root.querySelector('.meSectionHeader').after(settings);}}
+   const root=document.getElementById(id);if(root){root.prepend(header(section));if(section==='profile'){const settings=document.createElement('button');settings.type='button';settings.className='secondary';settings.textContent='Paramètres et apparence';settings.onclick=()=>{visit('profile','settings');document.getElementById('myeventAppearanceCard')?.scrollIntoView({block:'start'});};root.querySelector('.meSectionHeader').after(settings);const appearance=document.getElementById('myeventAppearanceCard');if(appearance){const internalBack=document.createElement('button');internalBack.type='button';internalBack.textContent='‹ Retour au profil';internalBack.onclick=()=>api.back();appearance.prepend(internalBack);}}}
   }
   const market=document.getElementById('myeventMarketplace');
   if(market){
-   market.prepend(header('marketplace'));stack=[{section:'marketplace',page:'home'}];save();history.replaceState(state(),'',url(current()));
-   market.querySelectorAll('dialog').forEach(d=>{d.prepend(header('marketplace'));d.addEventListener('close',()=>{if(!restoring&&current().section==='marketplace'&&current().page===d.id)back();});});
+   const marketHead=market.querySelector('.marketHeader'),identity=document.createElement('div');identity.className='meMarketplaceIdentity';const brand=marketHead.querySelector('.brand');identity.append(brand);identity.append(header('marketplace').querySelector('.meSectionClose'));marketHead.prepend(identity);stack=[{section:'marketplace',page:'home'}];save();history.replaceState(state(),'',url(current()));
+   market.querySelectorAll('dialog').forEach(d=>{const close=d.querySelector('.dialogClose');if(close){close.addEventListener('click',e=>{e.stopImmediatePropagation();api.close();},true);}d.addEventListener('close',()=>{if(!restoring&&current().section==='marketplace'&&current().page===d.id)back();});});
   }else{
    const hash=location.hash.slice(1).split('/'),section=hash[0];
    if(names[section]){const saved=current();stack= saved.section===section?stack:[{section:'home'},{section,page:hash[1]||undefined}];history.replaceState(state(),'',url(current()));void render(current());}

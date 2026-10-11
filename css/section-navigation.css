@@ -1,21 +1,26 @@
-/* Marketplace brand proportions, reused by every section. */
-.meSectionHeader{box-sizing:border-box;width:100%;padding:18px 20px 16px;background:#071016;color:#f5f7fa;border-bottom:1px solid #263d4a;border-radius:18px 18px 0 0;margin-bottom:16px;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
-.meSectionBrand{display:flex;justify-content:flex-end;font-size:28px;font-weight:850;letter-spacing:-1.5px;line-height:1.2;margin-bottom:12px;color:#f5f7fa}
+/* Section identity follows the original Marketplace brand, without extra card chrome. */
+.meSectionHeader{box-sizing:border-box;padding:22px 0 18px;margin:0 0 16px;background:transparent;color:#f5f7fa;border:0;border-radius:0;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
+.meSectionBrand{display:flex;justify-content:flex-end;font-size:28px;font-weight:850;letter-spacing:-1.5px;line-height:1.2;color:#f5f7fa;padding-right:56px}
 .meSectionBrand>span{color:#ff8238}
-.meSectionTitleRow{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:12px}
-.meSectionTitleRow>h1{font-size:26px;font-weight:750;line-height:1.2;letter-spacing:-.5px;margin:0;text-align:left;color:inherit;overflow-wrap:anywhere}
-.meSectionTitleRow>button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:1px solid #355061;border-radius:50%;background:#132632;color:#bed1df;font:26px/1 system-ui;cursor:pointer;box-shadow:none;touch-action:manipulation}
-.meSectionTitleRow>button:hover{border-color:#ff8238;color:#ff9848}
-.meSectionTitleRow>button:focus-visible,.socialEventCard[data-event-id]:focus-visible{outline:2px solid #ff9848;outline-offset:4px}
-#eventsWorkspace>.meSectionHeader{margin-bottom:18px}
-#eventsWorkspace .ewHeader h1,#musicHome .musicHead h2,#musicBackBtn,#musicHome .musicScreenHead [data-back],.gl-header .gl-back,.profileSettingsCard .myeventProfileHeader{display:none!important}
+.meSectionTitleRow{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px;margin-top:2px}
+.meSectionHeader .meSectionTitleRow>h1,#eventsWorkspace .meSectionHeader h1{font-size:9px;font-weight:750;line-height:1.5;letter-spacing:2.1px;text-transform:uppercase;margin:0;text-align:right;color:inherit;overflow-wrap:anywhere}
+.meSectionClose{display:grid!important;place-items:center;min-width:44px;min-height:44px;padding:0!important;border:1px solid #355061!important;border-radius:50%!important;background:transparent!important;color:#bed1df!important;font:26px/1 system-ui!important;cursor:pointer;box-shadow:none!important;touch-action:manipulation}
+.meSectionClose:hover{border-color:#ff8238!important;color:#ff9848!important}
+.meSectionClose:focus-visible,.socialEventCard[data-event-id]:focus-visible{outline:2px solid #ff9848;outline-offset:4px}
+#eventsWorkspace .ewHeader h1,#musicHome .musicHead h2,#musicBackBtn,.profileSettingsCard .myeventProfileHeader{display:none!important}
 #musicHome .musicScreenHead h2,.gl-header h2{font-size:20px}
-#musicHome>.meSectionHeader{position:relative;z-index:2}
-#myeventMarketplace>.meSectionHeader{max-width:1320px;margin:0 auto;border-radius:0}
-#myeventMarketplace .marketHeader>.brand,#myeventMarketplace .marketHeader .backHome{display:none}
-#myeventMarketplace .marketHeader{justify-content:flex-end;padding-top:12px}
-#myeventMarketplace dialog>.meSectionHeader{margin-top:8px}
-#myeventMarketplace dialog>.dialogClose{display:none}
+#musicHome>.meSectionHeader{position:relative;z-index:2;padding-inline:16px}
+.gl-shell>.meSectionHeader{padding-inline:0}
+#entertainmentLounge[data-game-screen="hub"] .gl-header{display:none}
+#entertainmentLounge:not([data-game-screen="hub"]) .gl-back{display:inline-flex}
+/* Keep Marketplace's original brand, subtitle, toolbar and page width. */
+#myeventMarketplace .marketHeader{flex-wrap:wrap;align-items:center}
+.meMarketplaceIdentity{display:flex;align-items:flex-end;gap:12px;margin-left:auto;order:0}
+#myeventMarketplace .marketHeader .brand{display:block}
+#myeventMarketplace .marketHeader>nav{order:1;flex-basis:100%;justify-content:flex-end}
+#myeventMarketplace .marketHeader .backHome{display:none}
+body.profileSectionOpen #main>.card:not(#profileSettingsCard),body.profileSectionOpen #socialHome>:not(#socialBottomNav){display:none!important}
+body.profileSectionOpen #profileSettingsCard{display:block!important;scroll-margin-top:0}
+body.profileSectionOpen #socialHome{min-height:0!important;padding-bottom:0!important}
 .socialEventCard[data-event-id]{cursor:pointer;touch-action:manipulation}
-@media(max-width:600px){.meSectionHeader{padding:14px 12px}.meSectionTitleRow{gap:9px}.meSectionTitleRow>h1{font-size:23px}.meSectionBrand{font-size:26px}}
-@container events(max-width:600px){.meSectionHeader{padding:14px 12px}.meSectionTitleRow{gap:9px}.meSectionTitleRow>h1{font-size:23px}}
+@media(max-width:600px){.meSectionHeader{padding-top:16px}.meSectionBrand{font-size:24px}.meMarketplaceIdentity{gap:10px}}

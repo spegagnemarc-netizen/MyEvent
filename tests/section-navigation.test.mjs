@@ -28,8 +28,8 @@ test('Event detail back restores Events and close invalidates old browser histor
 for(const [section,subpage] of [['music','playlists'],['games','setup'],['profile','settings']])test(section+' internal back and close',async()=>{
  const {dom,w,getRestored}=fixture();const n=w.MyEventSectionNavigation;n.visit(section,section==='games'?'hub':'home');n.visit(section,subpage);n.back();await flush();assert.equal(n.current().section,section);if(section!=='profile')assert.equal(getRestored().page,section==='games'?'hub':'home');n.close();await flush();assert.equal(n.current().section,'home');n.back();await flush();assert.equal(n.current().section,'home');dom.window.close();
 });
-test('Five sections use one accessible brand/right title/back/close structure',()=>{
- const {dom,w}=fixture();for(const section of ['events','marketplace','music','games','profile']){const h=w.MyEventSectionNavigation.header(section);assert.equal(h.querySelector('.meSectionBrand').textContent,'MyEvent');assert.equal(h.querySelectorAll('button').length,2);assert(h.querySelector('button[aria-label="Retour"]'));assert(h.querySelector('button[aria-label="Fermer et revenir à l’accueil"]'));assert(h.querySelector('h1').textContent);}dom.window.close();
+test('Main section headers have one close button and no general back arrow',()=>{
+ const {dom,w}=fixture();for(const section of ['events','marketplace','music','games','profile']){const h=w.MyEventSectionNavigation.header(section);assert.equal(h.querySelector('.meSectionBrand').textContent,'MyEvent');assert.equal(h.querySelectorAll('button').length,1);assert.equal(h.querySelector('button[aria-label="Retour"]'),null);assert(h.querySelector('button[aria-label="Fermer et revenir à l’accueil"]'));assert(h.querySelector('h1').textContent);}dom.window.close();
 });
 test('Marketplace detail returns to catalogue without leaving application',async()=>{
  const {dom,w}=fixture(true);w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};const d=w.document.getElementById('listingDialog');d.open=true;w.MyEventSectionNavigation.visit('marketplace','listingDialog');w.MyEventSectionNavigation.back();await flush();assert.equal(d.open,false);assert.equal(w.MyEventSectionNavigation.current().page,'home');assert.equal(w.location.pathname,'/marketplace.html');dom.window.close();
@@ -37,4 +37,13 @@ test('Marketplace detail returns to catalogue without leaving application',async
 test('Whole feed card is keyboard accessible and carries exact event id',async()=>{
  const {dom,w}=fixture();w.myeventCameraContext=()=>({user:{id:'existing-user'},sb:{rpc:async()=>({data:[{post_id:'post-a',event_id:'event-b',event_name:'B',is_member:true}]}),storage:{}}});
  w.eval(read('js/event-social-feed.js'));await w.myeventRefreshSocialFeed();const card=w.document.querySelector('.socialEventCard[data-event-id="event-b"]');assert(card);assert.equal(card.tabIndex,0);let opened;w.myeventViewSocialEvent=id=>{opened=id;};card.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));assert.equal(opened,'event-b');dom.window.close();
+});
+test('Every general header close returns home; Profile hides the status card above its identity',async()=>{
+ const {dom,w}=fixture();for(const section of ['events','music','games','profile']){w.MyEventSectionNavigation.visit(section);const h=w.MyEventSectionNavigation.header(section);h.querySelector('.meSectionClose').click();await flush();assert.equal(w.MyEventSectionNavigation.current().section,'home');assert.equal(w.document.body.classList.contains('profileSectionOpen'),false);}w.MyEventSectionNavigation.visit('profile');assert.equal(w.document.body.classList.contains('profileSectionOpen'),true);assert.equal(w.document.getElementById('profileSettingsCard').firstElementChild.className,'meSectionHeader');dom.window.close();
+});
+test('Marketplace retains original brand subtitle and all toolbar actions',()=>{
+ const {dom,w}=fixture(true),d=w.document;assert.equal(d.querySelectorAll('.marketHeader .brand').length,1);assert.equal(d.querySelector('.marketHeader .brand small').textContent,'MARKETPLACE');assert.equal(d.querySelectorAll('#myeventMarketplace>.meSectionHeader').length,0);assert(d.querySelector('.meMarketplaceIdentity>.meSectionClose'));for(const id of ['myListings','inboxButton','favoritesButton','createListing','marketThemeToggle'])assert(d.getElementById(id));dom.window.close();
+});
+test('Internal back controls are not hidden by the shared header styles',()=>{
+ const css=read('css/section-navigation.css');assert(!css.includes('.musicScreenHead [data-back]'));assert(css.includes('#entertainmentLounge[data-game-screen="hub"] .gl-header'));assert(!css.includes('border-radius:18px'));assert(css.includes('body.profileSectionOpen #main>.card:not(#profileSettingsCard)'));
 });
