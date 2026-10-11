@@ -18,7 +18,6 @@
   <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
   <div class="ewCarouselControls" aria-label="Pages des outils"><button data-tools-page="0" aria-label="Afficher les six premiers outils" aria-current="true">1</button><button data-tools-page="1" aria-label="Afficher les quatre autres outils" aria-current="false">2</button><span>Faire glisser pour voir les autres outils</span></div>
   <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
-  <section class="ewSection"><header><h2>👥 Participants <span id="ewMemberCount"></span></h2><button data-form="inviteCard">＋ Inviter</button></header><div id="ewParticipants" class="ewParticipants"></div><button class="ewSeeMembers" data-tool="members">Voir tout ›</button></section>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
   <div class="ewExtras"><button data-tool="accommodation">⌂ Hébergement</button><button data-tool="hall">▣ Salle</button><button data-tool="outings">✦ Sorties</button><button data-tool="localtravel">⌖ Déplacements</button><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
@@ -75,19 +74,6 @@
   return filter==='past'?date<Date.now():date>=Date.now();
  });}
  function members(){return [...($('members')?.querySelectorAll('.memberRow')||[])];}
- function renderMembers(){
-  const rows=members(),target=$('ewParticipants');target.replaceChildren();$('ewMemberCount').textContent=rows.length?`(${rows.length})`:'';
-  if(!context().event||!rows.length){target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucun participant à afficher.':'Les participants apparaîtront ici après la sélection d’un événement.')+'</p>';return;}
-  rows.forEach(original=>{
-   const button=document.createElement('button');button.className='ewPerson';button.type='button';
-   const avatar=original.querySelector('.avatar');if(avatar){const copy=avatar.cloneNode(true);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));button.appendChild(copy);}
-   else{const a=document.createElement('span');a.className='ewAvatar';a.textContent='👤';button.appendChild(a);}
-   const name=document.createElement('strong');name.textContent=original.querySelector('b')?.textContent||'Participant';button.appendChild(name);
-   const role=document.createElement('small');role.textContent=(original.querySelector('.memberInfo span')?.textContent||'Participant').split(' · ')[0].replace('Créateur','Propriétaire');
-   role.className=role.textContent.includes('Propriétaire')?'ewOwner':role.textContent.includes('Co-organisateur')?'ewCoorganizer':'';
-   button.appendChild(role);button.onclick=()=>original.click();target.appendChild(button);
-  });
- }
  function renderProgramme(target=$('ewProgramme'),full=false){
   target.replaceChildren();
   const source=$('eventPlanningTimeline');
@@ -152,7 +138,7 @@
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
   root.querySelectorAll('.ewTools button,.ewSections button,.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
-  renderHero();renderMembers();renderProgramme();
+  renderHero();renderProgramme();
  }
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}

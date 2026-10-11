@@ -42,8 +42,9 @@ test('Ten existing tools remain in six/four pages with participants and secondar
  assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,4]);
  assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games']);
  assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','supplies','transport','documents']);
- assert.equal(w.document.querySelector('#ewParticipants strong').textContent,'Alice');
- assert.equal(w.document.querySelector('#ewParticipants small').textContent,'Propriétaire');
+ assert.equal(w.document.querySelector('#ewParticipants'),null);
+ assert(w.document.querySelector('.ewSections [data-tool="members"]'));
+ assert(w.document.querySelector('#ewHero [data-tool="members"]'));
  for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport']){
   await w.myeventEventsWorkspace.openTool(key);
   assert(w.document.querySelector('#ewToolBody .ewPanel'),key+' opens its original panel');
