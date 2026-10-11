@@ -108,7 +108,7 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #eventsWorkspace .ewTools{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0;-webkit-overflow-scrolling:touch}
 #eventsWorkspace .ewTools::-webkit-scrollbar{display:none}
 #eventsWorkspace .ewToolsPage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,auto);gap:9px;flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;align-content:start}
-#eventsWorkspace .ew-aioutings{--tool:#758aff}#eventsWorkspace .ew-fund{--tool:#27c4bd}#eventsWorkspace .ew-music{--tool:#bd6251}#eventsWorkspace .ew-games{--tool:#a3ce52}
+#eventsWorkspace .ew-aioutings{--tool:#ffe229}#eventsWorkspace .ew-fund{--tool:#27c4bd}#eventsWorkspace .ew-music{--tool:#bd6251}#eventsWorkspace .ew-games{--tool:#a3ce52}
 #eventsWorkspace .ewCarouselControls{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 12px;color:#9db7c5;font-size:11px}
 #eventsWorkspace .ewCarouselControls button{border:1px solid #42616e;border-radius:50%;background:#0d1e27;color:#c5dae5;width:27px;height:27px;padding:0}
 #eventsWorkspace .ewCarouselControls [aria-current=true]{border-color:#ff954c;color:#ffad6b;background:#46200e}
@@ -154,3 +154,7 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  #ewToolBody .ewPanel{padding:12px!important}.ewToolHead{gap:10px}.ewToolHead h2{font-size:20px}
 }
 @media(prefers-reduced-motion:reduce){#eventsWorkspace *{scroll-behavior:auto!important}}
+.ewToolIcon img{display:block;width:80%;height:80%;object-fit:contain}
+#socialBottomNav.homeNavV2 .bottomIcon img{filter:none!important}
+#socialBottomNav.homeNavV2 .navCamera{border-color:#ff9848!important;background:#0e1419!important}
+#socialBottomNav.homeNavV2 .navCamera img{width:32px!important;height:32px!important;object-fit:contain!important;opacity:1!important;mix-blend-mode:normal!important;filter:none!important;border-radius:0!important}

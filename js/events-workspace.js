@@ -5,7 +5,7 @@
  const home=$('socialHome'),legacy=$('eventsCard'),nav=$('socialBottomNav');
  if(!home||!legacy||!bridge||!nav)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€',music:'♫',games:'🎮'};
+ const icons=Object.fromEntries(["weather","call","discussion","polls","media","tasks","aioutings","fund","music","games"].map(key=>[key,'<img src="assets/ui/me-card-'+key+'.svg" alt="" width="28" height="28">']));
  const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget'],['music','Musique','Playlist de l’événement'],['games','Jeux','Animations du groupe']];
  const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA',music:'Musique',games:'Jeux'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
