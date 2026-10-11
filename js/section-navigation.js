@@ -60,6 +60,8 @@
   if(location.pathname.endsWith('marketplace.html')){location.replace('index.html#home');return;}
   window.MyEventMusicWorkspace?.resetNavigation();history.replaceState(state(),'',url(current()));void render(current());
  }
+ function observeEnvironmentBanner(){const banner=document.getElementById('myeventEnvironmentBanner');if(!banner)return;const update=()=>document.documentElement.style.setProperty('--me-header-banner-height',banner.getBoundingClientRect().height+'px');update();if(window.ResizeObserver)new ResizeObserver(update).observe(banner);}
+ window.myeventRuntime?.ready.then(()=>queueMicrotask(observeEnvironmentBanner),()=>queueMicrotask(observeEnvironmentBanner));
  const api=window.MyEventSectionNavigation={header,visit,back,close,current};
  window.addEventListener('popstate',e=>{
   if(!ready)return;

@@ -24,3 +24,7 @@ body.profileSectionOpen #profileSettingsCard{display:block!important;scroll-marg
 body.profileSectionOpen #socialHome{min-height:0!important;padding-bottom:0!important}
 .socialEventCard[data-event-id]{cursor:pointer;touch-action:manipulation}
 @media(max-width:600px){.meSectionHeader{padding-top:16px}.meSectionBrand{font-size:24px}.meMarketplaceIdentity{gap:10px}}
+
+/* Fixed overlays must clear the existing environment banner on Previews. */
+body:has(#myeventEnvironmentBanner) #musicHome>.meSectionHeader,body:has(#myeventEnvironmentBanner) #entertainmentLounge .gl-shell>.meSectionHeader{margin-top:var(--me-header-banner-height,48px)}
+#socialHome #musicHome #musicBackBtn{display:none!important}
