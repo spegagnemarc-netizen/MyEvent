@@ -96,7 +96,7 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #eventsWorkspace .ewProgrammeBack {margin:10px 0 16px;padding:9px 12px;border-radius:12px;}
 #eventsWorkspace .ewProgrammeDetailTitle {font-size:17px;line-height:1.3;margin:0 0 14px;}
 #eventsWorkspace .ewProgrammeDetail {max-width:100%;overflow-wrap:anywhere;}
-@media(max-width:600px){
+@container events (max-width:600px){
  #eventsWorkspace .ewProgrammeCompact {grid-template-columns:44px minmax(0,1fr) 12px;gap:8px;padding:9px 2px;}
  #eventsWorkspace .ewProgrammeThumb {width:44px;height:44px;font-size:22px;}
  #eventsWorkspace .ewProgrammeCopy strong {font-size:12px;}
@@ -120,7 +120,7 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #eventsWorkspace .ewProgrammeCompact:nth-child(2):before{background:#ff8c42}#eventsWorkspace .ewProgrammeCompact:nth-child(3):before{background:#cd66ff}
 #eventsWorkspace .ewSeeMembers{display:block;margin:8px 0 0 auto;background:transparent;border:0;color:#ffab63;font-size:12px;padding:4px}
 #eventsWorkspace .ewProgrammeDetail{max-width:100%;overflow-wrap:anywhere}
-@media(max-width:600px){
+@container events (max-width:600px){
  #eventsWorkspace{padding-top:12px;padding-bottom:calc(100px + env(safe-area-inset-bottom));min-width:0}
  #eventsWorkspace .ewHeader{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;margin-bottom:14px}
  #eventsWorkspace .ewHeader>div{min-width:0}
@@ -158,3 +158,5 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #socialBottomNav.homeNavV2 .bottomIcon img{filter:none!important}
 #socialBottomNav.homeNavV2 .navCamera{border-color:#ff9848!important;background:#0e1419!important}
 #socialBottomNav.homeNavV2 .navCamera img{width:32px!important;height:32px!important;object-fit:contain!important;opacity:1!important;mix-blend-mode:normal!important;filter:none!important;border-radius:0!important}
+
+body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:events}
