@@ -144,6 +144,7 @@ function showEventTab(name, forceState=null){
       setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
   }
+  window.myeventEventsWorkspace?.syncTab(name,shouldOpen);
 }
 
 
@@ -3515,7 +3516,8 @@ async function logout(){
     activeEventRole='member';
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
-    user=null; event=null;
+    user=null; event=null;eventsWorkspaceRows=[];
+    window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
     $('main').classList.remove('mainVisible');
@@ -3589,6 +3591,7 @@ function openEventTool(id){
   el.classList.remove('hidden');
   el.open=true;
   if(id==='inviteCard') updateInviteUI();
+  window.myeventEventsWorkspace?.showForm(id);
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 ['createEventCard','joinCard','editEventBox','inviteCard'].forEach(id=>{const el=$(id);el?.addEventListener('toggle',()=>{if(!el.open)el.classList.add('hidden')});});

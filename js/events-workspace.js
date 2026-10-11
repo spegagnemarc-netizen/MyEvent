@@ -5,7 +5,7 @@
  const home=$('socialHome'),legacy=$('eventsCard'),nav=$('socialBottomNav');
  if(!home||!legacy||!bridge||!nav)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€',music:'♫',games:'🎮'};
+ const icons=Object.fromEntries(["weather","call","discussion","polls","media","tasks","aioutings","fund","music","games"].map(key=>[key,'<img src="assets/ui/me-card-'+key+'.svg" alt="" width="28" height="28">']));
  const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget'],['music','Musique','Playlist de l’événement'],['games','Jeux','Animations du groupe']];
  const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA',music:'Musique',games:'Jeux'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
@@ -16,9 +16,10 @@
   <div id="ewEventPicker"></div><p id="ewStatus" role="status" aria-live="polite"></p>
   <div id="ewHero"></div>
   <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
-  <nav class="ewSections" aria-label="Organisation de l’événement">${[['locations','⌖','Lieux'],['transport','▰','Trajets'],['accommodation','⌂','Hébergement'],['hall','▣','Salle'],['outings','✦','Sorties'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
+  <div class="ewCarouselControls" aria-label="Pages des outils"><button data-tools-page="0" aria-label="Afficher les six premiers outils" aria-current="true">1</button><button data-tools-page="1" aria-label="Afficher les quatre autres outils" aria-current="false">2</button><span>Faire glisser pour voir les autres outils</span></div>
+  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
-  <div class="ewExtras"><button data-form="joinCard">Rejoindre avec un code</button></div>
+  <div class="ewExtras"><button data-tool="accommodation">⌂ Hébergement</button><button data-tool="hall">▣ Salle</button><button data-tool="outings">✦ Sorties</button><button data-tool="localtravel">⌖ Déplacements</button><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
@@ -73,19 +74,6 @@
   return filter==='past'?date<Date.now():date>=Date.now();
  });}
  function members(){return [...($('members')?.querySelectorAll('.memberRow')||[])];}
- function renderMembers(){
-  const rows=members(),target=$('ewParticipants');target.replaceChildren();$('ewMemberCount').textContent=rows.length?`(${rows.length})`:'';
-  if(!context().event||!rows.length){target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucun participant à afficher.':'Les participants apparaîtront ici après la sélection d’un événement.')+'</p>';return;}
-  rows.forEach(original=>{
-   const button=document.createElement('button');button.className='ewPerson';button.type='button';
-   const avatar=original.querySelector('.avatar');if(avatar)button.appendChild(avatar.cloneNode(true));
-   else{const a=document.createElement('span');a.className='ewAvatar';a.textContent='👤';button.appendChild(a);}
-   const name=document.createElement('strong');name.textContent=original.querySelector('b')?.textContent||'Participant';button.appendChild(name);
-   const role=document.createElement('small');role.textContent=(original.querySelector('.memberInfo span')?.textContent||'Participant').replace('Créateur','Propriétaire');
-   role.className=role.textContent.includes('Propriétaire')?'ewOwner':role.textContent.includes('Co-organisateur')?'ewCoorganizer':'';
-   button.appendChild(role);button.onclick=()=>original.click();target.appendChild(button);
-  });
- }
  function renderProgramme(target=$('ewProgramme'),full=false){
   target.replaceChildren();
   const source=$('eventPlanningTimeline');
@@ -94,7 +82,7 @@
    if(source){const clone=source.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));clone.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>source.querySelectorAll('button')[i]?.click());target.appendChild(clone);}
    else target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucune activité prévue pour cet événement.':'Choisissez un événement pour retrouver son programme.')+'</p>';
   }else{
-   rows.slice(0,full?100:3).forEach((row,index)=>{
+   rows.slice(0,full?rows.length:3).forEach((row,index)=>{
     const title=row.querySelector('.inlineEventTimelineName')?.textContent?.trim()||'Activité';
     const time=row.querySelector('.inlineEventTimelineTime')?.textContent?.trim()||'Date à préciser';
     const meta=row.querySelector('.inlineEventTimelineMeta')?.textContent?.trim()||'';
@@ -155,12 +143,6 @@
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}
   if(key==='music'||key==='games'){
-   // Music is opened by its existing home shortcut; this uses the same
-   // initialization path as the working home Music card on iPhone.
-   if(key==='music'){
-    const musicShortcut=$('socialHeaderMusicBtn');
-    if(musicShortcut){close();musicShortcut.click();return;}
-   }
    const shortcut=nav.querySelector('[data-bottom-tab="'+key+'"]');
    if(shortcut){shortcut.click();return;}
    status('La rubrique '+(titles[key]||key)+' est momentanément indisponible.');return;
@@ -193,6 +175,7 @@
  }
  root.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b||b.disabled)return;
+  if(b.hasAttribute('data-tools-page')){const track=root.querySelector('.ewTools');track.scrollTo({left:Number(b.dataset.toolsPage)*track.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
   if(b.hasAttribute('data-back')){history.back();return;}
   if(b.dataset.form){form(b.dataset.form);return;}
   if(b.dataset.tool){openTool(b.dataset.tool);return;}
@@ -215,6 +198,8 @@
   else{revision++;close();if(history.state?.eventsWorkspace)history.replaceState({},'',location.pathname+location.search+'#home');}
  },true);
  window.myeventOpenEvents=open;
+ const toolsTrack=root.querySelector('.ewTools');
+ toolsTrack.addEventListener('scroll',()=>{const page=Math.round(toolsTrack.scrollLeft/Math.max(1,toolsTrack.clientWidth));root.querySelectorAll('[data-tools-page]').forEach(b=>b.setAttribute('aria-current',String(Number(b.dataset.toolsPage)===page)));},{passive:true});
  window.myeventEventsWorkspace={open,close,showForm,openTool,render,syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
  // Old shortcuts may still be invoked by notifications, camera or planning actions.
  oldTabs?.addEventListener('click',event=>{const b=event.target.closest('[data-tab]');if(isOpen()&&b){event.stopImmediatePropagation();openTool(b.dataset.tab);}},true);
