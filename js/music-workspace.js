@@ -16,12 +16,12 @@
     ['AzaTyxMduH4',"Pour que tu m’aimes encore",'Céline Dion']
   ].map(([id,title,artist])=>({provider:'youtube',provider_track_id:id,title,artist,thumbnail_url:'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'}));
   const button=(label,fn,parent=page)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',fn);parent.appendChild(b);return b;};
-  function back(){go(history.pop()||'home',false);}
+  function back(){if(window.MyEventSectionNavigation){window.MyEventSectionNavigation.back();return;}go(history.pop()||'home',false);}
   function shell(name){page.innerHTML='<header class="musicScreenHead"><button data-back aria-label="Retour">‹ Retour</button><h2>'+titles[name]+'</h2></header><p id="musicScreenStatus" role="status" aria-live="polite"></p><div id="musicScreenBody"></div>';page.querySelector('[data-back]').onclick=back;return $('musicScreenBody');}
   function go(name,push=true){
     if(name!=='ai')aiController?.abort();
     if(!titles[name]&&name!=='home')name='home';S.get();if(push&&name!==screen)history.push(screen);screen=name;revision++;
-    M.openMusic();home.hidden=name!=='home';page.hidden=name==='home';S.update({screen:name});
+    M.openMusic();home.hidden=name!=='home';page.hidden=name==='home';S.update({screen:name});window.MyEventSectionNavigation?.visit('music',name);
     for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.classList.remove('open');
     if(name==='home'){renderHome();return;}
     const body=shell(name);
@@ -243,7 +243,7 @@
   M.registerProvider('youtube',P);
   home.querySelector('.musicSectionTitle button:not([id])')?.addEventListener('click',()=>{go('discover');search('musique tendances France');});
   home.querySelector('[data-music-action="dj"] small')?.replaceChildren(document.createTextNode('File · Manuel'));
-  window.MyEventMusicWorkspace={go,back,openSearch(q){go('discover');search(q);}};renderHome();$('musicSearchInput').value=S.get().query;
+  window.MyEventMusicWorkspace={go,back,resetNavigation(){history=[];screen='home';S.update({screen:'home'});home.hidden=false;page.hidden=true;},openSearch(q){go('discover');search(q);}};renderHome();$('musicSearchInput').value=S.get().query;
   let eventId=ctx().event?.id;
   setInterval(()=>{const next=ctx().event?.id;if(next===eventId)return;eventId=next;eventData=null;$('musicEventPanel')?.remove();if(screen==='event'&&root.classList.contains('open'))go('event',false);},750);
   document.querySelector('[data-bottom-tab="music"]')?.addEventListener('click',()=>go(S.get().screen,false),true);

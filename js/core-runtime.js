@@ -3653,9 +3653,10 @@ $('shareEventFeedBtn')?.addEventListener('click',async()=>{
 });
 window.myeventOpenSocialEvent=async function(id){
   if(!id)return;
-  await loadEvents();await selectEvent(id);
-  window.myeventOpenEvents?.();
-  $('eventsCard').open=true;$('eventsCard').scrollIntoView({behavior:'smooth',block:'start'});
+  if(window.myeventEventsWorkspace?.openSelected)return window.myeventEventsWorkspace.openSelected(id);
+  await loadEvents();
+  if(!eventsWorkspaceRows.some(row=>row.id===id))throw new Error('Cet événement n’est pas accessible.');
+  await selectEvent(id);window.myeventOpenEvents?.();
 };
 $('leaveEventBtn').addEventListener('click',()=>leaveEvent(event?.id));
 $('editEventToggle').addEventListener('click',()=>openEventTool('editEventBox'));

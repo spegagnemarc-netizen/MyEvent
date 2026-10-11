@@ -29,7 +29,7 @@ function errorMessage(error){
   if(/fetch|network/i.test(error?.message||''))return 'Connexion interrompue. Vérifiez votre réseau puis réessayez.';
   return error?.message||'Une erreur est survenue. Réessayez.';
 }
-function showDialog(id){const dialog=$(id);if(!dialog.open)dialog.showModal();}
+function showDialog(id){const dialog=$(id);if(!dialog.open){dialog.showModal();window.MyEventSectionNavigation?.visit('marketplace',id);}}
 function requireUser(){if(user)return true;showDialog('authDialog');return false;}
 function status(text){$('connectionStatus').textContent=text;}
 function empty(text){$('marketGrid').replaceChildren();$('marketEmpty').hidden=false;$('marketEmpty').querySelector('h3').textContent=text;$('resultCount').textContent='';}

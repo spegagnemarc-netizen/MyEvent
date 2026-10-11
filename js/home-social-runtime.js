@@ -65,7 +65,7 @@
       if(window.myeventSocialInbox?.open){window.myeventSocialInbox.open('messages');return}
       tab('messages');return
     }
-    const view=e.target.closest('.socialViewEventBtn');if(view){window.myeventViewSocialEvent?.(view.dataset.eventId);return}
+    const view=e.target.closest('.socialViewEventBtn,.socialEventCard[data-event-id]');if(view){window.myeventViewSocialEvent?.(view.dataset.eventId);return}
   });
   $s('socialSearchBtn')?.addEventListener('click',()=>{const q=($s('socialSearchInput').value||'').toLowerCase().trim();document.querySelectorAll('#socialDiscoverList .socialEventCard').forEach(c=>c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'block':'none')});
   // Camera controls reuse the existing capture and filter actions.
@@ -833,7 +833,7 @@
   function showProfile(){
     const c=$('profileSettingsCard'); if(!c)return;
     c.classList.add('profileSettingsVisible','profileSettingsOpen');
-    c.style.display='block';
+    c.style.display='block';window.MyEventSectionNavigation?.visit('profile');
     setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),20);
   }
   function hideProfile(){
@@ -842,6 +842,7 @@
     c.style.display='none';
   }
 
+  window.myeventProfileNavigation={open:showProfile,close:hideProfile};
   function openOverlay(kind){
     if(window.myeventSocialInbox){window.myeventSocialInbox.open(kind);return;}
     const oid=kind==='messages'?'myeventGlobalMessagesOverlay':'myeventGlobalNotificationsOverlay';
