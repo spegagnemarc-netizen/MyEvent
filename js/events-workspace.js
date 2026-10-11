@@ -23,6 +23,11 @@
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
+ const setNavActive=key=>nav.querySelectorAll('[data-bottom-tab],#socialBottomCreate').forEach(b=>{const active=(b.dataset.bottomTab||'camera')===key;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+ let cameraPreviousTab='feed',cameraWasOpen=false;
+ nav.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(b)queueMicrotask(()=>setNavActive(b.dataset.bottomTab));},true);
+ document.addEventListener('click',e=>{const b=e.target.closest('#socialHeaderEventsBtn,#socialHeaderGamesBtn,#socialHeaderMusicBtn,#profileAvatar,#closeProfileBtn');if(b){const key={socialHeaderEventsBtn:'events',socialHeaderGamesBtn:'games',socialHeaderMusicBtn:'music',profileAvatar:'profile',closeProfileBtn:'feed'}[b.id];queueMicrotask(()=>setNavActive(key));}},true);
+ new MutationObserver(()=>{if(!document?.body)return;const open=document.body.classList.contains('camera-is-open');if(open===cameraWasOpen)return;if(open){cameraPreviousTab=nav.querySelector('[data-bottom-tab].active')?.dataset.bottomTab||'feed';setNavActive('camera');}else setNavActive(cameraPreviousTab);cameraWasOpen=open;}).observe(document.body,{attributes:true,attributeFilter:['class']});
  const depot=$('ewDepot'),body=$('ewToolBody');
  const panels=new Map();
  const park=node=>{if(node){depot.appendChild(node);node.classList.add('ewPanel');}};

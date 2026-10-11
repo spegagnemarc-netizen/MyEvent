@@ -5,6 +5,18 @@ import {JSDOM} from 'jsdom';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const code=readFileSync(new URL('../js/events-workspace.js',import.meta.url),'utf8');
 const flush=()=>new Promise(resolve=>setTimeout(resolve,15));
+test('Only the current navigation item lights up and camera restores its previous page',async()=>{
+ const {w,dom}=fixture();const nav=w.document.getElementById('socialBottomNav');
+ nav.querySelector('[data-bottom-tab="games"]').click();await flush();
+ assert.equal(nav.querySelectorAll('.active').length,1);
+ assert.equal(nav.querySelector('.active').dataset.bottomTab,'games');
+ w.document.body.classList.add('camera-is-open');await flush();
+ assert.equal(nav.querySelectorAll('.active').length,1);
+ assert.equal(nav.querySelector('.active').id,'socialBottomCreate');
+ w.document.body.classList.remove('camera-is-open');await flush();
+ assert.equal(nav.querySelector('.active').dataset.bottomTab,'games');
+ dom.window.close();
+});
 function fixture(role='owner',events=true){
  const dom=new JSDOM(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,''),{url:'https://myevent.test/',runScripts:'outside-only'});
  const w=dom.window;w.HTMLElement.prototype.scrollIntoView=()=>{};w.CSS={escape:s=>s};
