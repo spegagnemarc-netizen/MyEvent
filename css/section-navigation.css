@@ -34,3 +34,9 @@ body:has(#myeventEnvironmentBanner) #musicHome>.meSectionHeader,body:has(#myeven
 #myeventMarketplace .marketHeader>nav{grid-column:2;grid-row:1;min-width:0;justify-content:flex-end}
 @media(max-width:700px){#myeventMarketplace .marketHeader>nav{grid-column:1/-1;grid-row:2;justify-content:space-between}}
 body.profileSectionOpen #profileSettingsCard{scroll-margin-top:var(--me-header-banner-height,0px)}
+
+/* Marketplace subtitle and close share the same 44px title row. */
+#myeventMarketplace .marketHeader .brand{line-height:1.2}
+#myeventMarketplace .marketHeader .brand small{display:flex;align-items:center;height:44px;margin-top:2px}
+#myeventMarketplace .marketHeader>.meSectionClose{align-self:end}
+#myeventMarketplace .marketHeader #marketThemeToggle{position:static!important;flex:0 0 38px}
