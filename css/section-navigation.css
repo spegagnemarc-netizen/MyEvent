@@ -40,3 +40,5 @@ body.profileSectionOpen #profileSettingsCard{scroll-margin-top:var(--me-header-b
 #myeventMarketplace .marketHeader .brand small{display:flex;align-items:center;height:44px;margin-top:2px}
 #myeventMarketplace .marketHeader>.meSectionClose{align-self:end}
 #myeventMarketplace .marketHeader #marketThemeToggle{position:static!important;flex:0 0 38px}
+
+@media(max-width:700px){#myeventMarketplace .marketHeader>nav{grid-template-columns:38px repeat(3,minmax(0,1fr))}}
