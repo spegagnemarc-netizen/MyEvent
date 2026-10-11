@@ -204,6 +204,7 @@
  // Old shortcuts may still be invoked by notifications, camera or planning actions.
  oldTabs?.addEventListener('click',event=>{const b=event.target.closest('[data-tab]');if(isOpen()&&b){event.stopImmediatePropagation();openTool(b.dataset.tab);}},true);
  document.addEventListener('click',event=>{
+  if(event.target.closest('#socialHeaderEventsBtn')){event.preventDefault();event.stopImmediatePropagation();open();return;}
   if(event.target.closest('#socialHeaderSearchBtn,#socialFriendsShortcut,#socialHeaderMessagesBtnTop,#socialHeaderNotificationsBtnTop,#socialHeaderMusicBtn,#socialHeaderGamesBtn'))close();
  },true);
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&isOpen()&&screen!=='landing'){closeTool();render();}});
