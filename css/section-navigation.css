@@ -14,7 +14,7 @@
 #entertainmentLounge[data-game-screen="hub"] .gl-header{display:none}
 #entertainmentLounge:not([data-game-screen="hub"]) .gl-back{display:inline-flex}
 /* Keep Marketplace's original brand, subtitle, toolbar and page width. */
-#myeventMarketplace .marketHeader{flex-wrap:wrap;align-items:center}
+#myeventMarketplace .marketHeader{display:grid;grid-template-columns:auto minmax(0,1fr) 44px;align-items:center}
 .meMarketplaceIdentity{display:flex;align-items:flex-end;gap:12px;margin-left:0;order:0}
 #myeventMarketplace .marketHeader .brand{display:block}
 #myeventMarketplace .marketHeader>nav{order:1;flex:0 1 auto;justify-content:flex-start}
@@ -28,3 +28,9 @@ body.profileSectionOpen #socialHome{min-height:0!important;padding-bottom:0!impo
 /* Fixed overlays must clear the existing environment banner on Previews. */
 body:has(#myeventEnvironmentBanner) #musicHome>.meSectionHeader,body:has(#myeventEnvironmentBanner) #entertainmentLounge .gl-shell>.meSectionHeader{margin-top:var(--me-header-banner-height,48px)}
 #socialHome #musicHome #musicBackBtn{display:none!important}
+
+#myeventMarketplace .marketHeader>.meSectionClose{grid-column:3;grid-row:1;width:44px;height:44px;justify-self:end}
+#myeventMarketplace .marketHeader>.meMarketplaceIdentity{grid-column:1;grid-row:1}
+#myeventMarketplace .marketHeader>nav{grid-column:2;grid-row:1;min-width:0;justify-content:flex-end}
+@media(max-width:700px){#myeventMarketplace .marketHeader>nav{grid-column:1/-1;grid-row:2;justify-content:space-between}}
+body.profileSectionOpen #profileSettingsCard{scroll-margin-top:var(--me-header-banner-height,0px)}

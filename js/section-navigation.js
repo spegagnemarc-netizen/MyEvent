@@ -75,7 +75,7 @@
   }
   const market=document.getElementById('myeventMarketplace');
   if(market){
-   const marketHead=market.querySelector('.marketHeader'),identity=document.createElement('div');identity.className='meMarketplaceIdentity';const brand=marketHead.querySelector('.brand');identity.append(brand);identity.append(header('marketplace').querySelector('.meSectionClose'));marketHead.prepend(identity);stack=[{section:'marketplace',page:'home'}];save();history.replaceState(state(),'',url(current()));
+   const marketHead=market.querySelector('.marketHeader'),identity=document.createElement('div');identity.className='meMarketplaceIdentity';const brand=marketHead.querySelector('.brand');identity.append(brand);marketHead.append(header('marketplace').querySelector('.meSectionClose'));marketHead.prepend(identity);stack=[{section:'marketplace',page:'home'}];save();history.replaceState(state(),'',url(current()));
    market.querySelectorAll('dialog').forEach(d=>{const close=d.querySelector('.dialogClose');if(close){close.addEventListener('click',e=>{e.stopImmediatePropagation();api.close();},true);}d.addEventListener('close',()=>{if(!restoring&&current().section==='marketplace'&&current().page===d.id)back();});});
   }else{
    const hash=location.hash.slice(1).split('/'),section=hash[0];
