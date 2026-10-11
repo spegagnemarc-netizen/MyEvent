@@ -170,3 +170,6 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 #socialHome #socialBottomNav.homeNavV2 .navCamera{display:grid!important;place-items:center!important;padding:0!important;border:2px solid #9eb9cd!important;box-shadow:none!important;color:#9eb9cd!important}
 #socialHome #socialBottomNav.homeNavV2 .navCamera svg{display:block;width:32px;height:32px;margin:0;transform:translateY(-1px)}
 #socialHome #socialBottomNav.homeNavV2 .navCamera.active{border-color:#ff9848!important;box-shadow:0 0 14px #ff984855!important;color:#ff9848!important}
+
+#socialHome #socialBottomNav.homeNavV2 .navCamera{grid-template-columns:1fr!important;grid-template-rows:1fr!important;justify-content:center!important;align-content:center!important}
+#socialHome #socialBottomNav.homeNavV2 .navCamera svg{transform:none!important}
