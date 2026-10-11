@@ -160,3 +160,13 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #socialBottomNav.homeNavV2 .navCamera img{width:32px!important;height:32px!important;object-fit:contain!important;opacity:1!important;mix-blend-mode:normal!important;filter:none!important;border-radius:0!important}
 
 body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:events}
+
+/* Navigation: the current page alone receives the orange accent. */
+#socialHome #socialBottomNav.homeNavV2>button{color:#9eb9cd!important}
+#socialHome #socialBottomNav.homeNavV2>button.active{color:#ff9848!important}
+#socialHome #socialBottomNav.homeNavV2 .bottomIcon{color:inherit!important;filter:none!important}
+#socialHome #socialBottomNav.homeNavV2 .bottomIcon svg{display:block;width:28px;height:28px;color:inherit;filter:none}
+#socialHome #socialBottomNav.homeNavV2 .bottomLabel{color:inherit!important}
+#socialHome #socialBottomNav.homeNavV2 .navCamera{display:grid!important;place-items:center!important;padding:0!important;border:2px solid #9eb9cd!important;box-shadow:none!important;color:#9eb9cd!important}
+#socialHome #socialBottomNav.homeNavV2 .navCamera svg{display:block;width:32px;height:32px;margin:0;transform:translateY(-1px)}
+#socialHome #socialBottomNav.homeNavV2 .navCamera.active{border-color:#ff9848!important;box-shadow:0 0 14px #ff984855!important;color:#ff9848!important}
