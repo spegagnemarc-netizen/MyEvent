@@ -47,3 +47,6 @@ test('Marketplace retains original brand subtitle and all toolbar actions',()=>{
 test('Internal back controls are not hidden by the shared header styles',()=>{
  const css=read('css/section-navigation.css');assert(!css.includes('.musicScreenHead [data-back]'));assert(css.includes('#entertainmentLounge[data-game-screen="hub"] .gl-header'));assert(!css.includes('border-radius:18px'));assert(css.includes('body.profileSectionOpen #main>.card:not(#profileSettingsCard)'));
 });
+test('Section identities follow the content edge rather than a global right alignment',()=>{
+ const css=read('css/section-navigation.css');assert(css.includes('justify-content:flex-start;font-size:28px'));assert(css.includes('text-align:left;color:inherit'));assert(css.includes('z-index:2;padding-inline:0'));assert(!css.includes('margin-left:auto'));assert(!css.includes('flex-basis:100%'));assert(!css.includes('text-align:right'));
+});
