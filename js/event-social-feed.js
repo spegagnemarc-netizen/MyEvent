@@ -24,7 +24,7 @@
       meta.append(name,time);head.append(avatar,meta);post.append(head);
       if(item.body){const body=document.createElement('div');body.className='socialPostText';body.textContent=item.body;post.append(body);}
       if(item.event_id){
-        const card=document.createElement('div');card.className='socialEventCard';
+        const card=document.createElement('div');card.className='socialEventCard';card.dataset.eventId=item.event_id;card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','Ouvrir '+(item.event_name||'l’événement'));card.addEventListener('keydown',e=>{if(e.target===card&&['Enter',' '].includes(e.key)){e.preventDefault();window.myeventViewSocialEvent?.(item.event_id);}});
         const cover=document.createElement('div');cover.className='socialEventCover';
         card.append(cover);
         if(item.event_cover){

@@ -48,25 +48,27 @@
   body.replaceChildren();toolPage.hidden=true;landing.hidden=false;screen='landing';
  }
  function close(){closeTool();root.hidden=true;document.body.classList.remove('eventsWorkspaceOpen');}
- function route(key){if(!history.state?.eventsWorkspace&&key==='landing')history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events');else if(key!==history.state?.key)history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events/'+encodeURIComponent(key));}
+ function route(key){if(window.MyEventSectionNavigation){window.MyEventSectionNavigation.visit('events',key,context().event?.id);return;}if(!history.state?.eventsWorkspace&&key==='landing')history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events');else if(key!==history.state?.key)history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events/'+encodeURIComponent(key));}
  function showScreen(key){
   closeTool();screen=key;landing.hidden=true;toolPage.hidden=false;$('ewToolTitle').textContent=titles[key]||'Événement';
   root.scrollIntoView({block:'start'});
   route(key);
  }
- async function open(){
+ async function open(selectedId){
   root.hidden=false;legacy.hidden=true;document.body.classList.add('eventsWorkspaceOpen');
   nav.querySelectorAll('[data-bottom-tab]').forEach(b=>b.classList.toggle('active',b.dataset.bottomTab==='events'));
-  closeTool();route('landing');status('Chargement de vos événements…');
+  closeTool();if(!selectedId)route('landing');status('Chargement de vos événements…');
   const ticket=++revision;
   try{
    if(!context().user){status('Connectez-vous pour retrouver vos événements.');render();return;}
    await bridge.load();if(ticket!==revision||!isOpen())return;
    const rows=context().events;
+   if(selectedId&&!rows.some(e=>e.id===selectedId)){close();throw new Error('Cet événement n’est pas accessible.');}
+   if(selectedId&&context().event?.id!==selectedId){busy=true;try{await bridge.select(selectedId);}finally{busy=false;}}
    if(rows.length&&!rows.some(e=>e.id===context().event?.id)){busy=true;try{await bridge.select(rows[0].id);}finally{busy=false;}}
    if(ticket!==revision||!isOpen())return;
-   status('');render();root.scrollIntoView({block:'start'});
-  }catch(error){status('Impossible de charger les événements : '+(error.message||String(error)));render();}
+   status('');render();if(selectedId)route('selected');root.scrollIntoView({block:'start'});
+  }catch(error){status('Impossible de charger les événements : '+(error.message||String(error)));render();if(selectedId)throw error;}
  }
  async function select(id){
   if(busy)return;busy=true;status('Ouverture de l’événement…');
@@ -181,7 +183,7 @@
  root.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b||b.disabled)return;
   if(b.hasAttribute('data-tools-page')){const track=root.querySelector('.ewTools');track.scrollTo({left:Number(b.dataset.toolsPage)*track.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
-  if(b.hasAttribute('data-back')){history.back();return;}
+  if(b.hasAttribute('data-back')){if(window.MyEventSectionNavigation)window.MyEventSectionNavigation.back();else history.back();return;}
   if(b.dataset.form){form(b.dataset.form);return;}
   if(b.dataset.tool){openTool(b.dataset.tool);return;}
   if(b.dataset.select){select(b.dataset.select);return;}
@@ -205,7 +207,7 @@
  window.myeventOpenEvents=open;
  const toolsTrack=root.querySelector('.ewTools');
  toolsTrack.addEventListener('scroll',()=>{const page=Math.round(toolsTrack.scrollLeft/Math.max(1,toolsTrack.clientWidth));root.querySelectorAll('[data-tools-page]').forEach(b=>b.setAttribute('aria-current',String(Number(b.dataset.toolsPage)===page)));},{passive:true});
- window.myeventEventsWorkspace={open,close,showForm,openTool,render,syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
+ window.myeventEventsWorkspace={open,openSelected:id=>open(id),close,showForm,openTool,render,restore:async state=>{await open(state.eventId);if(state.page&&!['landing','selected'].includes(state.page))await openTool(state.page);},syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
  // Old shortcuts may still be invoked by notifications, camera or planning actions.
  oldTabs?.addEventListener('click',event=>{const b=event.target.closest('[data-tab]');if(isOpen()&&b){event.stopImmediatePropagation();openTool(b.dataset.tab);}},true);
  document.addEventListener('click',event=>{
@@ -218,5 +220,5 @@
  for(const id of ['eventList','members','mediaGrid'])if($(id))observer.observe($(id),{subtree:true,childList:true,characterData:true});
  // Core may close Discussion through its own arrow: return to the landing screen.
  const discussion=$('discussionPanel');discussion?.addEventListener('toggle',()=>{if(screen==='discussion'&&!discussion.open){closeTool();render();}});
- window.addEventListener('popstate',()=>{if(history.state?.eventsWorkspace){if(root.hidden){root.hidden=false;document.body.classList.add('eventsWorkspaceOpen');}if(history.state.key==='landing'){closeTool();render();}else openTool(history.state.key);}else{close();nav.querySelector('[data-bottom-tab="feed"]')?.click();}});
+ window.addEventListener('popstate',()=>{if(window.MyEventSectionNavigation)return;if(history.state?.eventsWorkspace){if(root.hidden){root.hidden=false;document.body.classList.add('eventsWorkspaceOpen');}if(history.state.key==='landing'){closeTool();render();}else openTool(history.state.key);}else{close();nav.querySelector('[data-bottom-tab="feed"]')?.click();}});
 })();

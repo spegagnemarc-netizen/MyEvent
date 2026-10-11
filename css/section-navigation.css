@@ -1,0 +1,21 @@
+/* Marketplace brand proportions, reused by every section. */
+.meSectionHeader{box-sizing:border-box;width:100%;padding:18px 20px 16px;background:#071016;color:#f5f7fa;border-bottom:1px solid #263d4a;border-radius:18px 18px 0 0;margin-bottom:16px;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
+.meSectionBrand{display:flex;justify-content:flex-end;font-size:28px;font-weight:850;letter-spacing:-1.5px;line-height:1.2;margin-bottom:12px;color:#f5f7fa}
+.meSectionBrand>span{color:#ff8238}
+.meSectionTitleRow{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:12px}
+.meSectionTitleRow>h1{font-size:26px;font-weight:750;line-height:1.2;letter-spacing:-.5px;margin:0;text-align:left;color:inherit;overflow-wrap:anywhere}
+.meSectionTitleRow>button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:1px solid #355061;border-radius:50%;background:#132632;color:#bed1df;font:26px/1 system-ui;cursor:pointer;box-shadow:none;touch-action:manipulation}
+.meSectionTitleRow>button:hover{border-color:#ff8238;color:#ff9848}
+.meSectionTitleRow>button:focus-visible,.socialEventCard[data-event-id]:focus-visible{outline:2px solid #ff9848;outline-offset:4px}
+#eventsWorkspace>.meSectionHeader{margin-bottom:18px}
+#eventsWorkspace .ewHeader h1,#musicHome .musicHead h2,#musicBackBtn,#musicHome .musicScreenHead [data-back],.gl-header .gl-back,.profileSettingsCard .myeventProfileHeader{display:none!important}
+#musicHome .musicScreenHead h2,.gl-header h2{font-size:20px}
+#musicHome>.meSectionHeader{position:relative;z-index:2}
+#myeventMarketplace>.meSectionHeader{max-width:1320px;margin:0 auto;border-radius:0}
+#myeventMarketplace .marketHeader>.brand,#myeventMarketplace .marketHeader .backHome{display:none}
+#myeventMarketplace .marketHeader{justify-content:flex-end;padding-top:12px}
+#myeventMarketplace dialog>.meSectionHeader{margin-top:8px}
+#myeventMarketplace dialog>.dialogClose{display:none}
+.socialEventCard[data-event-id]{cursor:pointer;touch-action:manipulation}
+@media(max-width:600px){.meSectionHeader{padding:14px 12px}.meSectionTitleRow{gap:9px}.meSectionTitleRow>h1{font-size:23px}.meSectionBrand{font-size:26px}}
+@container events(max-width:600px){.meSectionHeader{padding:14px 12px}.meSectionTitleRow{gap:9px}.meSectionTitleRow>h1{font-size:23px}}

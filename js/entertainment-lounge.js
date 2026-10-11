@@ -18,7 +18,7 @@
   const name=id=>esc(person(id)?.name||'Joueur');
   const avatar=p=>`<span class="gl-avatar">${/^https:\/\//i.test(p?.avatar||'')?`<img src="${esc(p.avatar)}" alt="" referrerpolicy="no-referrer">`:esc(p?.name?.slice(0,1)||'·')}</span>`;
   function notice(text){if($('gl-status'))$('gl-status').textContent=text;}
-  function shell(title,body){root.innerHTML=`<div class="gl-shell"><header class="gl-header"><button type="button" class="gl-back" data-action="back" aria-label="Retour">‹</button><h2 tabindex="-1">${title}</h2><span aria-hidden="true">${screen==='hub'?'🏆':session===defisSession?'🎯':'🕵️'}</span></header><p id="gl-status" role="status" aria-live="polite"></p><main>${body}</main><footer class="gl-footer">MYEVENT <span>Jouer, ensemble.</span></footer></div>`;root.scrollTop=0;}
+  function shell(title,body){root.innerHTML=`<div class="gl-shell"><header class="gl-header"><button type="button" class="gl-back" data-action="back" aria-label="Retour">‹</button><h2 tabindex="-1">${title}</h2><span aria-hidden="true">${screen==='hub'?'🏆':session===defisSession?'🎯':'🕵️'}</span></header><p id="gl-status" role="status" aria-live="polite"></p><main>${body}</main><footer class="gl-footer">MYEVENT <span>Jouer, ensemble.</span></footer></div>`;root.querySelector('.gl-shell').prepend(window.MyEventSectionNavigation?.header('games')||document.createTextNode(''));window.MyEventSectionNavigation?.visit('games',screen);root.scrollTop=0;}
   async function run(fn){if(busy)return;busy=true;root.setAttribute('aria-busy','true');try{await fn();}catch(e){notice(/schema cache|does not exist|Could not find/.test(e.message||'')?'Le Salon Jeux est en cours d’activation. Réessaie un peu plus tard.':e.message||'Connexion interrompue. Réessaie.');}finally{busy=false;root.removeAttribute('aria-busy');}}
   function open(){if(!shown){returnFocus=document.activeElement;previousOverflow=document.body.style.overflow;}shown=true;root.classList.add('open');root.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';if(session.state){screen='room';renderRoom();}else showHub();root.querySelector('h2')?.focus();}
   function close(){shown=false;secretVisible=false;root.classList.remove('open');root.setAttribute('aria-hidden','true');document.body.style.overflow=previousOverflow;returnFocus?.focus();}
@@ -139,7 +139,7 @@
   root.addEventListener('click',e=>{
     const tab=e.target.closest('[data-filter]');if(tab){filter=tab.dataset.filter;showHub();return;}
     const b=e.target.closest('[data-action]');if(!b)return;const action=b.dataset.action;
-    if(action==='back'){if(screen==='hub')close();else showHub();return;}if(action==='hub'){showHub();return;}if(action==='defis-setup'){showDefisSetup();return;}if(action==='setup'){if(b.dataset.game==='defis')showDefisSetup();else showSetup();return;}if(action==='show-secret'){secretVisible=true;renderRoom();return;}
+    if(action==='back'){if(window.MyEventSectionNavigation)window.MyEventSectionNavigation.back();else if(screen==='hub')close();else showHub();return;}if(action==='hub'){showHub();return;}if(action==='defis-setup'){showDefisSetup();return;}if(action==='setup'){if(b.dataset.game==='defis')showDefisSetup();else showSetup();return;}if(action==='show-secret'){secretVisible=true;renderRoom();return;}
     run(async()=>{
       if(action==='join'){await session.join(b.dataset.code);if(session===infiltreSession&&session.state?.room?.game_key==='defis'){const rid=session.roomId;session.disconnect();session=defisSession;await session.connect(rid);}screen='room';renderRoom();}
       else if(action==='share'){const url=inviteUrl();if(navigator.share){try{await navigator.share({title:session===defisSession?'Défis MyEvent':'Infiltré MyEvent',text:'Rejoins notre partie !',url});}catch(e){if(e.name!=='AbortError')throw e;}}else if(navigator.clipboard){await navigator.clipboard.writeText(url);notice('Lien copié.');}else{$('gl-share-link').select();notice('Copie le lien affiché.');}}
@@ -177,5 +177,5 @@
   });setInterval(tick,1000);
   setInterval(()=>{const id=context().user?.id||null;if(id===account)return;account=id;infiltreSession.disconnect();defisSession.disconnect();session=infiltreSession;lastRevision=-1;lastRound=null;secretVisible=false;choice=null;if(shown)showHub();if(id&&window.myeventInvitations?.get('game')){open();notice('Une invitation t’attend. Appuie sur Rejoindre.');}},1000);
   if(account&&window.myeventInvitations?.get('game'))open();
-  window.myeventEntertainment={open,close};
+  window.myeventEntertainment={open,close,restore(state){if(!shown){shown=true;previousOverflow=document.body.style.overflow;root.classList.add('open');root.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}if(state.page==='setup')showSetup();else if(state.page==='defis-setup')showDefisSetup();else if(state.page==='room'&&session.state){screen='room';renderRoom();}else showHub();}};
 })();
