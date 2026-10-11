@@ -81,14 +81,15 @@ function normalizeElement(x, index) {
   };
 }
 
-function isRelevantRentalVenue(item) {
+function isRelevantRentalVenue(item, tags = {}) {
   const name=String(item?.name||'').toLowerCase();
   const type=String(item?.typeLabel||'').toLowerCase();
   const strongName=/(salle des f[eê]tes|salle de r[eé]ception|espace [eé]v[eé]nementiel|centre de conf[eé]rence|conference|s[eé]minaire|seminaire|wedding|reception|domaine)/i.test(name);
   const strongType=/(events_venue|conference_centre)/i.test(type);
-  const hallName=/(salle|hall|foyer|maison des associations|centre culturel)/i.test(name);
+  const hallName=/(salle|hall|foyer|maison des associations)/i.test(name);
   const community=/(community_centre|village_hall|community_hall)/i.test(type);
-  const excluded=/(gymnase|gymnasium|stade|stadium|piscine|swimming|tennis|fitness|dojo|sport|school|école|ecole|mairie|townhall|hôtel de ville|hotel de ville|parking|église|eglise|church|hospital)/i.test(name+' '+type);
+  const categories=[tags.amenity,tags.leisure,tags.building,tags.sport,tags.tourism].filter(Boolean).join(' ');
+  const excluded=/(gymnase|gymnasium|sports?_hall|sports?_centre|stade|stadium|piscine|swimming|tennis|fitness|dojo|sport|school|école|ecole|mairie|townhall|hôtel de ville|hotel de ville|parking|église|eglise|church|hospital|hôpital|hopital|th[eéê]âtre|theatre|theater|cin[eé]ma|cinema|museum|mus[eé]e|library|biblioth[eè]que)/i.test(name+' '+type+' '+categories);
   return !excluded && (strongName || strongType || (community && hallName));
 }
 
@@ -260,7 +261,7 @@ module.exports = async function handler(req, res) {
         i
       );
 
-    if (!item || !isRelevantRentalVenue(item)) continue;
+    if (!item || !isRelevantRentalVenue(item, data.elements[i].tags)) continue;
 
     const key =
       `${item.name}|${item.lat.toFixed(5)}|${item.lon.toFixed(5)}`

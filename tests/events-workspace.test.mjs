@@ -71,3 +71,6 @@ test('Empty state disables event actions and creation remains available',async()
  assert.equal(w.document.getElementById('createEventCard').parentElement.id,'ewToolBody');
  dom.window.close();
 });
+test('Visible hall entry opens the original search panel and preserves ten tools',async()=>{
+ const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewHallSearchAccess');assert(b);assert(b.textContent.includes('Recherche de salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,10);dom.window.close();
+});

@@ -173,3 +173,7 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 
 #socialHome #socialBottomNav.homeNavV2 .navCamera{grid-template-columns:1fr!important;grid-template-rows:1fr!important;justify-content:center!important;align-content:center!important}
 #socialHome #socialBottomNav.homeNavV2 .navCamera svg{transform:none!important}
+
+/* Restore the existing hall search access beside the selected event. */
+#eventsWorkspace .ewHallSearchAccess{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:0 0 18px;padding:12px 16px!important;border:1px solid #355061!important;border-radius:14px!important;background:#0b1922!important;color:#c9dce9!important;text-align:left;font-weight:650}
+#eventsWorkspace .ewHallSearchAccess span:last-child{margin-left:auto}
