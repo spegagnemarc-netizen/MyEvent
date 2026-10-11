@@ -5,9 +5,9 @@
  const home=$('socialHome'),legacy=$('eventsCard'),nav=$('socialBottomNav');
  if(!home||!legacy||!bridge||!nav)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷'};
- const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches']];
- const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA'};
+ const icons={weather:'☀',call:'☎',discussion:'●●●',polls:'▥',media:'▣',tasks:'☷',aioutings:'✨',fund:'€',music:'♫',games:'🎮'};
+ const tools=[['weather','Météo','Prévisions sur place'],['call','Appel de groupe','Retrouvez les participants'],['discussion','Discussion','Échangez avec votre groupe'],['polls','Sondages','Prenez des décisions'],['media','Photos','Partagez vos souvenirs'],['tasks','Tâches','Organisez et suivez les tâches'],['aioutings','Sortie IA','Préparez votre sortie'],['fund','Cagnotte','Gérez le budget'],['music','Musique','Playlist de l’événement'],['games','Jeux','Animations du groupe']];
+ const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA',music:'Musique',games:'Jeux'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
  root.setAttribute('aria-label','Événements');
  root.innerHTML=`<div class="ewLanding">
@@ -15,11 +15,10 @@
   <nav class="ewTabs" aria-label="Choisir les événements">${[['all','Mes événements'],['upcoming','À venir'],['past','Passés'],['invites','Invitations'],['discover','Découvrir']].map(([key,title])=>`<button data-filter="${key}" aria-pressed="${key==='all'}">${title}</button>`).join('')}</nav>
   <div id="ewEventPicker"></div><p id="ewStatus" role="status" aria-live="polite"></p>
   <div id="ewHero"></div>
-  <div class="ewTools">${tools.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>
-  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
-  <section class="ewSection"><header><h2>👥 Participants <span id="ewMemberCount"></span></h2><button data-form="inviteCard">＋ Inviter</button></header><div id="ewParticipants" class="ewParticipants"></div></section>
+  <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
+  <nav class="ewSections" aria-label="Organisation de l’événement">${[['locations','⌖','Lieux'],['transport','▰','Trajets'],['accommodation','⌂','Hébergement'],['hall','▣','Salle'],['outings','✦','Sorties'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
-  <div class="ewExtras"><button data-tool="notifications">♧ Notifications de l’événement</button><button data-form="joinCard">Rejoindre avec un code</button></div>
+  <div class="ewExtras"><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
@@ -88,22 +87,52 @@
   });
  }
  function renderProgramme(target=$('ewProgramme'),full=false){
-  target.replaceChildren();const source=$('eventPlanningTimeline');
-  const rows=source?.querySelectorAll('.inlineEventTimelineItem');
-  if(rows?.length){
-   [...rows].slice(0,full?100:3).forEach(row=>{const clone=row.cloneNode(true);clone.removeAttribute('id');clone.classList.add('ewProgrammeRow');clone.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>row.querySelectorAll('button')[i]?.click());target.appendChild(clone);});
-  }else if(source){
-   const clone=source.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-   clone.querySelectorAll('button').forEach((button,i)=>{button.onclick=()=>source.querySelectorAll('button')[i]?.click();});
-   target.appendChild(clone);
-  }else target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucune activité prévue pour cet événement.':'Choisissez un événement pour retrouver son programme.')+'</p>';
+  target.replaceChildren();
+  const source=$('eventPlanningTimeline');
+  const rows=[...(source?.querySelectorAll('.inlineEventTimelineItem')||[])];
+  if(!rows.length){
+   if(source){const clone=source.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));clone.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>source.querySelectorAll('button')[i]?.click());target.appendChild(clone);}
+   else target.innerHTML='<p class="ewEmpty">'+(context().event?'Aucune activité prévue pour cet événement.':'Choisissez un événement pour retrouver son programme.')+'</p>';
+  }else{
+   rows.slice(0,full?100:3).forEach((row,index)=>{
+    const title=row.querySelector('.inlineEventTimelineName')?.textContent?.trim()||'Activité';
+    const time=row.querySelector('.inlineEventTimelineTime')?.textContent?.trim()||'Date à préciser';
+    const meta=row.querySelector('.inlineEventTimelineMeta')?.textContent?.trim()||'';
+    const icon=row.querySelector('.inlineEventTimelineDot');
+    const card=document.createElement('button');
+    card.type='button';card.className='ewProgrammeCompact';
+    card.setAttribute('aria-label','Détails : '+title);
+    const thumb=document.createElement('span');thumb.className='ewProgrammeThumb';
+    const img=icon?.querySelector('img');
+    if(img){const copy=img.cloneNode(true);copy.removeAttribute('id');copy.alt='';thumb.appendChild(copy);}
+    else thumb.textContent=icon?.textContent?.trim()||'📅';
+    const copy=document.createElement('span');copy.className='ewProgrammeCopy';
+    const date=document.createElement('span');date.className='ewProgrammeDate';date.textContent=time;
+    const name=document.createElement('strong');name.textContent=title;
+    copy.append(date,name);
+    if(meta){const location=document.createElement('span');location.className='ewProgrammeMeta';location.textContent=meta;copy.appendChild(location);}
+    const arrow=document.createElement('span');arrow.className='ewProgrammeChevron';arrow.textContent='›';arrow.setAttribute('aria-hidden','true');
+    card.append(thumb,copy,arrow);
+    card.onclick=()=>{
+     showScreen('programme');
+     body.replaceChildren();
+     const back=document.createElement('button');back.className='ewProgrammeBack';back.type='button';back.textContent='‹ Retour au programme';back.onclick=()=>{showScreen('programme');renderProgramme(body,true);};
+     const heading=document.createElement('h3');heading.className='ewProgrammeDetailTitle';heading.textContent=title;
+     const detail=row.cloneNode(true);detail.removeAttribute('id');detail.classList.add('ewProgrammeDetail');
+     detail.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+     detail.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>row.querySelectorAll('button')[i]?.click());
+     body.append(back,heading,detail);
+    };
+    target.appendChild(card);
+   });
+  }
   if(full){const button=document.createElement('button');button.className='ewCreate';button.textContent='Organiser une activité';button.onclick=()=>openTool('outings');target.appendChild(button);}
  }
  async function renderHero(){
   const ticket=++heroRevision,target=$('ewHero'),e=context().event;
   if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div>';return;}
   const date=Date.parse(e.event_date),upcoming=!Number.isFinite(date)||date>=Date.now(),canManage=['owner','coorganizer'].includes(context().role);
-  target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
+  target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-tool="notifications" class="ewHeroNotifications" aria-label="Notifications de cet événement" title="Notifications">🔔</button><button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
   members().slice(0,4).forEach(row=>{const avatar=row.querySelector('.avatar');if(avatar)target.querySelector('.ewHeroAvatars').appendChild(avatar.cloneNode(true));});
   try{
    let url=e.cover_url?await bridge.cover(e.cover_url):'';
@@ -121,13 +150,23 @@
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
   root.querySelectorAll('.ewTools button,.ewSections button,.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
-  renderHero();renderMembers();renderProgramme();
+  renderHero();renderProgramme();
  }
  async function openTool(key){
   if(!context().event){pendingTool=key;await open();status('Sélectionnez un événement pour ouvrir '+(titles[key]||'cet outil')+'.');return;}
+  if(key==='music'||key==='games'){
+   const shortcut=nav.querySelector('[data-bottom-tab="'+key+'"]');
+   if(shortcut){shortcut.click();return;}
+   status('La rubrique '+(titles[key]||key)+' est momentanément indisponible.');return;
+  }
   if(key==='discussion'){showScreen(key);bridge.tab('discussion',true);return;}
   showScreen(key);
   if(key==='programme'){renderProgramme(body,true);return;}
+  if(key==='tasks'){
+   const actions=document.createElement('div');actions.className='ewTaskActions';
+   const material=document.createElement('button');material.type='button';material.textContent='🎒 Matériel · Qui apporte quoi ?';material.onclick=()=>openTool('supplies');
+   actions.appendChild(material);body.appendChild(actions);
+  }
   if(key==='documents'){
    const documents=$('messages')?.querySelectorAll('a.chatAttachmentFile')||[];
    body.innerHTML='<p class="ewEmpty">Les documents partagés dans la discussion de cet événement.</p>';

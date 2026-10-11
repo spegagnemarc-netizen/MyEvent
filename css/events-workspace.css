@@ -88,3 +88,443 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  #ewToolBody .ewPanel{padding:12px!important}.ewToolHead h2{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){#eventsWorkspace *{scroll-behavior:auto!important}}
+
+/* MyEvent — Finitions de la page Événements */
+
+/* En-tête : titre et bouton côte à côte */
+@media (min-width: 350px) {
+  #eventsWorkspace .ewHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #eventsWorkspace .ewHeader > div {
+    min-width: 0;
+  }
+
+  #eventsWorkspace .ewHeader h1 {
+    font-size: clamp(23px, 6vw, 34px);
+  }
+
+  #eventsWorkspace .ewCreate {
+    font-size: 12px;
+    padding: 11px 12px;
+    white-space: normal;
+    max-width: 150px;
+    text-align: center;
+  }
+}
+
+/* Six outils : trois colonnes sur écran suffisamment large */
+@media (min-width: 390px) {
+  #eventsWorkspace .ewTools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-width: 0;
+    padding: 12px 7px;
+    gap: 7px;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Participants : présentation plus aérée */
+#eventsWorkspace .ewPerson {
+  min-width: 76px;
+  text-align: center;
+}
+
+#eventsWorkspace .ewPerson .avatar,
+#eventsWorkspace .ewAvatar {
+  border-radius: 50%;
+}
+
+/* Programme : cartes plus lisibles */
+#eventsWorkspace .ewProgrammeRow {
+  border-radius: 14px;
+}
+
+#eventsWorkspace .ewSection {
+  margin-bottom: 14px;
+}
+
+/* MyEvent — correction en-tête et navigation iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  #eventsWorkspace h1,
+  #eventsWorkspace .ewHeader h1 {
+    font-size: clamp(20px, 5vw, 25px);
+    letter-spacing: -0.5px;
+  }
+
+  #eventsWorkspace h1 span {
+    font-size: 22px;
+  }
+
+  #eventsWorkspace .ewHeader p {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  #eventsWorkspace .ewCreate,
+  #eventsWorkspace .ewHeader .ewCreate {
+    max-width: 125px;
+    padding: 9px 10px !important;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  #eventsWorkspace .ewTabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    overflow: visible;
+  }
+
+  #eventsWorkspace .ewTabs button {
+    min-width: 0;
+    padding: 10px 2px !important;
+    font-size: clamp(8px, 2.1vw, 10px);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    text-align: center;
+  }
+}
+
+/* MyEvent - cartes outils : lisibilite sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTools {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-width: 0 !important;
+    padding: 10px 6px !important;
+    gap: 6px !important;
+    overflow: hidden;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+    font-size: 18px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
+
+/* MyEvent — cartes outils plus compactes sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTools {
+    gap: 7px !important;
+  }
+
+  #eventsWorkspace .ewTool {
+    min-height: 100px !important;
+    padding: 8px 5px !important;
+    gap: 5px !important;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    font-size: 17px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+}
+
+/* MyEvent — typographie compacte des 6 cartes iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTool {
+    min-height: 76px !important;
+    height: auto !important;
+    padding: 5px 4px !important;
+    gap: 4px !important;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    width: 24px !important;
+    height: 24px !important;
+    flex: 0 0 24px !important;
+    font-size: 15px !important;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+  }
+}
+
+/* MyEvent — finitions iPhone : outils, participants, programme */
+@media (max-width: 600px) {
+
+  /* 1. Six cartes : aucun chevauchement */
+  #eventsWorkspace .ewTool {
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 76px !important;
+    padding: 6px 5px !important;
+    gap: 5px !important;
+    overflow: hidden;
+  }
+
+  #eventsWorkspace .ewToolIcon {
+    flex: 0 0 23px !important;
+    width: 23px !important;
+    height: 23px !important;
+    font-size: 12px !important;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  #eventsWorkspace .ewTool > span:nth-child(2) {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
+  #eventsWorkspace .ewTool strong {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    overflow-wrap: break-word;
+  }
+
+  #eventsWorkspace .ewTool small {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    margin-top: 3px !important;
+    overflow-wrap: break-word;
+  }
+
+  #eventsWorkspace .ewArrow {
+    flex: 0 0 9px;
+    margin-left: 0;
+    font-size: 16px !important;
+  }
+
+  /* 2. Participants : noms et rôles séparés */
+  #eventsWorkspace .ewParticipants {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 4px 0 8px;
+  }
+
+  #eventsWorkspace .ewPerson {
+    flex: 0 0 82px;
+    min-width: 82px;
+    gap: 5px;
+  }
+
+  #eventsWorkspace .ewPerson strong {
+    display: block;
+    max-width: 100%;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  #eventsWorkspace .ewPerson small {
+    display: block;
+    width: 100%;
+    font-size: 9px;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: center;
+  }
+
+  /* 3. Programme : aperçu compact */
+  #eventsWorkspace #ewProgramme {
+    min-width: 0;
+  }
+
+  #eventsWorkspace #ewProgramme .ewProgrammeRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 9px 4px 9px 13px;
+    min-width: 0;
+    border-bottom: 1px solid #183441;
+  }
+
+  #eventsWorkspace #ewProgramme .ewProgrammeRow > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #eventsWorkspace #ewProgramme .inlineEventTimelineDot {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    font-size: 19px;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+
+  #eventsWorkspace #ewProgramme .inlineEventTimelineDot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 9px;
+  }
+
+  #eventsWorkspace #ewProgramme .inlineEventTimelineName {
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    margin: 2px 0 4px !important;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  #eventsWorkspace #ewProgramme .inlineEventTimelineTime,
+  #eventsWorkspace #ewProgramme .inlineEventTimelineMeta {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #eventsWorkspace #ewProgramme .ewProgrammeRow button {
+    font-size: 10px !important;
+    padding: 5px 7px !important;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  #eventsWorkspace #ewProgramme .ewProgrammeRow p {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    margin: 4px 0 !important;
+  }
+}
+
+/* Correction exclusive du bouton Discussion sur iPhone */
+@media (max-width: 600px) {
+  #eventsWorkspace .ewTool.ew-sdiscussion {
+    display: grid !important;
+    grid-template-columns: 24px minmax(0, 1fr) 10px;
+    align-items: center;
+    column-gap: 6px !important;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion .ewToolIcon {
+    width: 24px !important;
+    height: 24px !important;
+    flex: none !important;
+    overflow: visible;
+    font-size: 13px !important;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion strong {
+    display: block;
+    white-space: nowrap;
+  }
+
+  #eventsWorkspace .ewTool.ew-sdiscussion small {
+    display: block;
+    white-space: normal;
+    overflow-wrap: normal;
+    line-height: 1.2;
+  }
+}
+
+/* Aperçu compact du Programme : détails conservés dans une vue dédiée. */
+#eventsWorkspace .ewProgrammeCompact {
+ display:grid;grid-template-columns:48px minmax(0,1fr) 16px;align-items:center;
+ width:100%;min-width:0;gap:10px;padding:10px 4px;
+ background:transparent;color:inherit;text-align:left;border:0;
+ border-bottom:1px solid rgba(105,155,180,.17);cursor:pointer;
+}
+#eventsWorkspace .ewProgrammeThumb {
+ display:flex;align-items:center;justify-content:center;width:48px;height:48px;
+ border:1px solid #34576a;border-radius:11px;background:#123041;
+ font-size:24px;overflow:hidden;
+}
+#eventsWorkspace .ewProgrammeThumb img {width:100%;height:100%;object-fit:cover;}
+#eventsWorkspace .ewProgrammeCopy {display:flex;flex-direction:column;min-width:0;gap:3px;}
+#eventsWorkspace .ewProgrammeDate {font-size:11px;color:#a6c1d0;}
+#eventsWorkspace .ewProgrammeCopy strong {
+ font-size:13px;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;
+ -webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;
+}
+#eventsWorkspace .ewProgrammeMeta {
+ font-size:11px;color:#9cb4c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#eventsWorkspace .ewProgrammeChevron {font-size:24px;color:#7fa3b8;}
+#eventsWorkspace .ewProgrammeBack {margin:10px 0 16px;padding:9px 12px;border-radius:12px;}
+#eventsWorkspace .ewProgrammeDetailTitle {font-size:17px;line-height:1.3;margin:0 0 14px;}
+#eventsWorkspace .ewProgrammeDetail {max-width:100%;overflow-wrap:anywhere;}
+@media(max-width:600px){
+ #eventsWorkspace .ewProgrammeCompact {grid-template-columns:44px minmax(0,1fr) 12px;gap:8px;padding:9px 2px;}
+ #eventsWorkspace .ewProgrammeThumb {width:44px;height:44px;font-size:22px;}
+ #eventsWorkspace .ewProgrammeCopy strong {font-size:12px;}
+}
+
+/* Navigation Événements simplifiée : 6 outils + 2 sur la page suivante. */
+#eventsWorkspace .ewToolsCarousel{width:100%;overflow:hidden;margin:16px 0;}
+#eventsWorkspace .ewTools{display:flex!important;gap:0!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;margin:0!important;-webkit-overflow-scrolling:touch;}
+#eventsWorkspace .ewTools::-webkit-scrollbar{display:none;}
+#eventsWorkspace .ewToolsPage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;align-content:start;}
+#eventsWorkspace .ew-aioutings{--tool:#8e6bff;}
+#eventsWorkspace .ew-fund{--tool:#1cb8a6;}
+#eventsWorkspace .ewTaskActions{display:flex;gap:8px;margin:12px 0;}
+#eventsWorkspace .ewTaskActions button{padding:10px 14px!important;border:1px solid #557484!important;border-radius:12px!important;background:#102632!important;color:white!important;}
+
+/* Event-specific quick actions: retain the existing modules and compact layout. */
+#eventsWorkspace .ew-music{--tool:#e052d8;}
+#eventsWorkspace .ew-games{--tool:#8b64ff;}
+#eventsWorkspace .ewHeroNotifications{position:relative;min-width:38px;min-height:36px;font-size:19px!important;display:inline-flex;align-items:center;justify-content:center;}
