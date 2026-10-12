@@ -10,3 +10,6 @@
 #socialBottomNav #socialBottomCreate .orevamiNavSymbol{display:block;width:calc(100% - 8px)!important;height:calc(100% - 8px)!important;border:2px solid #ff9b65;border-radius:50%;background:#101015;box-sizing:border-box;overflow:hidden}
 #socialBottomNav #socialBottomCreate .orevamiNavSymbol img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;border-radius:50%;opacity:1!important;mix-blend-mode:normal!important;filter:none!important}
 @media(max-width:400px){.orevamiBrand{width:155px}.orevamiBrand>.orevamiLogo{max-height:55px}}
+
+/* Outrank the existing neutral navigation ring without changing visibility or geometry. */
+#socialHome #socialBottomNav #socialBottomCreate{border:3px solid white!important;background:#1119!important;box-shadow:0 0 0 4px #ff672b55,0 0 23px #ff5e2b9c!important}
