@@ -118,7 +118,7 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
 #eventsWorkspace .ewProgrammeCompact{position:relative;padding-left:12px}
 #eventsWorkspace .ewProgrammeCompact:before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:5px;background:#2dbbff}
 #eventsWorkspace .ewProgrammeCompact:nth-child(2):before{background:#ff8c42}#eventsWorkspace .ewProgrammeCompact:nth-child(3):before{background:#cd66ff}
-#eventsWorkspace .ewSeeMembers{display:block;margin:8px 0 0 auto;background:transparent;border:0;color:#ffab63;font-size:12px;padding:4px}
+#eventsWorkspace .ewSeeMembers{display:block;margin:8px 0 0 auto;background:transparent;border:0;color:var(--myevent-accent);font-size:12px;padding:4px}
 #eventsWorkspace .ewProgrammeDetail{max-width:100%;overflow-wrap:anywhere}
 @container events (max-width:600px){
  #eventsWorkspace{padding-top:12px;padding-bottom:calc(100px + env(safe-area-inset-bottom));min-width:0}

@@ -3056,7 +3056,7 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 #musicTrending .musicTrendOpen img{background:#11151b!important}
 #musicTrending .musicTrendRank{background:rgba(8,11,16,.88)!important;border:1px solid rgba(255,255,255,.28)!important}
 
-#musicHome .musicHead>#musicFavoritesBtn{color:#e53935!important}
+#musicHome .musicHead>#musicFavoritesBtn{color:var(--myevent-accent)!important}
 
 
 /* Music V1.15 — screenshot corrections */
@@ -3080,8 +3080,8 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
 
 /* Favourite button: white disc + orange outline + red heart */
 #musicHome .musicHead>#musicFavoritesBtn{
-  color:#e53935!important;
-  -webkit-text-fill-color:#e53935!important;
+  color:var(--myevent-accent)!important;
+  -webkit-text-fill-color:var(--myevent-accent)!important;
   background:#fff!important;
   border-color:var(--myevent-accent,#ff6a00)!important;
 }
