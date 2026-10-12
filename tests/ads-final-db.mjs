@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {PGlite} from '@electric-sql/pglite';
+const db=new PGlite(),owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333';let checks=0;
+async function as(uid,fn,role='authenticated'){return db.transaction(async tx=>{await tx.exec('set local role '+role);await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[uid||'']);return fn(tx);});}
+async function rpc(uid,action,payload={}){return as(uid,async tx=>(await tx.query('select public.myevent_ads($1,$2::jsonb) result',[action,JSON.stringify(payload)])).rows[0].result);}
+async function service(name,args){return as(null,async tx=>(await tx.query('select public.'+name+'('+args.map((_,i)=>'$'+(i+1)).join(',')+') result',args)).rows[0].result,'service_role');}
+async function deny(fn){await assert.rejects(fn);checks++;}
+const check=(condition)=>{assert(condition);checks++;};
+try{
+ await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create schema storage;
+ create table auth.users(id uuid primary key,banned_until timestamptz);create table public.admin_account_controls(user_id uuid primary key,suspended boolean);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create function public.myevent_account_active() returns boolean language sql stable security definer as $$select auth.uid() is not null and not exists(select 1 from auth.users where id=auth.uid() and banned_until>now()) and not exists(select 1 from public.admin_account_controls where user_id=auth.uid() and suspended)$$;
+ create function public.myevent_is_admin() returns boolean language sql stable as $$select auth.uid()='${admin}'::uuid$$;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,created_at timestamptz default now(),metadata jsonb,unique(bucket_id,name));
+ alter table storage.objects enable row level security;grant usage on schema auth,storage to authenticated,anon,service_role;grant select,insert on storage.objects to authenticated;
+ `);
+ await db.query('insert into auth.users(id) values($1),($2),($3)',[owner,other,admin]);
+ await db.exec(await readFile(new URL('../supabase/migrations/202610100001_ads_v1_test.sql',import.meta.url),'utf8'));
+ const migration=await readFile(new URL('../supabase/migrations/202610120001_ads_final_test.sql',import.meta.url),'utf8');
+ await deny(()=>db.exec(migration));await db.exec('rollback');
+ await db.query("select set_config('myevent.target_project_ref',$1,false)",['ahyyknfjsielnqyoxqgh']);await db.exec(migration);await db.exec(migration);checks++;
+ const catalog=await rpc(owner,'catalog');check(catalog.plans.length===5&&catalog.plans.map(p=>p.price_cents).join(',')==='0,199,499,999,1999'&&catalog.settings.payments_enabled===false);
+ const image=owner+'/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.jpg';
+ await as(owner,tx=>tx.query("insert into storage.objects(bucket_id,name,metadata) values('ad-media',$1,'{\"mimetype\":\"image/jpeg\",\"size\":100}')",[image]));
+ await deny(()=>as(other,tx=>tx.query("insert into storage.objects(bucket_id,name) values('ad-media',$1)",[owner+'/bbbb.jpg'])));
+ check((await as(other,tx=>tx.query('select * from storage.objects'))).rows.length===0);
+ check((await as(admin,tx=>tx.query('select * from storage.objects'))).rows.length===1);
+ const payload={professional:'on',business:'Entreprise locale TEST',title:'Publicité TEST',body:'Description TEST',target_url:'https://example.com/offre',plan_key:'discovery',zone:'75',image_paths:[image]};
+ await deny(()=>rpc(owner,'create',{...payload,image_paths:[]}));await deny(()=>rpc(other,'create',payload));await deny(()=>rpc(owner,'create',{...payload,zone:'national'}));
+ let campaign=await rpc(owner,'create',payload);check(campaign.status==='pending'&&campaign.owner_id===owner);
+ await deny(()=>rpc(other,'update',{...payload,id:campaign.id}));
+ campaign=await rpc(owner,'update',{...payload,id:campaign.id,title:'Publicité TEST modifiée'});check(campaign.title==='Publicité TEST modifiée'&&campaign.status==='pending');
+ await deny(()=>rpc(owner,'review',{id:campaign.id,status:'approved'}));
+ 
+ await rpc(admin,'plan',{key:'discovery',price_cents:9900,duration_days:7,max_visuals:1,geography:'department'});
+ await rpc(admin,'review',{id:campaign.id,status:'approved'});
+ await deny(()=>rpc(owner,'reserve_checkout',{id:campaign.id}));
+ await rpc(admin,'settings',{enabled:true,payments_enabled:true});
+ const attempt=await rpc(owner,'reserve_checkout',{id:campaign.id});check(attempt.id===(await rpc(owner,'reserve_checkout',{id:campaign.id})).id);
+ await deny(()=>rpc(other,'reserve_checkout',{id:campaign.id}));await deny(()=>as(owner,tx=>tx.query('select * from public.ad_payment_attempts')));
+ await deny(()=>rpc(owner,'update',{...payload,id:campaign.id}));
+ check((await rpc(other,'feed',{zone:'75'})).length===0);
+ await service('myevent_ads_checkout_saved',[attempt.id,'cs_test_final','https://checkout.stripe.com/c/test']);
+ await deny(()=>service('myevent_ads_paid',[campaign.id,'cs_test_unknown',9900,'eur']));await deny(()=>service('myevent_ads_paid',[campaign.id,'cs_test_final',1,'eur']));
+ check(await service('myevent_ads_paid',[campaign.id,'cs_test_final',9900,'eur']));check(await service('myevent_ads_paid',[campaign.id,'cs_test_final',9900,'eur']));
+ check((await rpc(other,'feed',{zone:'75'})).length===1);check((await rpc(other,'feed',{zone:'13'})).length===0);check((await rpc(other,'feed')).length===0);
+ const receipt='a'.repeat(64);check(await service('myevent_ads_count_once',[campaign.id,'impression',receipt]));check(!await service('myevent_ads_count_once',[campaign.id,'impression',receipt]));check(await service('myevent_ads_count_once',[campaign.id,'click',receipt]));
+ const row=(await rpc(owner,'mine'))[0];check(row.impressions===1&&row.clicks===1&&row.starts_at&&row.ends_at);
+ check((await rpc(owner,'history')).length===1&&(await rpc(other,'history')).length===0);check(!('checkout_url' in (await rpc(owner,'history'))[0]));
+ await deny(()=>rpc(other,'audit'));check((await rpc(admin,'audit')).length>0);
+ await rpc(admin,'review',{id:campaign.id,status:'suspended',reason:'Essai local'});check((await rpc(other,'feed',{zone:'75'})).length===0);
+ await rpc(admin,'review',{id:campaign.id,status:'approved'});check((await rpc(other,'feed',{zone:'75'})).length===1);
+ await rpc(admin,'schedule',{id:campaign.id,starts_at:new Date(Date.now()+86400000).toISOString()});check((await rpc(other,'feed',{zone:'75'})).length===0);check(!await service('myevent_ads_count_once',[campaign.id,'click','b'.repeat(64)]));
+ await deny(()=>rpc(owner,'schedule',{id:campaign.id,starts_at:new Date(Date.now()+86400000).toISOString()}));
+ await db.query("update public.ad_campaigns set starts_at=now()-interval '8 days',ends_at=now()-interval '1 day' where id=$1",[campaign.id]);check((await rpc(other,'feed',{zone:'75'})).length===0);
+ const renewed=await rpc(owner,'renew',{id:campaign.id});check(renewed.id!==campaign.id&&renewed.status==='pending'&&renewed.paid_at===null);
+ await deny(()=>rpc(admin,'review',{id:renewed.id,status:'rejected',reason:''}));await rpc(admin,'review',{id:renewed.id,status:'rejected',reason:'Motif TEST'});
+ check((await rpc(owner,'mine')).some(c=>c.id===renewed.id&&c.review_reason==='Motif TEST'));
+ check((await rpc(admin,'admin_list')).payments[0].status==='paid');
+ check(!await service('myevent_ads_payment_event',['cs_test_final','failed']));
+ await rpc(admin,'settings',{payments_enabled:false});
+ const welcome=await rpc(owner,'create',{...payload,plan_key:'welcome'}),second=await rpc(owner,'create',{...payload,plan_key:'welcome'});
+ await deny(()=>rpc(admin,'review',{id:welcome.id,status:'approved'}));
+ await deny(()=>rpc(owner,'verify_advertiser',{owner_id:owner,reason:'auto verification'}));
+ await rpc(admin,'verify_advertiser',{owner_id:owner,advertiser_key:'123456789',reason:'Entreprise fictive vérifiée pour le test local'});
+ await deny(()=>rpc(admin,'verify_advertiser',{owner_id:other,advertiser_key:'123456789',reason:'Même annonceur, autre compte TEST'}));await rpc(admin,'review',{id:welcome.id,status:'approved'});
+ const free=(await rpc(owner,'mine')).find(c=>c.id===welcome.id);
+ check(free.price_cents===0&&free.paid_at===null&&free.payment_session===null&&free.duration_days===15&&free.free_activated_at);
+ check((await rpc(other,'feed',{zone:'75'})).some(c=>c.id===welcome.id));
+ await deny(()=>rpc(admin,'review',{id:second.id,status:'approved'}));await deny(()=>rpc(owner,'create',{...payload,plan_key:'welcome'}));
+ await rpc(admin,'settings',{payments_enabled:true});await deny(()=>rpc(owner,'reserve_checkout',{id:welcome.id}));
+ await rpc(admin,'review',{id:welcome.id,status:'suspended'});await deny(()=>rpc(admin,'verify_advertiser',{owner_id:other,advertiser_key:'123456789',reason:'Même annonceur, autre compte TEST'}));await rpc(admin,'review',{id:welcome.id,status:'approved'});
+ check((await rpc(owner,'mine')).find(c=>c.id===welcome.id).ends_at===free.ends_at);
+ check(await service('myevent_ads_count_once',[welcome.id,'impression','c'.repeat(64)]));
+ await db.query("update public.ad_campaigns set ends_at=now()-interval '1 second' where id=$1",[welcome.id]);
+ check(!(await rpc(other,'feed',{zone:'75'})).some(c=>c.id===welcome.id));await deny(()=>rpc(owner,'renew',{id:welcome.id}));
+ check((await rpc(owner,'catalog')).welcome_used===true);
+ console.log(`PASS Ads final: ${checks} isolated PostgreSQL checks; migration guard/idempotence, media RLS, edits, moderation, disabled payments, ledger/replay, geography, scheduling, expiry, renewal and metrics. No remote data or Stripe charge.`);
+}finally{await db.close();}
