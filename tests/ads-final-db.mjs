@@ -32,7 +32,7 @@ try{
  await deny(()=>rpc(other,'update',{...payload,id:campaign.id}));
  campaign=await rpc(owner,'update',{...payload,id:campaign.id,title:'Publicité TEST modifiée'});check(campaign.title==='Publicité TEST modifiée'&&campaign.status==='pending');
  await deny(()=>rpc(owner,'review',{id:campaign.id,status:'approved'}));
- 
+
  await rpc(admin,'plan',{key:'discovery',price_cents:9900,duration_days:7,max_visuals:1,geography:'department'});
  await rpc(admin,'review',{id:campaign.id,status:'approved'});
  await deny(()=>rpc(owner,'reserve_checkout',{id:campaign.id}));
