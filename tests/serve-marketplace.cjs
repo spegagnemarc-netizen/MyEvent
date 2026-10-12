@@ -5,6 +5,7 @@ http.createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost');
   if(url.pathname==='/marketplace-fixture'){
     let html=fs.readFileSync(path.join(root,'marketplace.html'),'utf8').replace('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/tests/marketplace-browser-fixture.js');
+    html=html.replace('<script src="/js/runtime-config.js?v=admin-v22"></script>','<script>window.myeventRuntime={ready:Promise.resolve({url:"http://127.0.0.1:54321",publishableKey:"fixture",authStorageKey:"fixture"})};</script>');
     html=html.replace('<body>','<body><p style="background:#ffdf91;padding:10px;margin:0">TEST LOCAL — données fictives, aucun accès à Supabase</p>');
     res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;
   }

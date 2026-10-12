@@ -1,0 +1,11 @@
+#myeventMarketplace .rentalDialog{width:min(1100px,95vw);max-width:1100px;max-height:92vh;overflow:auto;padding:32px}
+#myeventMarketplace .rentalForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:24px 0}
+#myeventMarketplace .rentalForm label{display:flex;flex-direction:column;gap:7px;min-width:0}
+#myeventMarketplace .rentalForm label:has(textarea){grid-column:1/-1}
+#myeventMarketplace .rentalForm input,#myeventMarketplace .rentalForm select,#myeventMarketplace .rentalForm textarea{width:100%;box-sizing:border-box}
+#myeventMarketplace .rentalNotice{padding:16px;border:1px solid currentColor;border-radius:12px}
+#myeventMarketplace .rentalActions{display:flex;gap:12px;align-items:end;flex-wrap:wrap}
+#myeventMarketplace .rentalActions label{display:flex;flex-direction:column;gap:8px}
+#myeventMarketplace .rentalPreview{width:100%;height:650px;background:white;border:1px solid #b8c5bb;border-radius:8px}
+#myeventMarketplace #rentalStatus{white-space:pre-wrap}
+@media(max-width:640px){#myeventMarketplace .rentalDialog{padding:24px 16px}#myeventMarketplace .rentalForm{grid-template-columns:1fr}#myeventMarketplace .rentalActions>*{width:100%}}
