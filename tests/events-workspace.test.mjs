@@ -39,7 +39,7 @@ test('Owner/coorganizer edit; participant keeps functional tools without edit',a
  for(const role of ['owner','coorganizer','member']){
   const {w,count,dom}=fixture(role);await w.myeventEventsWorkspace.open();await flush();
   assert.equal(!!w.document.querySelector('#ewHero [data-form="editEventBox"]'),role!=='member');
-  assert.equal(w.document.querySelectorAll('.ewTool').length,10);
+  assert.equal(w.document.querySelectorAll('.ewTool').length,12);
   assert.equal(w.document.querySelector('#ewHero h2').textContent,'<Événement réel>');
   await w.myeventEventsWorkspace.openTool('polls');assert.equal(count(),1);
   assert.equal(w.document.querySelector('[data-panel="polls"]').parentElement.id,'ewToolBody');
@@ -48,16 +48,16 @@ test('Owner/coorganizer edit; participant keeps functional tools without edit',a
  }
 });
 
-test('Ten existing tools remain in six/four pages with participants and secondary navigation',async()=>{
+test('Twelve tools remain in six/six pages with participants and secondary navigation',async()=>{
  const {w,dom}=fixture();await w.myeventEventsWorkspace.open();await flush();
  const pages=[...w.document.querySelectorAll('.ewToolsPage')];
- assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,4]);
- assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games']);
+ assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,6]);
+ assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games','hall','outings']);
  assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','supplies','transport','documents']);
  assert.equal(w.document.querySelector('#ewParticipants'),null);
  assert(w.document.querySelector('.ewSections [data-tool="members"]'));
  assert(w.document.querySelector('#ewHero [data-tool="members"]'));
- for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport']){
+ for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport','hall','outings']){
   await w.myeventEventsWorkspace.openTool(key);
   assert(w.document.querySelector('#ewToolBody .ewPanel'),key+' opens its original panel');
  }
@@ -71,6 +71,6 @@ test('Empty state disables event actions and creation remains available',async()
  assert.equal(w.document.getElementById('createEventCard').parentElement.id,'ewToolBody');
  dom.window.close();
 });
-test('Visible hall entry opens the original search panel and preserves ten tools',async()=>{
- const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewHallSearchAccess');assert(b);assert(b.textContent.includes('Recherche de salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,10);dom.window.close();
+test('Visible hall entry opens the original search panel and preserves twelve tools',async()=>{
+ const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewToolsPage .ew-hall');assert(b);assert(b.textContent.includes('Salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,12);dom.window.close();
 });
