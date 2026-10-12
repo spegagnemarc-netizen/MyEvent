@@ -69,3 +69,9 @@ Ces tests utilisent une base locale et des transports Stripe simulés : **ils ne
 ## Avant toute production
 
 Installer et vérifier le schéma TEST, effectuer le parcours distant avec comptes fictifs autorisés, contrôler le webhook Stripe TEST réellement livré, valider les détails commerciaux de ciblage/visuels et la politique de vérification des entreprises, vérifier l'affichage iPhone et les règles de consentement/confidentialité. Production/Stripe LIVE/Google nécessitent une nouvelle autorisation.
+
+## Correction Premium / Professionnel du 12 octobre
+
+Les trois migrations Ads ont été appliquées exclusivement à MyEvent-Admin-Test (ahyyknfjsielnqyoxqgh). Les tarifs et durées des cinq offres sont conservés. Premium : une campagne départementale. Professionnel : trois campagnes nationales prioritaires, regroupées dans un forfait payé une fois et une période commune, avec statistiques journalières par campagne (impressions, clics, CTR). Les plafonds sont contrôlés lors de la validation côté base, les tentatives de paiement sont partagées et les tables internes restent privées. La programmation individuelle des campagnes d’un forfait Professionnel est indisponible, afin de conserver la période commune. Aucun nouvel endpoint Vercel.
+
+74 contrôles PostgreSQL isolés et 32 tests Node passent. La création réelle d’une campagne Bienvenue et son téléversement ont été réalisés dans la Preview TEST ; la récupération des images signées reste à vérifier. Les paiements et la diffusion distante restent désactivés. Aucun paiement complet Stripe TEST externe ni essai Safari iPhone physique validé. Ne pas présenter ces points comme terminés.

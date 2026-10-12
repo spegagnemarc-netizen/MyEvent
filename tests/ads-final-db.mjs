@@ -76,5 +76,20 @@ try{
  await db.query("update public.ad_campaigns set ends_at=now()-interval '1 second' where id=$1",[welcome.id]);
  check(!(await rpc(other,'feed',{zone:'75'})).some(c=>c.id===welcome.id));await deny(()=>rpc(owner,'renew',{id:welcome.id}));
  check((await rpc(owner,'catalog')).welcome_used===true);
+ await db.exec(await readFile(new URL('../supabase/migrations/202610120002_ads_professional_test.sql',import.meta.url),'utf8'));
+ const upgraded=await rpc(owner,'catalog');check(upgraded.plans.find(p=>p.key==='premium').max_campaigns===1);check(upgraded.plans.find(p=>p.key==='professional').max_campaigns===3);
+ await deny(()=>rpc(owner,'create',{...payload,plan_key:'professional',zone:'75'}));
+ const pros=[];for(let i=0;i<4;i++)pros.push(await rpc(owner,'create',{...payload,plan_key:'professional',zone:'national'}));
+ for(const c of pros.slice(0,3))await rpc(admin,'review',{id:c.id,status:'approved'});
+ await deny(()=>rpc(admin,'review',{id:pros[3].id,status:'approved'}));
+ const proAttempt=await rpc(owner,'reserve_checkout',{id:pros[0].id});check((await rpc(owner,'reserve_checkout',{id:pros[1].id})).id===proAttempt.id);
+ await rpc(admin,'settings',{payments_enabled:false});await deny(()=>rpc(owner,'reserve_checkout',{id:pros[1].id}));await rpc(admin,'settings',{payments_enabled:true});
+ await service('myevent_ads_checkout_saved',[proAttempt.id,'cs_test_pro','https://checkout.stripe.com/c/pro']);await service('myevent_ads_paid',[pros[0].id,'cs_test_pro',1999,'eur']);
+ const paidPros=(await rpc(owner,'mine')).filter(c=>pros.slice(0,3).some(p=>p.id===c.id));check(paidPros.every(c=>c.paid_at&&c.entitlement_id===paidPros[0].entitlement_id&&c.ends_at===paidPros[0].ends_at));check(paidPros.reduce((sum,c)=>sum+c.price_cents,0)===1999);
+ await deny(()=>rpc(admin,'schedule',{id:pros[0].id,starts_at:new Date().toISOString()}));
+ const premiums=[];for(let i=0;i<2;i++)premiums.push(await rpc(owner,'create',{...payload,plan_key:'premium'}));await rpc(admin,'review',{id:premiums[0].id,status:'approved'});await deny(()=>rpc(admin,'review',{id:premiums[1].id,status:'approved'}));
+ check((await rpc(other,'feed',{zone:'13'})).every(c=>pros.some(p=>p.id===c.id)&&c.feed_priority===100));
+ check(await service('myevent_ads_count_once',[pros[0].id,'impression','d'.repeat(64)]));check((await rpc(owner,'mine')).find(c=>c.id===pros[0].id).daily_stats[0].impressions===1);
+ await deny(()=>as(owner,tx=>tx.query('select * from public.ad_entitlements')));await deny(()=>as(owner,tx=>tx.query('select * from public.ad_daily_stats')));
  console.log(`PASS Ads final: ${checks} isolated PostgreSQL checks; migration guard/idempotence, media RLS, edits, moderation, disabled payments, ledger/replay, geography, scheduling, expiry, renewal and metrics. No remote data or Stripe charge.`);
 }finally{await db.close();}
