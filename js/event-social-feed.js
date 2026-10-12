@@ -19,8 +19,8 @@
         const img=document.createElement('img');img.src=item.author_avatar;img.alt='';avatar.append(img);
       }else avatar.textContent='👤';
       const meta=document.createElement('div');meta.className='socialPostMeta';
-      const name=document.createElement('b');name.textContent=item.author_name||'Membre MyEvent';
-      const time=document.createElement('span');time.textContent=date(item.created_at)+' · MyEvent';
+      const name=document.createElement('b');name.textContent=item.author_name||'Membre ORÉVAMI';
+      const time=document.createElement('span');time.textContent=date(item.created_at)+' · ORÉVAMI';
       meta.append(name,time);head.append(avatar,meta);post.append(head);
       if(item.body){const body=document.createElement('div');body.className='socialPostText';body.textContent=item.body;post.append(body);}
       if(item.event_id){

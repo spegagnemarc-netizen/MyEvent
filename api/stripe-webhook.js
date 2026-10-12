@@ -191,7 +191,7 @@ module.exports = async function handler(req, res) {
         if (!Array.isArray(entries) || entries.length !== 1 ||
             entries[0].id !== fundEntryId || entries[0].status !== "confirmed") {
           console.error("Participation Stripe introuvable ou non confirmée", { fundEntryId });
-          return res.status(500).send("Participation MyEvent non confirmée");
+          return res.status(500).send("Participation ORÉVAMI non confirmée");
         }
 
         console.log(

@@ -20,5 +20,5 @@
    const admin=document.getElementById('myeventAdminPanel');if(admin)admin.style.top='calc(38px + env(safe-area-inset-top))';};
   if(document.body)render();else document.addEventListener('DOMContentLoaded',render,{once:true});
  }
- ready.then(config=>{if(config.isTest)banner(`MYEVENT TEST · ${config.environment} · données fictives uniquement · ${config.projectRef}`);},()=>banner('MYEVENT · CONNEXION BLOQUÉE · configuration de test requise'));
+ ready.then(config=>{if(config.isTest)banner(`ORÉVAMI TEST · ${config.environment} · données fictives uniquement · ${config.projectRef}`);},()=>banner('ORÉVAMI · CONNEXION BLOQUÉE · configuration de test requise'));
 })();

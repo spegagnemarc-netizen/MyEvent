@@ -1,0 +1,19 @@
+/* Symbol stays left of the name, in the original header line box. */
+.orevamiBrand{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:.28em;white-space:nowrap;vertical-align:middle;max-width:100%;line-height:inherit;color:inherit}
+.orevamiSymbol{display:inline-block!important;position:relative;flex:0 0 1.36em;width:1.36em;height:1em;line-height:0}
+.orevamiSymbol img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.orevamiName{display:inline!important;font:inherit;letter-spacing:inherit;color:inherit!important}
+.orevamiSymbol .orevamiSymbolLight{display:none}
+html[data-myevent-theme="light"] .orevamiSymbolDark{display:none}
+html[data-myevent-theme="light"] .orevamiSymbolLight{display:block}
+#myeventMarketplace[data-theme="light"] .orevamiSymbolDark{display:none}
+#myeventMarketplace[data-theme="light"] .orevamiSymbolLight{display:block}
+#myeventMarketplace[data-theme="dark"] .orevamiSymbolDark{display:block}
+#myeventMarketplace[data-theme="dark"] .orevamiSymbolLight{display:none}
+#socialHome .socialBrand{display:flex!important;align-items:center}
+.meSectionBrand{align-items:center;letter-spacing:-.7px}
+.orevamiCameraSymbol{display:block;object-fit:contain;width:100%;height:100%;pointer-events:none}
+#socialBottomCreate .orevamiCameraSymbol{width:32px;height:32px}
+@media(max-width:400px){.meSectionBrand{font-size:22px}#socialHome .socialBrand{font-size:26px!important}}
+
+#socialBottomCreate .orevamiNavSymbol{width:32px!important;height:32px!important;flex-basis:32px}

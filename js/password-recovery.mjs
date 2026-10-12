@@ -17,7 +17,7 @@ export async function setupRecovery({document,client,location,history}){
    const {error}=await client.auth.updateUser({password});if(error)throw error;
    form.reset();recovery=false;form.hidden=true;
    const result=await client.auth.signOut();
-   status.textContent=result.error?'Mot de passe enregistré. La déconnexion n’a pas pu être confirmée : ferme cette fenêtre.':'Mot de passe enregistré. Tu peux te reconnecter à MyEvent.';
+   status.textContent=result.error?'Mot de passe enregistré. La déconnexion n’a pas pu être confirmée : ferme cette fenêtre.':'Mot de passe enregistré. Tu peux te reconnecter à ORÉVAMI.';
   }catch{status.textContent='Le mot de passe n’a pas pu être enregistré. Réessaie ou demande un nouveau lien.';}
   finally{busy=false;form.querySelector('button').disabled=false;}
  });

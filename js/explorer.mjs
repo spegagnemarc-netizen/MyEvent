@@ -33,7 +33,7 @@ function render(){
  }
 }
 function open(row=null){
- if(!account){error(Error('Connecte-toi dans MyEvent pour enregistrer tes réservations.'));return;}
+ if(!account){error(Error('Connecte-toi dans ORÉVAMI pour enregistrer tes réservations.'));return;}
  editing=row;$('bookingForm').reset();$('formNotice').textContent='';$('existingProof').textContent=row?.details.proof?'Justificatif conservé : '+row.details.proof.name:'';
  const f=$('bookingForm').elements,d=row?.details;
  if(d){for(const key of ['original_url','name','destination','from','reference','note','address'])f.namedItem(key).value=d[key]||'';f.kind.value=row.kind;f.start.value=(d.checkin||d.departure||'').slice(0,10);f.end.value=(d.checkout||d.arrival||'').slice(0,10);f.travelers.value=d.people_count||'';f.status.value=d.reservation_status;f.confirmed_by_user.checked=d.confirmation_source==='user_declared';if(api.reliableGeo(d.geo)){f.lat.value=d.geo.lat;f.lon.value=d.geo.lon;f.geo_verified.checked=true;}}
@@ -73,6 +73,6 @@ $('locate').onclick=async()=>{
   }
  }catch(e){if(run===searchRun)$('searchNotice').textContent=e.message||'Position ou recherche indisponible.';}finally{if(run===searchRun)$('locate').disabled=false;}
 };
-try{const config=await window.myeventRuntime.ready;client=window.supabase.createClient(config.url,config.publishableKey,{auth:{storageKey:config.authStorageKey}});async function session(next){if(account?.id!==next?.id)clear();account=next;store=account?personal.create(client,account.id):null;$('account').textContent=account?'Connecté · tes réservations sont privées jusqu’au partage.':'Recherche libre. Connecte-toi dans MyEvent pour enregistrer une réservation.';if(account)await load().catch(error);}
+try{const config=await window.myeventRuntime.ready;client=window.supabase.createClient(config.url,config.publishableKey,{auth:{storageKey:config.authStorageKey}});async function session(next){if(account?.id!==next?.id)clear();account=next;store=account?personal.create(client,account.id):null;$('account').textContent=account?'Connecté · tes réservations sont privées jusqu’au partage.':'Recherche libre. Connecte-toi dans ORÉVAMI pour enregistrer une réservation.';if(account)await load().catch(error);}
  const auth=await client.auth.getUser();await session(auth.data.user);client.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>session(s?.user).catch(error),0);});
 }catch(e){error(e);$('add').disabled=true;}

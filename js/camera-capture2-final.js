@@ -105,7 +105,7 @@
     const aiAccess=document.createElement('button');aiAccess.type='button';aiAccess.className='cameraIAAccess';aiAccess.id='cameraIAAccess';aiAccess.textContent='✨ IA';aiAccess.setAttribute('aria-label','Ouvrir les outils IA');
     aiAccess.addEventListener('click',()=>{
       const panel=modal.querySelector('#cameraCreativePanel'),host=modal.querySelector('#cameraPanelContent');panel.hidden=false;panel.dataset.kind='ai-info';modal.querySelector('#cameraPanelTitle').textContent='IA et retouches';host.replaceChildren();
-      const note=document.createElement('p');note.textContent='Outils locaux : retouches, filtres et effets de visage, sans envoi de photo. Transformations IA distantes : styles après capture, via le service serveur MyEvent. Ouvrir les styles ne lance aucun traitement.';host.append(note);
+      const note=document.createElement('p');note.textContent='Outils locaux : retouches, filtres et effets de visage, sans envoi de photo. Transformations IA distantes : styles après capture, via le service serveur ORÉVAMI. Ouvrir les styles ne lance aucun traitement.';host.append(note);
       const choices=document.createElement('div');choices.className='cameraPanelChoices';for(const [label,id] of [['Retouches photo','cameraRetouchSide'],['Effets de visage','cameraAppearanceSide'],['Filtres créatifs','cameraFilterSide']]){const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=()=>{panel.hidden=true;modal.querySelector('#'+id)?.click();};choices.append(button);}const remote=document.createElement('button');remote.type='button';remote.textContent='Transformations IA distantes';remote.onclick=()=>{panel.hidden=true;modal.querySelector('#cameraAiSide')?.click();};choices.append(remote);host.append(choices);
     });sheet.querySelector('.cameraProTopRight').prepend(aiAccess);
 
@@ -298,9 +298,9 @@
     modal.cameraComposeAppearance=(source,output)=>appearance?appearance.compose(source,output):output;
 
     // Direct Lens carousel: one tap/swipe from the viewfinder, no settings panel.
-    const lensStrip=document.createElement('div');lensStrip.className='cameraLensStrip';lensStrip.setAttribute('role','group');lensStrip.setAttribute('aria-label','Lens MyEvent');
+    const lensStrip=document.createElement('div');lensStrip.className='cameraLensStrip';lensStrip.setAttribute('role','group');lensStrip.setAttribute('aria-label','Lens ORÉVAMI');
     const lensItems=[
-      [null,'Aucun','ME'],['pig-face','Cochon','🐷'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Gonflé','😮'],['reactive-mouth','Bouche','😛']
+      [null,'Aucun','O'],['pig-face','Cochon','🐷'],['toon-face','Cartoon','🤪'],['wild-face','Délire','😜'],['big-eyes','Gros yeux','👀'],['puffy-face','Gonflé','😮'],['reactive-mouth','Bouche','😛']
     ];
     lensStrip.innerHTML=lensItems.map((x,i)=>'<button type="button" class="cameraLens '+(i===0?'active':'')+'" data-lens="'+(x[0]||'')+'" aria-label="'+x[1]+'"><span>'+x[2]+'</span><small>'+x[1]+'</small></button>').join('');
     sheet.appendChild(lensStrip);

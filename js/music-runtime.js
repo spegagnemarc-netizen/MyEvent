@@ -62,7 +62,7 @@
     }catch(e){status('Favoris : '+e.message);}
   }
   async function ensurePlaylist(){
-    const {sb,user,event}=ctx(); if(!sb||!user||!event?.id)throw new Error('Ouvre d’abord un événement MyEvent.');
+    const {sb,user,event}=ctx(); if(!sb||!user||!event?.id)throw new Error('Ouvre d’abord un événement ORÉVAMI.');
     let r=await sb.from('music_playlists').select('*').eq('event_id',event.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
     if(r.error)throw r.error;
     if(!r.data){r=await sb.from('music_playlists').insert({event_id:event.id,created_by:user.id,name:'Playlist de l’événement'}).select().single();if(r.error)throw r.error;}
@@ -105,7 +105,7 @@
     window.MyEventMusicPlayback?.select(track,items);
 
     const id=encodeURIComponent(track.provider_track_id||'');
-    panel.innerHTML='<div class="musicPlayerTop"><button type="button" data-player-close aria-label="Retour">‹</button><b>MyEvent · Musique</b><span aria-hidden="true">♫</span></div>'+
+    panel.innerHTML='<div class="musicPlayerTop"><button type="button" data-player-close aria-label="Retour">‹</button><b>ORÉVAMI · Musique</b><span aria-hidden="true">♫</span></div>'+
       '<div class="musicPlayerMedia"><button type="button" class="musicPlayerCover" data-player-play aria-label="Lire sur YouTube"><img src="'+esc(track.thumbnail_url)+'" alt=""><span>▶<small>Lire sur YouTube</small></span></button></div>'+
       '<div class="musicPlayerMeta"><h2>'+meta(track.title)+'</h2><p>'+meta(track.artist)+'</p></div>'+
       '<div class="musicPlayerActions"><button type="button" data-player-add>＋<span>Playlist</span></button><button type="button" data-player-fav aria-pressed="false" disabled>♡<span>Favori</span></button><button type="button" data-player-share>↗<span>Partager</span></button><button type="button" data-player-related>♫<span>Similaires</span></button></div>'+

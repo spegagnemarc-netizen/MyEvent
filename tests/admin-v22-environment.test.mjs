@@ -30,7 +30,7 @@ test('Browser boundary fails closed and shows test identity; same session key fo
   const dom=new JSDOM('<body></body>',{url:'https://example.test',runScripts:'outside-only'});
   dom.window.fetch=async(url,options)=>{assert.equal(url,'/api/runtime-config');assert.equal(options.credentials,'same-origin');return {ok:valid,json:async()=>valid?supabaseEnvironment(env):{error:'failure'}};};
   dom.window.eval(source);if(valid){const c=await dom.window.myeventRuntime.ready;assert.equal(c.projectRef,ref);}else await assert.rejects(dom.window.myeventRuntime.ready);
-  await new Promise(r=>setImmediate(r));assert.match(dom.window.document.getElementById('myeventEnvironmentBanner').textContent,valid?/MYEVENT TEST/:/BLOQUÉE/);dom.window.close();
+  await new Promise(r=>setImmediate(r));assert.match(dom.window.document.getElementById('myeventEnvironmentBanner').textContent,valid?/ORÉVAMI TEST/:/BLOQUÉE/);dom.window.close();
  }
  for(const p of ['../js/core-runtime.js','../js/marketplace.mjs']){const s=await readFile(new URL(p,import.meta.url),'utf8');assert(s.includes('storageKey:config.authStorageKey'));assert(!s.includes('sb_publishable_'));assert(!s.includes('nxxvadbliinhvkirqkkl'));}
  for(const p of ['../index.html','../marketplace.html'])assert((await readFile(new URL(p,import.meta.url),'utf8')).includes('/js/runtime-config.js'));

@@ -3,7 +3,7 @@
   const $=id=>document.getElementById(id);
   const context=()=>window.myeventCameraContext?.()||{};
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const label=p=>p?.display_name||p?.username||'Utilisateur MyEvent';
+  const label=p=>p?.display_name||p?.username||'Utilisateur ORÉVAMI';
   const date=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
   const avatar=p=>`<span class="si-avatar">${/^https:\/\//.test(p?.avatar||'')?`<img src="${esc(p.avatar)}" alt="" referrerpolicy="no-referrer">`:esc(label(p).slice(0,1))}</span>`;
   let account=null,client=null,epoch=0,channel=null,kind=null,conversation=null,snapshot=null,loading=false,refreshAgain=false,refreshTimer=null,viewEpoch=0,more=false;

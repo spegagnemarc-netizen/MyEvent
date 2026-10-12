@@ -1,6 +1,6 @@
 import {pdfBlocks,createRentalPDF} from './rental-pdf.mjs';
 // Paper documents only: no persistence, reservation, payment or backend call.
-export const notice = 'Modèles pour la location de matériel en France, à adapter à votre situation. Ils ne garantissent pas une validité juridique universelle. MyEvent ne conclut pas la location, ne propose pas d’assurance et ne reçoit ni loyer ni dépôt de garantie.';
+export const notice = 'Modèles pour la location de matériel en France, à adapter à votre situation. Ils ne garantissent pas une validité juridique universelle. ORÉVAMI ne conclut pas la location, ne propose pas d’assurance et ne reçoit ni loyer ni dépôt de garantie.';
 export const fields = [
   ['reference','Référence du dossier'], ['owner','Propriétaire : nom / raison sociale'], ['ownerAddress','Adresse du propriétaire'], ['ownerContact','Téléphone / email du propriétaire'],
   ['ownerStatus','Statut du propriétaire','select',['Particulier','Professionnel']], ['ownerBusiness','Professionnel : SIREN / SIRET et représentant'],
@@ -47,7 +47,7 @@ export function renderRental(data,kind){
   const entry=key=>{const label=fields.find(f=>f[0]===key)[1];let value=data[key];if(value&&fields.find(f=>f[0]===key)[2]==='number')value=Number(value).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';return '<div class="entry"><span class="label">'+escape(label)+'</span><p>'+escape(value||'À compléter sur papier : ____________________')+'</p></div>';};
   const section=(title,keys)=>'<section><h2>'+title+'</h2>'+keys.map(entry).join('')+'</section>';
   const errors=validateRental(data,kind);
-  let html='<header><p>MyEvent · Documents de location · '+escape(data.reference)+'</p><h1>'+titles[kind]+'</h1></header><p class="note">'+escape(notice)+'</p>';
+  let html='<header><p>ORÉVAMI · Documents de location · '+escape(data.reference)+'</p><h1>'+titles[kind]+'</h1></header><p class="note">'+escape(notice)+'</p>';
   if(errors.length)html+='<p class="note">BROUILLON — informations à compléter avant signature :\n'+escape(errors.join('\n'))+'</p>';
   html+=section('Les parties',['owner','ownerAddress','ownerContact','ownerStatus','ownerBusiness','renter','renterAddress','renterContact'])+section('Matériel et période',['equipment','serial','use','start','end','handover']);
   if(kind==='contract')html+=section('Prix et conditions',['daily','total','priceTerms','deposit','depositMode','depositDetails','returnBy','returnTerms','terms','consumerTerms']);
@@ -55,7 +55,7 @@ export function renderRental(data,kind){
   if(kind==='inventory')html+='<p>Les deux parties vérifient ensemble le matériel et consignent leurs constatations et réserves. Un champ de retour vide ne vaut pas acceptation du retour.</p>'+section('Constat au départ',['outAt','outState','evidence'])+'<div class="signatures"><p>Départ — signature manuscrite du propriétaire</p><p>Départ — signature manuscrite du locataire</p></div>'+section('Constat au retour',['backAt','backState','disagreements','deductions','returned','returnedAt'])+'<div class="signatures"><p>Retour — signature manuscrite du propriétaire</p><p>Retour — signature manuscrite du locataire</p></div>';
   html+=section('Observations et signature',['observations','place','signedAt'])+'<p>Établi en deux originaux, un remis à chacune des parties. Annexer le contrat, le reçu et les constats correspondants, ainsi que les photos et justificatifs mentionnés.</p>';
   if(kind!=='inventory')html+='<div class="signatures"><p>Signature manuscrite du propriétaire</p><p>Signature manuscrite du locataire</p></div>';
-  return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+titles[kind]+'</title><style>'+printCSS+'</style></head><body>'+html+'<footer>Document préparé pour signature sur papier. Aucun paiement, encaissement, assurance ou signature électronique MyEvent.</footer></body></html>';
+  return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+titles[kind]+'</title><style>'+printCSS+'</style></head><body>'+html+'<footer>Document préparé pour signature sur papier. Aucun paiement, encaissement, assurance ou signature électronique ORÉVAMI.</footer></body></html>';
 }
 export function openRentalDocuments(item){
   const data=prefillRental(item),dialog=document.createElement('dialog');dialog.className='rentalDialog';dialog.setAttribute('aria-labelledby','rentalTitle');
@@ -77,7 +77,7 @@ export function openRentalDocuments(item){
   const pdfButton=dialog.querySelector('#rentalPDF');pdfButton.onclick=async()=>{
     update();if(!form.reportValidity())return;const errors=validateRental(data,kind.value);if(errors.length){status.textContent='Export bloqué : '+errors.join(' · ');return;}
     pdfButton.disabled=true;
-    try{if(!window.PDFLib)throw Error('Bibliothèque PDF indisponible. Rechargez la page ou utilisez Imprimer.');const bytes=await createRentalPDF(pdfBlocks(renderRental(data,kind.value)),window.PDFLib),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),link=document.createElement('a');link.href=url;link.download='myevent-location-'+kind.value+'.pdf';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='PDF préparé. Vérifiez le téléchargement et imprimez deux originaux pour les signatures manuscrites.';}
+    try{if(!window.PDFLib)throw Error('Bibliothèque PDF indisponible. Rechargez la page ou utilisez Imprimer.');const bytes=await createRentalPDF(pdfBlocks(renderRental(data,kind.value)),window.PDFLib),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),link=document.createElement('a');link.href=url;link.download='orevami-location-'+kind.value+'.pdf';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='PDF préparé. Vérifiez le téléchargement et imprimez deux originaux pour les signatures manuscrites.';}
     catch(error){status.textContent=error.message;}finally{pdfButton.disabled=false;}
   };
   pdfButton.parentElement.nextElementSibling.textContent='Le PDF se télécharge directement. Imprimez deux originaux et signez-les sur papier. Le bouton Imprimer ouvre la fenêtre d’impression de votre navigateur.';

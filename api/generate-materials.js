@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       ? `Salle sélectionnée: ${hall.name || 'inconnue'}; capacité: ${hall.capacity || 'non indiquée'}; équipements: ${hall.equipment || 'non indiqués'}.`
       : 'Aucune salle sélectionnée.';
 
-    const prompt = `Tu es l’assistant d’organisation de MyEvent. Génère une liste pratique de matériel et consommables à prévoir pour un événement.
+    const prompt = `Tu es l’assistant d’organisation de ORÉVAMI. Génère une liste pratique de matériel et consommables à prévoir pour un événement.
 
 Événement: ${eventName || 'non précisé'}
 Type: ${eventType || 'non précisé'}
@@ -48,7 +48,7 @@ Règles:
 - Si un élément dépend du lieu, mets-le en note plutôt que de l’inventer.
 - Les quantités doivent être des entiers positifs.
 - Ne propose pas d’alcool, d’armes, de médicaments ou de produits dangereux.
-- N’inclus pas les personnes responsables: MyEvent s’en chargera après ajout.`;
+- N’inclus pas les personnes responsables: ORÉVAMI s’en chargera après ajout.`;
 
     const response = await fetch(
       'https://api.openai.com/v1/responses',

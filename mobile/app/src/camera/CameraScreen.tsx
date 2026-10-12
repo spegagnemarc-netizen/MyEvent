@@ -83,7 +83,7 @@ export function CameraScreen({onClose,onUse,onWebFallback}: Props) {
   const control=(label:string,action:()=>void,disabled=false)=><Pressable accessibilityRole="button" accessibilityLabel={label} onPress={action} disabled={disabled} style={[styles.button,disabled&&{opacity:0.4}]}><Text style={styles.text}>{label}</Text></Pressable>;
   function confirm(action:'publish'|'event'){
     if(!photo || busyRef.current)return;
-    Alert.alert(action==='publish'?'Publier cette photo ?':'Ajouter à un événement ?',action==='publish'?'La photo sera publiée dans MyEvent.':'Vous choisirez ensuite l’événement dans MyEvent.',[
+    Alert.alert(action==='publish'?'Publier cette photo ?':'Ajouter à un événement ?',action==='publish'?'La photo sera publiée dans ORÉVAMI.':'Vous choisirez ensuite l’événement dans ORÉVAMI.',[
       {text:'Annuler',style:'cancel'},
       {text:action==='publish'?'Publier':'Choisir un événement',onPress:()=>{
         if(busyRef.current)return;busyRef.current=true;setBusy(true);setError('');
@@ -94,7 +94,7 @@ export function CameraScreen({onClose,onUse,onWebFallback}: Props) {
   const aspect=ratio==='1:1'?1:ratio==='9:16'?9/16:3/4;
   const previewWidth=Math.min(window.width-24,Math.max(160,window.height-insets.top-insets.bottom-220)*aspect);
   return <View style={styles.screen}>
-    <View style={styles.row}>{control('Fermer',onClose,busy)}<Text style={styles.text}>Caméra MyEvent</Text>{control('↻',()=>{setReady(false);setFacing(facing==='front'?'back':'front');setZoom(0);},busy||!!photo)}</View>
+    <View style={styles.row}>{control('Fermer',onClose,busy)}<Text style={styles.text}>Caméra ORÉVAMI</Text>{control('↻',()=>{setReady(false);setFacing(facing==='front'?'back':'front');setZoom(0);},busy||!!photo)}</View>
     <View style={{width:previewWidth,alignSelf:'center',aspectRatio:aspect,backgroundColor:'black',overflow:'hidden'}} {...pan.panHandlers}>
       {photo?<Image source={{uri:photo.uri}} style={StyleSheet.absoluteFill} resizeMode="contain"/>:
         permission?.granted && active?<CameraView ref={camera} style={StyleSheet.absoluteFill} facing={facing} zoom={zoom} mode="picture" onCameraReady={()=>setReady(true)} onMountError={e=>setError(e.message)}/>:
@@ -106,7 +106,7 @@ export function CameraScreen({onClose,onUse,onWebFallback}: Props) {
     {!!error&&<Text accessibilityRole="alert" style={styles.text}>{error}</Text>}
     <ScrollView contentContainerStyle={{gap:8}}>
       {photo?<View style={styles.row}>{control('Reprendre',()=>{setPhoto(null);setReady(false);},busy)}{control('Publier',()=>confirm('publish'),busy)}{control('Ajouter à un événement',()=>confirm('event'),busy)}</View>:<>
-        <View style={styles.row}>{control('Galerie',()=>{void gallery();},busy)}<Pressable accessibilityRole="button" accessibilityLabel="Prendre une photo MyEvent" onPress={()=>{void capture();}} disabled={busy||!ready} style={styles.shutter}><Image source={require('../assets/camera-me-logo.jpeg')} style={{width:64,height:64,borderRadius:32}}/></Pressable>{control('Zoom +',()=>setZoom(Math.min(1,zoom+0.1)),busy)}</View>
+        <View style={styles.row}>{control('Galerie',()=>{void gallery();},busy)}<Pressable accessibilityRole="button" accessibilityLabel="Prendre une photo ORÉVAMI" onPress={()=>{void capture();}} disabled={busy||!ready} style={styles.shutter}><Image source={require('../assets/camera-me-logo.jpeg')} style={{width:64,height:64,borderRadius:32}}/></Pressable>{control('Zoom +',()=>setZoom(Math.min(1,zoom+0.1)),busy)}</View>
         <View style={styles.row}>{control(`Timer ${timer}s`,()=>setTimer(timer===0?3:timer===3?10:0),busy)}{control(`Grille ${grid?'✓':''}`,()=>setGrid(!grid))}{control(`Niveau ${level?'✓':''}`,()=>setLevel(!level))}</View>
         <View style={styles.row}>{(['4:3','1:1','9:16'] as CameraRatio[]).map(value=><React.Fragment key={value}>{control(value+ (value===ratio?' ✓':''),()=>setRatio(value),busy)}</React.Fragment>)}</View>
         {control('Caméra web de secours',onWebFallback,busy)}

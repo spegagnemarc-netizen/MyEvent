@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       new_members_count: members.length
     };
 
-    const prompt = `Tu es l’assistant de MyEvent.
+    const prompt = `Tu es l’assistant de ORÉVAMI.
 Résume très brièvement ce qu’une personne a manqué dans son événement de groupe.
 
 Événement : ${payload.event}

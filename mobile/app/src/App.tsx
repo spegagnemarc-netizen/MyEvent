@@ -48,7 +48,7 @@ export default function App(){
     web.current?.injectJavaScript(releaseCameraTriggerScript(WEB_ORIGIN));
   }
   async function usePhoto(photo:CapturedMedia,action:'publish'|'event'){
-    if(!loaded || !trustedNavigation(url,WEB_ORIGIN))throw new Error('Chargez l’accueil MyEvent avant l’import.');
+    if(!loaded || !trustedNavigation(url,WEB_ORIGIN))throw new Error('Chargez l’accueil ORÉVAMI avant l’import.');
     const navigationToken=triggerToken.current;
     const file=new File(photo.uri);
     if(!file.exists || file.size>MAX_PHOTO_BYTES)throw new Error('Photo trop volumineuse (4 Mo maximum).');
@@ -62,20 +62,20 @@ export default function App(){
     if(pending.current)throw new Error('Transfert déjà en cours.');
     setStatus(action==='publish'?'Publication en cours…':'Préparation du choix d’événement…');
     await new Promise<void>((resolve,reject)=>{
-      const timeout=setTimeout(()=>cancelTransfer('Résultat non confirmé : vérifiez MyEvent avant de réessayer.'),60000);
+      const timeout=setTimeout(()=>cancelTransfer('Résultat non confirmé : vérifiez ORÉVAMI avant de réessayer.'),60000);
       pending.current={id,action,timer:timeout,resolve,reject};web.current?.injectJavaScript(script);
     });
     nativeOpen.current=false;
     setCamera(false);
   }
   return <SafeAreaProvider><SafeAreaView style={styles.screen}>
-    <View style={styles.bar}><Text style={styles.title}>{__DEV__?'MyEvent · TEST':'MyEvent'}</Text>{__DEV__&&!triggerReady&&<Pressable accessibilityRole="button" onPress={openNativeCamera} style={styles.button}><Text style={styles.title}>Caméra ME</Text></Pressable>}</View>
+    <View style={styles.bar}><Text style={styles.title}>{__DEV__?'ORÉVAMI · TEST':'ORÉVAMI'}</Text>{__DEV__&&!triggerReady&&<Pressable accessibilityRole="button" onPress={openNativeCamera} style={styles.button}><Text style={styles.title}>Caméra ME</Text></Pressable>}</View>
     {!!status&&<Text style={styles.status}>{status}</Text>}
     <WebView ref={web} source={{uri:WEB_URL}} style={{flex:1}} sharedCookiesEnabled thirdPartyCookiesEnabled={false} javaScriptEnabled allowsInlineMediaPlayback geolocationEnabled setSupportMultipleWindows
       onLoadStart={()=>{setLoaded(false);setTriggerReady(false);triggerToken.current=uuid.v4();nativeOpen.current=false;setCamera(false);cancelTransfer('Navigation en cours, transfert annulé.');}}
       onLoadEnd={()=>{setLoaded(true);web.current?.injectJavaScript(cameraTriggerScript(WEB_ORIGIN,triggerToken.current));}}
       onNavigationStateChange={navigation=>{setUrl(navigation.url);canGoBack.current=navigation.canGoBack;}}
-      onError={()=>{setLoaded(false);setTriggerReady(false);cancelTransfer('Connexion MyEvent perdue.');setStatus('Connexion à MyEvent impossible.');}}
+      onError={()=>{setLoaded(false);setTriggerReady(false);cancelTransfer('Connexion ORÉVAMI perdue.');setStatus('Connexion à ORÉVAMI impossible.');}}
       onShouldStartLoadWithRequest={request=>{
         if(trustedNavigation(request.url,WEB_ORIGIN))return true;
         // Partner iframes stay embedded; only top-level external navigation opens the system browser.
@@ -93,8 +93,8 @@ export default function App(){
           if(message.version!==1 || message.id!==pending.current.id)return;
           if(!['action-completed','action-failed','import-unavailable'].includes(message.type))return;
           const transfer=pending.current;pending.current=null;clearTimeout(transfer.timer);
-          if(message.type==='action-completed'){transfer.resolve();setStatus(transfer.action==='publish'?'Photo publiée dans MyEvent.':'Choisissez un événement : la photo sera enregistrée après votre sélection.');}
-          else{transfer.reject(new Error(message.error||'Action indisponible : chargez l’accueil MyEvent.'));setStatus('Action non enregistrée.');}
+          if(message.type==='action-completed'){transfer.resolve();setStatus(transfer.action==='publish'?'Photo publiée dans ORÉVAMI.':'Choisissez un événement : la photo sera enregistrée après votre sélection.');}
+          else{transfer.reject(new Error(message.error||'Action indisponible : chargez l’accueil ORÉVAMI.'));setStatus('Action non enregistrée.');}
         }catch{/* Only camera requests and photo acknowledgements; no auth tokens or uploads from web. */}
       }}/>
     <Modal visible={camera} animationType="slide" onRequestClose={closeNativeCamera}>

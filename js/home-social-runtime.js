@@ -55,7 +55,7 @@
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
     const interest=e.target.closest('.socialInterestBtn');if(interest){interest.textContent='✅ Intérêt enregistré';interest.classList.add('active');return}
     const follow=e.target.closest('.socialFollowBtn');if(follow){$s('socialFriendsShortcut')?.click();const input=document.querySelector('#socialFriendsView .socialSearch input');if(input)input.focus();const notice=$s('socialFriendStatus');if(notice)notice.textContent='Recherche la personne dans Amis pour lui envoyer une vraie demande.';return}
-    const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'MyEvent',text:'Découvre cet événement sur MyEvent'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
+    const share=e.target.closest('.socialShareBtn');if(share){if(navigator.share){navigator.share({title:'ORÉVAMI',text:'Découvre cet événement sur ORÉVAMI'}).catch(()=>{})}else{navigator.clipboard?.writeText(location.href);share.textContent='✓ Lien copié'}return}
     const send=e.target.closest('.socialCommentBox button:not(.socialCommentDelete)');if(send){window.myeventFeedInteractions?.mutate(send.closest('.socialPost'),'send',send);return}
     const removeComment=e.target.closest('.socialCommentDelete');if(removeComment){window.myeventFeedInteractions?.mutate(removeComment.closest('.socialPost'),'delete',removeComment);return}
     const msg=e.target.closest('.socialMessageBtn');if(msg){
@@ -184,13 +184,13 @@
     function setCameraMusic(track){cameraMusicTrack=track||null;cameraMusicStart=0;cameraMusicDuration=15;cameraMusicConfirmed=false;publishCameraMusicSelection();$s('cameraMusicSide')?.classList.toggle('active',!!track);}
     async function searchCameraMusic(query,results,note){
       const q=query.trim();if(q.length<2){note.textContent='Écris au moins 2 caractères.';return;}
-      const ticket=++cameraMusicRequest;note.textContent='Recherche MyEvent Music…';
+      const ticket=++cameraMusicRequest;note.textContent='Recherche ORÉVAMI Music…';
       try{const r=await fetch('/api/search-music?q='+encodeURIComponent(q)),data=await r.json();if(!r.ok)throw new Error(data.error||'Recherche indisponible');if(ticket!==cameraMusicRequest)return;
         cameraMusicResults=data.items||[];results.replaceChildren();
         cameraMusicResults.forEach(track=>{const b=document.createElement('button');b.type='button';b.className='storyMusicResult';
           const img=document.createElement('img');img.src=track.thumbnail_url||'';img.alt='';const meta=document.createElement('span'),strong=document.createElement('strong'),small=document.createElement('small');strong.textContent=track.title||'Morceau';small.textContent=track.artist||'';meta.append(strong,small);b.append(img,meta);
           b.addEventListener('click',()=>{setCameraMusic(track);window.MyEventMusicPlayback?.select(track,[track]);closePanel();openPanel('music',$s('cameraMusicSide'));});results.appendChild(b);});
-        note.textContent=cameraMusicResults.length?cameraMusicResults.length+' résultat(s) MyEvent Music':'Aucun résultat.';
+        note.textContent=cameraMusicResults.length?cameraMusicResults.length+' résultat(s) ORÉVAMI Music':'Aucun résultat.';
       }catch(error){note.textContent='Musique : '+error.message;}
     }
     const panel=$s('cameraCreativePanel'), content=$s('cameraPanelContent'), title=$s('cameraPanelTitle');
@@ -205,7 +205,7 @@
       $s('myeventCameraModal').cameraResumeEdit?.();
       closePanel();const settings=sheet?.querySelector('.cameraGlassSettings');if(settings)settings.open=false;panel.hidden=false;panel.dataset.kind=kind;
       source?.classList.add('active');source?.setAttribute('aria-expanded','true');
-      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures MyEvent ✍️',frames:'Cadres photo',text:'Texte',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
+      const names={ai:'IA photo',beauty:'Beauté',retouch:'Retouches',filters:'Filtres créatifs',appearance:'Effets amusants 🤩',signatures:'Signatures ORÉVAMI ✍️',frames:'Cadres photo',text:'Texte',stickers:'Texte & stickers',music:'Ajouter un son',timer:'Minuteur',ratio:'Cadrage',settings:'Réglages',plus:'Plus · Outils créatifs'};
       title.textContent=names[kind];
       content.replaceChildren();
       if(cameraMode==='video'||cameraVideoFile){
@@ -267,11 +267,11 @@
       const descriptions={
         ai:'Traitement IA à connecter. La commande existante est disponible après une photo.',
         stickers:'Emoji · Stickers · Texte · Décorations : à venir.',
-        music:'Recherche et lecture via MyEvent Music.'
+        music:'Recherche et lecture via ORÉVAMI Music.'
       };
       const note=document.createElement('p');note.textContent=descriptions[kind];content.appendChild(note);
       if(kind==='music'){
-        note.textContent='Recherche un morceau dans MyEvent Music. Aucun fichier audio local n’est nécessaire.';
+        note.textContent='Recherche un morceau dans ORÉVAMI Music. Aucun fichier audio local n’est nécessaire.';
         const search=document.createElement('div');search.className='cameraMusicSearch';
         const input=document.createElement('input');input.type='search';input.placeholder='Rechercher un morceau…';
         const go=document.createElement('button');go.type='button';go.textContent='Rechercher';search.append(input,go);content.appendChild(search);
@@ -540,7 +540,7 @@
   };
   cameraModal.cameraGetPhotoSource=()=>cameraAISourceCanvas||cameraSourceCanvas;
   cameraModal.cameraHasPhoto=()=>!!cameraSourceCanvas&&!cameraVideoFile;
-  cameraModal.cameraGetMediaFile=async()=>cameraVideoFile||(myeventCapturedDataUrl?new File([await(await fetch(myeventCapturedDataUrl)).blob()],'MyEvent-photo.jpg',{type:'image/jpeg'}):null);
+  cameraModal.cameraGetMediaFile=async()=>cameraVideoFile||(myeventCapturedDataUrl?new File([await(await fetch(myeventCapturedDataUrl)).blob()],'ORÉVAMI-photo.jpg',{type:'image/jpeg'}):null);
   cameraModal.addEventListener('camera-decoration-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
   cameraModal.addEventListener('camera-filter-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
   cameraModal.addEventListener('camera-appearance-change',()=>{if(cameraSourceCanvas)renderCameraPhoto(++cameraRevision);});
@@ -602,7 +602,7 @@
           if(failed||revision!==cameraRevision||!cameraModal.classList.contains('open'))return;
           const type=(recorder.mimeType||chunks[0]?.type||'video/mp4').split(';')[0],blob=new Blob(chunks,{type});chunks=[];
           if(!blob.size)return;
-          showCameraVideo(new File([blob],'MyEvent-video.'+(type==='video/mp4'?'mp4':'webm'),{type}));
+          showCameraVideo(new File([blob],'ORÉVAMI-video.'+(type==='video/mp4'?'mp4':'webm'),{type}));
         };
         recorder.start(1000);$s('cameraShutterBtn')?.classList.add('recording');
         $s('cameraShutterBtn')?.setAttribute('aria-label','Arrêter l’enregistrement');
@@ -638,7 +638,7 @@
   }
   $s('cameraDownloadBtn')?.addEventListener('click',()=>{
     const url=cameraVideoUrl||myeventCapturedDataUrl;if(!url)return;
-    const link=document.createElement('a');link.href=url;link.download=cameraVideoFile?.name||'MyEvent-photo.jpg';link.click();
+    const link=document.createElement('a');link.href=url;link.download=cameraVideoFile?.name||'ORÉVAMI-photo.jpg';link.click();
   });
   $s('cameraStoryBtn')?.addEventListener('click',async()=>{
     const button=$s('cameraStoryBtn'),revision=cameraRevision;button.disabled=true;
@@ -752,8 +752,8 @@
     if(!item?.image)return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
-    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo MyEvent" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-    post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur MyEvent.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 MyEvent';
+    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo ORÉVAMI" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
+    post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
@@ -986,7 +986,7 @@
       err=>{
         if(showError){
           const msg=err?.code===1
-            ?'Autorisation de localisation refusée. Autorise la localisation pour MyEvent dans les réglages du navigateur.'
+            ?'Autorisation de localisation refusée. Autorise la localisation pour ORÉVAMI dans les réglages du navigateur.'
             :'Impossible d’obtenir ta position pour le moment.';
           if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='⚠️ '+msg;
         }
@@ -1019,7 +1019,7 @@
       const on=e.target.checked;
       setShareEnabled(on);
       if(on){
-        if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='📍 Partage activé. MyEvent pourra utiliser ta position sur cet appareil. Autorise la localisation si le navigateur la demande.';
+        if($('myeventNearbyInfo'))$('myeventNearbyInfo').textContent='📍 Partage activé. ORÉVAMI pourra utiliser ta position sur cet appareil. Autorise la localisation si le navigateur la demande.';
         getPosition(false);
       }else{
         const ctx=globalThis.myeventCameraContext?.();

@@ -73,7 +73,7 @@ module.exports = async function handler(req, res) {
       }));
 
     const prompt = `
-Tu es l'assistant de décision de MyEvent.
+Tu es l'assistant de décision de ORÉVAMI.
 
 Événement : ${eventName}
 

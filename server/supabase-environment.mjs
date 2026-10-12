@@ -2,7 +2,7 @@
 const protectedProject='nxxvadbliinhvkirqkkl';
 export function supabaseEnvironment(env=process.env){
  const environment=env.VERCEL_ENV||env.MYEVENT_ENV||'development';
- if(!['development','preview','production'].includes(environment))throw Error('Environnement MyEvent invalide.');
+ if(!['development','preview','production'].includes(environment))throw Error('Environnement ORÉVAMI invalide.');
  const url=String(env.SUPABASE_URL||'').trim();
  const publishableKey=String(env.SUPABASE_PUBLISHABLE_KEY||'').trim();
  let parsed;try{parsed=new URL(url);}catch{throw Error('Configuration Supabase absente ou invalide.');}

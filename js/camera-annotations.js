@@ -27,7 +27,7 @@
         ];
         for(const path of paths)ctx.stroke(new Path2D(path));ctx.restore();return;
       }
-      ctx.font='italic 700 '+size+'px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('MyEvent',0,0);
+      ctx.font='italic 700 '+size+'px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ORÉVAMI',0,0);
       if(style==='heart'){ctx.save();ctx.translate(size*2.12,-size*.32);ctx.scale(size/40,size/40);ctx.lineWidth=2.4;ctx.stroke(new Path2D('M 0 4 C -20 -10 -9 -23 0 -12 C 10 -24 25 -10 0 4 Z'));ctx.restore();}
       if(style==='crown'){ctx.save();ctx.translate(size*1.55,-size*.85);ctx.scale(size/40,size/40);ctx.lineWidth=2;const path=new Path2D('M -15 8 L -19 -9 L -7 0 L 0 -16 L 7 0 L 19 -9 L 15 8 Z');ctx.stroke(path);ctx.restore();}
     }
@@ -134,13 +134,13 @@
           const button=document.createElement('button');button.type='button';button.dataset.signature=style;button.setAttribute('aria-label','Signature '+name);
           const thumb=document.createElement('canvas');thumb.width=260;thumb.height=100;const ctx=thumb.getContext('2d');ctx.translate(125,55);signature(ctx,style,40,'#ffffff');
           const label=document.createElement('span');label.textContent=name;button.append(thumb,label);
-          button.onclick=()=>{if(items[selected]?.kind==='signature'){items[selected].signature=style;items[selected].text='MyEvent · '+name;changed();panel(host,mode);}else create('MyEvent · '+name,'signature',style);};gallery.append(button);
+          button.onclick=()=>{if(items[selected]?.kind==='signature'){items[selected].signature=style;items[selected].text='ORÉVAMI · '+name;changed();panel(host,mode);}else create('ORÉVAMI · '+name,'signature',style);};gallery.append(button);
         }host.append(gallery);
       }else{
         const text=document.createElement('input');text.type='text';text.maxLength=80;text.placeholder='Ton texte…';text.setAttribute('aria-label','Texte sur la photo');
         const add=document.createElement('button');add.type='button';add.textContent='Ajouter le texte';add.onclick=()=>create(text.value,'text');host.append(text,add);
         const stickers=document.createElement('div');stickers.className='cameraPanelChoices';
-        ['❤️','✨','🎉','🥳','👑','🌟','ME'].forEach(value=>{const button=document.createElement('button');button.type='button';button.textContent=value;button.setAttribute('aria-label','Ajouter le sticker '+value);button.onclick=()=>create(value,'sticker');stickers.append(button);});if(mode!=='text')host.append(stickers);
+        ['❤️','✨','🎉','🥳','👑','🌟','ORÉVAMI'].forEach(value=>{const button=document.createElement('button');button.type='button';button.textContent=value;button.setAttribute('aria-label','Ajouter le sticker '+value);button.onclick=()=>create(value,'sticker');stickers.append(button);});if(mode!=='text')host.append(stickers);
       }
       if(items.length>=12){const limit=document.createElement('p');limit.textContent='12 éléments maximum.';host.append(limit);}
       if(!items.length)return;

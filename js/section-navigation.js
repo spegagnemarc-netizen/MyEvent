@@ -12,7 +12,7 @@
  function active(section){document.querySelectorAll('#socialBottomNav [data-bottom-tab],#socialBottomCreate').forEach(b=>{const yes=b.dataset.bottomTab===(section==='home'?'feed':section);b.classList.toggle('active',yes);if(yes)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});}
  function header(section){
   const h=document.createElement('header');h.className='meSectionHeader';h.dataset.sectionHeader=section;
-  const brand=document.createElement('div');brand.className='meSectionBrand';brand.append('My');const accent=document.createElement('span');accent.textContent='Event';brand.append(accent);
+  const brand=document.createElement('div');brand.className='meSectionBrand';brand.append(window.OrevamiBrand?.create()||document.createTextNode('ORÉVAMI'));
   const row=document.createElement('div');row.className='meSectionTitleRow';
   const title=document.createElement('h1');title.textContent=names[section];
   const close=document.createElement('button');close.type='button';close.className='meSectionClose';close.textContent='×';close.setAttribute('aria-label','Fermer et revenir à l’accueil');close.title='Fermer';close.onclick=()=>api.close();

@@ -7,7 +7,7 @@ export function pdfBlocks(html){
 }
 export async function createRentalPDF(blocks,library){
   const {PDFDocument,StandardFonts,rgb}=library,pdf=await PDFDocument.create(),regular=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-  pdf.setTitle(blocks.find(b=>b.style==='title')?.text||'Documents de location');pdf.setAuthor('MyEvent');
+  pdf.setTitle(blocks.find(b=>b.style==='title')?.text||'Documents de location');pdf.setAuthor('ORÉVAMI');
   const margin=45,width=595.28,height=841.89,contentWidth=width-2*margin;
   let page,y;function newPage(){page=pdf.addPage([width,height]);y=height-margin;}
   newPage();
@@ -34,6 +34,6 @@ export async function createRentalPDF(blocks,library){
     for(const line of wrapped){if(y-leading<margin+25)newPage();page.drawText(line,{x:margin,y:y-size,size,font,color:rgb(.09,.16,.12)});y-=leading;}
     if(signature){page.drawRectangle({x:margin,y:y-62,width:contentWidth,height:60,borderWidth:.5,borderColor:rgb(.65,.71,.66)});y-=72;}else y-=block.style==='label'?1:7;
   }
-  const pages=pdf.getPages();pages.forEach((p,i)=>p.drawText('MyEvent - Location de matériel - '+(i+1)+' / '+pages.length,{x:margin,y:24,size:8,font:regular,color:rgb(.35,.4,.36)}));
+  const pages=pdf.getPages();pages.forEach((p,i)=>p.drawText('ORÉVAMI - Location de matériel - '+(i+1)+' / '+pages.length,{x:margin,y:24,size:8,font:regular,color:rgb(.35,.4,.36)}));
   return pdf.save();
 }

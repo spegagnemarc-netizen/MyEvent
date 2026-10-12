@@ -5,7 +5,7 @@
     endpoint(kind) { return this.prefix+'_'+kind; }
     async rpc(name,args={}) {
       const {sb,user}=this.context();
-      if(!sb||!user) throw Error('Connecte-toi à MyEvent pour jouer.');
+      if(!sb||!user) throw Error('Connecte-toi à ORÉVAMI pour jouer.');
       const {data,error}=await sb.rpc(name,args);
       if(error) throw error;
       return data;
