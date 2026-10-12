@@ -1,12 +1,12 @@
 /* Section identity follows the original Marketplace brand, without extra card chrome. */
-.meSectionHeader{box-sizing:border-box;padding:22px 0 18px;margin:0 0 16px;background:transparent;color:#f5f7fa;border:0;border-radius:0;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
+.meSectionHeader{position:relative;--me-close-top:22px;box-sizing:border-box;padding:22px 0 18px;margin:0 0 16px;background:transparent;color:#f5f7fa;border:0;border-radius:0;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
 .meSectionBrand{display:flex;justify-content:flex-start;font-size:28px;font-weight:850;letter-spacing:-1.5px;line-height:1.2;color:#f5f7fa;padding-right:0}
 .meSectionBrand>span{color:#ff8238}
-.meSectionTitleRow{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px;margin-top:2px}
+.meSectionTitleRow{min-height:44px;display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px;margin-top:2px}
 .meSectionHeader .meSectionTitleRow>h1,#eventsWorkspace .meSectionHeader h1{font-size:9px;font-weight:750;line-height:1.5;letter-spacing:2.1px;text-transform:uppercase;margin:0;text-align:left;color:inherit;overflow-wrap:anywhere}
 .meSectionClose{display:grid!important;place-items:center;min-width:44px;min-height:44px;padding:0!important;border:1px solid #355061!important;border-radius:50%!important;background:transparent!important;color:#bed1df!important;font:26px/1 system-ui!important;cursor:pointer;box-shadow:none!important;touch-action:manipulation}
-.meSectionClose:hover{border-color:#ff8238!important;color:#ff9848!important}
-.meSectionClose:focus-visible,.socialEventCard[data-event-id]:focus-visible{outline:2px solid #ff9848;outline-offset:4px}
+.meSectionClose:hover{border-color:var(--myevent-accent)!important;color:var(--myevent-accent)!important}
+.meSectionClose:focus-visible,.socialEventCard[data-event-id]:focus-visible{outline:2px solid var(--myevent-accent);outline-offset:4px}
 #eventsWorkspace .ewHeader h1,#musicHome .musicHead h2,#musicBackBtn,.profileSettingsCard .myeventProfileHeader{display:none!important}
 #musicHome .musicScreenHead h2,.gl-header h2{font-size:20px}
 #musicHome>.meSectionHeader{position:relative;z-index:2;padding-inline:0}
@@ -23,7 +23,7 @@ body.profileSectionOpen #main>.card:not(#profileSettingsCard),body.profileSectio
 body.profileSectionOpen #profileSettingsCard{display:block!important;scroll-margin-top:0}
 body.profileSectionOpen #socialHome{min-height:0!important;padding-bottom:0!important}
 .socialEventCard[data-event-id]{cursor:pointer;touch-action:manipulation}
-@media(max-width:600px){.meSectionHeader{padding-top:16px}.meSectionBrand{font-size:24px}.meMarketplaceIdentity{gap:10px}}
+@media(max-width:600px){.meSectionHeader{--me-close-top:16px;padding-top:16px}.meSectionBrand{font-size:24px}.meMarketplaceIdentity{gap:10px}}
 
 /* Fixed overlays must clear the existing environment banner on Previews. */
 body:has(#myeventEnvironmentBanner) #musicHome>.meSectionHeader,body:has(#myeventEnvironmentBanner) #entertainmentLounge .gl-shell>.meSectionHeader{margin-top:var(--me-header-banner-height,48px)}
@@ -38,7 +38,13 @@ body.profileSectionOpen #profileSettingsCard{scroll-margin-top:var(--me-header-b
 /* Marketplace subtitle and close share the same 44px title row. */
 #myeventMarketplace .marketHeader .brand{line-height:1.2}
 #myeventMarketplace .marketHeader .brand small{display:flex;align-items:center;height:44px;margin-top:2px}
-#myeventMarketplace .marketHeader>.meSectionClose{align-self:end}
+#myeventMarketplace .marketHeader>.meSectionClose{align-self:start}
 #myeventMarketplace .marketHeader #marketThemeToggle{position:static!important;flex:0 0 38px}
 
 @media(max-width:700px){#myeventMarketplace .marketHeader>nav{grid-template-columns:38px repeat(3,minmax(0,1fr))}}
+
+/* Close controls share the content edge and top inset, independently of the title. */
+.meSectionHeader .meSectionClose{position:absolute;top:var(--me-close-top);right:0;width:44px;height:44px}
+.meSectionHeader .meSectionBrand{max-width:calc(100% - 56px)}
+#myeventMarketplace .marketHeader{padding-top:22px}
+@media(max-width:700px){#myeventMarketplace .marketHeader{padding-top:16px}}
