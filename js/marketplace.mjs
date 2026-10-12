@@ -1,5 +1,6 @@
 import {categories,conditions,money,validateListing,filterListings,createMarketplaceStore} from './marketplace-data.mjs';
 import {marketplaceConfig} from './marketplace-config.mjs';
+import {openRentalDocuments} from './rental-documents.mjs';
 
 const root=document.getElementById('myeventMarketplace'),$=id=>root.querySelector('#'+id);
 let client,store,user=null,items=[],favorites=new Set(),photos=new Map(),editing=null,thread=null;
@@ -115,6 +116,7 @@ function openDetail(item){
   const price=el('p','price',money(item.price_cents));if(item.mode==='rent')price.append(el('small','',' / jour'));
   const facts=el('div','detailFacts');[labelCategory(item.category),conditions[item.condition],item.city].forEach(text=>facts.append(el('span','',text)));
   host.append(gallery,el('p','eyebrow',item.mode==='rent'?'À LOUER':'À VENDRE'),title,price,facts,el('p','detailDescription',item.description));
+  if(item.mode==='rent')host.append(button('Préparer les documents de location','quiet',()=>{$('listingDialog').close();openRentalDocuments(item);}));
   if(item.owner_id===user?.id){
     host.append(button('Modifier l’annonce','primary',()=>{$('listingDialog').close();openForm(item);}));
     if(item.status!=='archived')host.append(button('Retirer l’annonce','quiet',async()=>{try{await store.update(item.id,{status:'archived'});$('listingDialog').close();await load();toast('Annonce retirée. Vos conversations sont conservées.');}catch(e){toast(errorMessage(e));}}));
