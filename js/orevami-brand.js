@@ -4,20 +4,7 @@
 (() => {
   'use strict';
 
-  const markup = `
-    <span class="orevamiBrand">
-      <img
-        class="orevamiLogoLight"
-        src="/assets/orevami/logo-light.png"
-        alt="ORÉVAMI — Vos sorties prennent vie"
-      >
-      <img
-        class="orevamiLogoDark"
-        src="/assets/orevami/logo-transparent.png"
-        alt="ORÉVAMI — Vos sorties prennent vie"
-      >
-    </span>
-  `;
+  const markup = "<span class=\"orevamiBrand\"><img class=\"orevamiLogo\" src=\"/assets/orevami/logo-transparent.png\" alt=\"ORÉVAMI — Vos sorties prennent vie\"></span>";
 
   window.OrevamiBrand = Object.freeze({
     name: 'ORÉVAMI',
