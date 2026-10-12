@@ -13,7 +13,7 @@
       >
       <img
         class="orevamiLogoDark"
-        src="/assets/orevami/logo-dark.png"
+        src="/assets/orevami/logo-transparent.png"
         alt="ORÉVAMI — Vos sorties prennent vie"
       >
     </span>
