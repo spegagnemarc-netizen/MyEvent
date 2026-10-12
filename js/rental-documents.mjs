@@ -1,3 +1,4 @@
+import {pdfBlocks,createRentalPDF} from './rental-pdf.mjs';
 // Paper documents only: no persistence, reservation, payment or backend call.
 export const notice = 'Modèles pour la location de matériel en France, à adapter à votre situation. Ils ne garantissent pas une validité juridique universelle. MyEvent ne conclut pas la location, ne propose pas d’assurance et ne reçoit ni loyer ni dépôt de garantie.';
 export const fields = [
@@ -72,7 +73,14 @@ export function openRentalDocuments(item){
   function update(){for(const [key] of fields)data[key]=form.elements[key].value;const errors=validateRental(data,kind.value);status.textContent=errors.length?errors.join(' · '):'Informations principales complétées. Relisez le document et ses annexes avant signature.';frame.srcdoc=renderRental(data,kind.value);}
   form.addEventListener('input',update);form.addEventListener('change',update);form.addEventListener('submit',e=>e.preventDefault());kind.addEventListener('change',update);
   function print(){update();if(!form.reportValidity())return;const errors=validateRental(data,kind.value);if(errors.length){status.textContent='Impression bloquée : '+errors.join(' · ');return;}const popup=window.open('','_blank');if(!popup){status.textContent='Autorisez l’ouverture de la fenêtre d’impression puis réessayez.';return;}popup.opener=null;popup.document.write(renderRental(data,kind.value));popup.document.close();popup.focus();popup.print();}
-  dialog.querySelector('#rentalPrint').onclick=print;dialog.querySelector('#rentalPDF').onclick=print;
+  dialog.querySelector('#rentalPrint').onclick=print;
+  const pdfButton=dialog.querySelector('#rentalPDF');pdfButton.onclick=async()=>{
+    update();if(!form.reportValidity())return;const errors=validateRental(data,kind.value);if(errors.length){status.textContent='Export bloqué : '+errors.join(' · ');return;}
+    pdfButton.disabled=true;
+    try{if(!window.PDFLib)throw Error('Bibliothèque PDF indisponible. Rechargez la page ou utilisez Imprimer.');const bytes=await createRentalPDF(pdfBlocks(renderRental(data,kind.value)),window.PDFLib),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),link=document.createElement('a');link.href=url;link.download='myevent-location-'+kind.value+'.pdf';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='PDF préparé. Vérifiez le téléchargement et imprimez deux originaux pour les signatures manuscrites.';}
+    catch(error){status.textContent=error.message;}finally{pdfButton.disabled=false;}
+  };
+  pdfButton.parentElement.nextElementSibling.textContent='Le PDF se télécharge directement. Imprimez deux originaux et signez-les sur papier. Le bouton Imprimer ouvre la fenêtre d’impression de votre navigateur.';
   dialog.querySelector('.dialogClose').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{dialog.remove();},{once:true});
   document.getElementById('myeventMarketplace').append(dialog);update();dialog.showModal();
 }
