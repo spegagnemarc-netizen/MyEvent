@@ -2,11 +2,13 @@
   "scripts": {
     "generate:explorer": "node scripts/generate-explorer-partners.cjs",
     "test:marketplace": "node --test tests/marketplace.test.mjs && node tests/marketplace-rls.mjs",
-    "test:games": "node --test tests/invitation-context.test.mjs tests/game-session.test.mjs && node tests/games-rls.mjs",
-    "preview:games": "node tests/games-preview.mjs"
+    "test:games": "node --test tests/invitation-context.test.mjs tests/game-session.test.mjs tests/additional-games.test.mjs && OREVAMI_TEST_ADDITIONAL_GAMES=1 node tests/games-rls.mjs && OREVAMI_TEST_ADDITIONAL_GAMES=1 node tests/defis-rls.mjs",
+    "preview:games": "node tests/games-preview.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.3.14"
+    "@electric-sql/pglite": "0.3.14",
+    "jsdom": "26.1.0"
   },
   "dependencies": {
     "stripe": "latest"

@@ -1,7 +1,7 @@
 import {PGlite} from '@electric-sql/pglite';
 import {readFile} from 'node:fs/promises';
 export const users=Array.from({length:8},(_,i)=>`${i+1}`.repeat(8)+'-'+`${i+1}`.repeat(4)+'-4'+`${i+1}`.repeat(3)+'-8'+`${i+1}`.repeat(3)+'-'+`${i+1}`.repeat(12));
-export async function setup(){
+export async function setup({additional=process.env.OREVAMI_TEST_ADDITIONAL_GAMES==='1'}={}){
  const db=new PGlite();
  await db.exec(`create role anon; create role authenticated; create role service_role;
  create schema auth; create schema storage;
@@ -20,6 +20,7 @@ export async function setup(){
   await db.query('insert into public.profiles values($1,$2,$3,null)',[users[i],['Marc','Caroline','Lucas','Noélyne','Timéo','Victoire','Camille','Alex'][i],'test'+i]);
  }
  for(const file of ['202609250002_friends_stories.sql','202609270001_friend_invite_links.sql','202609270002_games_engine.sql','202609270003_defis_game.sql']) await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ if(additional)await db.exec(await readFile(new URL('../supabase/migrations/202610130001_additional_games_test.sql',import.meta.url),'utf8'));
  return db;
 }
 export const as=(db,id,sql,params=[],role='authenticated')=>db.transaction(async tx=>{
