@@ -154,7 +154,7 @@ function normalizeFeature(feature, index) {
       '',
 
     source:
-      'OpenStreetMap / Photon'
+      p.source || 'OpenStreetMap / Photon'
   };
 }
 
@@ -322,6 +322,21 @@ function buildPhotonUrl(
 
 
 async function fetchNearbyOverpass(lat,lon,radius){
+  // Use the already configured provider instead of the saturated public instance.
+  if(process.env.GEOAPIFY_API_KEY){
+    const url=new URL('https://api.geoapify.com/v2/places');
+    url.search=new URLSearchParams({apiKey:process.env.GEOAPIFY_API_KEY,categories:'catering,entertainment,leisure,sport,tourism',filter:`circle:${lon},${lat},${Math.round(radius*1000)}`,bias:`proximity:${lon},${lat}`,limit:'150',lang:'fr'}).toString();
+    const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
+    if(!response.ok)throw new Error('Fournisseur de lieux HTTP '+response.status);
+    const data=await response.json();
+    if(!Array.isArray(data.features))throw new Error('Réponse de lieux invalide');
+    return {source:'OpenStreetMap / Geoapify',features:data.features.map(feature=>{
+      const p=feature.properties||{},raw=p.datasource?.raw||{},categories=p.categories||[];
+      const category=categories.find(x=>x.startsWith('catering.'))||categories.find(x=>x.includes('.'))||'tourism.attraction';
+      const kind=raw.amenity||raw.leisure||raw.tourism||category.split('.').slice(-1)[0];
+      return {geometry:feature.geometry,properties:{...p,source:'OpenStreetMap / Geoapify',osm_id:p.place_id,osm_key:raw.amenity?'amenity':raw.leisure?'leisure':'tourism',osm_value:kind,extra:raw}};
+    })};
+  }
   const meters=Math.round(radius*1000);
   const clauses=[
     'nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|cinema|theatre|arts_centre|bowling_alley|community_centre)$"]',
@@ -940,7 +955,7 @@ module.exports =
             : null,
 
         source:
-          mode === 'nearby' ? 'OpenStreetMap / Overpass via ORÉVAMI API' : 'OpenStreetMap / Photon via ORÉVAMI API'
+          mode === 'nearby' ? (data.source || 'OpenStreetMap / Overpass via ORÉVAMI API') : 'OpenStreetMap / Photon via ORÉVAMI API'
       }
     );
   };

@@ -14,6 +14,7 @@ function v58SearchAccommodation(){
     state.status.hidden=false;
     state.status.textContent='Le widget '+state.name+' n’a pas pu charger. Vérifie ta connexion ou ton bloqueur de contenu, puis réessaie. Les autres partenaires et l’ajout manuel restent disponibles.';
     state.retry.hidden=false;
+    if(state.fallback)state.fallback.hidden=false;
   }
   function fail(){scriptFailed=true;states.forEach(failed);}
   window.MyEventAccommodationWidget={fail};
@@ -33,6 +34,12 @@ function v58SearchAccommodation(){
       const widget=slot.querySelector('.eg-widget');
       const state={widget,name:slot.dataset.partner,status:slot.querySelector('.myeventEgStatus'),retry:slot.querySelector('.myeventEgRetry'),ready:false};
       states.set(widget,state);
+      if(state.name==='Hotels.com'){
+        const link=document.createElement('a');
+        link.href='https://fr.hotels.com/';link.target='_blank';link.rel='noopener noreferrer';
+        link.textContent='Continuer sur Hotels.com';link.hidden=true;
+        state.retry.insertAdjacentElement('afterend',link);state.fallback=link;
+      }
       state.retry.addEventListener('click',()=>window.location.reload());
       function labelFrame(){const frame=widget.querySelector('iframe');if(frame)frame.title='Recherche '+state.name+' France';}
       new MutationObserver(labelFrame).observe(widget,{childList:true});labelFrame();
@@ -45,6 +52,7 @@ function v58SearchAccommodation(){
         const frame=state.widget.querySelector('iframe');
         if(!frame||event.source!==frame.contentWindow||event.data.meta?.instance!==state.widget.getAttribute('data-instance'))return;
         state.ready=true;clearTimeout(state.timer);state.status.hidden=true;state.retry.hidden=true;
+        if(state.fallback)state.fallback.hidden=true;
       });
     });
   }
