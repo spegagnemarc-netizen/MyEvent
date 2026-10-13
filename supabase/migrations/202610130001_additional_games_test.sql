@@ -14,6 +14,8 @@ create table game_private.activity_answers (
  answer text not null, correct boolean not null, attempts int not null default 1,
  primary key(room_id,round_no,user_id)
 );
+alter table game_private.activities enable row level security;
+alter table game_private.activity_answers enable row level security;
 revoke all on game_private.activities,game_private.activity_answers from public,anon,authenticated;
 
 create function public.activity_create(options jsonb default '{}',target_event uuid default null) returns uuid

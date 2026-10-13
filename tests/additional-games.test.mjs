@@ -142,3 +142,25 @@ test('real GameSession → authenticated PostgreSQL RPC → two rendered Quiz cl
   assert.ok(a.document.body.textContent.includes('Classement'));assert.ok(b.document.body.textContent.includes('Classement'));
  }finally{for(const dom of windows){dom.window.OrevamiExtraGames?.stop();dom.window.close();}await db.close();}
 });
+
+test('event games reject pending/inactive members using the actual TEST membership schema',async()=>{
+ const db=await init();try{
+ await db.exec("alter table public.event_members add column status text default 'confirmed'");
+ await db.exec(await readFile(new URL('../supabase/migrations/202610130002_games_event_membership_test.sql',import.meta.url),'utf8'));
+ const event='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ await db.query('insert into public.events values($1,$2)',[event,users[0]]);
+ await db.query("insert into public.event_members(event_id,user_id,status) values($1,$2,'pending'),($1,$3,'inactive'),($1,$4,'active')",[event,users[1],users[2],users[3]]);
+ const rid=await rpc(db,users[0],'activity_create',{options:{game_key:'quiz'},target_event:event});
+ const code=(await snapshot(db,users[0],rid)).room.code;
+ for(const user of [users[1],users[2]]){
+  await assert.rejects(()=>rpc(db,user,'activity_create',{options:{game_key:'quiz'},target_event:event}),/inaccessible/);
+  await assert.rejects(()=>rpc(db,user,'activity_join',{invitation_code:code}),/participants/);
+  await assert.rejects(()=>act(db,users[0],rid,'invite',{target:user}),/non autorisée/);
+ }
+ await act(db,users[0],rid,'invite',{target:users[3]});
+ await rpc(db,users[3],'activity_join',{invitation_code:code});
+ assert.equal((await snapshot(db,users[3],rid)).players.length,2);
+ await db.query("update public.event_members set status='inactive' where event_id=$1 and user_id=$2",[event,users[3]]);
+ await assert.rejects(()=>snapshot(db,users[3],rid),/inaccessible/);
+ }finally{await db.close();}
+});
