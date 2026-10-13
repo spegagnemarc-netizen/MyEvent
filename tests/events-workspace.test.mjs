@@ -53,11 +53,11 @@ test('Ten existing tools remain in six/four pages with participants and secondar
  const pages=[...w.document.querySelectorAll('.ewToolsPage')];
  assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,4]);
  assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games']);
- assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','supplies','transport','documents']);
+ assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','transport','documents','accommodation','outings','localtravel','hall']);
  assert.equal(w.document.querySelector('#ewParticipants'),null);
  assert(w.document.querySelector('.ewSections [data-tool="members"]'));
  assert(w.document.querySelector('#ewHero [data-tool="members"]'));
- for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport']){
+ for(const key of ['weather','call','polls','media','tasks','aioutings','fund','members','locations','supplies','transport','accommodation','outings','localtravel','hall']){
   await w.myeventEventsWorkspace.openTool(key);
   assert(w.document.querySelector('#ewToolBody .ewPanel'),key+' opens its original panel');
  }
@@ -72,5 +72,5 @@ test('Empty state disables event actions and creation remains available',async()
  dom.window.close();
 });
 test('Visible hall entry opens the original search panel and preserves ten tools',async()=>{
- const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewHallSearchAccess');assert(b);assert(b.textContent.includes('Recherche de salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,10);dom.window.close();
+ const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewSections [data-tool="hall"]');assert(b);assert(b.textContent.includes('Recherche de salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,10);assert.equal(d.querySelector('.ewHallSearchAccess'),null);assert.equal(d.querySelector('.ewSections [data-tool="supplies"]'),null);assert.equal(d.querySelector('.ewExtras [data-tool]'),null);for(const key of ['accommodation','outings','localtravel','hall'])assert.equal(d.querySelectorAll('.ewLanding [data-tool="'+key+'"]').length,1);await w.myeventEventsWorkspace.openTool('tasks');d.querySelector('.ewTaskActions button').click();assert.equal(d.querySelector('[data-panel="supplies"]').parentElement.id,'ewToolBody');dom.window.close();
 });
