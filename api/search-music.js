@@ -30,7 +30,7 @@ async function generatePlaylist(req,res){
     : mode==='regenerate'
       ? `Remplace ${count} morceaux non verrouillés. Les morceaux verrouillés restent en place.`
       : `Propose une playlist de ${count} morceaux.`;
-  const prompt=`Tu es MyEvent Music IA. Tu prépares une playlist, mais tu ne fournis jamais de fichier audio et tu ne prétends pas qu'un morceau est disponible. Les résultats seront ensuite vérifiés dans le fournisseur musical réel.
+  const prompt=`Tu es ORÉVAMI Music IA. Tu prépares une playlist, mais tu ne fournis jamais de fichier audio et tu ne prétends pas qu'un morceau est disponible. Les résultats seront ensuite vérifiés dans le fournisseur musical réel.
 
 Demande utilisateur : ${request || 'Refaire la playlist en conservant les titres verrouillés.'}
 Action : ${instruction}

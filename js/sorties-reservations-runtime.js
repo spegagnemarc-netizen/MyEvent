@@ -672,13 +672,13 @@ async function saveEventReservation(outingId,prefix){
   currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
   document.getElementById(prefix+'ReservationForm')?.remove();
   refreshReservationBoxes();
-  msg('outingMsg','📅 Demande enregistrée dans MyEvent. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
+  msg('outingMsg','📅 Demande enregistrée dans ORÉVAMI. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
 }
 function reservationStatusLabel(r){
   if(!r)return 'Aucune réservation enregistrée.';
   const d=r.reserved_at?new Date(r.reserved_at):null;
   const when=d&&!Number.isNaN(d.getTime())?d.toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'';
-  const status=r.status==='confirmed'?'validée dans MyEvent':r.status==='cancelled'?'annulée':'à valider dans MyEvent';
+  const status=r.status==='confirmed'?'validée dans ORÉVAMI':r.status==='cancelled'?'annulée':'à valider dans ORÉVAMI';
   return '📅 Suivi <b>'+status+'</b>'+(when?' · '+esc(when):'')+' · '+esc(String(r.party_size||1))+' pers.';
 }
 function reservationBoxHtml(prefix){
@@ -898,7 +898,7 @@ loadSelectedOuting=async function(){
       saveLocalReservationSnapshot(currentReservation);
       document.getElementById(prefix+'ReservationForm')?.remove();
       await refreshReservationBoxes();
-      msg('outingMsg','📅 Demande enregistrée dans MyEvent. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
+      msg('outingMsg','📅 Demande enregistrée dans ORÉVAMI. La réservation chez le prestataire reste à effectuer ou à vérifier.','ok');
     }catch(err){
       console.error(err);
       alert('Erreur pendant l’enregistrement : '+(err?.message||err));
@@ -927,7 +927,7 @@ loadSelectedOuting=async function(){
   function isOrganizer(){ return !!(event && user && (event.creator_id === user.id || activeEventRole === 'coorganizer')); }
   async function confirmEventReservation(){
     if(!event)return;
-    if(!isOrganizer()){ alert('Seul un organisateur peut valider ce suivi dans MyEvent.'); return; }
+    if(!isOrganizer()){ alert('Seul un organisateur peut valider ce suivi dans ORÉVAMI.'); return; }
     // V54.24 : relecture obligatoire juste avant confirmation pour éviter
     // qu'un bloc Planning affiche une réservation devenue obsolète.
     try{
@@ -967,12 +967,12 @@ loadSelectedOuting=async function(){
     if(r.error){
       console.error('confirm_event_reservation',r.error);
       await refreshReservationBoxes();
-      alert('Impossible de valider le suivi dans MyEvent : '+r.error.message);
+      alert('Impossible de valider le suivi dans ORÉVAMI : '+r.error.message);
       return;
     }
     currentReservation=Array.isArray(r.data)?(r.data[0]||null):r.data;
     await refreshReservationBoxes();
-    msg('outingMsg','✅ Suivi validé dans MyEvent. Vérifie la confirmation réelle auprès du prestataire.','ok');
+    msg('outingMsg','✅ Suivi validé dans ORÉVAMI. Vérifie la confirmation réelle auprès du prestataire.','ok');
   }
   window.confirmEventReservationV536=confirmEventReservation;
   const oldReservationBoxHtmlV536=reservationBoxHtml;
@@ -982,7 +982,7 @@ loadSelectedOuting=async function(){
     const confirmed=currentReservation.status==='confirmed';
     const cls=cancelled?'cancelled':confirmed?'confirmed':'pending';
     const confirmBtn=(!cancelled&&!confirmed&&isOrganizer())
-      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Valider dans MyEvent</button>' : '';
+      ? '<button type="button" class="secondary reservationConfirmBtn" id="'+prefix+'ReservationConfirm">✅ Valider dans ORÉVAMI</button>' : '';
     return '<div class="reservationBox"><div class="reservationTitle">📅 Réservation</div>'+
       '<div class="reservationStatus '+cls+'">'+reservationStatusLabel(currentReservation)+'</div>'+
       confirmBtn+
@@ -1036,7 +1036,7 @@ function ensureAiPlanEditorModal(){
   wrap.addEventListener('click',e=>{if(e.target===wrap)closeAiPlanEditor();});
 }
 window.__myeventOpenAiPlanEditor=function(){
-  try{ openAiPlanEditor(); }catch(e){ console.error('[MyEvent V54.6] openAiPlanEditor:',e); alert('Impossible d’ouvrir la modification du planning : '+(e.message||String(e))); }
+  try{ openAiPlanEditor(); }catch(e){ console.error('[ORÉVAMI V54.6] openAiPlanEditor:',e); alert('Impossible d’ouvrir la modification du planning : '+(e.message||String(e))); }
 };
 function openAiPlanEditor(){
   ensureAiPlanEditorModal();
@@ -1052,11 +1052,11 @@ function openAiPlanEditor(){
     return '<div class="aiPlanOption" style="margin-top:10px">'+
       '<div class="aiPlanOptionTitle">'+step+'. '+esc(item.name||'Étape')+'</div>'+
       '<div class="aiPlanGrid" style="margin-top:8px">'+
-      '<label>Nom<input id="aiEditName'+step+'" value="'+escAttr(item.name||'')+'"></label>'+ 
-      '<label>Type<select id="aiEditType'+step+'"><option value="activity" '+(type==='activity'?'selected':'')+'>🎯 Activité</option><option value="restaurant" '+(type==='restaurant'?'selected':'')+'>🍽️ Restaurant</option><option value="culture" '+(type==='culture'?'selected':'')+'>🏛️ Culture</option><option value="nature" '+(type==='nature'?'selected':'')+'>🌳 Nature</option></select></label>'+ 
-      '<label>Heure<input id="aiEditTime'+step+'" type="time" value="'+escAttr(String(item.start_time||'').slice(0,5))+'"></label>'+ 
-      '<label>Durée (min)<input id="aiEditDuration'+step+'" type="number" min="0" step="5" value="'+escAttr(item.duration_minutes!=null?String(item.duration_minutes):'')+'"></label>'+ 
-      '<label class="aiPlanFull">Adresse<input id="aiEditAddress'+step+'" value="'+escAttr(item.address||'')+'"></label>'+ 
+      '<label>Nom<input id="aiEditName'+step+'" value="'+escAttr(item.name||'')+'"></label>'+
+      '<label>Type<select id="aiEditType'+step+'"><option value="activity" '+(type==='activity'?'selected':'')+'>🎯 Activité</option><option value="restaurant" '+(type==='restaurant'?'selected':'')+'>🍽️ Restaurant</option><option value="culture" '+(type==='culture'?'selected':'')+'>🏛️ Culture</option><option value="nature" '+(type==='nature'?'selected':'')+'>🌳 Nature</option></select></label>'+
+      '<label>Heure<input id="aiEditTime'+step+'" type="time" value="'+escAttr(String(item.start_time||'').slice(0,5))+'"></label>'+
+      '<label>Durée (min)<input id="aiEditDuration'+step+'" type="number" min="0" step="5" value="'+escAttr(item.duration_minutes!=null?String(item.duration_minutes):'')+'"></label>'+
+      '<label class="aiPlanFull">Adresse<input id="aiEditAddress'+step+'" value="'+escAttr(item.address||'')+'"></label>'+
       '</div></div>';
   }).join('');
   $('aiPlanEditorStatus').textContent='';
@@ -1585,7 +1585,7 @@ async function loadAiOutingPlan(){
 
   }catch(e){
     if(loadToken!==aiPlanLoadToken)return;
-    console.error('[MyEvent V53.25] loadAiOutingPlan:',e);
+    console.error('[ORÉVAMI V53.25] loadAiOutingPlan:',e);
     box.innerHTML=
       '<div class="planningEmpty">⚠️ Impossible de charger le planning IA : '+
       esc(e.message||String(e))+

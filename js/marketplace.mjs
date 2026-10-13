@@ -24,7 +24,7 @@ const button=(text,className,action)=>{const node=el('button',className,text);no
 $('marketThemeToggle')?.addEventListener('click',()=>applyTheme(root.dataset.theme==='dark'?'light':'dark',true));
 function toast(text){$('marketToast').textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('marketToast').textContent='',5000);}
 function errorMessage(error){
-  if(['42P01','PGRST205','PGRST202'].includes(error?.code)||/bucket not found/i.test(error?.message||''))return 'La marketplace doit encore être activée par l’équipe MyEvent. Réessayez après son activation.';
+  if(['42P01','PGRST205','PGRST202'].includes(error?.code)||/bucket not found/i.test(error?.message||''))return 'La marketplace doit encore être activée par l’équipe ORÉVAMI. Réessayez après son activation.';
   if(error?.code==='42501')return 'Cette action n’est pas autorisée pour votre compte.';
   if(/fetch|network/i.test(error?.message||''))return 'Connexion interrompue. Vérifiez votre réseau puis réessayez.';
   return error?.message||'Une erreur est survenue. Réessayez.';
@@ -61,7 +61,7 @@ async function load(){
     if(revision!==generation)return;
     items=rows;favorites=new Set(saved.map(f=>f.listing_id));photos=new Map(urls.filter(p=>p.signedUrl).map(p=>[p.path,p.signedUrl]));
     // Sector is searched as free text and converted to coordinates.
-    status('Entre membres MyEvent · Vente et location · Contact direct, sans paiement en ligne');render();
+    status('Entre membres ORÉVAMI · Vente et location · Contact direct, sans paiement en ligne');render();
   }catch(error){if(revision===generation){status(errorMessage(error));empty('Les annonces ne sont pas disponibles');}}
   finally{if(revision===generation)loading=false;}
 }
@@ -74,7 +74,7 @@ function render(){
   root.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===filters.mode)));
   $('favoritesButton').setAttribute('aria-pressed',String(onlyFavorites));$('myListings').setAttribute('aria-pressed',String(own));$('favoriteCount').textContent=favorites.size;
   if(!user){
-    empty('Bienvenue dans la marketplace MyEvent');
+    empty('Bienvenue dans la marketplace ORÉVAMI');
     $('marketEmpty').querySelector('p').textContent='Connectez-vous pour consulter les annonces ou proposer votre matériel.';
     $('marketGrid').append(button('Se connecter','primary',()=>showDialog('authDialog')));return;
   }
@@ -124,7 +124,7 @@ function openDetail(item){
       try{const id=await store.contact(item.id);$('listingDialog').close();await openInbox(id);}catch(e){toast(errorMessage(e));}finally{contact.disabled=false;}
     });host.append(contact);
   }
-  host.append(el('p','detailNotice',item.mode==='rent'?'Contactez le propriétaire pour les dates, la caution éventuelle et la remise du matériel. Aucun créneau n’est réservé et aucun paiement n’est encaissé sur MyEvent.':'Échangez avec le vendeur pour la remise du matériel et le règlement. Aucun paiement n’est encaissé sur MyEvent.'));showDialog('listingDialog');
+  host.append(el('p','detailNotice',item.mode==='rent'?'Contactez le propriétaire pour les dates, la caution éventuelle et la remise du matériel. Aucun créneau n’est réservé et aucun paiement n’est encaissé sur ORÉVAMI.':'Échangez avec le vendeur pour la remise du matériel et le règlement. Aucun paiement n’est encaissé sur ORÉVAMI.'));showDialog('listingDialog');
 }
 function openForm(item=null){
   if(!requireUser())return;editing=item;$('draftForm').reset();$('draftStatus').textContent='';$('draftTitle').textContent=item?'Modifier mon annonce':'Déposer une annonce';
@@ -254,7 +254,7 @@ function signedOut(){
   window.myeventThemeSetUser?.(null);
   generation++;threadRevision++;clearTimeout(messageTimer);user=null;items=[];photos.clear();favorites.clear();thread=null;editing=null;pendingMessage=null;onlyFavorites=own=false;
   for(const dialog of root.querySelectorAll('dialog[open]'))dialog.close();$('messageList').replaceChildren();$('threadList').replaceChildren();$('conversation').hidden=true;$('draftForm').reset();render();
-  status('Connectez-vous à votre compte MyEvent pour accéder aux annonces.');
+  status('Connectez-vous à votre compte ORÉVAMI pour accéder aux annonces.');
 }
 try{
   if(!window.supabase)throw new Error('Le service de connexion n’a pas pu être chargé. Rechargez la page.');

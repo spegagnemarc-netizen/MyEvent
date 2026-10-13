@@ -338,7 +338,7 @@ module.exports = async function handler(req, res) {
       wanted === 'plane'
     ) {
       warnings.push(
-        'ℹ️ La recherche de vols sera bientôt disponible dans MyEvent.'
+        'ℹ️ La recherche de vols sera bientôt disponible dans ORÉVAMI.'
       );
     }
 
@@ -496,7 +496,7 @@ module.exports = async function handler(req, res) {
       });
 
       warnings.push(
-        'ℹ️ Taxi / VTC : MyEvent ouvre actuellement Uber. Les tarifs et disponibilités en temps réel seront intégrés avec un accès partenaire/API approprié.'
+        'ℹ️ Taxi / VTC : ORÉVAMI ouvre actuellement Uber. Les tarifs et disponibilités en temps réel seront intégrés avec un accès partenaire/API approprié.'
       );
     }
 

@@ -16,7 +16,7 @@ function ensureDiscussionPortalShell(){
   if(discussionPortalShell) return discussionPortalShell;
   const panel=document.getElementById('discussionPanel');
   if(!panel) return null;
-  discussionPortalPlaceholder=document.createComment('MyEvent discussion portal');
+  discussionPortalPlaceholder=document.createComment('ORÉVAMI discussion portal');
   discussionPortalHome=panel.parentNode;
   if(discussionPortalHome) discussionPortalHome.insertBefore(discussionPortalPlaceholder,panel);
 
@@ -1189,7 +1189,7 @@ async function shareInvite(){
   const link=location.origin+location.pathname+'?join='+encodeURIComponent(event.invite_code);
   try{
     if(navigator.share){
-      await navigator.share({title:'Rejoins mon événement MyEvent',text:'Rejoins mon événement sur MyEvent',url:link});
+      await navigator.share({title:'Rejoins mon événement ORÉVAMI',text:'Rejoins mon événement sur ORÉVAMI',url:link});
     }else await copyInvite();
   }catch(e){ if(e?.name!=='AbortError') msg('inviteMsg',e.message||String(e),'err'); }
 }
@@ -2183,7 +2183,7 @@ async function loadMessages(){
     if(item.kind==='message' && typeof m.content==='string' && /^\[\[MYEVENT_(TRANSPORT|ACCOMMODATION)\]\]/.test(m.content)){
       try{const record=JSON.parse(m.content.slice(m.content.indexOf(']]')+2));if(record.link_import){return '<div class="messageRow"><div class="messageBody">'+esc(record.name||'Réservation ajoutée')+' · '+esc(window.MyEventReservationLink?.statusLabel(record,record.checkin?'accommodation':'transport')||'Ajout au planning')+'</div></div>';}}catch(_){}
     }
-    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){ 
+    if(item.kind==='message' && typeof m.content==='string' && m.content.startsWith('[[MYEVENT_ATTACHMENT]]')){
       let a=null; try{a=JSON.parse(m.content.slice('[[MYEVENT_ATTACHMENT]]'.length));}catch{}
       if(!a?.path)return '';
       const sx=await sb.storage.from('event-media').createSignedUrl(a.path,3600);
@@ -2222,7 +2222,7 @@ async function loadMessages(){
     const reactionHtml='<div class="messageReactions">'+summary+
       '<div class="reactionPicker hidden" data-picker="'+m.id+'">'+
         '<div class="reactionQuick">'+quick+'<button type="button" class="reactionMore" data-more="'+m.id+'" aria-label="Plus de réactions">•••</button></div>'+
-        '<div class="reactionFull hidden" data-full="'+m.id+'">'+full+'</div>'+ 
+        '<div class="reactionFull hidden" data-full="'+m.id+'">'+full+'</div>'+
       '</div></div>';
     return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
       avatarHtml(av,'messageAvatar')+
@@ -2820,7 +2820,7 @@ window.myeventPublishCameraPost=async function(dataUrl){
   const path=user.id+'/'+crypto.randomUUID()+'-feed.jpg';
   const up=await sb.storage.from('social-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
   if(up.error)throw up.error;
-  const ins=await sb.from('social_posts').insert({user_id:user.id,media_path:path,media_type:'image',content:'📸 Nouveau moment partagé sur MyEvent.'}).select('id,user_id,media_path,media_type,content,created_at').single();
+  const ins=await sb.from('social_posts').insert({user_id:user.id,media_path:path,media_type:'image',content:'📸 Nouveau moment partagé sur ORÉVAMI.'}).select('id,user_id,media_path,media_type,content,created_at').single();
   if(ins.error){await sb.storage.from('social-media').remove([path]);throw ins.error;}
   return ins.data;
 };
@@ -2973,15 +2973,15 @@ async function loadPolls(){
         '<button type="button" class="secondary voteBtn'+selected+'" data-poll="'+p.id+'" data-option="'+o.id+'">'+
         (mine.includes(o.id)?'✓ ':'')+esc(o.option_text)+
         '<span class="pollCount">'+count+' vote'+(count>1?'s':'')+' · '+pct+'%</span>'+
-        '</button>'+ 
-        '<div class="pollBar"><div class="pollBarFill" style="width:'+pct+'%"></div></div>'+ 
+        '</button>'+
+        '<div class="pollBar"><div class="pollBarFill" style="width:'+pct+'%"></div></div>'+
         '</div>';
     }).join('');
     const mode=p.allow_multiple?'Plusieurs réponses possibles':'Une seule réponse';
     return '<div class="card" data-poll-card data-allow-multiple="'+(p.allow_multiple?'true':'false')+'" data-poll-question="'+esc(p.question)+'">'+
-      '<b>'+esc(p.question)+'</b>'+ 
+      '<b>'+esc(p.question)+'</b>'+
       '<p class="muted">'+mode+' · '+voterCount+' participant'+(voterCount>1?'s':'')+' · '+totalVotes+' vote'+(totalVotes>1?'s':'')+'</p>'+options+
-      '<button type="button" class="secondary pollAnalyzeBtn" data-analyze-poll="'+p.id+'">✨ Analyser les résultats</button>'+ 
+      '<button type="button" class="secondary pollAnalyzeBtn" data-analyze-poll="'+p.id+'">✨ Analyser les résultats</button>'+
       '<div class="pollAiBox hidden" id="pollAi-'+p.id+'"></div></div>';
   }).join('');
 
@@ -3621,7 +3621,7 @@ $('shareEventFeedBtn')?.addEventListener('click',async()=>{
     const result=await sb.from('event_feed_posts').insert({author_id:user.id,event_id:event.id,body:''});
     if(result.error)throw result.error;
     await window.myeventRefreshSocialFeed?.();
-    global('Événement partagé dans le fil MyEvent.','ok');
+    global('Événement partagé dans le fil ORÉVAMI.','ok');
   }catch(e){global('Partage impossible : '+(e.message||String(e)),'err')}
   finally{button.disabled=false}
 });

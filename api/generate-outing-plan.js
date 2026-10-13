@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       );
 
     const prompt = `
-Tu es l'organisateur IA de MyEvent.
+Tu es l'organisateur IA de ORÉVAMI.
 
 Construis une sortie complète multi-étapes à partir UNIQUEMENT
 des lieux candidats fournis.

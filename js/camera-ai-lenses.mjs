@@ -65,7 +65,7 @@ export function createAILenses(modal){
       const label=document.createElement('span');label.textContent=lens.label;button.append(icon,label);
       button.addEventListener('click',()=>{selected=lens.id;message='';refresh();});choices.appendChild(button);
     }
-    const note=document.createElement('p');note.textContent='Après la prise : ta photo est envoyée à OpenAI uniquement lorsque tu appuies sur « Transformer ». Chaque transformation utilise le service IA payant de MyEvent.';
+    const note=document.createElement('p');note.textContent='Après la prise : ta photo est envoyée à OpenAI uniquement lorsque tu appuies sur « Transformer ». Chaque transformation utilise le service IA payant de ORÉVAMI.';
     const status=document.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
     const actions=document.createElement('div');actions.className='cameraPanelChoices';
     const generateButton=document.createElement('button');generateButton.type='button';generateButton.dataset.aiGenerate='';generateButton.addEventListener('click',generate);

@@ -940,7 +940,7 @@ module.exports =
             : null,
 
         source:
-          mode === 'nearby' ? 'OpenStreetMap / Overpass via MyEvent API' : 'OpenStreetMap / Photon via MyEvent API'
+          mode === 'nearby' ? 'OpenStreetMap / Overpass via ORÉVAMI API' : 'OpenStreetMap / Photon via ORÉVAMI API'
       }
     );
   };

@@ -1,0 +1,15 @@
+/* One official transparent logo; shared existing dimensions. */
+.orevamiBrand{display:inline-flex!important;align-items:center;justify-content:flex-start;vertical-align:middle;width:220px;max-width:100%;line-height:0;flex-shrink:1}
+.orevamiBrand>.orevamiLogo{display:block!important;width:100%!important;height:auto!important;max-height:72px;object-fit:contain!important;object-position:left center;min-width:0}
+/* Defend old cached markup without letting obsolete variants or wordmarks overflow. */
+.orevamiBrand .orevamiSymbol,.orevamiBrand .orevamiName,.orevamiBrand .orevamiLogoLight,.orevamiBrand .orevamiLogoDark{display:none!important}
+#socialHome .socialBrand{display:flex!important;flex-direction:column;align-items:flex-start!important;gap:4px}
+.meSectionBrand{align-items:center}
+.meSectionHeader .meSectionTitleRow>h1,#eventsWorkspace .meSectionHeader h1,#socialHome .orevamiSectionTitle,#myeventMarketplace .brand>small{font-family:Inter,system-ui,sans-serif!important;font-size:12.5px!important;font-weight:750!important;line-height:1.5!important;letter-spacing:2.1px!important;text-transform:uppercase;margin:0!important;color:#fff!important;text-shadow:0 1px 2px #0009}
+#socialBottomNav #socialBottomCreate{border:3px solid white!important;background:#1119!important;box-shadow:0 0 0 4px #ff672b55,0 0 23px #ff5e2b9c!important;display:grid!important;place-items:center!important}
+#socialBottomNav #socialBottomCreate .orevamiNavSymbol{display:block;width:calc(100% - 8px)!important;height:calc(100% - 8px)!important;border:2px solid #ff9b65;border-radius:50%;background:#101015;box-sizing:border-box;overflow:hidden}
+#socialBottomNav #socialBottomCreate .orevamiNavSymbol img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;border-radius:50%;opacity:1!important;mix-blend-mode:normal!important;filter:none!important}
+@media(max-width:400px){.orevamiBrand{width:155px}.orevamiBrand>.orevamiLogo{max-height:55px}}
+
+/* Outrank the existing neutral navigation ring without changing visibility or geometry. */
+#socialHome #socialBottomNav #socialBottomCreate{border:3px solid white!important;background:#1119!important;box-shadow:0 0 0 4px #ff672b55,0 0 23px #ff5e2b9c!important}

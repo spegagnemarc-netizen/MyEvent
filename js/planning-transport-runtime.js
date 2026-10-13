@@ -209,12 +209,12 @@ async function renderEventAccommodation(box,eventObj){
       '<label>Départ — date et heure<input type="datetime-local" id="eventAccommodationCheckout"></label>'+
       '<label>Participants<input id="eventAccommodationPeople" placeholder="Ex. 10 personnes"></label>'+
       '<label>Chambres / logements<input id="eventAccommodationRooms" placeholder="Ex. 4 chambres"></label>'+
-      '<label>Capacité par logement<input type="number" min="1" step="1" id="eventAccommodationCapacity" inputmode="numeric" placeholder="2"></label>'+ 
-      '<label>Prix / nuit (€)<input type="number" min="0" step="0.01" id="eventAccommodationNightPrice" inputmode="decimal" placeholder="0"></label>'+ 
-      '<label>Coût total (€)<input type="number" min="0" step="0.01" id="eventAccommodationTotalCost" inputmode="decimal" placeholder="0"></label>'+ 
-      '<label>Réservation / référence<input id="eventAccommodationBooking" placeholder="Ex. Booking ABC123 ou lien de réservation"></label>'+ 
-      '<label>Note<textarea id="eventAccommodationNote" rows="2" placeholder="Ex. petit-déjeuner, arrivée tardive, répartition des chambres…"></textarea></label>'+ 
-      '<div class="inlineEventAccommodationActions"><button type="button" class="secondary" id="eventAccommodationSaveBtn">💾 Ajouter au planning</button><button type="button" class="secondary" id="eventAccommodationCancelBtn">Annuler</button></div>'+ 
+      '<label>Capacité par logement<input type="number" min="1" step="1" id="eventAccommodationCapacity" inputmode="numeric" placeholder="2"></label>'+
+      '<label>Prix / nuit (€)<input type="number" min="0" step="0.01" id="eventAccommodationNightPrice" inputmode="decimal" placeholder="0"></label>'+
+      '<label>Coût total (€)<input type="number" min="0" step="0.01" id="eventAccommodationTotalCost" inputmode="decimal" placeholder="0"></label>'+
+      '<label>Réservation / référence<input id="eventAccommodationBooking" placeholder="Ex. Booking ABC123 ou lien de réservation"></label>'+
+      '<label>Note<textarea id="eventAccommodationNote" rows="2" placeholder="Ex. petit-déjeuner, arrivée tardive, répartition des chambres…"></textarea></label>'+
+      '<div class="inlineEventAccommodationActions"><button type="button" class="secondary" id="eventAccommodationSaveBtn">💾 Ajouter au planning</button><button type="button" class="secondary" id="eventAccommodationCancelBtn">Annuler</button></div>'+
     '</div>';
   box.appendChild(wrap);
   const list=wrap.querySelector('#eventAccommodationList');
@@ -573,7 +573,7 @@ function v58RenderAvailabilityCards(container, results, warnings, kind){
   const hasExternal=results.some(r=>r.external_only);
   const hasSncf=results.some(r=>r.kind==='train');
   if(hasSncf) html+='<div class="m58AvailabilityWarnings">ℹ️ Les horaires train viennent de l’API horaire SNCF. Ils ne correspondent pas forcément aux offres commerciales affichées par SNCF Connect.</div>';
-  if(hasExternal) html+='<div class="m58AvailabilityWarnings">🔗 Pour les services partenaires (BlaBlaCar, BlaBlaCar Bus, Taxi/VTC), MyEvent ouvre actuellement la recherche officielle. L’accès aux offres intégrées directement dans MyEvent dépend encore des accès partenaires/API.</div>';
+  if(hasExternal) html+='<div class="m58AvailabilityWarnings">🔗 Pour les services partenaires (BlaBlaCar, BlaBlaCar Bus, Taxi/VTC), ORÉVAMI ouvre actuellement la recherche officielle. L’accès aux offres intégrées directement dans ORÉVAMI dépend encore des accès partenaires/API.</div>';
   html+='<div class="m58AvailabilityCount">'+results.length+' option(s) proposée(s)</div><div class="m58AvailabilityResults">';
   results.forEach((r,i)=>{
     const title=r.kind==='hotel'?(r.name||'Hôtel'):(r.title||'Trajet');

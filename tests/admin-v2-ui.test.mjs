@@ -3,7 +3,7 @@ const {JSDOM}=createRequire(import.meta.url)('jsdom');
 import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-const section=html.match(/<section id="myeventAdminPanel"[\s\S]*?<\/section>/)?.[0];assert.ok(section);
+const sourceDom=new JSDOM(html);const section=sourceDom.window.document.getElementById('myeventAdminPanel')?.outerHTML;sourceDom.window.close();assert.ok(section);
 const dom=new JSDOM('<!doctype html><html><body><div id="profileSettingsCard"><button id="myeventAdminEntry" hidden></button></div>'+section+'</body></html>',{runScripts:'outside-only',url:'https://preview.example.test/'});
 const {window}=dom;const doc=window.document;window.HTMLElement.prototype.scrollIntoView=function(){};
 const wait=ms=>new Promise(r=>setTimeout(r,ms));const click=selector=>doc.querySelector(selector).click();
@@ -27,6 +27,7 @@ assert.match(doc.getElementById('myeventAdminGate').textContent,/verrouillées/)
 for(const tab of ['content','users','events','marketplace','partners','settings']){click('[data-admin-tab='+tab+']');await wait(20);assert.equal(doc.querySelector('[data-admin-tab='+tab+']').getAttribute('aria-current'),'page');assert.equal(doc.querySelector('[data-admin-view='+tab+']').hidden,false);}
 assert.equal(doc.querySelectorAll('#myeventAdminAudit .adminCard').length,1);
 click('[data-admin-tab=users]');await wait(20);
+const detail=doc.getElementById('myeventAdminUserDetail');detail.hidden=false;click('#myeventAdminUserDetailClose');assert.equal(detail.hidden,true);
 const search=doc.querySelector('[data-admin-search=users]');search.value='Compte B';search.dispatchEvent(new window.Event('input'));await wait(290);assert.ok(calls.some(c=>c.name==='myevent_admin_list'&&c.args.p_query==='Compte B'));
 confirm=false;let count=calls.filter(c=>c.name==='myevent_admin_action').length;click('#myeventAdminUsers .adminDanger');await wait(20);assert.equal(calls.filter(c=>c.name==='myevent_admin_action').length,count);
 confirm=true;actionResolve=true;click('#myeventAdminUsers .adminDanger');await wait(20);assert.equal(doc.querySelector('#myeventAdminUsers .adminDanger').disabled,true);

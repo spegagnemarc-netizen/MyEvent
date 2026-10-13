@@ -130,7 +130,7 @@ function renderUsers(rows,target){
   if(user.avatar&&/^https:\/\//.test(user.avatar)){const img=document.createElement('img');img.src=user.avatar;img.alt='';img.className='adminAvatar';card.append(img);}
   else if(user.avatar&&user.avatar.length<12)card.append(item('span',user.avatar,'adminAvatar adminAvatarText'));
   const managed=user.managed_suspension===true;
-  card.append(item('h4',user.display_name||user.username||'Compte MyEvent'),item('p','@'+(user.username||'—')+' · '+user.id),item('small','Inscrit le '+stamp(user.created_at)+' · '+(user.suspended?(managed?'Suspendu par MyEvent':'Bannissement externe protégé'):'Actif')+(user.is_admin?' · Administrateur':'')));
+  card.append(item('h4',user.display_name||user.username||'Compte ORÉVAMI'),item('p','@'+(user.username||'—')+' · '+user.id),item('small','Inscrit le '+stamp(user.created_at)+' · '+(user.suspended?(managed?'Suspendu par ORÉVAMI':'Bannissement externe protégé'):'Actif')+(user.is_admin?' · Administrateur':'')));
   const actions=item('div',null,'adminActions');
   actions.append(actionButton('Voir la fiche',()=>showUserDetail(user.id)));
   if(!user.is_admin&&(!user.suspended||managed))actions.append(actionButton(managed?'Réactiver':'Suspendre',()=>perform('user',user.id,managed?'reactivate':'suspend','',!managed),!managed));
@@ -147,7 +147,7 @@ async function showUserDetail(userId){
   body.replaceChildren();
   const identity=item('div',null,'adminUserIdentity');
   if(user.avatar&&/^https:\/\//.test(user.avatar)){const img=document.createElement('img');img.src=user.avatar;img.alt='';img.className='adminAvatar';identity.append(img);}
-  identity.append(item('h4',user.display_name||user.username||'Compte MyEvent'),item('p','@'+(user.username||'—')),item('small','UUID · '+user.id));
+  identity.append(item('h4',user.display_name||user.username||'Compte ORÉVAMI'),item('p','@'+(user.username||'—')),item('small','UUID · '+user.id));
   body.append(identity);
   const facts=item('div',null,'adminUserFacts');
   for(const [label,value] of [
@@ -157,7 +157,7 @@ async function showUserDetail(userId){
    ['Dernière action admin',stamp(user.last_admin_action)]
   ]){const row=item('div',null,'adminUserFact');row.append(item('span',label),item('strong',value));facts.append(row);}
   body.append(facts);
-  const note=item('p',user.is_admin?'Ce compte administrateur est protégé contre la suspension depuis MyEvent Admin.':'Les actions sensibles restent confirmées et journalisées.','adminMobileHint');body.append(note);
+  const note=item('p',user.is_admin?'Ce compte administrateur est protégé contre la suspension depuis ORÉVAMI Admin.':'Les actions sensibles restent confirmées et journalisées.','adminMobileHint');body.append(note);
   const actions=item('div',null,'adminActions');
   if(!user.is_admin)actions.append(actionButton(user.suspended?'Réactiver':'Suspendre',()=>perform('user',user.id,user.suspended?'reactivate':'suspend','',!user.suspended),!user.suspended));
   body.append(actions);box.scrollIntoView({behavior:'smooth',block:'start'});notify('Fiche utilisateur chargée.');
@@ -167,7 +167,7 @@ function renderReservations(rows,target){
  for(const row of rows){
   const card=item('article',null,'adminCard');
   const scope=row.event_id?'Événement':'Personnelle';
-  card.append(item('h4',row.destination||row.provider||'Réservation MyEvent'),
+  card.append(item('h4',row.destination||row.provider||'Réservation ORÉVAMI'),
    item('p',scope+' · '+(row.kind||'—')+' · '+(row.reservation_status==='confirmed'?'Confirmée':'Ajoutée / à vérifier')),
    item('small','Utilisateur : '+(row.owner_name||row.owner_id)+(row.event_name?' · Événement : '+row.event_name:'')+' · '+stamp(row.created_at)));
   if(row.provider)card.append(item('p','Partenaire / source : '+row.provider));
@@ -306,6 +306,5 @@ const profile=$('profileSettingsCard');
 if(profile)new MutationObserver(()=>{if(profile.classList.contains('profileSettingsVisible'))check();}).observe(profile,{attributes:true,attributeFilter:['class']});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check();});
 window.addEventListener('pageshow',()=>check());
-})();
-
 $('myeventAdminUserDetailClose')?.addEventListener('click',()=>{const box=$('myeventAdminUserDetail');if(box)box.hidden=true;});
+})();

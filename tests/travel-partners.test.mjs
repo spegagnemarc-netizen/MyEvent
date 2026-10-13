@@ -27,12 +27,16 @@ test('per-widget failure and authenticated recovery do not change another partne
  assert.equal(d.querySelector('#m58AccommodationExpediaSlot .myeventEgStatus').hidden,false);assert.equal(d.querySelectorAll('.myeventEgRetry:not([hidden])').length,3);dom.window.close();
 });
 test('existing Transport and Omio, manual accommodation and other scripts remain unchanged',()=>{
- const base=execFileSync('git',['show','d876c6581c0d40d10ec697191916c91395a99b1a:index.html'],{encoding:'utf8'});
+ const base=execFileSync('git',['show','04a46ed9366c7a68bbfb21d3ed6391ca28bb6eaf:index.html'],{encoding:'utf8'});
  const oldDom=new JSDOM(base),newDom=new JSDOM(html);
  for(const id of ['myeventOmioSection','m58TransportForm','m58TransportSearchBox','m58AccommodationForm'])assert.equal(newDom.window.document.getElementById(id).outerHTML,oldDom.window.document.getElementById(id).outerHTML,id);
- assert.equal(execFileSync('git',['diff','dd0d50241a4ec05ea760c92e153cde012af71c0d','--','server','lib','supabase','vercel.json',':(exclude)supabase/migrations/202610050001_personal_reservations.sql',':(exclude)supabase/migrations/202610050002_admin_v3_dashboard_reservations.sql',':(exclude)supabase/admin/production-readiness-v3.sql'],{encoding:'utf8'}),'');
- const searchBase=execFileSync('git',['show','dd0d50241a4ec05ea760c92e153cde012af71c0d:api/search-places.js'],{encoding:'utf8'});
+ // Compare all protected provider/data/config files against the actual production baseline.
+ // Only public brand wording is allowed to differ; logic, identifiers and schema must match.
+ const baseline='04a46ed9366c7a68bbfb21d3ed6391ca28bb6eaf';
+ const protectedFiles=execFileSync('git',['ls-tree','-r','--name-only',baseline,'server','lib','supabase','vercel.json'],{encoding:'utf8'}).trim().split('\n');
+ for(const file of protectedFiles){const previous=execFileSync('git',['show',baseline+':'+file],{encoding:'utf8'});assert.equal(readFileSync(new URL('../'+file,import.meta.url),'utf8').replaceAll('ORÉVAMI','MyEvent'),previous,file);}
+ const searchBase=execFileSync('git',['show','04a46ed9366c7a68bbfb21d3ed6391ca28bb6eaf:api/search-places.js'],{encoding:'utf8'});
  // Explorer needs explicit accuracy metadata. Existing search/affiliate behavior is unchanged.
- assert.equal(readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8').replace(',locationApproximate:!!location.approximate','').replaceAll('\r\n','\n'),searchBase.replaceAll('\r\n','\n'));
+ assert.equal(readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8').replaceAll('ORÉVAMI','MyEvent').replaceAll('\r\n','\n'),searchBase.replaceAll('\r\n','\n'));
  oldDom.window.close();newDom.window.close();
 });

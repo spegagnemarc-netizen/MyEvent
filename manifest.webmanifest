@@ -1,26 +1,26 @@
 {
   "id": "/",
-  "name": "MyEvent",
-  "short_name": "MyEvent",
-  "description": "Organisez vos événements et partagez vos moments avec MyEvent.",
+  "name": "ORÉVAMI",
+  "short_name": "ORÉVAMI",
+  "description": "Vos sorties prennent vie",
   "lang": "fr",
-  "start_url": "/index.html",
+  "start_url": "/index.html#home",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0c0f18",
-  "theme_color": "#0c0f18",
+  "background_color": "#07131c",
+  "theme_color": "#07131c",
   "icons": [
     {
-      "src": "/icons/myevent-192.png",
+      "src": "/assets/orevami/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icons/myevent-512.png",
+      "src": "/assets/orevami/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

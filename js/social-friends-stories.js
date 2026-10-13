@@ -59,7 +59,7 @@
   }
   const status = text => { if ($('socialFriendStatus')) $('socialFriendStatus').textContent = text; };
   const check = result => { if (result.error) throw result.error; return result.data; };
-  const profileName = p => p?.display_name || p?.username || 'Membre MyEvent';
+  const profileName = p => p?.display_name || p?.username || 'Membre ORÉVAMI';
   let invitation = window.myeventInvitations?.get('friendInvite') || new URL(location.href).searchParams.get('friendInvite');
   function clearInvitation() {
     if (window.myeventInvitations) window.myeventInvitations.clear('friendInvite');
@@ -81,7 +81,7 @@
   async function shareInvitation() {
     const url = $('socialFriendInviteLink').value;
     try {
-      if (navigator.share) await navigator.share({title:'Invitation MyEvent',text:'Accepte mon invitation d’ami sur MyEvent.',url});
+      if (navigator.share) await navigator.share({title:'Invitation ORÉVAMI',text:'Accepte mon invitation d’ami sur ORÉVAMI.',url});
       else if (navigator.clipboard) { await navigator.clipboard.writeText(url); status('Lien d’invitation copié.'); }
       else { $('socialFriendInviteLink').select(); status('Copie ce lien et envoie-le à ton contact.'); }
     } catch (e) { if (e.name !== 'AbortError') status('Partage impossible : ' + e.message); }
@@ -104,7 +104,7 @@
       $('socialFriendInviteUsername').textContent = profile.username ? '@' + profile.username : '';
       const relation = relations.find(r => (r.user_low === user.id && r.user_high === profile.id) || (r.user_high === user.id && r.user_low === profile.id));
       const alreadyFriends = relation?.status === 'accepted';
-      $('socialFriendInviteDetail').textContent = alreadyFriends ? 'Vous êtes déjà amis sur MyEvent.' : relation?.status === 'pending' ? 'Une demande existe déjà. Acceptez ce lien pour devenir amis.' : 'Vous invite à devenir amis sur MyEvent.';
+      $('socialFriendInviteDetail').textContent = alreadyFriends ? 'Vous êtes déjà amis sur ORÉVAMI.' : relation?.status === 'pending' ? 'Une demande existe déjà. Acceptez ce lien pour devenir amis.' : 'Vous invite à devenir amis sur ORÉVAMI.';
       $('socialFriendInviteAccept').hidden = alreadyFriends;
       $('socialFriendInvitePrompt').classList.remove('hidden');
       if (alreadyFriends) clearInvitation();
@@ -385,7 +385,7 @@
   }
   async function selectStoryMusic(track) {
     const {sb}=context(); if(!sb||!track)return;
-    const ensure=window.MyEventMusic?.ensureTrack;if(!ensure)throw new Error('MyEvent Music n’est pas encore prêt.');
+    const ensure=window.MyEventMusic?.ensureTrack;if(!ensure)throw new Error('ORÉVAMI Music n’est pas encore prêt.');
     const id=await ensure(sb,track);window.MyEventMusicPlayback?.stop();storyMusicTrack={...track,id};storyMusicStart=0;storyMusicDuration=15;
     const preview=$('storyMusicSelected');preview.hidden=false;
     preview.querySelector('strong').textContent=decodeEntities(track.title||'Morceau');preview.querySelector('small').textContent=decodeEntities(track.artist||'');
@@ -425,7 +425,7 @@
   }
   function setupCreation() {
     const sheet=document.createElement('div'); sheet.id='storyCreateSheet'; sheet.className='storyCreateSheet'; sheet.hidden=true;
-    sheet.innerHTML='<div><h3>Ma Story</h3><div id="storyMediaPreview" class="storyMediaPreview" hidden></div><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><div id="storyMusicSelected" class="storyMusicSelected" hidden><span><strong></strong><small></small></span><button type="button" id="storyMusicRemove" aria-label="Retirer la musique">×</button></div><button type="button" id="storyAddMusic">🎵 Ajouter une musique</button><div id="storyMusicExcerpt" class="storyMusicExcerpt" hidden><label>Début de l’extrait <input id="storyMusicStart" type="range" min="0" max="300" value="0" step="1"></label><label>Durée <select id="storyMusicDuration"><option value="15">15 s</option><option value="30">30 s</option></select></label><strong id="storyMusicExcerptValue">Début 0 s · 15 s</strong><button type="button" id="storyMusicPreview">▶ Écouter l’extrait</button></div><label class="storyDisplayDuration">Durée d’affichage <select id="storyDisplayDuration"><option value="5">5 s</option><option value="10" selected>10 s</option><option value="15">15 s</option><option value="30">30 s</option></select></label><div id="storyMusicSearchPanel" class="storyMusicSearchPanel" hidden><div><input id="storyMusicSearchInput" type="search" placeholder="Rechercher un morceau…"><button type="button" id="storyMusicSearchBtn">Rechercher</button></div><div id="storyMusicResults" class="storyMusicResults"></div></div><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra MyEvent</button><button type="button" id="storyPublish" hidden>Publier la Story</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
+    sheet.innerHTML='<div><h3>Ma Story</h3><div id="storyMediaPreview" class="storyMediaPreview" hidden></div><input id="storyCaptionInput" maxlength="500" placeholder="Légende (facultative)"><div id="storyMusicSelected" class="storyMusicSelected" hidden><span><strong></strong><small></small></span><button type="button" id="storyMusicRemove" aria-label="Retirer la musique">×</button></div><button type="button" id="storyAddMusic">🎵 Ajouter une musique</button><div id="storyMusicExcerpt" class="storyMusicExcerpt" hidden><label>Début de l’extrait <input id="storyMusicStart" type="range" min="0" max="300" value="0" step="1"></label><label>Durée <select id="storyMusicDuration"><option value="15">15 s</option><option value="30">30 s</option></select></label><strong id="storyMusicExcerptValue">Début 0 s · 15 s</strong><button type="button" id="storyMusicPreview">▶ Écouter l’extrait</button></div><label class="storyDisplayDuration">Durée d’affichage <select id="storyDisplayDuration"><option value="5">5 s</option><option value="10" selected>10 s</option><option value="15">15 s</option><option value="30">30 s</option></select></label><div id="storyMusicSearchPanel" class="storyMusicSearchPanel" hidden><div><input id="storyMusicSearchInput" type="search" placeholder="Rechercher un morceau…"><button type="button" id="storyMusicSearchBtn">Rechercher</button></div><div id="storyMusicResults" class="storyMusicResults"></div></div><input id="storyFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" hidden><button type="button" id="storyPickFile">Photo ou vidéo</button><button type="button" id="storyUseCamera">Caméra ORÉVAMI</button><button type="button" id="storyPublish" hidden>Publier la Story</button><button type="button" id="storyCloseSheet">Fermer</button><p id="storyCreateStatus" role="status"></p></div>';
     document.body.append(sheet);
     $('storyCloseSheet').onclick=()=>sheet.hidden=true;
     $('storyPickFile').onclick=()=>$('storyFile').click();
@@ -467,7 +467,7 @@
   async function openMemberProfile(detail) {
     const {sb,user}=context();if(!sb||!user||!detail?.id)return;
     const sheet=ensureMemberProfileSheet(),avatarHost=sheet.querySelector('.memberFriendProfileAvatar'),actions=sheet.querySelector('.memberFriendProfileActions'),message=sheet.querySelector('.memberFriendProfileStatus');
-    sheet.querySelector('#memberFriendProfileName').textContent=detail.name||'Membre MyEvent';
+    sheet.querySelector('#memberFriendProfileName').textContent=detail.name||'Membre ORÉVAMI';
     sheet.querySelector('.memberFriendProfileRole').textContent=detail.role||'Participant';
     sheet.querySelector('.memberFriendProfileIdentity').textContent=(detail.username?'@'+detail.username+' · ':'')+'Compte '+detail.id+(detail.eventId?' · Événement '+detail.eventId:'');
     avatarHost.replaceChildren();

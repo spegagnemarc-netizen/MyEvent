@@ -6,3 +6,13 @@ test('disconnect clears subscriptions and ignores a stale response',async()=>{le
 test('server action failures are not reflected as local success',async()=>{const {session}=setup(async(name)=>name==='game_snapshot'?{data:{room:{revision:4}}}:{error:Error('Vote refusé')});await session.connect('room');await assert.rejects(session.act('vote',{target:'x'}),/Vote refusé/);assert.equal(session.state.room.revision,4);session.disconnect();});
 
 test('a custom game namespace reuses the same transport',async()=>{const names=[];const {session}=setup(async(name)=>{names.push(name);if(name==='defis_create')return {data:'room'};if(name==='defis_snapshot')return {data:{room:{revision:1,game_key:'defis'}}};if(name==='defis_action')return {data:null};return {data:null};},'defis');await session.create({players:4,challenges:5});await session.act('ready',{ready:true});assert.ok(names.includes('defis_create'));assert.ok(names.includes('defis_snapshot'));assert.ok(names.includes('defis_action'));session.disconnect();});
+
+for(const prefix of ['game','defis'])test(`${prefix} routes actions, heartbeat and leave to its own RPC`,async()=>{
+ const calls=[];const {session,intervals}=setup(async(name,args)=>{calls.push({name,args});return {data:name.endsWith('_snapshot')?{room:{revision:7}}:null};},prefix);
+ await session.connect('room');await session.act('ready',{ready:true});
+ await [...intervals][1]();await session.leave();
+ const actions=calls.filter(c=>c.name.endsWith('_action'));
+ assert.deepEqual(actions.map(c=>c.name),Array(3).fill(prefix+'_action'));
+ assert.deepEqual(actions.map(c=>c.args.action),['ready','heartbeat','leave']);
+ assert.equal(actions[0].args.data.revision,7);assert.equal(session.roomId,null);assert.equal(intervals.size,0);
+});

@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
 
     params.append(
       "line_items[0][price_data][product_data][name]",
-      "Participation MyEvent"
+      "Participation ORÉVAMI"
     );
 
     params.append(

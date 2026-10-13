@@ -2,11 +2,11 @@ import test from 'node:test';import assert from 'node:assert/strict';import {rea
 const require=createRequire(import.meta.url),{JSDOM}=require('jsdom'),api=require('../js/reservation-link-contract.js'),personal=require('../js/personal-reservations.js');
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8'),tick=()=>new Promise(r=>setTimeout(r,20));
 test('home shortcut is in the upper carousel; navigation, partner identifiers and appearance preferences are preserved',()=>{
- const before=new JSDOM(execFileSync('git',['show','fd3ebbd36a937b5a3775e883857443ee3d065073:index.html'],{encoding:'utf8',maxBuffer:4000000})),after=new JSDOM(read('index.html')),a=after.window.document,b=before.window.document;
+ const before=new JSDOM(execFileSync('git',['show','2e943322e0658f64e0ab30e0f2f539321ddb3aa2:index.html'],{encoding:'utf8',maxBuffer:4000000})),after=new JSDOM(read('index.html')),a=after.window.document,b=before.window.document;
  assert.ok(a.querySelector('.explorerCard'));assert.equal(a.querySelector('.explorerCard').closest('#eventsCard'),null);assert.equal(a.querySelector('.explorerCard').getAttribute('href'),'explorer.html');
  assert.deepEqual([...a.querySelectorAll('[data-bottom-tab]')].map(e=>e.outerHTML),[...b.querySelectorAll('[data-bottom-tab]')].map(e=>e.outerHTML));
  for(const selector of ['.eg-widget','[data-omio-widget]','.tnSearchWidget'])assert.deepEqual([...a.querySelectorAll(selector)].map(e=>e.outerHTML),[...b.querySelectorAll(selector)].map(e=>e.outerHTML));
- assert.equal(a.querySelector('#myeventAppearanceCard').outerHTML,b.querySelector('#myeventAppearanceCard').outerHTML);assert.equal(a.querySelectorAll('#myeventAdminEntry').length,1);assert.equal(a.querySelector('#myeventAdminEntry').closest('#profileSettingsCard').id,'profileSettingsCard');
+ assert.equal(a.querySelector('#myeventAppearanceCard').outerHTML,b.querySelector('#myeventAppearanceCard').outerHTML.replace(/\bMyEvent\b/g,'ORÉVAMI'));assert.equal(a.querySelectorAll('#myeventAdminEntry').length,1);assert.equal(a.querySelector('#myeventAdminEntry').closest('#profileSettingsCard').id,'profileSettingsCard');
  before.window.close();after.window.close();
 });
 function fixture(authenticated=true){

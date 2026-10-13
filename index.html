@@ -7,17 +7,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/myevent-192.png">
-<link rel="apple-touch-icon" href="/icons/myevent-192.png">
 <meta name="theme-color" content="#0c0f18">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MyEvent">
+<meta name="apple-mobile-web-app-title" content="ORÉVAMI">
 <meta name="mobile-web-app-capable" content="yes">
-<title>MyEvent</title>
+<title>ORÉVAMI</title>
 
-<!-- MyEvent V47 — vitesse vocaux par clic, multiplicateur à côté de la durée -->
-<!-- MyEvent V24 - fonds photos exactes fournis par l’utilisateur -->
+<!-- ORÉVAMI V47 — vitesse vocaux par clic, multiplicateur à côté de la durée -->
+<!-- ORÉVAMI V24 - fonds photos exactes fournis par l’utilisateur -->
 
 
 
@@ -77,10 +75,15 @@
 </style>
 <link rel="stylesheet" href="css/section-navigation.css?v=8">
 <script src="js/section-navigation.js?v=6"></script>
+
+<meta name="description" content="ORÉVAMI — Vos sorties prennent vie. Organisez vos événements et partagez vos moments ensemble.">
+<meta property="og:site_name" content="ORÉVAMI"><meta property="og:title" content="ORÉVAMI — Vos sorties prennent vie"><meta property="og:description" content="Organisez vos événements et partagez vos moments ensemble."><meta property="og:type" content="website"><meta property="og:image" content="/assets/orevami/logo-light.png"><meta property="og:image:alt" content="ORÉVAMI — Vos sorties prennent vie"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="ORÉVAMI — Vos sorties prennent vie"><meta name="twitter:image" content="/assets/orevami/logo-light.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/orevami/icon-32.png"><link rel="apple-touch-icon" sizes="180x180" href="/assets/orevami/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-title" content="ORÉVAMI">
+<link rel="stylesheet" href="/css/orevami-brand.css?v=orevami-final-3"><script src="/js/orevami-brand.js?v=orevami-final-3"></script>
 </head>
 <body>
 <div class="app">
-<h1>My<span style="color:#278cff">Event</span></h1>
+<h1><span class="orevamiBrand"><img class="orevamiLogo" src="/assets/orevami/logo-transparent.png" alt="ORÉVAMI — Vos sorties prennent vie"></span></h1>
 
 <section id="setup" class="card">
 <h2>Connexion</h2>
@@ -104,9 +107,9 @@
 
 <section id="main" class="hidden">
 
-<!-- MyEvent V54.46 — Accueil social / fil d'actualité -->
+<!-- ORÉVAMI V54.46 — Accueil social / fil d'actualité -->
 <section id="socialHome" class="socialHome">
-  <div class="socialBrand" aria-label="MyEvent">My<span>Event</span></div>
+  <div class="socialBrand" aria-label="ORÉVAMI"><span class="orevamiBrand"><img class="orevamiLogo" src="/assets/orevami/logo-transparent.png" alt="ORÉVAMI — Vos sorties prennent vie"></span><h1 class="orevamiSectionTitle">Accueil</h1></div>
   <div class="socialTop">
     <div class="socialProfileHead">
       <div id="profileAvatar" class="profileAvatar profileAvatarTrigger socialProfileAvatar" title="Maintiens appuyé pour ouvrir ton profil">?</div>
@@ -121,7 +124,7 @@
 
 
   <span id="socialHeaderName" class="hidden">Bonjour</span><span id="socialHeaderAvatar" class="hidden"></span>
-  <div class="homeFeatureCarousel" aria-label="Raccourcis MyEvent">
+  <div class="homeFeatureCarousel" aria-label="Raccourcis ORÉVAMI">
     <div class="homeFeatureCard storyCard" id="socialMyStory"><div class="socialStoryBubble">👤</div><b>Ma story</b><span class="storyAddBadge">＋</span></div>
     <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview">👥</div><b>Amis</b></button>
     <button type="button" class="homeFeatureCard storyCard" id="socialStoriesShortcut" aria-controls="friendStoriesSection" aria-expanded="false"><div class="homeStoriesArt" aria-hidden="true"><span></span><span></span></div><b>Stories</b></button>
@@ -157,7 +160,7 @@
       <button type="button" class="socialComposerInput" id="socialOpenComposer">Partager une expérience, une photo ou une idée de sortie…</button>
     </div>
     <div class="socialComposerPanel" id="socialComposerPanel">
-      <textarea id="socialPostText" placeholder="Qu'est-ce que tu veux partager avec la communauté MyEvent ?"></textarea>
+      <textarea id="socialPostText" placeholder="Qu'est-ce que tu veux partager avec la communauté ORÉVAMI ?"></textarea>
       <div class="row">
         <button type="button" id="socialPublishBtn">🚀 Publier</button>
         <button type="button" class="secondary" id="socialCancelPostBtn">Annuler</button>
@@ -178,10 +181,10 @@
   </div>
 
   <div id="socialFriendsView" class="socialPeople">
-    <div id="socialFriendInvitePrompt" class="socialFriendInvitePrompt hidden"><div id="socialFriendInviteAvatar" class="socialFriendInviteAvatar" aria-hidden="true"></div><div class="socialFriendInviteIdentity"><strong id="socialFriendInviteName"></strong><small id="socialFriendInviteUsername"></small><span id="socialFriendInviteDetail">Vous invite à devenir amis sur MyEvent.</span></div><button type="button" id="socialFriendInviteAccept">Accepter l’invitation</button></div>
+    <div id="socialFriendInvitePrompt" class="socialFriendInvitePrompt hidden"><div id="socialFriendInviteAvatar" class="socialFriendInviteAvatar" aria-hidden="true"></div><div class="socialFriendInviteIdentity"><strong id="socialFriendInviteName"></strong><small id="socialFriendInviteUsername"></small><span id="socialFriendInviteDetail">Vous invite à devenir amis sur ORÉVAMI.</span></div><button type="button" id="socialFriendInviteAccept">Accepter l’invitation</button></div>
     <div class="socialSearch"><input placeholder="🔎 Rechercher un ami…"><button type="button">Rechercher</button></div>
     <div id="socialFriendStatus" role="status" class="muted"></div>
-    <h4>Utilisateurs MyEvent</h4><div class="socialFriendCarousel" id="socialFriendResults"></div>
+    <h4>Utilisateurs ORÉVAMI</h4><div class="socialFriendCarousel" id="socialFriendResults"></div>
     <div class="socialFriendRequests"><div class="socialFriendRequestsHead"><h4>Demandes reçues</h4><button type="button" id="invitePhoneContactsBtn" class="secondary socialContactInviteBtn">📱 Inviter mes contacts</button></div><div id="socialFriendInviteShare" class="socialFriendInviteShare hidden"><input id="socialFriendInviteLink" readonly aria-label="Lien d’invitation ami"><button type="button" id="socialFriendInviteShareBtn">Partager le lien</button></div><div class="socialFriendRequestsCarousel" id="socialFriendIncoming"></div></div>
     <h4>Demandes envoyées</h4><div class="socialFriendCarousel" id="socialFriendOutgoing"></div>
     <h4>Mes amis</h4><div class="socialFriendCarousel" id="socialFriendList"></div>
@@ -191,7 +194,7 @@
   <div id="socialGlobalNotificationsView" class="socialPeople" style="display:none"><p>Ouvre Notifications pour retrouver ton activité sociale.</p></div>
 
   <div class="cameraModal" id="myeventCameraModal" aria-hidden="true">
-    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra MyEvent">
+    <div class="cameraSheet cameraProSheet" role="dialog" aria-modal="true" aria-label="Caméra ORÉVAMI">
       <div class="cameraProTop">
         <button type="button" class="cameraProIcon" id="cameraCloseBtn" aria-label="Fermer">✕</button>
         <div class="cameraProTitle"><span id="cameraModeTitle">PHOTO</span><small id="cameraQualityLabel">Auto</small></div>
@@ -246,7 +249,7 @@
 
       <div class="cameraProBottom">
         <button type="button" class="cameraProRoundAction" id="cameraGalleryBtn" aria-label="Galerie"><span>▣</span><small>Galerie</small></button>
-        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span aria-hidden="true"><img src="assets/camera-me-logo.jpeg" alt=""></span></button>
+        <button type="button" class="cameraShutter cameraProShutter" id="cameraShutterBtn" aria-label="Prendre une photo"><span aria-hidden="true"><img src="assets/orevami/icon-192.png" alt=""></span></button>
         <button type="button" class="cameraProRoundAction" id="cameraFlipBtn" aria-label="Changer de caméra"><span>↻</span><small>Caméra</small></button>
       </div>
 
@@ -265,7 +268,7 @@
         <button type="button" id="cameraAttachEventBtn">📅 Ajouter à un événement</button>
         <button type="button" id="cameraDownloadBtn">Enregistrer</button>
       </div>
-      <div class="cameraHint cameraProHint" id="cameraHint">Selfie MyEvent · photo non publiée tant que tu ne valides pas.</div>
+      <div class="cameraHint cameraProHint" id="cameraHint">Selfie ORÉVAMI · photo non publiée tant que tu ne valides pas.</div>
     </div>
   </div>
 
@@ -353,7 +356,7 @@
   <div class="musicSearch"><span>⌕</span><input id="musicSearchInput" type="search" enterkeyhint="search" placeholder="Titre, artiste, playlist…"><button type="button" id="musicSearchBtn" aria-label="Rechercher">Rechercher</button></div>
   <div class="musicTabs"><button class="active" data-music-filter="for-you">Pour vous</button><button data-music-filter="trends">Tendances</button><button data-music-filter="moods">Ambiances</button><button data-music-filter="genres">Genres</button></div>
   <div class="musicSection"><div class="musicSectionTitle"><h3>Tendances</h3><button type="button">Voir tout ›</button></div><div class="musicCards" id="musicTrending"><div class="musicEmpty">Le catalogue sera alimenté par les fournisseurs Musique.</div></div></div>
-  <div class="musicSection" id="musicPlaylistsSection"><div class="musicSectionTitle"><h3>Playlists MyEvent</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards" style="display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:hidden!important;width:100%!important;box-sizing:border-box!important"><button class="musicTile" data-music-action="event"><span>👥</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj"><span>🎧</span><b>Mode DJ</b><small>File · Manuel</small></button><button class="musicTile" data-music-action="favorites"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
+  <div class="musicSection" id="musicPlaylistsSection"><div class="musicSectionTitle"><h3>Playlists ORÉVAMI</h3><button type="button" id="musicEventPlaylistsBtn">Mes événements ›</button></div><div class="musicCards" style="display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:hidden!important;width:100%!important;box-sizing:border-box!important"><button class="musicTile" data-music-action="event"><span>👥</span><b>Playlist d’événement</b><small>Propositions · votes</small></button><button class="musicTile" data-music-action="dj"><span>🎧</span><b>Mode DJ</b><small>File · Manuel</small></button><button class="musicTile" data-music-action="favorites"><span>♥</span><b>Mes favoris</b><small>Titres sauvegardés</small></button></div></div>
   <div class="musicSection" id="musicAmbiancesSection"><div class="musicSectionTitle"><h3>Ambiances</h3><button type="button" data-music-filter="moods">Voir tout ›</button></div><div class="musicChips musicMoodCards"><button data-mood="chill"><img class="musicMoodArt musicMoodChill" src="assets/music-mood-chill.webp" alt="" loading="lazy"><b>Chill</b></button><button data-mood="soiree"><img class="musicMoodArt musicMoodParty" src="assets/music-mood-party.webp" alt="" loading="lazy"><b>Soirée</b></button><button data-mood="80s"><img class="musicMoodArt musicMood80s" src="assets/music-mood-80s.webp" alt="" loading="lazy"><b>Années 80</b></button><button data-mood="rap"><img class="musicMoodArt musicMoodRap" src="assets/music-mood-rap.webp" alt="" loading="lazy"><b>Rap</b></button><button data-mood="electro"><img class="musicMoodArt musicMoodElectro" src="assets/music-mood-electro.webp" alt="" loading="lazy"><b>Électro</b></button><button data-mood="variete"><img class="musicMoodArt musicMoodVariete" src="assets/music-mood-variete.webp" alt="" loading="lazy"><b>Variété</b></button></div></div>
 </section>
 
@@ -361,7 +364,7 @@
     <button type="button" class="active navHome" data-bottom-tab="feed"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><path d="m2 11 10-9 10 9M5 9v13h5v-7h4v7h5V9"/></svg></span><span class="bottomLabel">Accueil</span></button>
     <button type="button" class="navMarket" data-bottom-tab="marketplace" onclick="location.href='marketplace.html'"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><path d="M4 8h16l2 14H2Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></span><span class="bottomLabel">Marketplace</span></button>
     <button type="button" class="navGames" data-bottom-tab="games"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><path d="M6 6h12c3 0 5 12 3 14-2 2-5-3-6-3H9c-1 0-4 5-6 3C1 18 3 6 6 6Z"/><path d="M5 11h6M8 8v6"/><circle cx="17" cy="10" r="1" fill="currentColor"/><circle cx="19" cy="13" r="1" fill="currentColor"/></svg></span><span class="bottomLabel">Jeux</span></button>
-    <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Photo ME" aria-label="Photo ME — ouvrir la caméra"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><path d="M3 7h4l2-3h6l2 3h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="5"/></svg></button>
+    <button type="button" class="createBottom navCamera" id="socialBottomCreate" title="Photo ORÉVAMI" aria-label="Photo ORÉVAMI — ouvrir la caméra"><span class="orevamiNavSymbol" aria-hidden="true"><img src="assets/orevami/icon-192.png" alt=""></span></button>
     <button type="button" class="navEvents" data-bottom-tab="events"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><rect x="3" y="5" width="18" height="17" rx="2"/><path d="M7 2v6M17 2v6M3 10h18m-9 3 1.4 2.8 3.1.5-2.2 2.2.5 3-2.8-1.4-2.8 1.4.5-3-2.2-2.2 3.1-.5Z"/></svg></span><span class="bottomLabel">Événements</span></button>
     <button type="button" class="navMusic" data-bottom-tab="music"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><path d="M9 18V5l12-3v13M9 8l12-3"/><ellipse cx="5.5" cy="18.5" rx="3.5" ry="2.5"/><ellipse cx="17.5" cy="15.5" rx="3.5" ry="2.5"/></svg></span><span class="bottomLabel">Musique</span></button>
     <button type="button" class="navProfile" data-bottom-tab="profile"><span class="bottomIcon"><svg aria-hidden="true" focusable="false" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:inherit"><circle cx="12" cy="6" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></span><span class="bottomLabel">Profil</span></button>
@@ -378,7 +381,7 @@
 
 <div class="card profileSettingsCard" id="profileSettingsCard">
 <div class="myeventProfileHeader"><h2>👤 Mon profil</h2><button type="button" id="closeProfileBtn" class="myeventCloseBtn" title="Réduire le profil">⌄ Réduire</button></div>
-<div style="padding:12px 16px"><button type="button" class="secondary" id="myeventAdminEntry" hidden style="width:100%;min-height:48px">🛡️ Administration MyEvent</button></div>
+<div style="padding:12px 16px"><button type="button" class="secondary" id="myeventAdminEntry" hidden style="width:100%;min-height:48px">🛡️ Administration ORÉVAMI</button></div>
 <div class="profileEditor">
 <div style="flex:1;min-width:0">
 <div style="flex:1;min-width:0">
@@ -389,7 +392,7 @@
 <div id="avatarChoices" class="avatarChoices"><button type="button" class="avatarChoice" data-avatar="😀">😀</button><button type="button" class="avatarChoice" data-avatar="😎">😎</button><button type="button" class="avatarChoice" data-avatar="🥳">🥳</button><button type="button" class="avatarChoice" data-avatar="🤩">🤩</button><button type="button" class="avatarChoice" data-avatar="🦊">🦊</button><button type="button" class="avatarChoice" data-avatar="🐼">🐼</button><button type="button" class="avatarChoice" data-avatar="🚀">🚀</button><button type="button" class="avatarChoice" data-avatar="⭐">⭐</button></div>
 <div class="aiAvatarCard">
   <div class="aiAvatarTitle">✨ Créer mon avatar avec l’IA</div>
-  <div class="aiAvatarSub">Ajoute une photo et MyEvent crée un avatar illustré à partir de ton visage.</div>
+  <div class="aiAvatarSub">Ajoute une photo et ORÉVAMI crée un avatar illustré à partir de ton visage.</div>
   <label class="aiPhotoLabel">📷 Choisir ma photo<input id="aiAvatarInput" type="file" accept="image/*"></label>
   <div class="aiAvatarPreview">
     <div class="previewBox"><span id="aiPhotoPlaceholder" class="muted">Ta photo</span><img id="aiPhotoPreview" class="hidden" alt="Photo sélectionnée"></div>
@@ -397,7 +400,7 @@
     <div class="previewBox"><span id="aiAvatarPlaceholder" class="muted">Ton avatar</span><img id="aiAvatarPreview" class="hidden" alt="Avatar IA"></div>
   </div>
   <button id="generateAiAvatarBtn" class="aiGenerateBtn" type="button">✨ Générer mon avatar</button>
-  <div class="privacyNote">La photo est envoyée uniquement au service d’IA pour générer l’avatar. MyEvent ne l’enregistre pas dans ton profil ; seul l’avatar généré peut être enregistré.</div>
+  <div class="privacyNote">La photo est envoyée uniquement au service d’IA pour générer l’avatar. ORÉVAMI ne l’enregistre pas dans ton profil ; seul l’avatar généré peut être enregistré.</div>
   <p id="aiAvatarMsg" class="muted"></p>
 </div>
 
@@ -414,7 +417,7 @@
 </div>
 </div>
 <div class="myeventAppearanceCard" id="myeventAppearanceCard">
-  <div class="myeventAppearanceTitle">🎨 Apparence de MyEvent</div>
+  <div class="myeventAppearanceTitle">🎨 Apparence de ORÉVAMI</div>
   <div class="myeventAppearanceSub">Ces réglages s’appliquent à toute l’application.</div>
   <div class="myeventAppearanceSub">Fond de l’application</div>
   <div class="myeventAppearanceRow" aria-label="Fond">
@@ -424,22 +427,22 @@
   <label class="myeventColorPicker"><span><b>Couleur de l’application</b><small>Choisis librement ta couleur</small></span><input type="color" data-theme="accent" value="#ff6a34" aria-label="Couleur de l’application"></label>
   <label class="myeventThemeSlider"><span>Transparence des boutons <output data-theme-output="buttonOpacity">90%</output></span><input type="range" min="0.20" max="1" step="0.01" data-theme="buttonOpacity"></label>
   <label class="myeventThemeSlider"><span>Transparence des cadres <output data-theme-output="surfaceOpacity">94%</output></span><input type="range" min="0.20" max="1" step="0.01" data-theme="surfaceOpacity"></label>
-  <button type="button" class="myeventThemeReset" data-theme-reset>↺ Réinitialiser le thème MyEvent</button>
+  <button type="button" class="myeventThemeReset" data-theme-reset>↺ Réinitialiser le thème ORÉVAMI</button>
   <p class="myeventThemeNote">Les couleurs fonctionnelles (validation, erreur et certains repères d’événement) restent distinctes.</p>
 </div>
 <details id="myeventDiscoverCard" class="myeventDiscoverCard">
-  <summary>ℹ️ Découvrir MyEvent <span aria-hidden="true">⌄</span></summary>
+  <summary>ℹ️ Découvrir ORÉVAMI <span aria-hidden="true">⌄</span></summary>
   <div class="myeventDiscoverBody">
-    <header><div class="myeventDiscoverBrand">My<span>Event</span></div><h3>Tout votre événement, au même endroit.</h3><p>Imaginez, préparez, partagez et vivez vos moments ensemble, depuis une seule application.</p></header>
+    <header><div class="myeventDiscoverBrand">ORÉVAMI</div><h3>Tout votre événement, au même endroit.</h3><p>Imaginez, préparez, partagez et vivez vos moments ensemble, depuis une seule application.</p></header>
     <h4>Comment ça marche ?</h4>
     <ol><li><b>Créez votre événement</b> : choisissez son nom, sa date, son lieu et sa visibilité.</li><li><b>Invitez vos proches</b> : ajoutez vos amis et répartissez les rôles entre organisateurs et participants.</li><li><b>Organisez ensemble</b> : échangez, attribuez les tâches, préparez le matériel et construisez votre programme.</li><li><b>Profitez du moment</b> : découvrez les activités disponibles, écoutez de la musique et partagez vos photos et stories.</li></ol>
     <h4>Explorez les fonctionnalités</h4>
     <div class="myeventDiscoverFeatures"><p>🎉 <b>Événements</b><small>Invitations, participants et organisation.</small></p><p>👥 <b>Social</b><small>Amis, messages, publications et stories.</small></p><p>📋 <b>Préparation</b><small>Tâches, matériel et planning partagé.</small></p><p>🎵 <b>Musique</b><small>Playlists, suggestions IA et mode DJ.</small></p><p>📸 <b>Souvenirs</b><small>Caméra, photos et vidéos.</small></p><p>📍 <b>Découvertes</b><small>Carte, sorties et activités selon les services disponibles.</small></p></div>
-    <h4>▶️ Tutoriel MyEvent</h4><div class="myeventDiscoverVideo" role="note">🎬 Vidéo de présentation complète à venir (~2 min).<br><small>De la création d’un événement au partage des souvenirs.</small></div>
-    <h4>✨ MyEvent en 30 secondes</h4><div class="myeventDiscoverVideo" role="note">🎬 Bande-annonce à venir (30–45 secondes).</div>
+    <h4>▶️ Tutoriel ORÉVAMI</h4><div class="myeventDiscoverVideo" role="note">🎬 Vidéo de présentation complète à venir (~2 min).<br><small>De la création d’un événement au partage des souvenirs.</small></div>
+    <h4>✨ ORÉVAMI en 30 secondes</h4><div class="myeventDiscoverVideo" role="note">🎬 Bande-annonce à venir (30–45 secondes).</div>
     <h4>Confidentialité et sécurité</h4><p>Choisissez la visibilité de vos événements. Le partage de position avec les amis est facultatif et doit être activé volontairement dans les réglages. Vérifiez les destinataires avant de publier du contenu personnel.</p>
-    <h4>Aide et informations</h4><p>Pour toute question ou signalement, utilisez les coordonnées officielles de support MyEvent lorsqu’elles seront publiées. Les conditions d’utilisation et la politique de confidentialité seront accessibles ici après validation des documents définitifs.</p>
-    <p class="myeventDiscoverVersion">MyEvent · Présentation de la V1 en préparation</p>
+    <h4>Aide et informations</h4><p>Pour toute question ou signalement, contactez <a href="mailto:contact@orevami.com">contact@orevami.com</a>. Les conditions d’utilisation et la politique de confidentialité seront accessibles ici après validation des documents définitifs.</p>
+    <p class="myeventDiscoverVersion">ORÉVAMI · Présentation de la V1 en préparation</p>
   </div>
 </details>
 <button id="saveProfileBtn">Enregistrer mon profil</button>
@@ -512,11 +515,11 @@
       <div><label class="smallLabel" for="editEventPlace">Lieu</label><input id="editEventPlace" placeholder="Lieu"></div>
     </div>
     <textarea id="editEventDescription" placeholder="Description" rows="4"></textarea>
-    <label class="smallLabel" for="editEventVisibility">Visibilité</label><select id="editEventVisibility"><option value="private">Privé · invités uniquement</option><option value="friends">Amis · amis du créateur</option><option value="public">Public · découverte MyEvent</option></select>
+    <label class="smallLabel" for="editEventVisibility">Visibilité</label><select id="editEventVisibility"><option value="private">Privé · invités uniquement</option><option value="friends">Amis · amis du créateur</option><option value="public">Public · découverte ORÉVAMI</option></select>
     <label class="coverFileLabel">🖼️ Remplacer la photo de couverture<input id="editEventCoverFile" type="file" accept="image/*"></label><div id="editEventCoverFileName" class="coverFileName"></div>
     <div id="editCoverPreview" class="coverPreview hidden"></div>
     <button id="saveEventBtn">💾 Enregistrer les modifications</button>
-    <button type="button" id="shareEventFeedBtn" class="secondary hidden">↗ Partager dans le fil MyEvent</button>
+    <button type="button" id="shareEventFeedBtn" class="secondary hidden">↗ Partager dans le fil ORÉVAMI</button>
     <p id="editEventMsg" class="muted"></p>
   </div>
 </details>
@@ -818,7 +821,7 @@
 <details class="myeventGygSection" id="myeventGygMarseille">
   <summary>🎟️ GetYourGuide · Activités à Marseille</summary>
   <div class="myeventGygBody">
-    <p class="muted">Découvre d’autres activités à Marseille. Réservation sécurisée sur GetYourGuide, partenaire externe. Cette sélection est dédiée à Marseille et ne suit pas encore le rayon de recherche MyEvent.</p>
+    <p class="muted">Découvre d’autres activités à Marseille. Réservation sécurisée sur GetYourGuide, partenaire externe. Cette sélection est dédiée à Marseille et ne suit pas encore le rayon de recherche ORÉVAMI.</p>
     <div data-gyg-href="https://widget.getyourguide.com/default/city.frame" data-gyg-location-id="292" data-gyg-locale-code="fr-FR" data-gyg-widget="city" data-gyg-partner-id="ZJ2NODE"></div>
   </div>
 </details>
@@ -830,7 +833,7 @@
     <a class="myeventGygActivityLink" href="https://www.getyourguide.com/paris-l16/eiffel-tower-entry-summit-or-2nd-floor-with-audioguide-t786932/?partner_id=ZJ2NODE&amp;utm_medium=travel_agent&amp;travel_agent=1&amp;cmp=myevent_activites_v1" target="_blank" rel="noopener noreferrer">🎟️ Voir et réserver cette activité ↗</a>
   </div>
 </details>
-<div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon MyEvent indique « tarif à vérifier ». Les réservations sont maintenant disponibles directement depuis la sortie sélectionnée.</div>
+<div class="outingCompare">💡 Les tarifs publics ne sont pas toujours disponibles. Le budget sert de filtre lorsqu’un prix est fourni ; sinon ORÉVAMI indique « tarif à vérifier ». Les réservations sont maintenant disponibles directement depuis la sortie sélectionnée.</div>
 </div>
 </details>
 
@@ -862,7 +865,7 @@
     <p id="m58TransportMsg" class="muted"></p>
   </div>
   <div id="m58TransportList" class="m58ModuleList"><p class="muted">Chargement…</p></div>
- 
+
 <div id="myeventOmioSection" class="m58OmioSection" style="margin-top:18px;padding:14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;">
   <h3>🚆 Réserver avec Omio</h3>
   <p>Compare les trains, bus et ferries disponibles pour ton trajet.</p>
@@ -874,9 +877,9 @@
     data-redirect="https://omio.sjv.io/c/7865634/3963000/7385?u="
   ></div>
 </div>
- 
+
 </div>
-<section id="myeventExpediaFlightsSection" class="m58OmioSection"><h3>✈️ Expedia Vols</h3><p class="muted">Recherche les vols avec Expedia France. Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible.</p><section class="myeventEgSlot" data-partner="Expedia Vols"><div id="m58TransportExpediaWidget" class="eg-widget" data-widget="search" data-program="fr-expedia" data-lobs="flights" data-network="pz" data-camref="1011l6tumI" data-pubref="myevent-expedia"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Expedia Vols…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section></section>
+<section id="myeventExpediaFlightsSection" class="m58OmioSection"><h3>✈️ Expedia Vols</h3><p class="muted">Recherche les vols avec Expedia France. Lien affilié : ORÉVAMI peut recevoir une commission pour une réservation admissible.</p><section class="myeventEgSlot" data-partner="Expedia Vols"><div id="m58TransportExpediaWidget" class="eg-widget" data-widget="search" data-program="fr-expedia" data-lobs="flights" data-network="pz" data-camref="1011l6tumI" data-pubref="myevent-expedia"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Expedia Vols…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section></section>
 </details>
 
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="accommodation" id="accommodationPanel">
@@ -891,7 +894,7 @@
 <section id="m58AccommodationHotelsSlot" class="myeventEgSlot" data-partner="Hotels.com"><div id="m58AccommodationHotelsWidget" class="eg-widget" data-widget="search" data-program="fr-hcom" data-lobs="stays" data-network="pz" data-camref="1110lR6fx" data-pubref="myevent-hebergement"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Hotels.com…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
 <section id="m58AccommodationExpediaSlot" class="myeventEgSlot" data-partner="Expedia Séjours" hidden><div id="m58AccommodationExpediaWidget" class="eg-widget" data-widget="search" data-program="fr-expedia" data-lobs="stays" data-network="pz" data-camref="1011l6tumI" data-pubref="myevent-expedia"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Expedia Séjours…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
 <section id="m58AccommodationAbritelSlot" class="myeventEgSlot" data-partner="Abritel" hidden><div id="m58AccommodationAbritelWidget" class="eg-widget" data-widget="search" data-program="abritel" data-lobs="stays" data-network="pz" data-camref="1100l6v4qo" data-pubref="myevent-abritel"></div><p class="myeventEgStatus" role="status" aria-live="polite">Chargement du widget Abritel…</p><button type="button" class="secondary myeventEgRetry" hidden>Réessayer le chargement</button></section>
-    <p class="muted">Lien affilié : MyEvent peut recevoir une commission pour une réservation admissible. Après réservation, ajoute ton hébergement au planning avec « Ajouter un hébergement ».</p>
+    <p class="muted">Lien affilié : ORÉVAMI peut recevoir une commission pour une réservation admissible. Après réservation, ajoute ton hébergement au planning avec « Ajouter un hébergement ».</p>
     <div class="m58ModuleActions"><button type="button" class="secondary" id="m58AccommodationSearchCancel">Fermer la recherche</button></div>
     <noscript>Active JavaScript pour utiliser le widget Hotels.com. Tu peux aussi ajouter un hébergement manuellement.</noscript>
   </div>
@@ -917,7 +920,7 @@
 <details class="card tabPanel collapsibleCard uniformToggle" data-panel="localtravel" id="localTravelPanel">
 <summary>🧭 Déplacements locaux</summary>
 <div class="collapsibleBody">
-  <div class="m58ModuleIntro"><b>Organise les déplacements entre les étapes</b><p class="muted">Ajoute un trajet à pied, à vélo, en voiture, en covoiturage, en bus, en taxi/VTC ou en transfert. MyEvent peut calculer automatiquement la distance et la durée, afficher le trajet sur la carte et l’intégrer à la timeline.</p></div>
+  <div class="m58ModuleIntro"><b>Organise les déplacements entre les étapes</b><p class="muted">Ajoute un trajet à pied, à vélo, en voiture, en covoiturage, en bus, en taxi/VTC ou en transfert. ORÉVAMI peut calculer automatiquement la distance et la durée, afficher le trajet sur la carte et l’intégrer à la timeline.</p></div>
   <div class="m58ModuleActions"><button type="button" id="m58LocalTravelAddBtn">➕ Ajouter un déplacement</button><button type="button" class="secondary" id="m58LocalTravelAutoBtn">✨ Calculer entre les étapes</button><label class="m58AutoThreshold"><span>📏 Distance minimale</span><select id="m58LocalTravelMinDistance"><option value="0.3">0,3 km</option><option value="0.5" selected>0,5 km</option><option value="1">1 km</option><option value="2">2 km</option><option value="5">5 km</option></select></label></div>
   <div id="m58LocalTravelForm" class="m58Form hidden">
     <div class="m58FormTitle">➕ Ajouter un déplacement</div>
@@ -989,7 +992,7 @@
   <div class="suppliesHead"><div><b>🎒 Qui amène quoi ?</b><p class="muted">Organise le matériel à apporter pour l’événement.</p></div><button type="button" id="supplyAddBtn">➕ Ajouter</button></div>
 
   <div class="materialAiBox" id="materialAiBox">
-    <div class="materialAiHead"><div><b>✨ Assistant IA</b><p class="muted">Décris l’événement et MyEvent te propose une liste prête à modifier.</p></div><button type="button" id="materialAiOpenBtn">✨ Générer avec l’IA</button></div>
+    <div class="materialAiHead"><div><b>✨ Assistant IA</b><p class="muted">Décris l’événement et ORÉVAMI te propose une liste prête à modifier.</p></div><button type="button" id="materialAiOpenBtn">✨ Générer avec l’IA</button></div>
     <div id="materialAiForm" class="editEventBox hidden" style="margin-top:10px">
       <div class="fieldRow"><input id="materialAiPeople" type="number" min="1" step="1" value="30" placeholder="Nombre de personnes"><input id="materialAiMeal" placeholder="Ex. Buffet dînatoire"></div>
       <input id="materialAiDetails" placeholder="Précisions (extérieur, barbecue, boissons, anniversaire…) — optionnel">
@@ -1236,7 +1239,7 @@
 
 
 
-<!-- MyEvent V54.15 — robust event-card opening fix -->
+<!-- ORÉVAMI V54.15 — robust event-card opening fix -->
 
 
 
@@ -1261,7 +1264,7 @@
 <link rel="stylesheet" href="css/entertainment-lounge.css?v=multiplayer-1">
 <link rel="stylesheet" href="css/theme-accent.css?v=accent-v4">
 
-<section id="entertainmentLounge" aria-hidden="true" role="dialog" aria-label="Salon Jeux MyEvent" aria-modal="true"></section>
+<section id="entertainmentLounge" aria-hidden="true" role="dialog" aria-label="Salon Jeux ORÉVAMI" aria-modal="true"></section>
 <script src="js/game-session.js?v=1"></script>
 <script src="js/entertainment-lounge.js?v=multiplayer-1"></script>
 
@@ -1447,10 +1450,10 @@
  modal.addEventListener('click',e=>{if(e.target===modal)hide();});
 })();
 </script>
-<section id="myeventAdminPanel" hidden role="dialog" aria-modal="true" aria-label="Administration MyEvent" style="position:fixed;inset:0;z-index:99999;background:#080d18;overflow:auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);color:#fff">
+<section id="myeventAdminPanel" hidden role="dialog" aria-modal="true" aria-label="Administration ORÉVAMI" style="position:fixed;inset:0;z-index:99999;background:#080d18;overflow:auto;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);color:#fff">
  <div style="max-width:1000px;margin:auto;padding:16px 0 42px">
   <div class="adminTopbar"><header class="adminHeader">
-   <h2 style="margin:0">🛡️ MyEvent Admin</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button>
+   <h2 style="margin:0">🛡️ ORÉVAMI Admin</h2><button type="button" id="myeventAdminClose" class="secondary">✕ Fermer</button>
   </header>
   <nav id="myeventAdminNav" aria-label="Rubriques administration" tabindex="0" style="display:flex;overflow-x:auto;gap:8px;padding:12px 0">
    <button type="button" data-admin-tab="overview" aria-current="page">Tableau de bord</button>
@@ -1526,8 +1529,8 @@
    <div id="myeventAdminReports" class="adminList" aria-live="polite"></div>
   </div>
   <div data-admin-view="statistics" hidden>
-   <h3>Statistiques</h3><p>Indicateurs internes MyEvent. Aucune conversion affiliée n’est inventée : seules les données réellement disponibles sont affichées.</p>
-   <div id="myeventAdminStatistics" class="adminStatsGrid" aria-live="polite"></div><p class="adminMobileHint">Les chiffres sont des données internes MyEvent. Les revenus ou conversions partenaires ne seront ajoutés que lorsqu’une source réelle sera disponible.</p>
+   <h3>Statistiques</h3><p>Indicateurs internes ORÉVAMI. Aucune conversion affiliée n’est inventée : seules les données réellement disponibles sont affichées.</p>
+   <div id="myeventAdminStatistics" class="adminStatsGrid" aria-live="polite"></div><p class="adminMobileHint">Les chiffres sont des données internes ORÉVAMI. Les revenus ou conversions partenaires ne seront ajoutés que lorsqu’une source réelle sera disponible.</p>
   </div>
   <div data-admin-view="partners" hidden>
    <h3>Partenaires</h3><p>Le registre central conserve l'état et les notes de chaque partenaire. Les clés API restent sur le serveur ; activer un registre ne met pas une intégration en ligne.</p>
@@ -1557,7 +1560,7 @@ body.myeventAdminOpen{overflow:hidden}
 <style id="myevent-omio-responsive">
 #myeventOmioSection [data-omio-widget],#myeventOmioSection form,#myeventOmioSection form>div{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 </style>
-<!-- MyEvent — Chargement du widget officiel Omio -->
+<!-- ORÉVAMI — Chargement du widget officiel Omio -->
 <script>
   (function addOmioWidget(d) {
     var widgetStyle = d.createElement('link');
