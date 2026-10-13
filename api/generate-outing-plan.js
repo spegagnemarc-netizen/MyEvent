@@ -192,6 +192,7 @@ Ne retourne pas seulement 3 propositions par défaut.
   "budget_per_person": ${
     budget == null ? 'null' : budget
   },
+
   "request": ${JSON.stringify(request)},
   "options": [
     {
@@ -228,6 +229,7 @@ ${JSON.stringify(safeCandidates)}
       'https://api.openai.com/v1/responses',
       {
         method: 'POST',
+        signal: AbortSignal.timeout(25000),
 
         headers: {
           'Content-Type': 'application/json',
@@ -251,9 +253,9 @@ ${JSON.stringify(safeCandidates)}
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error:
-          data?.error?.message ||
-          'Erreur du service IA.'
+        error: response.status === 429
+          ? 'Le service IA est momentanément saturé. Réessaie dans quelques minutes.'
+          : 'Le service IA est temporairement indisponible. Réessaie plus tard.'
       });
     }
 
@@ -478,9 +480,7 @@ ${JSON.stringify(safeCandidates)}
     );
 
     return res.status(500).json({
-      error:
-        error?.message ||
-        'Impossible de générer le planning.'
+      error: 'Impossible de composer la sortie pour le moment. Réessaie dans quelques minutes.'
     });
   }
 }

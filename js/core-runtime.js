@@ -435,14 +435,53 @@ async function connect(){
     if(!window.myeventRuntime)throw new Error('Configuration de connexion indisponible.');
     const config=await window.myeventRuntime.ready;
     sb=window.supabase.createClient(config.url,config.publishableKey,{auth:{storageKey:config.authStorageKey}});
+    sb.auth.onAuthStateChange((type)=>{
+      if(type==='PASSWORD_RECOVERY')showPasswordRecovery();
+    });
     const r=await sb.auth.getSession();
     if(r.error) throw r.error;
     $('setup').classList.add('hidden');
-    if(r.data.session) await show(r.data.session.user);
+    if(r.data.session && new URLSearchParams(location.search).get('auth')==='recovery')showPasswordRecovery();
+    else if(r.data.session) await show(r.data.session.user);
     else { $('main').classList.add('hidden'); $('auth').classList.remove('hidden'); }
   }catch(e){
     msg('status',e.message||String(e),'err');
   }
+}
+
+function showPasswordRecovery(){
+  $('setup').classList.add('hidden');
+  $('main').classList.add('hidden');
+  $('auth').classList.remove('hidden');
+  $('passwordRecoveryForm').classList.remove('hidden');
+  for(const id of ['email','password','signupBtn','loginBtn','forgotPasswordBtn'])$(id).classList.add('hidden');
+  msg('authmsg','Choisis ton nouveau mot de passe.');
+}
+async function requestPasswordRecovery(){
+  const email=$('email').value.trim();
+  if(!$('email').checkValidity()||!email){msg('authmsg','Saisis une adresse email valide.','err');return;}
+  setBusy('forgotPasswordBtn',true,'Envoi…');
+  try{
+    const redirect=new URL(location.pathname,location.origin);redirect.searchParams.set('auth','recovery');
+    const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirect.href});
+    if(r.error)throw r.error;
+    msg('authmsg','Si cette adresse correspond à un compte, un email de récupération va être envoyé.','ok');
+  }catch{msg('authmsg','Impossible d’envoyer le lien pour le moment. Réessaie plus tard.','err');}
+  finally{setBusy('forgotPasswordBtn',false,'Mot de passe oublié ?');}
+}
+async function saveRecoveredPassword(e){
+  e.preventDefault();
+  const password=$('recoveryPassword').value;
+  if(password.length<8||password!==$('recoveryPasswordConfirm').value){msg('authmsg','Les deux mots de passe doivent être identiques et contenir au moins 8 caractères.','err');return;}
+  setBusy('saveRecoveryPasswordBtn',true,'Enregistrement…');
+  try{
+    const session=await sb.auth.getSession();if(!session.data?.session)throw Error('Session expirée');
+    const r=await sb.auth.updateUser({password});if(r.error)throw r.error;
+    await sb.auth.signOut();
+    $('recoveryPassword').value='';$('recoveryPasswordConfirm').value='';
+    location.replace(location.pathname+'#home');
+  }catch{msg('authmsg','Le lien a expiré ou le mot de passe est refusé. Demande un nouveau lien ou choisis un autre mot de passe.','err');}
+  finally{setBusy('saveRecoveryPasswordBtn',false,'Enregistrer le nouveau mot de passe');}
 }
 
 async function signup(){
@@ -570,12 +609,16 @@ async function show(u){
 
     if(!p.data){
       const name=(u.email||'membre').split('@')[0];
-      const pr=await sb.from('profiles').upsert({
+      let pr=await sb.from('profiles').upsert({
         id:u.id,display_name:name,username:name
       },{onConflict:'id'}).select().single();
+      if(pr.error?.code==='23505'){
+        // Two email addresses may have the same local part; keep the display name.
+        pr=await sb.from('profiles').upsert({id:u.id,display_name:name,username:name+'_'+u.id},{onConflict:'id'}).select().single();
+      }
       if(pr.error) throw new Error('Création du profil : '+pr.error.message);
       $('who').textContent=name;
-      renderProfile({display_name:name,username:name,avatar:''});
+      renderProfile(pr.data||{display_name:name,username:name,avatar:''});
     }else {
       $('who').textContent=p.data.display_name||p.data.username||u.email;
       renderProfile(p.data);
@@ -1108,14 +1151,20 @@ async function deleteEvent(id){
   const btn=document.querySelector('.deleteEventBtn[data-id="'+id+'"]');
   if(btn){btn.disabled=true;btn.textContent='Suppression…';}
   try{
-    // On tente aussi de supprimer les fichiers médias du stockage.
+    // Preserve files until the database has accepted the owner-only deletion.
     const mr=await sb.from('media').select('storage_path').eq('event_id',id);
-    if(!mr.error && (mr.data||[]).length){
-      await sb.storage.from('event-media').remove((mr.data||[]).map(x=>x.storage_path).filter(Boolean));
-    }
+    if(mr.error)throw mr.error;
+    const mediaPaths=(mr.data||[]).map(x=>x.storage_path).filter(Boolean);
 
     const r=await sb.rpc('delete_event',{p_event_id:id});
     if(r.error) throw r.error;
+    let storageCleanupPending=false;
+    if(mediaPaths.length){
+      try{
+        const cleanup=await sb.storage.from('event-media').remove(mediaPaths);
+        storageCleanupPending=!!cleanup.error || (cleanup.data||[]).length!==mediaPaths.length;
+      }catch{storageCleanupPending=true;}
+    }
 
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
@@ -1133,7 +1182,7 @@ async function deleteEvent(id){
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('mediaGrid').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
     }
-    global('Événement supprimé.','ok');
+    global(storageCleanupPending?'Événement supprimé. Certains fichiers nécessitent encore un nettoyage du stockage.':'Événement supprimé.',storageCleanupPending?'muted':'ok');
   }catch(e){
     global('Suppression impossible : '+(e.message||String(e)),'err');
     if(btn){btn.disabled=false;btn.textContent='Supprimer';}
@@ -3533,6 +3582,8 @@ $('connectBtn').addEventListener('click',connect);
 window.addEventListener('load',()=>connect());
 $('signupBtn').addEventListener('click',signup);
 $('loginBtn').addEventListener('click',login);
+$('forgotPasswordBtn').addEventListener('click',requestPasswordRecovery);
+$('passwordRecoveryForm').addEventListener('submit',saveRecoveredPassword);
 function showLocationMap(lat,lon){
   const map=$('createLocationMap'), frame=$('createLocationMapFrame'), link=$('createLocationMapLink');
   if(!map||!frame||!link)return;

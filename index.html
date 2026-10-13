@@ -102,6 +102,12 @@
 <button id="signupBtn">Créer</button>
 <button class="secondary" id="loginBtn">Connexion</button>
 </div>
+<button type="button" class="secondary" id="forgotPasswordBtn">Mot de passe oublié ?</button>
+<form id="passwordRecoveryForm" class="hidden">
+<label>Nouveau mot de passe<input id="recoveryPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+<label>Confirmer le mot de passe<input id="recoveryPasswordConfirm" type="password" minlength="8" autocomplete="new-password" required></label>
+<button type="submit" id="saveRecoveryPasswordBtn">Enregistrer le nouveau mot de passe</button>
+</form>
 <p id="authmsg" class="muted"></p>
 </section>
 
@@ -1123,6 +1129,7 @@
 
 <script src="js/discussion-runtime.js"></script>
 
+<script src="js/ai-runtime.js"></script>
 <script src="js/sorties-reservations-runtime.js?v=outings-viator-fix-1"></script>
 
 
@@ -1222,7 +1229,6 @@
 
 
 
-<script src="js/ai-runtime.js"></script>
 
 <script src="js/accommodation-search-contract.js"></script>
 <script src="js/accommodation-search-runtime.js"></script>
