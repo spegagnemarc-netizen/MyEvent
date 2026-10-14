@@ -9,11 +9,11 @@ test('Release has its own identity, logo and splash without enabling a developme
  const previous=process.env.MYEVENT_BUILD_PROFILE;
  try{
   process.env.MYEVENT_BUILD_PROFILE='release';const result=configure({config});
-  assert.equal(result.name,'MyEvent');assert.equal(result.android.package,'app.myevent.mobile');
+  assert.equal(result.name,'ORÉVAMI');assert.equal(result.android.package,'app.myevent.mobile');
   assert.equal(result.ios.bundleIdentifier,'app.myevent.mobile');assert.equal(result.updates.enabled,false);
   assert.equal(result.plugins.filter(p=>(Array.isArray(p)?p[0]:p)==='expo-splash-screen').length,1);
-  const icon=readFileSync(new URL('../src/assets/app-icon.png',import.meta.url));
-  assert.equal(icon.subarray(1,4).toString(),'PNG');assert.equal(icon.readUInt32BE(16),1024);assert.equal(icon.readUInt32BE(20),1024);
+  const icon=readFileSync(new URL('../src/assets/orevami/icon.png',import.meta.url));
+  assert.equal(icon.subarray(1,4).toString(),'PNG');assert.equal(icon.readUInt32BE(16),512);assert.equal(icon.readUInt32BE(20),512);
   delete process.env.MYEVENT_BUILD_PROFILE;assert.equal(configure({config}).android.package,'app.myevent.mobile.dev');
   const eas=JSON.parse(readFileSync(new URL('../eas.json',import.meta.url),'utf8'));
   assert.equal(eas.build['release-private'].developmentClient,false);
