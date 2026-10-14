@@ -660,6 +660,7 @@ async function show(u){
 }
 
 async function loadEvents(){
+  void resumeEventStorageCleanup();
   try{
   const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
   if(owned.error) throw new Error('Événements : '+owned.error.message);
@@ -1143,6 +1144,22 @@ function updateInviteUI(){
   }
 }
 
+let eventStorageResumeRunning=false;
+async function eventDeletionRequest(eventId){
+  const session=await sb.auth.getSession();
+  const token=session.data?.session?.access_token;
+  if(!token)throw new Error('Reconnecte-toi pour supprimer cet événement.');
+  const response=await fetch('/api/event-deletion',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(eventId?{eventId}:{}),signal:AbortSignal.timeout(85000)});
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||'Suppression indisponible.');
+  return result;
+}
+async function resumeEventStorageCleanup(){
+  if(eventStorageResumeRunning||!sb||!user)return;
+  eventStorageResumeRunning=true;
+  try{await eventDeletionRequest();}catch{/* Durable server jobs remain available for the next connection. */}
+  finally{eventStorageResumeRunning=false;}
+}
 async function deleteEvent(id){
   if(!user||!sb||!id)return;
   const target=document.querySelector('.eventCard[data-event-id="'+id+'"] b')?.textContent||'cet événement';
@@ -1151,20 +1168,9 @@ async function deleteEvent(id){
   const btn=document.querySelector('.deleteEventBtn[data-id="'+id+'"]');
   if(btn){btn.disabled=true;btn.textContent='Suppression…';}
   try{
-    // Preserve files until the database has accepted the owner-only deletion.
-    const mr=await sb.from('media').select('storage_path').eq('event_id',id);
-    if(mr.error)throw mr.error;
-    const mediaPaths=(mr.data||[]).map(x=>x.storage_path).filter(Boolean);
-
-    const r=await sb.rpc('delete_event',{p_event_id:id});
-    if(r.error) throw r.error;
-    let storageCleanupPending=false;
-    if(mediaPaths.length){
-      try{
-        const cleanup=await sb.storage.from('event-media').remove(mediaPaths);
-        storageCleanupPending=!!cleanup.error || (cleanup.data||[]).length!==mediaPaths.length;
-      }catch{storageCleanupPending=true;}
-    }
+    const deletion=await eventDeletionRequest(id);
+    if(!deletion.deleted)throw new Error('Suppression non confirmée.');
+    const storageCleanupPending=deletion.cleanupPending;
 
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
