@@ -15,6 +15,8 @@ module.exports = ({ config }) => {
   }
   return {
     ...config,
+    owner: 'spegagnemarc',
+    extra: { ...config.extra, eas: { projectId: '643c0641-f24a-439d-af9f-bd3f75c77b29' } },
     ...(process.env.OREVAMI_EXPO_OWNER ? { owner: process.env.OREVAMI_EXPO_OWNER } : {}),
     ...(process.env.OREVAMI_EAS_PROJECT_ID ? { extra: { ...config.extra, eas: { projectId: process.env.OREVAMI_EAS_PROJECT_ID } } } : {}),
     name: privateBuild ? 'ORÉVAMI TEST' : release ? 'ORÉVAMI' : 'ORÉVAMI TEST',
