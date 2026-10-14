@@ -30,12 +30,14 @@
         "OREVAMI_DISTRIBUTION": "private"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       },
       "ios": {
         "simulator": false
       },
-      "credentialsSource": "remote"
+      "credentialsSource": "remote",
+      "node": "24.19.0"
     },
     "store-candidate": {
       "extends": "production"
