@@ -1,16 +1,5 @@
 {
   "build": {
-    "release-private": {
-      "developmentClient": false,
-      "distribution": "internal",
-      "env": {
-        "MYEVENT_BUILD_PROFILE": "release"
-      },
-      "android": {
-        "buildType": "apk",
-        "withoutCredentials": true
-      }
-    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -29,7 +18,27 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "credentialsSource": "remote"
+    },
+    "private-test": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "MYEVENT_BUILD_PROFILE": "release",
+        "OREVAMI_DISTRIBUTION": "private"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "credentialsSource": "remote"
+    },
+    "store-candidate": {
+      "extends": "production"
     }
   },
   "cli": {

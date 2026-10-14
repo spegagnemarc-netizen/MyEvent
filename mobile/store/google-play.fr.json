@@ -1,0 +1,27 @@
+{
+  "status": "draft_not_submitted",
+  "name": "ORÉVAMI",
+  "subtitle": "Sorties, amis et événements",
+  "shortDescription": "Organisez vos événements et partagez vos moments avec vos proches.",
+  "description": "ORÉVAMI réunit vos événements et vos moments entre amis. Retrouvez l’interface de votre compte, organisez vos rencontres, échangez avec les participants et partagez vos photos. Découvrez les rubriques Sorties, Musique, Jeux et Marketplace. Une connexion Internet est nécessaire. Les fonctionnalités disponibles dépendent de votre compte et des services partenaires.",
+  "website": "https://orevami.com",
+  "supportEmail": "contact@orevami.com",
+  "suggestedCategory": "Lifestyle",
+  "privacyPolicyUrl": null,
+  "accountDeletionUrl": null,
+  "ageRating": null,
+  "screenshots": [],
+  "reviewAccount": null,
+  "claimsExcluded": [
+    "notifications push opérationnelles",
+    "réalité augmentée",
+    "mode hors connexion",
+    "acceptation garantie par les stores"
+  ],
+  "store": "google-play",
+  "icon": "../app/src/assets/orevami/icon.png",
+  "releaseStatus": "private_candidate_not_built",
+  "notificationsAdvertised": false,
+  "featureGraphic": "google-play-feature.png",
+  "dataSafety": "to_complete_from_actual_data_flows"
+}

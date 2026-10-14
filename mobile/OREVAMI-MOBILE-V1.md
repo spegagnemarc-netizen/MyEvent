@@ -1,5 +1,7 @@
 # ORÉVAMI Mobile V1 — préparation stores
 
+Historique V1 : les assets et profils privés décrits ci-dessous sont remplacés par `OREVAMI-MOBILE-V1.1.md`.
+
 ## Décision et architecture
 
 Reprendre `mobile/app` (Expo SDK 57, React Native 0.86, react-native-webview, caméra Expo), déjà développé dans `mobile-v1-native-camera`, plutôt que créer une deuxième fondation Capacitor. La branche dédiée est `mobile/orevami-v1-store-preparation`, base `f2f5e86`.
