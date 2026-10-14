@@ -19,7 +19,12 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "credentialsSource": "remote"
+      "credentialsSource": "remote",
+      "node": "24.19.0",
+      "ios": {
+        "image": "sdk-57",
+        "simulator": false
+      }
     },
     "private-test": {
       "developmentClient": false,
@@ -35,7 +40,7 @@
       },
       "ios": {
         "simulator": false,
-        "image": "latest"
+        "image": "sdk-57"
       },
       "credentialsSource": "remote",
       "node": "24.19.0"

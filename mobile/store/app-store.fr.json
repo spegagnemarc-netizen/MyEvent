@@ -24,5 +24,12 @@
   "notificationsAdvertised": false,
   "keywords": "événements,sorties,amis,photos,loisirs",
   "appPrivacy": "to_complete_from_actual_data_flows",
-  "reviewNotes": "Application hybride réutilisant le service ORÉVAMI et une caméra native. Compte de démonstration à fournir via App Store Connect. Aucun identifiant dans ce fichier."
+  "reviewNotes": "Application hybride ORÉVAMI avec caméra native. Compte de démonstration et accès de revue à préparer avant soumission ; aucun identifiant dans Git. Aucun push natif ni RA annoncé. La candidate privée TEST utilise une Preview protégée par Vercel ; elle ne constitue pas une candidate de revue App Store.",
+  "preparationVersion": "iPhone V1.2",
+  "bundleIdentifier": "app.myevent.mobile",
+  "privateBundleIdentifier": "app.myevent.mobile.dev",
+  "supportUrl": null,
+  "screenshotsManifest": "app-store-screenshots.fr.json",
+  "appleTeamId": null,
+  "appStoreConnectAppId": null
 }

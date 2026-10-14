@@ -1,0 +1,81 @@
+{
+  "status": "draft_no_native_screenshots_available",
+  "sourcePolicy": "Only authentic screenshots of the signed iOS app; no generated UI, Expo dashboard, browser chrome or fabricated features.",
+  "availableApprovedAssets": [
+    {
+      "path": "../app/src/assets/orevami/icon-1024.png",
+      "purpose": "app icon",
+      "width": 1024,
+      "height": 1024,
+      "opaque": true
+    },
+    {
+      "path": "../app/src/assets/orevami/splash.png",
+      "purpose": "launch logo; not an App Store screenshot"
+    }
+  ],
+  "screenshots": [],
+  "requiredSet": {
+    "deviceFamily": "iPhone",
+    "displayClass": "6.9-inch",
+    "countMinimum": 1,
+    "countMaximum": 10,
+    "acceptedPortraitSizes": [
+      [
+        1260,
+        2736
+      ],
+      [
+        1290,
+        2796
+      ],
+      [
+        1320,
+        2868
+      ]
+    ],
+    "formats": [
+      "png",
+      "jpg",
+      "jpeg"
+    ],
+    "alphaAllowed": false
+  },
+  "capturePlan": [
+    {
+      "screen": "Accueil",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Événements",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Discussion",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Caméra native",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Musique",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Jeux",
+      "status": "pending_signed_iOS_app"
+    },
+    {
+      "screen": "Marketplace",
+      "status": "pending_signed_iOS_app"
+    }
+  ],
+  "captureRules": [
+    "Use fictional approved accounts and data; do not mutate Production for screenshots.",
+    "Hide personal messages, identifiers, secrets and account details.",
+    "Do not claim event deletion is validated; PC check remains pending.",
+    "Captures require separate authorization; no browsing campaign performed in V1.2."
+  ],
+  "specificationSource": "https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/"
+}
