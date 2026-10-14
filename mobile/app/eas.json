@@ -34,7 +34,8 @@
         "image": "latest"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "image": "latest"
       },
       "credentialsSource": "remote",
       "node": "24.19.0"
