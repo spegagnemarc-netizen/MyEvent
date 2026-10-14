@@ -1,11 +1,20 @@
 {
   "project": "ahyyknfjsielnqyoxqgh",
   "commit": "4db5b4fd0e723074d697838da21089d620ce269e",
-  "checks": [],
-  "fixtures": {},
-  "cleanup": [
-    "Compte fictif à reprendre : 00118062-636e-46af-9f02-e4753ec816da"
+  "checks": [
+    "Autre compte refusé ; événement cible conservé",
+    "Suppression propriétaire acceptée ; cascade membres ; panne injectée après retrait des médias, vocal en attente durable",
+    "Upload tardif refusé par le trigger, même via serveur privilégié",
+    "Événement témoin et ses deux binaires strictement préservés après suppression partielle",
+    "Reprise du handler réussi ; inventaire vide et trois binaires cible absents",
+    "Témoin préservé après reprise ; aucun événement existant utilisé"
   ],
-  "success": false,
-  "failure": "TEST POST /rest/v1/profiles HTTP 403: {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT, INSERT ON public.profiles TO service_role;\",\"message\":\"permission denied for table profiles\"}"
+  "fixtures": {
+    "target": "9939d011-20d3-4f00-9c9f-989e80367efa",
+    "witness": "25767f8e-6124-4ef2-a316-9df5fdea30c8",
+    "owner": "6144f756-9768-485a-9141-670b941b7b8c",
+    "other": "42669d1a-531e-403b-940d-bfc549ca71a7"
+  },
+  "cleanup": [],
+  "success": true
 }
