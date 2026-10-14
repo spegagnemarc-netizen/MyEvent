@@ -9,12 +9,13 @@ export default async function eventDeletion(req,res){
  if(id!==undefined&&!uuid.test(id))return res.status(400).json({error:'Événement invalide.'});
  let runtime;
  try{runtime=supabaseEnvironment();}catch{return res.status(503).json({error:'Environnement indisponible.'});}
- const secret=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ const secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY;
+ const serverHeaders={apikey:secret,...(secret?.startsWith('sb_secret_')?{}:{Authorization:'Bearer '+secret})};
  if(!secret)return res.status(503).json({error:'La suppression sécurisée est indisponible. Événement conservé.'});
  let deleted=false;
  const deadline=Date.now()+60000;
  async function request(path,body,privileged=true){
-  const response=await fetch(runtime.url+path,{method:'POST',headers:{apikey:privileged?secret:runtime.publishableKey,Authorization:privileged?'Bearer '+secret:authorization,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+  const response=await fetch(runtime.url+path,{method:'POST',headers:{...(privileged?serverHeaders:{apikey:runtime.publishableKey,Authorization:authorization}),'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw Error('Storage/RPC '+response.status);
   return response.status===204?null:response.json();
  }
@@ -43,7 +44,7 @@ export default async function eventDeletion(req,res){
      if(paths.some(path=>typeof path!=='string'||!path.startsWith(job.event_id+'/')))throw Error('Périmètre invalide');
      if(!paths.length)continue;
      // Actual binaries are removed via Storage API, never by deleting SQL metadata.
-     const response=await fetch(runtime.url+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'},body:JSON.stringify({prefixes:paths}),signal:AbortSignal.timeout(10000)});
+     const response=await fetch(runtime.url+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{...serverHeaders,'Content-Type':'application/json'},body:JSON.stringify({prefixes:paths}),signal:AbortSignal.timeout(10000)});
      if(!response.ok)throw Error('Storage '+response.status);
     }
     // Re-read the remaining inventory; a 2xx response alone is not completion.

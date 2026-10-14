@@ -1,0 +1,11 @@
+{
+  "project": "ahyyknfjsielnqyoxqgh",
+  "commit": "4db5b4fd0e723074d697838da21089d620ce269e",
+  "checks": [],
+  "fixtures": {},
+  "cleanup": [
+    "Compte fictif à reprendre : 00118062-636e-46af-9f02-e4753ec816da"
+  ],
+  "success": false,
+  "failure": "TEST POST /rest/v1/profiles HTTP 403: {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT, INSERT ON public.profiles TO service_role;\",\"message\":\"permission denied for table profiles\"}"
+}
