@@ -335,18 +335,21 @@ async function attachSelectedOutingActions(data){
 }
 
 async function loadSelectedOuting(){
+  const loadScope=eventLoadScope();
+  try{
   const box=$('outingSelectedBox'); if(!box||!event)return;
 
   const version=++outingStateVersion;
 
-  let data=await getScopedEventOuting(event.id);
+  let data=await eventRead(getScopedEventOuting(event.id),loadScope);
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
   // Si une ancienne ligne générique existe malgré tout dans Supabase, on la supprime
   // afin qu'elle ne puisse pas réapparaître au prochain chargement.
   if(isPlaceholderSelectedOuting(data)){
-    try{ await sb.from('event_outings').delete().eq('event_id',event.id); }catch(_){}
+    try{ await eventRead(sb.from('event_outings').delete().eq('event_id',event.id),loadScope); }catch(_){if(!loadScope.current())return;}
+  if(!loadScope.current())return;
     data=null;
   }else{
     data=validSelectedOuting(data);
@@ -365,7 +368,7 @@ async function loadSelectedOuting(){
 
   outingSelected=data;
   renderSelectedOutingBox(data);
-  await attachSelectedOutingActions(data);
+  await eventRead(attachSelectedOutingActions(data),loadScope);
 
   renderOutingResults();
 
@@ -398,6 +401,8 @@ async function loadSelectedOuting(){
     renderOutingResults();
     msg('outingMsg','Sortie retirée de l’événement.','ok');
   });
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function selectOuting(id){
@@ -641,8 +646,10 @@ function reservationFormHtml(prefix){
     '</div><div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationSave">💾 Enregistrer</button><button type="button" class="secondary" id="'+prefix+'ReservationCancel">Annuler</button></div></div>';
 }
 async function loadEventReservation(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return null;
-  const r=await sb.rpc('get_event_reservation',{p_event_id:event.id});
+  const r=await eventRead(sb.rpc('get_event_reservation',{p_event_id:event.id}),loadScope);
   if(r.error){
     console.error('get_event_reservation:', r.error);
     currentReservation=null;
@@ -657,6 +664,8 @@ async function loadEventReservation(){
   if(currentReservation?.status==='cancelled')currentReservation=null;
   if(!currentReservation) currentReservation=loadLocalReservationSnapshot(event.id);
   return currentReservation;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function saveEventReservation(outingId,prefix){
   if(!event||!outingSelected)return;
@@ -712,13 +721,15 @@ async function openReservationForm(prefix){
   $(prefix+'ReservationSave')?.addEventListener('click',()=>saveEventReservation(outingSelected?.id,prefix));
 }
 async function refreshReservationBoxes(){
+  const loadScope=eventLoadScope();
+  try{
   // V54.7 : aucune réservation ne doit apparaître sur un événement sans sortie réelle.
   const selected=validSelectedOuting(outingSelected);
   if(!selected){
     outingSelected=null;
     currentReservation=null;
   }else{
-    await loadEventReservation();
+    await eventRead(loadEventReservation(),loadScope);
     // Une ancienne réservation liée à une autre sortie ne doit pas être recyclée.
     if(currentReservation?.outing_id && selected.id && String(currentReservation.outing_id)!==String(selected.id)){
       currentReservation=null;
@@ -726,7 +737,7 @@ async function refreshReservationBoxes(){
   }
   const choiceKey=user&&event?'myevent_event_planning_choice_'+user.id+'_'+event.id:'';
   let planningChoice='manual';
-  try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){ }
+  try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){if(!loadScope.current())return; }
   const host=$('outingReservationHost'); if(host)host.innerHTML=reservationBoxHtml('outing');
   const home=$('homeReservationBox');
   if(home){
@@ -738,6 +749,8 @@ async function refreshReservationBoxes(){
   $('outingReservationDelete')?.addEventListener('click',cancelEventReservation);
   $('homeReservationDelete')?.addEventListener('click',cancelEventReservation);
   $('homeReserve')?.addEventListener('click',()=>openReservationForm('home'));
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function cancelEventReservation(){
   if(!event)return;

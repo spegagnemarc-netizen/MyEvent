@@ -84,3 +84,24 @@ test('selection survives filtering, return navigation and closing; no first-row 
   ctx.event=null;await w.myeventEventsWorkspace.open();assert.equal(ctx.event,null);assert.equal(selections,0);
  }finally{dom.window.close();}
 });
+
+test('picker and hero keep the committed ID while a requested selection is pending or fails',async()=>{
+ const {w,ctx,dom}=fixture();ctx.events.push({id:'B',name:'Test',event_date:'2030-01-01'});let reject;
+ w.myeventEventsBridge.select=()=>new Promise((_,r)=>reject=r);
+ await w.myeventEventsWorkspace.open();
+ const picker=w.document.getElementById('ewSelectedEvent');picker.value='B';picker.dispatchEvent(new w.Event('change'));
+ assert.equal(w.document.getElementById('ewSelectedEvent').value,ctx.event.id);
+ assert.equal(w.document.querySelector('#ewHero h2').textContent,ctx.event.name);
+ reject(new Error('Réseau indisponible'));await flush();assert.match(w.document.getElementById('ewStatus').textContent,/Réseau/);
+ assert.equal(w.document.getElementById('ewSelectedEvent').value,ctx.event.id);dom.window.close();
+});
+test('cached event renders before list refresh finishes and latest rapid selection wins',async()=>{
+ const {w,ctx,dom}=fixture();ctx.events.push({id:'B',name:'Test',event_date:'2030-01-01'},{id:'C',name:'Dernier',event_date:'2030-01-01'});
+ let finish;w.myeventEventsBridge.load=()=>new Promise(r=>finish=r);
+ const opening=w.myeventEventsWorkspace.open();assert.equal(w.document.querySelector('#ewHero h2').textContent,ctx.event.name);finish();await opening;
+ const pending={};w.myeventEventsBridge.select=id=>new Promise(r=>{pending[id]=()=>{ctx.event=ctx.events.find(e=>e.id===id);r();};});
+ for(const id of ['B','C']){const picker=w.document.getElementById('ewSelectedEvent');picker.value=id;picker.dispatchEvent(new w.Event('change'));}
+ pending.C();await flush();assert.equal(w.document.getElementById('ewSelectedEvent').value,'C');assert.equal(w.document.getElementById('ewStatus').textContent,'');
+ // Real core guards the stale response; here finish without mutating the committed context.
+ dom.window.close();
+});

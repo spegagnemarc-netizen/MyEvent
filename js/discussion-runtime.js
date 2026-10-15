@@ -23,11 +23,12 @@
     return raw;
   };
   const load=async()=>{
+    const scope=eventLoadScope();
     try{
       if(!user?.id||!event?.id)return;
       if(sb?.auth){
-        const r=await sb.auth.getUser();
-        if(!r.error&&r.data?.user)user=r.data.user;
+        const r=await eventRead(sb.auth.getUser(),scope);
+        if(!r.error&&r.data?.user?.id===user?.id)user=r.data.user;
       }
       // Les réglages légers sont synchronisés sur le compte. L'image personnalisée
       // reste locale : on ne met JAMAIS une data:image volumineuse dans user_metadata.
@@ -47,7 +48,7 @@
       }
       if(local)style={...defaults,...local};
       else style={...defaults};
-    }catch(e){ console.warn('Chargement personnalisation:',e?.message||e); }
+    }catch(e){if(e?.code==='EVENT_STALE')return;console.warn('Chargement personnalisation indisponible');}
   };
   let saveQueue=Promise.resolve();
   let saveBusy=false;
@@ -150,7 +151,7 @@
   document.getElementById('chatBgUpload')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{style.customBg=String(r.result);style.bg='custom';apply();save();};r.readAsDataURL(f);});
   resetBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();style={...defaults};apply();save();});
   // Permet à selectEvent() de recharger le fond dès que l'événement et l'utilisateur sont connus.
-  window.loadMyEventChatStyle=async()=>{await load();apply();};
+  window.loadMyEventChatStyle=async()=>{const scope=eventLoadScope();await load();if(scope.current())apply();};
   window.addEventListener('beforeunload',save);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
   load().then(apply);

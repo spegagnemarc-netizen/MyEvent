@@ -7,7 +7,7 @@ const helpers=core.slice(core.indexOf('function rememberedActiveEventId'),core.i
 const select=core.slice(core.indexOf('async function selectEvent(id, options={})'),core.indexOf('\nfunction updateInviteUI'));
 function setup(fetchEvent=async id=>({data:{id,name:'Event '+id,creator_id:'u'}})){
  const saved=new Map(),nodes=new Map();let resets=0;
- const c={event:null,user:{id:'u'},activeEventRole:'member',activeEventSelectionVersion:0,currentReservation:null,callActive:false,window:{},setTimeout(){},global(){},resetOutingModuleState(){resets++;},resetAiModuleState(){},localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)},sessionStorage:{removeItem(){}},document:{querySelectorAll:()=>[],body:{classList:{remove(){}}}},$:id=>{if(!nodes.has(id))nodes.set(id,{textContent:'0'});return nodes.get(id);},sb:{from(){let id;return {select(){return this;},eq(k,v){if(k==='id')id=v;return this;},maybeSingle(){return fetchEvent(id);}}}}};
+ const c={event:null,user:{id:'u'},activeEventRole:'member',activeEventSelectionVersion:0,eventsWorkspaceUserId:null,eventsWorkspaceRows:[],eventRead:async r=>r,eventLoadWarning(){},currentReservation:null,callActive:false,window:{},setTimeout(){},global(){},resetOutingModuleState(){resets++;},resetAiModuleState(){},localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)},sessionStorage:{removeItem(){}},document:{querySelectorAll:()=>[],body:{classList:{remove(){}}}},$:id=>{if(!nodes.has(id))nodes.set(id,{textContent:'0',replaceChildren(){}});return nodes.get(id);},sb:{from(){let id;return {select(){return this;},eq(k,v){if(k==='id')id=v;return this;},maybeSingle(){return fetchEvent(id);}}}}};
  for(const n of ['initializeUnreadMarkers','loadMessages','loadPolls','loadMembers','loadMedia','loadFund','loadWeather','refreshNotifications','renderInlineSelectedEvent','refreshReservationBoxes'])c[n]=async()=>{};
  for(const n of ['renderEventHero','updateInviteUI','subscribeRealtime'])c[n]=()=>{};
  vm.createContext(c);vm.runInContext(helpers+select,c);return {c,saved,resets:()=>resets};
@@ -41,4 +41,17 @@ test('late outing generation cannot replace a plan for another event or another 
  let resolve;const nodes={aiPlanGenerate:{disabled:false},aiPlanStatus:{},aiPlanResults:{},aiPlanRadius:{value:20},aiPlanSteps:{value:2}};
  const c={event:{id:'A'},user:{id:'u'},aiPlanLoadToken:0,$:id=>nodes[id],getActivitySearchCenter:async()=>({lat:44.56,lon:6.08}),fetch:()=>new Promise(r=>resolve=r),aiPlanCandidateType:p=>p.type};
  vm.createContext(c);vm.runInContext(fn,c);const pending=c.generateAiOutingPlan();await new Promise(r=>setImmediate(r));c.event={id:'B'};c.aiPlanLoadToken++;resolve({ok:true,json:async()=>({results:[]})});await pending;assert.equal(c.event.id,'B');assert.equal(c.aiOutingPlanData,undefined);assert.equal(nodes.aiPlanGenerate.disabled,false);
+});
+
+test('cached authorized selection completes even when an ancillary request never resolves',async()=>{
+ const {c}=setup();c.eventsWorkspaceUserId='u';c.eventsWorkspaceRows=[{id:'B',creator_id:'u',name:'B',workspaceRole:'owner'}];
+ c.loadMessages=()=>new Promise(()=>{});
+ await c.selectEvent('B');assert.equal(c.event.id,'B');
+ const version=c.activeEventSelectionVersion;await c.selectEvent('B');assert.equal(c.activeEventSelectionVersion,version);
+});
+
+test('a cached event from a different account never authorizes a selection',async()=>{
+ let calls=0;const {c}=setup(async id=>{calls++;return {data:{id,creator_id:'u'}};});
+ c.eventsWorkspaceUserId='other';c.eventsWorkspaceRows=[{id:'B',creator_id:'other'}];
+ await c.selectEvent('B');assert.equal(calls,1);assert.equal(c.event.creator_id,'u');
 });
