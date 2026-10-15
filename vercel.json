@@ -24,5 +24,10 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "feat/outing-plan-more-options": false
+    }
+  }
 }
