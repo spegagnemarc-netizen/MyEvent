@@ -11,6 +11,17 @@ export default async function handler(req, res) {
   let context;
   try { context = planning.prepare(body); }
   catch (error) { return res.status(error.status || 400).json({error:error.message,code:error.code || 'INVALID_INPUT'}); }
+  // Explicit pagination uses only the request's cached candidate set, never Geoapify/OpenAI.
+  if(body.mode==='alternatives'){
+    try{
+      const primary=planning.fromModel({options:body.primary_options},context,true);
+      const supplied=body.alternative_policy;
+      const policy=planning.alternativePolicy(context,body,supplied?{preferences_checked:true,alternative_candidate_ids:supplied.candidate_ids,required_candidate_groups:supplied.required_groups}:null);
+      const expanded=planning.expand(context,body,primary,policy,body.cursor,true);
+      res.setHeader('Cache-Control','no-store');
+      return res.status(200).json({...planning.response(context,body,expanded.options,null),...expanded,mode:'alternatives'});
+    }catch(error){return res.status(error.status||400).json({error:error.message,code:error.code||'INVALID_PAGE'});}
+  }
   const {people,budget,startTime,mealTime,requestedSteps} = context;
   const safeCandidates=[...context.candidates.filter(c=>c.type==='restaurant').slice(0,12),...context.candidates.filter(c=>c.type!=='restaurant').slice(0,24)];
   const request=String(body.request||'').trim(), eventName=String(body.event_name||'').trim();
@@ -18,7 +29,7 @@ export default async function handler(req, res) {
   const mealType=context.mealType;
   const mealInstruction=mealType==='lunch'?'déjeuner':mealType==='dinner'?'dîner':'repas';
   let failure=process.env.OPENAI_API_KEY?null:'AI_NOT_CONFIGURED';
-  let options=[];
+  let options=[],policy=null;
   if (!failure) try {
     const prompt = `
 Tu es l'organisateur IA de ORÉVAMI.
@@ -61,8 +72,11 @@ OBJECTIF :
 - Ne pas inventer d'ouverture, d'horaire, de durée, de prix ou de disponibilité.
 - Les horaires explicites de l'utilisateur et les prix des candidats seront repris côté serveur.
 - Renvoyer uniquement les identifiants ; ne pas recopier adresses et coordonnées.
+- Pour les variantes automatiques, indique alternative_candidate_ids : uniquement les lieux compatibles avec la demande, sans inventer leurs caractéristiques.
+- required_candidate_groups : pour CHAQUE exigence explicite (ex. bowling), une liste des IDs réellement compatibles. Une variante doit contenir au moins un ID de chaque groupe.
+- Si tu ne peux pas vérifier les préférences avec les données fournies, mets preferences_checked à false. Ne présume pas une caractéristique absente des candidats.
 
-JSON STRICT : {"options":[{"steps":[{"candidate_id":"identifiant exact"}]}]}
+JSON STRICT : {"options":[{"steps":[{"candidate_id":"identifiant exact"}]}],"preferences_checked":true,"alternative_candidate_ids":["identifiant exact"],"required_candidate_groups":[]}
 
 CANDIDATS :
 
@@ -104,6 +118,7 @@ ${JSON.stringify(safeCandidates)}
         try {
           const parsed=JSON.parse(String(text).trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
           options=planning.fromModel(parsed,context);
+          policy=planning.alternativePolicy(context,body,parsed);
           if(!options.length)failure='AI_RESPONSE';
         } catch (_) { failure='AI_RESPONSE'; }
       }
@@ -117,5 +132,10 @@ ${JSON.stringify(safeCandidates)}
   }
   if(!options.length)return res.status(422).json({error:'Aucune combinaison de lieux disponibles ne respecte les critères connus de budget et d’étapes. Ajuste ces critères ou le rayon.',code:'NO_COMPATIBLE_COMBINATION'});
   res.setHeader('Cache-Control','no-store');
-  return res.status(200).json(planning.response(context,body,options,failure));
+  if(!policy)policy=planning.alternativePolicy(context,body,null);
+  const expanded=planning.expand(context,body,options,policy);
+  const result=planning.response(context,body,expanded.options,failure);
+  if(expanded.options.some(o=>o.generation==='deterministic')&&!failure)result.warning+=' Les variantes supplémentaires sont composées automatiquement à partir des mêmes lieux.';
+  if(String(body.request||'').trim()&&!policy)result.warning+=' Les préférences libres ne permettent pas de vérifier d’autres combinaisons : seules les propositions initiales sont conservées.';
+  return res.status(200).json({...result,...expanded});
 }

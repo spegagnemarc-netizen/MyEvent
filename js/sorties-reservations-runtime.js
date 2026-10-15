@@ -23,6 +23,7 @@ function resetAiModuleState(){
   // le planning IA, ses réservations ou son état en mémoire.
   aiPlanLoadToken++;
   aiOutingPlanData=null;
+  aiPlanPagingState=null;
   window.__myeventAiCurrentPlan=null;
   window.__myeventAiReservationPlan=null;
   window.__myeventAiReservationItems=null;
@@ -1013,6 +1014,7 @@ loadSelectedOuting=async function(){
 
 /* ===== original inline script 12 ===== */
 let aiOutingPlanData=null;
+let aiPlanPagingState=null;
 
 // V54.6 : helper global unique pour les valeurs injectées dans les attributs HTML.
 // Important : ne pas créer un wrapper qui rappelle window.escAttr, car une
@@ -1171,6 +1173,8 @@ async function openAiOutingPlanner(editMode=false){
     $('aiPlanMealTime').value=restaurantItem?.start_time||'';
   }
   syncAiMealTime();
+  aiPlanPagingState=null;
+  aiPlanLoadToken++;
   $('aiPlanResults').innerHTML='';
   $('aiPlanStatus').textContent=editMode&&existing?'✏️ Modification du planning IA existant. Génère une nouvelle proposition pour le remplacer.':'';
   $('aiPlanModal').classList.add('open');
@@ -1221,6 +1225,7 @@ async function generateAiOutingPlan(){
   const mealTime=String($('aiPlanMealTime')?.value||'').trim();
   const prompt=String($('aiPlanPrompt')?.value||'').trim();
   btn.disabled=true;
+  aiPlanPagingState=null;
   $('aiPlanResults').innerHTML='';
   $('aiPlanStatus').className='aiPlanStatus';
   $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour du centre 🎯…';
@@ -1237,7 +1242,7 @@ async function generateAiOutingPlan(){
     const available=(d.results||[]).map((p,i)=>({
       id:String(p.id||('candidate-'+i)),
       name:String(p.name||'').trim(),
-      type:aiPlanCandidateType(p),
+      type:aiPlanCandidateType(p),place_type:String(p.type||''),
       address:String(p.address||'').trim(),
       lat:Number(p.lat),lon:Number(p.lon),
       price_per_person:p.price!=null&&Number.isFinite(Number(p.price))&&Number(p.price)>=0?Number(p.price):null,
@@ -1252,49 +1257,88 @@ async function generateAiOutingPlan(){
       const nextRadius=[5,10,20,50].find(km=>km>radius);
       throw new Error((d.partial?'Les résultats disponibles sont insuffisants pour composer ces étapes. ':'')+'Recherche effectuée : '+restaurants.length+' restaurant(s) et '+activities.length+' activité(s) dans '+radius+' km. Pas assez de lieux pour ces '+steps+' étapes. '+(d.partial?'Réessaie lorsque les catégories indisponibles seront rétablies, ou choisis moins d’étapes.':nextRadius?'Sélectionne un rayon de '+nextRadius+' km puis relance la recherche.':'Essaie un autre centre ou moins d’étapes.'));
     }
-    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+'🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
+    const catalogueSummary=restaurants.length+' restaurant(s) et '+activities.length+' activité(s) disponibles dans '+radius+' km.';
+    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+catalogueSummary+' 🤖 Composition des parcours…';
     const token=(await sb.auth.getSession()).data?.session?.access_token||'';
     if(!isCurrent())return;
+    const planRequest={
+      radius,center:geo,event_name:selectedEvent.name||'Événement',
+      event_date:selectedEvent.event_date||null,event_location:selectedEvent.location||'',
+      people,budget_per_person:budget||null,requested_steps:steps,
+      start_time:startTime||null,meal_type:mealType,meal_time:mealTime||null,request:prompt,candidates
+    };
     const ar=await fetch('/api/generate-outing-plan',{
       method:'POST',
       headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},
-      body:JSON.stringify({
-        radius,center:geo,event_name:selectedEvent.name||'Événement',
-        event_date:selectedEvent.event_date||null,
-        event_location:selectedEvent.location||'',
-        people,budget_per_person:budget||null,
-        requested_steps:steps,
-        start_time:startTime||null,
-        meal_type:mealType,
-        meal_time:mealTime||null,
-        request:prompt,
-        candidates
-      })
+      body:JSON.stringify(planRequest)
     });
     const data=await ar.json().catch(()=>({}));
     if(!isCurrent())return;
     if(!ar.ok)throw new Error(data.error||'Le service IA est indisponible.');
     aiOutingPlanData={...data,event_id:selectedEvent.id};
-    renderAiOutingPlans(data);
-    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+(data.warning?data.warning+' ':'')+((data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.');
+    aiPlanPagingState={userId:selectedUserId,eventId:selectedEvent.id,token:generationToken,request:planRequest,paging:data.paging,warning:[searchWarning,catalogueSummary].filter(Boolean).join(' '),busy:false};
+    renderAiOutingPlans(aiOutingPlanData);
+    $('aiPlanStatus').textContent=catalogueSummary+' '+(data.paging?'':'Cette réponse ne contient pas la pagination attendue : actualise la Preview avant de relancer. ')+(searchWarning?searchWarning+' ':'')+(data.warning?data.warning+' ':'')+((data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.');
   }catch(e){
     if(!isCurrent())return;
     $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+(e.message||'Impossible de générer le planning.');
     $('aiPlanStatus').className='aiPlanStatus err';
   }finally{btn.disabled=false;}
 }
+function aiPlanCriteriaMatch(request){
+  return Number($('aiPlanPeople')?.value||10)===request.people&&
+    (Math.max(0,Number($('aiPlanBudget')?.value||0)||0)||null)===request.budget_per_person&&
+    Number($('aiPlanRadius')?.value||5)===request.radius&&Number($('aiPlanSteps')?.value||3)===request.requested_steps&&
+    (String($('aiPlanStartTime')?.value||'').trim()||null)===request.start_time&&
+    String($('aiPlanMealType')?.value||'none')===request.meal_type&&
+    (String($('aiPlanMealTime')?.value||'').trim()||null)===request.meal_time&&
+    String($('aiPlanPrompt')?.value||'').trim()===request.request;
+}
+async function loadMoreAiOutingPlans(){
+  const state=aiPlanPagingState;
+  const isCurrent=()=>state&&aiPlanPagingState===state&&event?.id===state.eventId&&user?.id===state.userId&&aiPlanLoadToken===state.token;
+  if(!isCurrent()||state.busy||!state.paging?.has_more)return;
+  if(!aiPlanCriteriaMatch(state.request)){$('aiPlanStatus').textContent='Les critères ont changé. Relance la génération pour les appliquer.';return;}
+  state.busy=true;
+  document.querySelectorAll('[data-ai-plan-more]').forEach(button=>{button.disabled=true;button.textContent='Préparation des autres sorties…';});
+  try{
+    const r=await fetch('/api/generate-outing-plan',{
+      method:'POST',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...state.request,mode:'alternatives',cursor:state.paging.next_cursor,
+        primary_options:state.paging.primary_options,alternative_policy:state.paging.alternative_policy})
+    });
+    const data=await r.json();
+    if(!isCurrent())return;
+    if(!aiPlanCriteriaMatch(state.request)){$('aiPlanStatus').textContent='Les critères ont changé. Relance la génération pour les appliquer.';return;}
+    if(!r.ok)throw new Error(data.error||'Les propositions supplémentaires sont indisponibles.');
+    const key=o=>JSON.stringify((o.steps||[]).map(s=>s.candidate_id).sort());
+    const seen=new Set((aiOutingPlanData.options||[]).map(key)),added=[];
+    for(const o of data.options||[]){const id=key(o);if(!seen.has(id)){seen.add(id);added.push(o);}}
+    aiOutingPlanData.options.push(...added);
+    state.paging=data.paging;aiOutingPlanData.paging=data.paging;
+    renderAiOutingPlans(aiOutingPlanData);
+    $('aiPlanStatus').className='aiPlanStatus';
+    $('aiPlanStatus').textContent=[state.warning,aiOutingPlanData.warning,data.warning,added.length+' proposition(s) supplémentaire(s), '+aiOutingPlanData.options.length+' au total.',!data.paging?.has_more?'Toutes les combinaisons pertinentes disponibles sont affichées.':''].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' ');
+  }catch(error){if(isCurrent()){$('aiPlanStatus').textContent='Les propositions déjà affichées sont conservées. '+(error.name==='TimeoutError'?'Délai dépassé : réessaie.':error.message||'Réessaie.');}}
+  finally{
+    if(isCurrent()){
+      state.busy=false;document.querySelectorAll('[data-ai-plan-more]').forEach(button=>{button.disabled=false;button.textContent='Voir 10 autres sorties';});
+    }
+  }
+}
 function renderAiOutingPlans(data){
   const box=$('aiPlanResults'); if(!box)return;
   const opts=Array.isArray(data?.options)?data.options:[];
   if(!opts.length){box.innerHTML='<div class="planningEmpty">Aucune combinaison trouvée. Essaie avec un rayon ou un budget différent.</div>';return;}
-  box.innerHTML=opts.map((o,oi)=>{
+  const more=data.paging?.has_more?'<button type="button" class="secondary" data-ai-plan-more>Voir 10 autres sorties</button>':'';
+  box.innerHTML=more+opts.map((o,oi)=>{
     const steps=Array.isArray(o.steps)?o.steps:[];
     const total=o.total_estimated_per_person!=null?'<div class="aiPlanOptionMeta">💶 Environ '+esc(String(o.total_estimated_per_person))+' € / pers.</div>':'';
     return '<div class="aiPlanOption"><div class="aiPlanOptionTitle">'+esc(o.title||('Proposition '+(oi+1)))+'</div>'+
       '<div class="aiPlanOptionMeta">'+esc(o.summary||'Sortie complète')+'</div>'+(o.incomplete?'<div class="aiPlanOptionMeta">Proposition partielle · '+steps.length+' / '+esc(String(o.requested_steps))+' étapes demandées</div>':'')+total+
       steps.map((s,si)=>'<div class="aiPlanStep"><div class="aiPlanStepNum">'+(si+1)+'</div><div><div class="aiPlanStepName">'+esc(s.name||'Étape')+'</div><div class="aiPlanStepMeta">'+aiPlanCandidateLabel(String(s.type||'activity'))+(s.start_time?' · 🕐 '+esc(s.start_time):'')+(s.duration_minutes?' · '+esc(String(s.duration_minutes))+' min':'')+(s.address?' · 📍 '+esc(s.address):'')+(s.price_per_person!=null?' · '+(s.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(s.price_per_person)+(s.source==='ai_estimate'?' (estimé)':''):'')+'</div></div></div>').join('')+
       '<button type="button" class="aiPlanChoose" data-ai-plan-index="'+oi+'">✅ Choisir cette proposition</button></div>';
-  }).join('');
+  }).join('')+more;
 }
 let aiPlanSaving=false;
 async function saveAiOutingPlan(index){
@@ -1629,6 +1673,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#aiOutingOpenBtn')){openAiOutingPlanner();return;}
   if(e.target.closest('#aiPlanClose')||e.target.closest('#aiPlanCancel')){closeAiOutingPlanner();return;}
   if(e.target.closest('#aiPlanGenerate')){generateAiOutingPlan();return;}
+  if(e.target.closest('[data-ai-plan-more]')){loadMoreAiOutingPlans();return;}
   const c=e.target.closest('[data-ai-plan-index]'); if(c){saveAiOutingPlan(c.dataset.aiPlanIndex);return;}
 });
 document.addEventListener('change',e=>{

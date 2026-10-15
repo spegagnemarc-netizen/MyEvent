@@ -21,7 +21,7 @@ function prepare(body={}) {
     if(radius!=null&&km!=null&&km>radius)continue;
     if(capacity!=null&&capacity>0&&capacity<people)continue;
     if(budget!=null&&price!=null&&price>budget)continue;
-    candidates.push({id:String(c.id||'c'+i),name:String(c.name).slice(0,180),type:c.type==='restaurant'?'restaurant':['culture','nature'].includes(c.type)?c.type:'activity',address:String(c.address||'').slice(0,240),lat,lon,price_per_person:price!=null&&price>=0?price:null,capacity:capacity!=null&&capacity>0?capacity:null,distance_km:km,website:c.website?String(c.website).slice(0,500):null,phone:c.phone?String(c.phone).slice(0,80):null});
+    candidates.push({place_type:String(c.place_type||c.type||'').slice(0,100),id:String(c.id||'c'+i),name:String(c.name).slice(0,180),type:c.type==='restaurant'?'restaurant':['culture','nature'].includes(c.type)?c.type:'activity',address:String(c.address||'').slice(0,240),lat,lon,price_per_person:price!=null&&price>=0?price:null,capacity:capacity!=null&&capacity>0?capacity:null,distance_km:km,website:c.website?String(c.website).slice(0,500):null,phone:c.phone?String(c.phone).slice(0,80):null});
   }
   // IDs must identify a single real place; ambiguous duplicates are not selectable.
   const counts=new Map();for(const c of candidates)counts.set(c.id,(counts.get(c.id)||0)+1);
@@ -41,12 +41,13 @@ function option(selection,ctx,title,summary){
   const pricesKnown=steps.every(s=>s.price_per_person!=null);
   return {title:String(title||'Sortie proposée').slice(0,180),summary:String(summary||'Proposition à partir des lieux disponibles.').slice(0,400),total_estimated_per_person:pricesKnown?steps.reduce((sum,s)=>sum+s.price_per_person,0):null,budget_verified:pricesKnown,capacity_verified:selection.every(c=>c.capacity!=null),incomplete:ctx.targetSteps<ctx.requestedSteps,requested_steps:ctx.requestedSteps,steps};
 }
-function fromModel(parsed,ctx){
+function fromModel(parsed,ctx,allowIncomplete=false){
   const map=new Map(ctx.candidates.map(c=>[c.id,c])),options=[],seen=new Set();
   for(const raw of (Array.isArray(parsed?.options)?parsed.options:[]).slice(0,3)){
     const ids=(Array.isArray(raw.steps)?raw.steps:[]).map(s=>String(s.candidate_id||''));
     if(ids.some(id=>!map.has(id)))continue;
-    const result=option(ids.map(id=>map.get(id)),ctx,'Sortie proposée','Sélection de lieux réels ; horaires, tarifs et accueil du groupe à confirmer.');
+    const optionContext=allowIncomplete&&ids.length>=2&&ids.length<=ctx.targetSteps?{...ctx,targetSteps:ids.length}:ctx;
+    const result=option(ids.map(id=>map.get(id)),optionContext,'Sortie proposée','Sélection de lieux réels ; horaires, tarifs et accueil du groupe à confirmer.');
     const key=ids.slice().sort().join('|');if(result&&!seen.has(key)){seen.add(key);options.push(result);}
   }
   return options;
@@ -73,4 +74,97 @@ function response(ctx,body,options,reason){
   if(String(body.request||'').trim()&&reason)warnings.push('Tes préférences libres restent à vérifier sur cette sélection de secours.');
   return {people:ctx.people,budget_per_person:ctx.budget,request:String(body.request||'').slice(0,2000),start_time:ctx.startTime,meal_type:ctx.mealType,meal_time:ctx.mealTime,requested_steps:ctx.requestedSteps,mode:reason?'deterministic':'ai',fallback_reason:reason||null,warning:warnings.join(' '),options};
 }
-module.exports={prepare,fromModel,fallback,response};
+// Extra choices reuse the same real places. Pagination never calls a provider.
+const optionKey=o=>JSON.stringify((o?.steps||[]).map(s=>String(s.candidate_id)).sort());
+function localPreferencePolicy(ctx,body){
+  let text=String(body.request||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const all=ctx.candidates.map(c=>c.id),groups=[];
+  // Only requirements supported by actual names/types are interpreted locally.
+  // Unknown adjectives, exclusions and complex requests remain blocked, never guessed.
+  if(/\b(pas|sans|sauf|eviter|uniquement|vegetarien|vegan|accessible|romantique|calme|terrasse)\b/.test(text))return null;
+  const rules=[
+    [/\bbowling\b/g,/bowling/],[/\b(cinema|cine)\b/g,/cinema/],[/\b(musee|musees)\b/g,/museum|musee/],
+    [/\b(parc|parcs|nature)\b/g,/park|parc|garden|nature|playground/],[/\b(culture|culturel|culturelle)\b/g,/culture|museum|musee|theatre|cinema|gallery/],
+    [/\b(piscine|piscines)\b/g,/swimming_pool|piscine/],[/\b(minigolf|mini golf)\b/g,/miniature_golf|minigolf/]
+  ];
+  for(const [words,match]of rules){if(!words.test(text))continue;words.lastIndex=0;text=text.replace(words,' ');const ids=ctx.candidates.filter(c=>match.test((c.name+' '+c.place_type+' '+c.type).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())).map(c=>c.id);if(!ids.length)return null;groups.push(ids);}
+  text=text.replace(/\b(restaurant|restaurants|resto|repas|activite|activites|loisir|loisirs|sortie|sorties|soiree|journee|conviviale|convivial|equilibree|equilibre|un|une|des|de|du|le|la|les|et|avec|puis|pour|je|veux|voudrais|faire|organiser|proposer)\b/g,' ').replace(/[\s+,.!;:&/()-]/g,'');
+  return text?null:{candidate_ids:all,required_groups:groups};
+}
+function alternativePolicy(ctx,body,raw){
+  if(!String(body.request||'').trim())return {candidate_ids:ctx.candidates.map(c=>c.id),required_groups:[]};
+  const local=localPreferencePolicy(ctx,body);
+  if(local)return local;
+  if(raw?.preferences_checked!==true)return null;
+  const allowed=new Set(ctx.candidates.map(c=>c.id));
+  const ids=Array.isArray(raw.alternative_candidate_ids)?[...new Set(raw.alternative_candidate_ids.map(String))]:[];
+  const groups=raw.required_candidate_groups;
+  if(!ids.length||ids.some(id=>!allowed.has(id))||!Array.isArray(groups)||groups.length>ctx.targetSteps)return null;
+  const pool=new Set(ids);
+  if(groups.some(g=>!Array.isArray(g)||!g.length||g.some(id=>!pool.has(String(id)))))return null;
+  return {candidate_ids:ids,required_groups:groups.map(g=>[...new Set(g.map(String))])};
+}
+function* extraOptions(ctx,policy){
+  if(!policy)return;
+  const ids=new Set(policy.candidate_ids),pool=ctx.candidates.filter(c=>ids.has(c.id));
+  const rank=(a,b)=>(a.distance_km??Infinity)-(b.distance_km??Infinity)||a.id.localeCompare(b.id);
+  const restaurants=pool.filter(food).sort(rank),buckets=['culture','activity','nature'].map(type=>pool.filter(c=>c.type===type).sort(rank));
+  const activities=[];
+  for(let i=0;i<Math.max(0,...buckets.map(b=>b.length));i++)for(const b of buckets)if(b[i])activities.push(b[i]);
+  function* forRestaurant(restaurant,rotation){
+    const a=activities.slice(rotation).concat(activities.slice(0,rotation));
+    const remainingBudget=ctx.budget==null?Infinity:ctx.budget-(restaurant.price_per_person??0);
+    const costs=a.map(c=>c.price_per_person??0).sort((x,y)=>x-y);
+    let k=0,cost=0;
+    while(k<ctx.targetSteps-1&&k<costs.length&&cost+costs[k]<=remainingBudget){cost+=costs[k];k++;}
+    if(!k)return;
+    // Lower bounds prune unaffordable branches before enumerating combinations.
+    const min=Array.from({length:a.length+1},()=>Array(k+1).fill(Infinity));min[a.length][0]=0;
+    for(let i=a.length-1;i>=0;i--){min[i][0]=0;for(let n=1;n<=k;n++)min[i][n]=Math.min(min[i+1][n],(a[i].price_per_person??0)+min[i+1][n-1]);}
+    const groups=policy.required_groups.map(g=>new Set(g));
+    function* choose(start,left,selection,budget){
+      if(min[start][left]>budget)return;
+      const unmet=groups.filter(g=>!selection.some(c=>g.has(c.id))),tail=a.slice(start);
+      for(const g of unmet){
+        const matches=tail.filter(c=>g.has(c.id));
+        if(!left||!matches.length||Math.min(...matches.map(c=>c.price_per_person??0))>budget)return;
+      }
+      if(unmet.length){
+        const maxCoverage=Math.max(0,...tail.map(c=>unmet.filter(g=>g.has(c.id)).length));
+        if(!maxCoverage||Math.ceil(unmet.length/maxCoverage)>left)return;
+      }
+      if(!left){
+        const result=option(selection,{...ctx,targetSteps:selection.length},'Autre sortie proposée','Combinaison automatique de lieux réels ; vérifie les horaires, tarifs et disponibilités.');
+        if(result)yield {...result,generation:'deterministic'};
+        return;
+      }
+      for(let i=start;i<=a.length-left;i++){
+        const price=a[i].price_per_person??0;
+        if(price<=budget)yield* choose(i+1,left-1,[...selection,a[i]],budget-price);
+      }
+    }
+    yield* choose(0,k,[restaurant],remainingBudget);
+  }
+  const iterators=restaurants.map((r,i)=>forRestaurant(r,activities.length?i%activities.length:0));
+  // Rotate restaurants as well as activity order, rather than exhausting one venue first.
+  while(iterators.length){
+    for(let i=0;i<iterators.length;){const next=iterators[i].next();if(next.done){iterators.splice(i,1);continue;}yield next.value;i++;}
+  }
+}
+function extraPage(ctx,primary,policy,cursor=0,limit=10){
+  if(!Number.isInteger(cursor)||cursor<0||cursor>10000)throw Object.assign(new Error('Page de propositions invalide. Relance la recherche.'),{status:400,code:'INVALID_PAGE'});
+  const original=new Set(primary.map(optionKey)),options=[];let skipped=0,hasMore=false;
+  for(const result of extraOptions(ctx,policy)){
+    if(original.has(optionKey(result)))continue;
+    if(skipped++<cursor)continue;
+    if(options.length===limit){hasMore=true;break;}
+    options.push(result);
+  }
+  return {options,next_cursor:cursor+options.length,has_more:hasMore&&cursor+options.length<=10000};
+}
+function expand(ctx,body,primary,policy,cursor=0,additional=false){
+  const page=extraPage(ctx,primary,policy,cursor,additional?10:10-primary.length);
+  return {options:additional?page.options:[...primary,...page.options],planner_version:'more-options-2',choice_summary:{candidate_count:ctx.candidates.length,primary_count:primary.length,eligible_count:policy?.candidate_ids.length||0,blocked_by:policy?null:'UNVERIFIED_PREFERENCES'},paging:{next_cursor:page.next_cursor,has_more:page.has_more,primary_options:primary.map(o=>({steps:o.steps.map(s=>({candidate_id:s.candidate_id}))})),alternative_policy:policy}};
+}
+
+module.exports={prepare,fromModel,fallback,response,alternativePolicy,localPreferencePolicy,extraPage,expand};

@@ -73,4 +73,26 @@ function failure(error, subject = 'de lieux') {
   };
 }
 
-module.exports = { places, feature, failure, searchTimeoutMs, FOOD, ACTIVITIES, OUTDOORS, HALLS };
+// Public place responses only. Never cache a key, an account or a user's planning data.
+const searchCache=new Map(),searchPending=new Map();
+async function searchPlaces(lat,lon,radius,categories){
+  const key=JSON.stringify([lat,lon,radius,categories]),now=Date.now(),cached=searchCache.get(key);
+  if(cached&&now-cached.at<60000)return {features:cached.features,cached:true,stale:false,durationMs:0};
+  if(searchPending.has(key))return searchPending.get(key);
+  const request=(async()=>{
+    const start=Date.now();
+    try{
+      const features=await places(lat,lon,radius,categories,100,searchTimeoutMs());
+      searchCache.set(key,{at:Date.now(),features});
+      while(searchCache.size>100)searchCache.delete(searchCache.keys().next().value);
+      return {features,cached:false,stale:false,durationMs:Date.now()-start};
+    }catch(error){
+      if(cached&&Date.now()-cached.at<600000)return {features:cached.features,cached:true,stale:true,durationMs:Date.now()-start,failure:failure(error)};
+      throw Object.assign(error,{durationMs:Date.now()-start});
+    }
+  })();
+  searchPending.set(key,request);
+  try{return await request;}finally{if(searchPending.get(key)===request)searchPending.delete(key);}
+}
+
+module.exports = { places, searchPlaces, feature, failure, searchTimeoutMs, FOOD, ACTIVITIES, OUTDOORS, HALLS };
