@@ -7,7 +7,7 @@ function send(res, status, body) {
   res.status(status);
   res.setHeader(
     'Cache-Control',
-    status >= 400 ? 'no-store' : 's-maxage=180, stale-while-revalidate=600'
+    status >= 400 || body.partial ? 'no-store' : 's-maxage=180, stale-while-revalidate=600'
   );
   return res.json(body);
 }
@@ -332,13 +332,32 @@ async function fetchNearbyOverpass(lat,lon,radius){
   if(process.env.GEOAPIFY_API_KEY){
     // Independent result limits per family prevent art/monuments or dense restaurants
     // from consuming every slot needed to compose restaurant + activity.
-    const groups = await Promise.all([
-      geoapify.places(lat, lon, radius, geoapify.FOOD),
-      geoapify.places(lat, lon, radius, geoapify.ACTIVITIES),
-      geoapify.places(lat, lon, radius, geoapify.OUTDOORS)
-    ]);
-    return { source: 'OpenStreetMap / Geoapify',
-      features: groups.flatMap((group, i) => group.slice(0, [75, 50, 25][i]).map(geoapify.feature)) };
+    const families = [
+      { category: 'restaurants', label: 'Restaurants', query: geoapify.FOOD, cap: 75 },
+      { category: 'culture', label: 'Culture et divertissement', query: geoapify.ACTIVITIES, cap: 50 },
+      { category: 'outdoors', label: 'Plein air et sport', query: geoapify.OUTDOORS, cap: 25 }
+    ];
+    const groups = await Promise.allSettled(families.map(family =>
+      geoapify.places(lat, lon, radius, family.query, 100, geoapify.searchTimeoutMs())));
+    const categoryStatus = groups.map((group, i) => ({
+      category: families[i].category, label: families[i].label,
+      available: group.status === 'fulfilled',
+      ...(group.status === 'rejected' ? geoapify.failure(group.reason) : {})
+    }));
+    if (groups.every(group => group.status === 'rejected')) {
+      // Keep the individual safe causes: a total outage is never an empty success.
+      throw Object.assign(new Error('Toutes les recherches ont échoué.'), {
+        code: groups[0].reason?.code || 'PROVIDER_UNAVAILABLE',
+        providerStatus: groups[0].reason?.providerStatus, categoryStatus
+      });
+    }
+    const unavailable = categoryStatus.filter(status => !status.available);
+    return { source: 'OpenStreetMap / Geoapify', categoryStatus,
+      partial: unavailable.length > 0,
+      warning: unavailable.length ? 'Recherche partiellement indisponible. '+unavailable.map(status =>
+        status.label+' : '+status.error).join(' ')+' Les résultats disponibles sont affichés ; la liste peut être incomplète.' : '',
+      features: groups.flatMap((group, i) => group.status === 'fulfilled' ?
+        group.value.slice(0, families[i].cap).map(geoapify.feature) : []) };
   }
   const meters=Math.round(radius*1000);
   const clauses=[
@@ -798,7 +817,7 @@ module.exports =
 
       // Log/status metadata only: a fetch exception can contain a URL with a key.
       console.error('[ORÉVAMI search]', error?.code || 'PROVIDER_UNAVAILABLE', error?.providerStatus || '');
-      return send(res, 503, geoapify.failure(error));
+      return send(res, 503, { ...geoapify.failure(error), ...(error?.categoryStatus ? { categoryStatus: error.categoryStatus } : {}) });
     }
 
 
@@ -918,6 +937,9 @@ module.exports =
       200,
       {
         mode,
+        partial: !!data.partial,
+        warning: data.warning || '',
+        ...(data.categoryStatus ? { categoryStatus: data.categoryStatus } : {}),
 
         results:
           finalResults,

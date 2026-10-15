@@ -199,7 +199,7 @@ function setBusy(id,busy,label){
 
 /* V48.6 — Localisation : activités renforcées + avatars sur la carte */
 let locationMap=null, locationEventMarker=null, locationUserMarker=null, locationMemberMarkers=[], locationPlaceMarkers=[], locationEventCoords=null, locationSearchCenterMarker=null, locationSearchCircle=null, locationSearchCenter=null, locationHallMarker=null, locationOutingMarker=null;
-let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='';
+let locationPlacesData=[], locationPlaceFilter='all', locationPlaceSearch='', locationPlacesWarning='';
 // V54.34 — centre de recherche utilisé comme source de vérité pour les recherches d'activités.
 // Le point rouge reste fixe ; le point 🎯 peut être déplacé pour concentrer les résultats.
 const locationSearchCentersByEvent=new Map();
@@ -329,6 +329,7 @@ function renderNearbyPlaces(){
     }
   });
   el.innerHTML=filtered.slice(0,20).map(p=>'<div class="locationPlace"><div class="placeIcon">'+(locationIcons[p.type]||'📍')+'</div><div class="placeBody"><b>'+esc(p.name)+'</b><span>'+esc(String(p.type).replaceAll('_',' '))+' · '+p.distance.toFixed(1)+' km</span></div><button type="button" class="secondary locationGoBtn" data-lat="'+p.lat+'" data-lon="'+p.lon+'">Voir</button></div>').join('')||'<p class="muted">Aucun lieu ne correspond à ta recherche.</p>';
+  if(locationPlacesWarning)el.insertAdjacentHTML('afterbegin','<p class="muted" role="status">'+esc(locationPlacesWarning)+'</p>');
   el.querySelectorAll('.locationGoBtn').forEach(b=>b.onclick=(ev)=>{
     ev.preventDefault();ev.stopPropagation();
     const lat=+b.dataset.lat,lon=+b.dataset.lon;setLocationMapView(lat,lon,17);
@@ -346,8 +347,8 @@ async function loadNearbyPlaces(lat,lon){
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche indisponible');
     const arr=(d.results||[]).map(x=>({...x,lat:+x.lat,lon:+x.lon,distance:Number(x.distance)})).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
-    locationPlacesData=arr;renderNearbyPlaces();
-  }catch(e){locationPlacesData=[];el.innerHTML='<p class="muted">Les activités sont momentanément indisponibles. Appuie sur ↻ Actualiser pour réessayer.</p>';const countEl=$('locationResultCount');if(countEl)countEl.textContent='';}
+    locationPlacesWarning=d.warning||'';locationPlacesData=arr;renderNearbyPlaces();
+  }catch(e){locationPlacesWarning='';locationPlacesData=[];el.innerHTML='<p class="muted">'+esc(e.message||'Les activités sont momentanément indisponibles.')+'</p>';const countEl=$('locationResultCount');if(countEl)countEl.textContent='';}
 }
 async function loadSharedMemberLocations(){
   const wrap=$('locationMembers'); if(!wrap||!event||!user)return;
@@ -396,7 +397,7 @@ async function loadEventLocations(){
   }
   else{
     $('locationEventAddress').textContent=event.location||'Lieu non renseigné';
-    locationPlacesData=[];
+    locationPlacesData=[];locationPlacesWarning='';
     $('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';
   }
   await loadSharedMemberLocations();await window.MyEventReservationLinkUI?.map();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);

@@ -46,3 +46,14 @@ test('nearby restaurant search expands an empty radius; approximate activities n
  w.document.querySelector('[data-category=activity]').click();w.document.getElementById('locate').click();await tick();assert.equal(markers.length,0);assert.match(w.document.getElementById('places').textContent,/Localisation indicative/);assert.doesNotMatch(w.document.getElementById('places').textContent,/0.0 km/);
  }finally{f.dom.window.close();}
 });
+
+test('partial search shows available restaurants and warnings, without automatic widening on provider failure',async()=>{
+ const f=fixture(false),w=f.w;let calls=0;
+ try{await tick();Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition:resolve=>resolve({coords:{latitude:44.56,longitude:6.08}})}});w.AbortSignal=AbortSignal;
+ const group={addTo(){return group;},clearLayers(){}};const map={setView(){return map;},invalidateSize(){}};
+ w.L={map:()=>map,tileLayer:()=>({addTo(){}}),layerGroup:()=>group,marker:()=>({addTo(){return this;},bindPopup(){return this;}})};
+ w.fetch=async()=>{calls++;return {ok:true,json:async()=>({partial:true,warning:'Recherche partiellement indisponible : culture.',results:calls===1?[{name:'Restaurant disponible',type:'restaurant',lat:44.56,lon:6.08}]:[]})};};
+ w.document.querySelector('[data-category=restaurant]').click();w.document.getElementById('locate').click();await tick();assert.equal(calls,1);assert.match(w.document.getElementById('places').textContent,/Restaurant disponible/);assert.match(w.document.getElementById('searchNotice').textContent,/partiellement indisponible/);
+ w.document.getElementById('locate').click();await tick();assert.equal(calls,2);assert.match(w.document.getElementById('searchNotice').textContent,/partiellement indisponible/);assert.doesNotMatch(w.document.getElementById('searchNotice').textContent,/choisis un rayon/);
+ }finally{f.dom.window.close();}
+});

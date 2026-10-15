@@ -1208,12 +1208,14 @@ async function generateAiOutingPlan(){
   btn.disabled=true;
   $('aiPlanResults').innerHTML='';
   $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour du centre 🎯…';
+  let searchWarning='';
   try{
     const geo=await getActivitySearchCenter();
     if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.');
     const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
+    searchWarning=d.warning||'';
     const available=(d.results||[]).map((p,i)=>({
       id:String(p.id||('candidate-'+i)),
       name:String(p.name||'').trim(),
@@ -1230,9 +1232,9 @@ async function generateAiOutingPlan(){
     const candidates=[...restaurants,...activities];
     if(!restaurants.length||activities.length<steps-1){
       const nextRadius=[5,10,20,50].find(km=>km>radius);
-      throw new Error('Recherche effectuée : '+restaurants.length+' restaurant(s) et '+activities.length+' activité(s) dans '+radius+' km. Pas assez de lieux pour ces '+steps+' étapes. '+(nextRadius?'Sélectionne un rayon de '+nextRadius+' km puis relance la recherche.':'Essaie un autre centre ou moins d’étapes.'));
+      throw new Error((d.partial?'Les résultats disponibles sont insuffisants pour composer ces étapes. ':'')+'Recherche effectuée : '+restaurants.length+' restaurant(s) et '+activities.length+' activité(s) dans '+radius+' km. Pas assez de lieux pour ces '+steps+' étapes. '+(d.partial?'Réessaie lorsque les catégories indisponibles seront rétablies, ou choisis moins d’étapes.':nextRadius?'Sélectionne un rayon de '+nextRadius+' km puis relance la recherche.':'Essaie un autre centre ou moins d’étapes.'));
     }
-    $('aiPlanStatus').textContent='🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
+    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+'🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
     const token=(await sb.auth.getSession()).data?.session?.access_token||'';
     const ar=await fetch('/api/generate-outing-plan',{
       method:'POST',
@@ -1254,9 +1256,9 @@ async function generateAiOutingPlan(){
     if(!ar.ok)throw new Error(data.error||'Le service IA est indisponible.');
     aiOutingPlanData=data;
     renderAiOutingPlans(data);
-    $('aiPlanStatus').textContent=(data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.';
+    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+((data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.');
   }catch(e){
-    $('aiPlanStatus').textContent=e.message||'Impossible de générer le planning.';
+    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+(e.message||'Impossible de générer le planning.');
     $('aiPlanStatus').className='aiPlanStatus err';
   }finally{btn.disabled=false;}
 }

@@ -39,15 +39,15 @@ test('successful empty response stays empty, with a proposed radius; it is not a
   for(const handler of [places,halls]){const r=await run(handler);assert.equal(r.code,200);assert.equal(r.body.count,0);assert.equal(r.body.nextRadius,10);assert.equal(r.body.error,undefined);}
 });
 test('auth, quota and outage errors are explicit, not cached, and never contain a key or upstream payload',async()=>{
-  for(const handler of [places,halls])for(const [status,code] of [[401,'PROVIDER_AUTH'],[403,'PROVIDER_AUTH'],[429,'PROVIDER_QUOTA'],[500,'PROVIDER_UNAVAILABLE']]){
+  for(const handler of [places,halls])for(const [status,code] of [[401,'PROVIDER_AUTH'],[403,'PROVIDER_AUTH'],[429,'PROVIDER_QUOTA'],[500,'PROVIDER_HTTP']]){
     const r=await run(handler,{},()=>({ok:false,status,json:async()=>({message:'unit-test-key'})}));
     assert.equal(r.code,503);assert.equal(r.body.code,code);assert.equal(r.body.providerStatus,status);assert.equal(r.headers['Cache-Control'],'no-store');
     assert(!JSON.stringify(r.body).includes('unit-test-key'));
   }
 });
-test('network/invalid JSON failures stay safe; partial family failure is not reported as zero results',async()=>{
+test('network/invalid JSON failures stay safe; partial quota failure preserves available results',async()=>{
   for(const response of [()=>{throw Error('https://provider?apiKey=unit-test-key');},()=>({ok:true,json:async()=>{throw Error('unit-test-key');}}),url=>url.searchParams.get('categories').startsWith('catering')?ok([point('r','catering.restaurant','Restaurant')]):({ok:false,status:429})]){
-    const r=await run(places,{},response);assert.equal(r.code,503);assert(!JSON.stringify(r.body).includes('unit-test-key'));
+    const r=await run(places,{},response);assert.equal(r.code,r.body.partial?200:503);if(r.body.partial){assert.equal(r.body.results.length,1);assert.match(r.body.warning,/partiellement/);assert.equal(r.body.categoryStatus.filter(x=>!x.available).length,2);}assert(!JSON.stringify(r.body).includes('unit-test-key'));
   }
 });
 test('invalid coordinates and radii never call a provider',async()=>{
@@ -64,11 +64,11 @@ test('halls use configured Geoapify with strict venue filtering and known capaci
 test('AI candidate limit retains both families and never calls the model when actual results are insufficient',async()=>{
   const src=readFileSync(new URL('../js/sorties-reservations-runtime.js',import.meta.url),'utf8');
   const fn=src.slice(src.indexOf('async function generateAiOutingPlan(){'),src.indexOf('\nfunction renderAiOutingPlans'));
-  async function generate(results){
+  async function generate(results,metadata={}){
     const nodes={aiPlanGenerate:{disabled:false},aiPlanRadius:{value:'5'},aiPlanSteps:{value:'3'},aiPlanResults:{},aiPlanStatus:{}};let sent;
     const c=vm.createContext({event:{name:'Fictif'},user:{id:'fictif'},$:id=>nodes[id],getActivitySearchCenter:async()=>({lat:48.8566,lon:2.3522}),aiPlanCandidateType:p=>p.type,renderAiOutingPlans(){},sb:{auth:{getSession:async()=>({data:{}})}},fetch:async(url,options)=>{
       if(options?.method==='POST'){sent=JSON.parse(options.body);return {ok:true,json:async()=>({options:[]})};}
-      return {ok:true,json:async()=>({results})};
+      return {ok:true,json:async()=>({results,...metadata})};
     }});
     vm.runInContext(fn,c);await c.generateAiOutingPlan();return {sent,status:nodes.aiPlanStatus.textContent};
   }
@@ -76,4 +76,42 @@ test('AI candidate limit retains both families and never calls the model when ac
   const activity=i=>({id:'a'+i,name:'Activité '+i,type:'activity',lat:48.8566,lon:2.3522});
   const r=await generate([...food,activity(1),activity(2)]);assert.equal(r.sent.candidates.length,62);assert.equal(r.sent.candidates.filter(x=>x.type==='activity').length,2);
   const insufficient=await generate(food);assert.equal(insufficient.sent,undefined);assert.match(insufficient.status,/120|60/);assert.match(insufficient.status,/10 km/);
+  const degraded=await generate([...food,activity(1),activity(2)],{partial:true,warning:'Culture temporairement indisponible.'});assert.equal(degraded.sent.candidates.filter(x=>x.type==='activity').length,2);assert.match(degraded.status,/Culture temporairement/);
+  const missingFood=await generate([activity(1),activity(2)],{partial:true,warning:'Restaurants indisponibles.'});assert.equal(missingFood.sent,undefined);assert.match(missingFood.status,/Restaurants indisponibles/);assert.doesNotMatch(missingFood.status,/Sélectionne un rayon/);
+});
+
+test('three calls start independently; culture timeout retains restaurants and outdoors with explicit warning',async()=>{
+  const pending=[];
+  const result=run(places,{radius:20},url=>new Promise((resolve,reject)=>pending.push({url,resolve,reject})));
+  await new Promise(resolve=>setImmediate(resolve));assert.equal(pending.length,3);
+  pending.find(p=>p.url.searchParams.get('categories').startsWith('catering')).resolve(ok([point('food','catering.restaurant','Restaurant') ]));
+  pending.find(p=>p.url.searchParams.get('categories').startsWith('leisure')).resolve(ok([point('park','leisure.park','Parc')]));
+  pending.find(p=>p.url.searchParams.get('categories')==='entertainment').reject(Object.assign(new Error('unit-test-key'),{name:'TimeoutError'}));
+  const r=await result;assert.equal(r.code,200);assert.equal(r.body.partial,true);assert.equal(r.body.results.length,2);
+  assert.equal(r.body.categoryStatus.find(p=>p.category==='culture').code,'PROVIDER_TIMEOUT');
+  assert.match(r.body.warning,/Culture et divertissement/);assert.match(r.body.warning,/délai/);
+  assert.equal(r.headers['Cache-Control'],'no-store');assert(!JSON.stringify(r.body).includes('unit-test-key'));
+});
+test('timeouts, network errors and malformed responses stay distinct, including during body consumption',async()=>{
+  for(const [response,code] of [
+    [()=>{throw Object.assign(new Error('unit-test-key'),{name:'TimeoutError'});},'PROVIDER_TIMEOUT'],
+    [()=>{throw new TypeError('unit-test-key');},'PROVIDER_NETWORK'],
+    [()=>({ok:true,json:async()=>{throw Object.assign(new Error('unit-test-key'),{name:'AbortError'});}}),'PROVIDER_TIMEOUT'],
+    [()=>({ok:true,json:async()=>{throw new SyntaxError('unit-test-key');}}),'PROVIDER_RESPONSE'],
+    [()=>({ok:true,json:async()=>({features:null})}),'PROVIDER_RESPONSE']
+  ]){const r=await run(places,{},response);assert.equal(r.code,503);assert.equal(r.body.code,code);assert.equal(r.body.categoryStatus.length,3);assert(r.body.categoryStatus.every(x=>x.code===code));assert(!JSON.stringify(r.body).includes('unit-test-key'));}
+});
+test('a successful empty family and unavailable families are partial, not evidence that all places are absent',async()=>{
+  const r=await run(places,{},url=>url.searchParams.get('categories').startsWith('catering')?ok([]):({ok:false,status:429}));
+  assert.equal(r.code,200);assert.equal(r.body.count,0);assert.equal(r.body.partial,true);assert.match(r.body.warning,/incomplète/);
+  assert.equal(r.body.categoryStatus[0].available,true);assert.equal(r.body.categoryStatus[1].code,'PROVIDER_QUOTA');
+});
+test('20-second search setting is bounded and does not alter the halls default or increase call count',async()=>{
+  const saved=process.env.GEOAPIFY_SEARCH_TIMEOUT_MS,original=AbortSignal.timeout,seen=[];
+  const provider=require('../server/geoapify-places');
+  try{
+    for(const [setting,expected] of [['20000',20000],['1000',1000],['bad',10000],['0',10000],['20001',10000]]){process.env.GEOAPIFY_SEARCH_TIMEOUT_MS=setting;assert.equal(provider.searchTimeoutMs(),expected);}
+    process.env.GEOAPIFY_SEARCH_TIMEOUT_MS='20000';AbortSignal.timeout=ms=>{seen.push(ms);return original(ms);};
+    const p=await run(places),h=await run(halls);assert.equal(p.calls.length,3);assert.equal(h.calls.length,1);assert.deepEqual(seen,[20000,20000,20000,10000]);
+  }finally{AbortSignal.timeout=original;if(saved===undefined)delete process.env.GEOAPIFY_SEARCH_TIMEOUT_MS;else process.env.GEOAPIFY_SEARCH_TIMEOUT_MS=saved;}
 });

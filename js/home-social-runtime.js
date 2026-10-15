@@ -1224,10 +1224,11 @@
       if(!r.ok)throw new Error(d.error||'Recherche indisponible');
       nearbyPlaces=Array.isArray(d.results)?d.results:[];
       renderNearbyPlaces();
-      if(toast)toast.textContent=nearbyPlaces.length?nearbyPlaces.length+' lieux trouvés dans un rayon de '+nearbyRadiusKm+' km':'Aucun lieu trouvé dans un rayon de '+nearbyRadiusKm+' km.';
+      if(toast)toast.textContent=(d.warning?d.warning+' ':'')+(nearbyPlaces.length?nearbyPlaces.length+' lieux trouvés dans un rayon de '+nearbyRadiusKm+' km':d.partial?'Aucun résultat disponible pour le moment.':'Aucun lieu trouvé dans un rayon de '+nearbyRadiusKm+' km.');
+      if(d.partial)return; // Keep the warning visible until the next search.
     }catch(e){
       nearbyPlaces=[];renderNearbyPlaces();
-      if(toast)toast.textContent='Les lieux à proximité sont temporairement indisponibles.';
+      if(toast)toast.textContent=e.message||'Les lieux à proximité sont temporairement indisponibles.';
     }
     if(toast)setTimeout(()=>{if(toast.textContent)toast.textContent=''},3500);
   }
