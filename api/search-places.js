@@ -644,6 +644,10 @@ module.exports =
       );
     }
 
+    if (req.query.diagnostic === 'gap-once') {
+      return require('../server/geoapify-diagnostic-once')(req, res);
+    }
+
     const mode =
       String(
         req.query.mode ||
