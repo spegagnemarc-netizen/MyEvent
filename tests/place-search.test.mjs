@@ -20,13 +20,14 @@ async function run(handler, query = {}, response = () => ({ok:true,json:async()=
 const ok=features=>({ok:true,json:async()=>({features})});
 test('5, 10, 20 and 50 km use lon/lat and meters; food and activities cannot exhaust each other',async()=>{
   for(const radius of [5,10,20,50]){
-    const r=await run(places,{radius},url=>ok(Array.from({length:100},(_,i)=>point(url.searchParams.get('categories')+'-'+i,url.searchParams.get('categories').startsWith('catering')?'catering.restaurant':'entertainment.culture.theatre',url.searchParams.get('categories')+' Lieu '+i))));
-    assert.equal(r.code,200);assert.equal(r.calls.length,2);
+    const r=await run(places,{radius},url=>ok(Array.from({length:100},(_,i)=>point(url.searchParams.get('categories')+'-'+i,url.searchParams.get('categories').startsWith('catering')?'catering.restaurant':url.searchParams.get('categories')==='entertainment'?'entertainment.culture.theatre':'leisure.park',url.searchParams.get('categories')+' Lieu '+i))));
+    assert.equal(r.code,200);assert.equal(r.calls.length,3);
     for(const url of r.calls)assert.equal(url.searchParams.get('filter'),`circle:2.3522,48.8566,${radius*1000}`);
     assert(r.calls.some(url=>url.searchParams.get('categories')==='catering.restaurant,catering.fast_food'));
     assert(r.calls.every(url=>!url.searchParams.get('categories').split(',').includes('tourism')));
     assert.equal(r.body.results.filter(x=>x.type==='restaurant').length,75);
-    assert.equal(r.body.results.filter(x=>x.type==='theatre').length,75);
+    assert.equal(r.body.results.filter(x=>x.type==='theatre').length,50);
+    assert.equal(r.body.results.filter(x=>x.type==='park').length,25);
   }
 });
 test('Geoapify classification, duplicates, unnamed places and out-of-radius points are handled',async()=>{

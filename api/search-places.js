@@ -334,10 +334,11 @@ async function fetchNearbyOverpass(lat,lon,radius){
     // from consuming every slot needed to compose restaurant + activity.
     const groups = await Promise.all([
       geoapify.places(lat, lon, radius, geoapify.FOOD),
-      geoapify.places(lat, lon, radius, geoapify.ACTIVITIES)
+      geoapify.places(lat, lon, radius, geoapify.ACTIVITIES),
+      geoapify.places(lat, lon, radius, geoapify.OUTDOORS)
     ]);
     return { source: 'OpenStreetMap / Geoapify',
-      features: groups.flatMap(group => group.slice(0, 75).map(geoapify.feature)) };
+      features: groups.flatMap((group, i) => group.slice(0, [75, 50, 25][i]).map(geoapify.feature)) };
   }
   const meters=Math.round(radius*1000);
   const clauses=[

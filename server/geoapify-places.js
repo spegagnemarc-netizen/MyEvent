@@ -1,6 +1,7 @@
 // Server-side only. Never return provider payloads or credential-bearing URLs.
 const FOOD = 'catering.restaurant,catering.fast_food';
-const ACTIVITIES = 'entertainment,leisure.park,leisure.spa,sport';
+const ACTIVITIES = 'entertainment';
+const OUTDOORS = 'leisure.park,leisure.spa,sport';
 const HALLS = 'activity.events_venue,activity.community_center';
 
 async function places(lat, lon, radius, categories, limit = 100) {
@@ -54,4 +55,4 @@ function failure(error, subject = 'de lieux') {
   };
 }
 
-module.exports = { places, feature, failure, FOOD, ACTIVITIES, HALLS };
+module.exports = { places, feature, failure, FOOD, ACTIVITIES, OUTDOORS, HALLS };

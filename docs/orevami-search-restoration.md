@@ -15,7 +15,7 @@ Contrôles GET uniquement, centre de référence public Paris (48.8566, 2.3522),
 
 ## Corrections préparées
 
-- Deux requêtes Geoapify distinctes, restauration et activités (culture/loisirs/sport), sans la famille touristique générale qui saturait les résultats. Plafond réservé par famille ; catégories et coordonnées conservées, dédoublonnage et filtre de distance réels maintenus. Deux appels fournisseur par recherche de proximité, au lieu d'un : à intégrer au suivi de quota.
+- Trois requêtes Geoapify distinctes, restauration, culture/divertissement et plein air/sport, sans la famille touristique générale qui saturait les résultats. Plafond réservé par famille ; catégories et coordonnées conservées, dédoublonnage et filtre de distance réels maintenus. Trois appels fournisseur par recherche de proximité, au lieu d'un : à intégrer au suivi de quota.
 - Catégorisation restauration issue des catégories Geoapify ; coordonnées obligatoires, noms absents exclus, contact/site préservés.
 - Salles : utilisation de Geoapify déjà configuré, catégories documentées `activity.events_venue` et `activity.community_center`, puis filtre strict des lieux événementiels. Pas de promesse de disponibilité à la location ; capacité et tarif inconnus restent inconnus. Ancien repli Overpass uniquement si aucune clé Geoapify n'est configurée, avec délai borné.
 - Rayons 5/10/20/50 km acceptés ; conversion km → mètres vérifiée. Option 50 km ajoutée aux sélecteurs concernés.
@@ -27,6 +27,6 @@ Contrôles GET uniquement, centre de référence public Paris (48.8566, 2.3522),
 
 20 contrôles Node ciblés réussis : recherches salles/lieux, rayons, filtrage, erreurs fournisseur, protection des secrets, équilibre des candidats IA et non-régression Viator. Un contrôle DOM ciblé supplémentaire confirme l'élargissement de rayon et l'absence de marqueur exact pour une activité approximative. Aucun test des jeux ni campagne de navigation.
 
-Les contrôles des nouveaux appels fournisseur sont simulés localement ; les résultats réels de la correction restent à confirmer sur une Preview avant promotion. Les catégories utilisées sont celles de la documentation officielle Geoapify : https://apidocs.geoapify.com/docs/places/.
+Les scénarios d'erreur sont simulés localement. Une première Preview a aussi renvoyé HTTP 200 avec 75 restaurants/fast-foods et 75 parcs à 5 km, 62 salles via Geoapify, et une recherche 50 km valide. Ce contrôle a motivé la réservation complémentaire de 50 places aux divertissements/cultures, afin que les parcs ne saturent pas la famille activités. Le résultat du contrôle réel du dernier commit est indiqué dans le bilan de mission. Les catégories utilisées sont celles de la documentation officielle Geoapify : https://apidocs.geoapify.com/docs/places/.
 
-Pour rétablir la Production : contrôler les deux nouvelles recherches et les salles sur la Preview de cette branche, puis obtenir l'autorisation de déployer le commit validé. Confirmer ensuite par quelques GET ciblés sur le centre/rayon signalés par l'utilisateur. Aucun changement de clé n'est actuellement justifié. Aucun déploiement Production, modification de main, Supabase, Stripe, SMTP ou DNS dans cette mission.
+Pour rétablir la Production : terminer les contrôles ciblés de cette Preview, puis obtenir l'autorisation de déployer le commit validé. Confirmer ensuite par quelques GET ciblés sur le centre/rayon signalés par l'utilisateur. Aucun changement de clé n'est actuellement justifié. Aucun déploiement Production, modification de main, Supabase, Stripe, SMTP ou DNS dans cette mission.
