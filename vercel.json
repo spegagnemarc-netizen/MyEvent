@@ -24,5 +24,10 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "fix/compact-feed-media": false
+    }
+  }
 }
