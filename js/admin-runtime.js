@@ -262,6 +262,7 @@ async function loadTab(name){
  if(name==='reservations')return loadReservations();
  if(name==='reports')return loadReports();
  if(name==='statistics')return loadStatistics();
+ if(name==='ads')return window.myeventAds?.loadAdmin();
  const kinds={users:['users'],events:['events','reports'],marketplace:['listings','reports'],partners:['partners'],settings:['settings','audit']}[name];if(!kinds)return;
  for(const kind of kinds){const target=$(targetIds[kind]);if(target)target.textContent='Chargement…';}
  notify('Chargement de la rubrique…','loading');

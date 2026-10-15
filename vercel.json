@@ -2,9 +2,16 @@
   "functions": {
     "api/camera-ai.js": {
       "maxDuration": 180
+    },
+    "api/create-payment-session.js": {
+      "maxDuration": 30
     }
   },
   "routes": [
+    {
+      "src": "^/server/ads-handler\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/search-(accommodation|transport)\\.js$",
       "status": 404
@@ -24,10 +31,5 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "integrate/compact-feed-ads-test": false
-    }
-  }
+  ]
 }
