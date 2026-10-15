@@ -1,6 +1,27 @@
 /* ===== original inline script 4 ===== */
 let sb=null,user=null,event=null,activeEventRole='member';
+let activeEventSelectionVersion=0;
 let eventsWorkspaceRows=[];
+let eventsWorkspaceUserId=null,eventsListRequest=null,eventsListLoadedAt=0,eventsListEpoch=0;
+function eventLoadScope(){
+  const uid=user?.id,id=event?.id,version=activeEventSelectionVersion;
+  return {current:()=>!!uid&&user?.id===uid&&event?.id===id&&activeEventSelectionVersion===version};
+}
+async function eventRead(request,scope,timeout=15000){
+  if(scope&&!scope.current())throw Object.assign(new Error('Chargement remplacé.'),{code:'EVENT_STALE'});
+  const controller=new AbortController();let timer;
+  try{
+    if(request?.abortSignal)request=request.abortSignal(controller.signal);
+    const result=await Promise.race([Promise.resolve(request),new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Object.assign(new Error('Le chargement a dépassé le délai. Réessayez.'),{code:'EVENT_TIMEOUT'}));},timeout);})]);
+    if(scope&&!scope.current())throw Object.assign(new Error('Chargement remplacé.'),{code:'EVENT_STALE'});
+    return result;
+  }finally{clearTimeout(timer);}
+}
+function eventLoadWarning(error){
+  if(error?.code==='EVENT_STALE')return;
+  window.myeventEventsWorkspace?.loadWarning?.('Certaines données de cet événement n’ont pas pu être chargées. Rouvrez la rubrique pour réessayer.');
+}
+
 let realtimeChannel=null;
 let notificationPollTimer=null;
 
@@ -130,10 +151,10 @@ function showEventTab(name, forceState=null){
     // During the automatic restore at login/reload, do not mark the discussion as read
     // before loadMessages() has located the unread/last message.
     if(!initialRestore){
-      if(name==='discussion') markDiscussionRead();
-      if(name==='polls') markPollsRead();
-      if(name==='media') markMediaRead();
-      if(name==='members') markMembersRead();
+      if(name==='discussion'){void loadMessages();markDiscussionRead();}
+      if(name==='polls'){void loadPolls();markPollsRead();}
+      if(name==='media'){void loadMedia();markMediaRead();}
+      if(name==='members'){void loadMembers();markMembersRead();}
       if(name==='locations') loadEventLocations();
       if(name==='fund') loadFund();
       if(name==='hall'){ loadHall(); }
@@ -596,7 +617,25 @@ function renderEventLoadError(error){
   list.replaceChildren(paragraph);
 }
 
+function rememberedActiveEventId(){
+  if(!user?.id)return '';
+  try{return localStorage.getItem('myevent_active_'+user.id)||'';}catch(_){return '';}
+}
+function forgetActiveEvent(id){
+  if(!user?.id)return;
+  try{for(const key of ['myevent_active_','myevent_last_event_'])if(localStorage.getItem(key+user.id)===String(id))localStorage.removeItem(key+user.id);}catch(_){}
+  if(String(event?.id||'')===String(id)){activeEventSelectionVersion++;event=null;activeEventRole='member';}
+}
+async function restoreActiveEventSelection(rows,options={}){
+  const id=event?.id||rememberedActiveEventId();
+  if(!id)return false;
+  if(!rows.some(row=>String(row.id)===String(id))){forgetActiveEvent(id);return false;}
+  if(String(event?.id||'')!==String(id))await selectEvent(id,options);
+  return String(event?.id||'')===String(id);
+}
 async function show(u){
+  const sameUser=String(user?.id||'')===String(u?.id||'');
+  if(!sameUser){activeEventSelectionVersion++;event=null;eventsWorkspaceRows=[];eventsWorkspaceUserId=u.id;eventsListLoadedAt=0;eventsListRequest=null;}
   user=u;
   window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
@@ -606,6 +645,7 @@ async function show(u){
 
   try{
     const p=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
+    if(user?.id!==u.id)return;
     if(p.error) throw new Error('Profil : '+p.error.message);
 
     if(!p.data){
@@ -627,11 +667,12 @@ async function show(u){
 
     // V49.4 : connexion = accueil, sauf retour/rechargement de la même session
     // alors qu'un onglet était déjà ouvert.
-    event=null;
-    activeEventRole='member';
-    if(typeof resetOutingModuleState==='function')resetOutingModuleState();
-    if(typeof resetAiModuleState==='function')resetAiModuleState();
-    currentReservation=null;
+    if(!sameUser){
+      activeEventRole='member';
+      if(typeof resetOutingModuleState==='function')resetOutingModuleState();
+      if(typeof resetAiModuleState==='function')resetAiModuleState();
+      currentReservation=null;
+    }
     const events=await loadEvents();
     await handleJoinLink();
 
@@ -639,52 +680,68 @@ async function show(u){
     // pendant la même session et qu'un onglet était ouvert, on restaure exactement
     // cet événement et cet onglet. Un changement d'événement efface ce mode.
     const restoreSameView=sessionStorage.getItem('myevent_restore_view')==='1';
-    const savedActiveId=localStorage.getItem('myevent_active_'+u.id)||'';
-    if(restoreSameView && savedActiveId && events.some(e=>e.id===savedActiveId)){
-      await selectEvent(savedActiveId,{restoreView:true});
-    }else{
-      event=null;
-      sessionStorage.removeItem('myevent_restore_view');
-    }
+    await restoreActiveEventSelection(events,{restoreView:restoreSameView});
     $('ename').value=''; $('place').value='';
     renderEventHero();
     updateInviteUI();
+    if(!event){
     $('members').innerHTML='<p class="muted">Sélectionne un événement pour voir les participants.</p>';
     $('messages').innerHTML='<p class="muted">Sélectionne un événement pour ouvrir la discussion.</p>';
     $('polls').innerHTML='<p class="muted">Sélectionne un événement pour voir les sondages.</p>';
     $('mediaGrid').innerHTML='<p class="muted">Sélectionne un événement pour voir les souvenirs.</p>';
+    }
     global(events.length ? 'Accueil chargé. Choisis un événement pour l’ouvrir.' : 'Aucun événement pour le moment. Crée ou rejoins un groupe.','ok');
   }catch(e){
-    renderEventLoadError(e);
+    if(!eventsWorkspaceRows.length)renderEventLoadError(e);
     global(e.message||String(e),'err');
   }
 }
 
-async function loadEvents(){
+function loadEvents({useCache=false}={}){
+  const uid=user?.id;
+  if(!uid)return Promise.resolve([]);
+  if(eventsWorkspaceUserId!==uid){eventsWorkspaceRows=[];eventsWorkspaceUserId=uid;eventsListLoadedAt=0;eventsListRequest=null;}
+  if(useCache&&eventsListRequest)return eventsListRequest;
+  if(useCache&&eventsListLoadedAt&&Date.now()-eventsListLoadedAt<15000)return Promise.resolve(eventsWorkspaceRows);
+  const epoch=++eventsListEpoch;
+  const request=fetchEventsList(epoch).then(rows=>{if(user?.id===uid&&epoch===eventsListEpoch)eventsListLoadedAt=Date.now();return rows;});
+  eventsListRequest=request;
+  request.finally(()=>{if(eventsListRequest===request)eventsListRequest=null;}).catch(()=>{});
+  return request;
+}
+async function fetchEventsList(epoch){
+  const loadingUserId=user?.id;
+  if(!loadingUserId)return [];
   void resumeEventStorageCleanup();
   try{
-  const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
+  const [owned,memberships]=await Promise.all([
+    eventRead(sb.from('events').select('*').eq('creator_id',loadingUserId).order('created_at',{ascending:false})),
+    eventRead(sb.from('event_members').select('event_id,role').eq('user_id',loadingUserId))
+  ]);
+  if(user?.id!==loadingUserId||epoch!==eventsListEpoch)return [];
   if(owned.error) throw new Error('Événements : '+owned.error.message);
 
-  const memberships=await sb.from('event_members').select('event_id,role').eq('user_id',user.id);
+  if(user?.id!==loadingUserId||epoch!==eventsListEpoch)return [];
   if(memberships.error) throw new Error('Groupes : '+memberships.error.message);
 
   const memberIds=(memberships.data||[]).map(x=>x.event_id).filter(Boolean);
   const roles=new Map((memberships.data||[]).map(m=>[m.event_id,m.role]));
   let memberEvents=[];
   if(memberIds.length){
-    const r=await sb.from('events').select('*').in('id',memberIds);
+    const r=await eventRead(sb.from('events').select('*').in('id',memberIds));
     if(r.error) throw new Error('Groupes : '+r.error.message);
     memberEvents=r.data||[];
   }
 
+  if(user?.id!==loadingUserId||epoch!==eventsListEpoch)return [];
   const map=new Map();
   [...(owned.data||[]),...memberEvents].forEach(e=>map.set(e.id,e));
   const events=Array.from(map.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   eventsWorkspaceRows=events.map(e=>({...e,workspaceRole:e.creator_id===user.id?'owner':roles.get(e.id)||'member'}));
 
-  // Le dernier événement reste mémorisé, mais aucune fiche ne s'ouvre automatiquement à la connexion.
-  const savedId=event?.id || '';
+  const selectedId=event?.id||rememberedActiveEventId();
+  if(selectedId&&!events.some(e=>String(e.id)===String(selectedId)))forgetActiveEvent(selectedId);
+  const savedId=event?.id || rememberedActiveEventId();
   $('eventList').innerHTML=events.length ? events.map(e=>{
     const active=e.id===savedId?' active':'';
     const mine=e.creator_id===user.id;
@@ -710,11 +767,12 @@ async function loadEvents(){
   }).join('') : '<p class="muted">Aucun groupe pour le moment.</p>';
 
   // Charge les couvertures visibles de tous les événements sans bloquer l'affichage de la liste.
-  await Promise.all(events.map(async e=>{
+  void Promise.allSettled(events.map(async e=>{
     const el=document.querySelector('.eventCardCover[data-event-id="'+CSS.escape(String(e.id))+'"]');
     if(!el || !e.cover_url)return;
     try{
       const url=await coverDisplayUrl(e.cover_url);
+      if(user?.id!==loadingUserId||epoch!==eventsListEpoch||!el.isConnected)return;
       if(url) el.style.backgroundImage='url("'+String(url).replace(/"/g,'%22')+'")';
     }catch(_){ }
   }));
@@ -796,19 +854,19 @@ async function loadEvents(){
   },{once:true});
 
   $('eventListMsg').textContent=events.length ? events.length+' événement'+(events.length>1?'s':'') : '';
-  if(event && events.some(e=>e.id===event.id)){
-    await renderInlineSelectedEvent();
-    if(typeof refreshReservationBoxes==='function') await refreshReservationBoxes();
-  }
+  window.myeventEventsWorkspace?.render();
   return events;
   }catch(e){
-    renderEventLoadError(e);
+    if(user?.id!==loadingUserId||epoch!==eventsListEpoch)return [];
+    if(!eventsWorkspaceRows.length)renderEventLoadError(e);
     throw e;
   }
 }
 
 let inlineEventRenderToken=0;
 async function renderInlineSelectedEvent(){
+  const loadScope=eventLoadScope();
+  try{
   const renderToken=++inlineEventRenderToken;
   document.querySelectorAll('.eventCard').forEach(card=>card.querySelector('.inlineEventDetails')?.remove());
   if(!event)return;
@@ -839,20 +897,22 @@ async function renderInlineSelectedEvent(){
     }catch(e){ alert('Impossible d’ouvrir cette rubrique : '+(e.message||String(e))); }
   }));
 
+  card.appendChild(box); // Metadata is visible before optional planning queries.
+
   // V57.3 : une décision IA transformée en action doit aussi apparaître
   // directement sur l'accueil de l'événement, et pas uniquement dans la discussion.
   try{
-    const aq=await sb.from('messages')
+    const aq=await eventRead(sb.from('messages')
       .select('id,content,created_at')
       .eq('event_id',event.id)
       .like('content','[[MYEVENT_AI_ACTION]]%')
       .order('created_at',{ascending:false})
-      .limit(1);
+      .limit(1),loadScope);
     if(renderToken!==inlineEventRenderToken)return;
     const actionMessage=Array.isArray(aq.data)&&aq.data[0]?aq.data[0]:null;
     if(actionMessage?.content){
       let payload=null;
-      try{payload=JSON.parse(actionMessage.content.slice('[[MYEVENT_AI_ACTION]]'.length));}catch(_){ }
+      try{payload=JSON.parse(actionMessage.content.slice('[[MYEVENT_AI_ACTION]]'.length));}catch(_){if(!loadScope.current())return; }
       if(payload){
         const actionBox=document.createElement('div');
         actionBox.className='inlineEventAiAction';
@@ -861,7 +921,8 @@ async function renderInlineSelectedEvent(){
         box.appendChild(actionBox);
       }
     }
-  }catch(_){ }
+  }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
 
   // V55 : le planning affiché sur l'accueil de l'événement peut être
   // soit le planning manuel (🍽️ Sorties), soit le planning complet IA (✨ Sortie IA).
@@ -874,7 +935,7 @@ async function renderInlineSelectedEvent(){
     if(outingSelected && String(outingSelected.event_id||event.id)===String(event.id)){
       outing=validSelectedOuting(outingSelected);
     }
-    if(!outing) outing=await getScopedEventOuting(event.id);
+    if(!outing) outing=await eventRead(getScopedEventOuting(event.id),loadScope);
     if(renderToken!==inlineEventRenderToken)return;
 
     // Récupère le planning IA sans modifier le fonctionnement de l'onglet ✨ Sortie IA.
@@ -888,15 +949,15 @@ async function renderInlineSelectedEvent(){
           aiPlan={id:lp.plan_id||null,event_id:event.id,title:lp.title||'Sortie organisée avec l’IA',people:Number(lp.people)||1,budget_per_person:lp.budget_per_person,request:lp.request||''};
           aiItems=lp.items;
         }
-      }catch(_){ }
+      }catch(_){if(!loadScope.current())return; }
     }
     if(!aiPlan){
-      const aq=await sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1);
+      const aq=await eventRead(sb.from('event_outing_plans').select('*').eq('event_id',event.id).order('created_at',{ascending:false}).limit(1),loadScope);
       if(renderToken!==inlineEventRenderToken)return;
       if(!aq.error&&Array.isArray(aq.data)&&aq.data[0]){
         aiPlan=aq.data[0];
         if(aiPlan.id){
-          const ar=await sb.from('event_outing_plan_items').select('*').eq('plan_id',aiPlan.id).order('step_order',{ascending:true});
+          const ar=await eventRead(sb.from('event_outing_plan_items').select('*').eq('plan_id',aiPlan.id).order('step_order',{ascending:true}),loadScope);
           if(renderToken!==inlineEventRenderToken)return;
           if(!ar.error)aiItems=Array.isArray(ar.data)?ar.data:[];
         }
@@ -907,7 +968,7 @@ async function renderInlineSelectedEvent(){
     planning.className='inlineEventPlanning';
     const choiceKey=user ? 'myevent_event_planning_choice_'+user.id+'_'+event.id : '';
     let choice='manual';
-    try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai'&&aiPlan&&aiItems.length)choice='ai'; }catch(_){ }
+    try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai'&&aiPlan&&aiItems.length)choice='ai'; }catch(_){if(!loadScope.current())return; }
 
     const renderManual=()=>{
       if(!outing){
@@ -945,12 +1006,16 @@ async function renderInlineSelectedEvent(){
     planning.querySelector('[data-ai-plan-remove]')?.addEventListener('click',removeAiOutingPlan);
 
     // V58.1 — Timeline centrale du planning de l’événement.
-    try{ await renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
+    try{ await eventRead(renderEventPlanningTimeline(box,event,choice,outing,aiPlan,aiItems),loadScope); }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
     // V58.2 — Transport intégré au planning central.
-    try{ await renderEventTransport(box,event); }catch(_){ }
-    try{ await renderEventAccommodation(box,event); }catch(_){ }
+    try{ await eventRead(renderEventTransport(box,event),loadScope); }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
+    try{ await eventRead(renderEventAccommodation(box,event),loadScope); }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
     // V58.4 — Déplacements locaux entre les étapes.
-    try{ await renderEventLocalTravel(box,event,choice,outing,aiPlan,aiItems); }catch(_){ }
+    try{ await eventRead(renderEventLocalTravel(box,event,choice,outing,aiPlan,aiItems),loadScope); }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
 
     const content=planning.querySelector('#eventPlanningSelectedContent');
     const bindPlanningActions=()=>{
@@ -1027,20 +1092,31 @@ async function renderInlineSelectedEvent(){
       // obsolète pendant qu'une nouvelle sélection venait d'être enregistrée.
       bindPlanningActions();
     }
-  }catch(_){ }
+  }catch(_){if(!loadScope.current())return; }
+  if(!loadScope.current())return;
 
-  card.appendChild(box);
+  if(renderToken!==inlineEventRenderToken||!loadScope.current())return;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function selectEvent(id, options={}){
-  if(!id)return;
+  if(!id||!user?.id)return;
+  if(String(event?.id||'')===String(id)&&options?.restoreView!==true)return;
+  const selectionVersion=++activeEventSelectionVersion,selectionUserId=user.id;
+  const isCurrent=()=>selectionVersion===activeEventSelectionVersion&&user?.id===selectionUserId;
   const restoreView=options?.restoreView===true;
-  // Lors d'un changement d'événement, aucun détail de l'ancien ne doit rester visible.
-  document.querySelectorAll('.eventCard .inlineEventDetails').forEach(d=>d.remove());
-  const r=await sb.from('events').select('*').eq('id',id).maybeSingle();
-  if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
-  if(!r.data) throw new Error('Cet événement n’est plus accessible.');
-
+  // Reuse the account-scoped, RLS-authorized list. Reopening the same event is immediate.
+  if(String(event?.id||'')===String(id)&&!restoreView)return;
+  const cached=eventsWorkspaceUserId===selectionUserId?eventsWorkspaceRows.find(row=>String(row.id)===String(id)):null;
+  const r=cached?{data:cached}:await eventRead(sb.from('events').select('*').eq('id',id).maybeSingle());
+  if(!isCurrent())return;
+  if(r.error)throw new Error('Sélection de l’événement : '+r.error.message);
+  if(!r.data){forgetActiveEvent(id);throw new Error('Cet événement n’est plus accessible.');}
+  const selectedEvent=r.data;
+  const roleRecord=selectedEvent.creator_id===selectionUserId?null:cached?{data:{role:cached.workspaceRole}}:await eventRead(sb.from('event_members').select('role').eq('event_id',id).eq('user_id',selectionUserId).maybeSingle());
+  if(!isCurrent())return;
+  if(roleRecord?.error)throw new Error('Accès à l’événement : '+roleRecord.error.message);
   // V54.21 — Ne pas effacer l'état de la sortie lorsque l'utilisateur
   // rouvre le MÊME événement depuis sa carte. Le retour à la carte d'accueil
   // passait auparavant par selectEvent(id), puis resetOutingModuleState(),
@@ -1054,84 +1130,61 @@ async function selectEvent(id, options={}){
     resetAiModuleState();
   }
 
-  if(callActive && !sameEvent) await stopGroupCall();
-  event=r.data;
-  const roleRecord=event.creator_id===user.id?null:await sb.from('event_members').select('role').eq('event_id',id).eq('user_id',user.id).maybeSingle();
-  activeEventRole=event.creator_id===user.id?'owner':roleRecord?.data?.role||'member';
-  localStorage.setItem('myevent_active_'+user.id,event.id);
-  localStorage.setItem('myevent_last_event_'+user.id,event.id);
+  if(callActive && !sameEvent) void stopGroupCall().catch(eventLoadWarning);
+  if(!isCurrent())return;
+  document.querySelectorAll('.eventCard .inlineEventDetails').forEach(d=>d.remove());
+  event=selectedEvent;
+  activeEventRole=event.creator_id===selectionUserId?'owner':roleRecord?.data?.role||'member';
+  try{
+    localStorage.setItem('myevent_active_'+selectionUserId,event.id);
+    localStorage.setItem('myevent_last_event_'+selectionUserId,event.id);
+  }catch(_){}
   // Les champs du formulaire « Créer un événement » restent indépendants
   // de l’événement actuellement sélectionné.
   renderEventHero();
   updateInviteUI();
-  await initializeUnreadMarkers();
-
+  if(!isCurrent())return;
+  void initializeUnreadMarkers().catch(eventLoadWarning);
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
-
-  // V54.26 — l'événement actif est la seule source de vérité pour Sortie + Réservation.
-  // À chaque ouverture/reconnexion, on recharge explicitement la sélection de CET événement
-  // avant de construire le Planning. Un nouvel événement arrive donc naturellement sans sélection.
-  if(typeof loadSelectedOuting==='function'){
-    try{ await loadSelectedOuting(); }catch(e){ console.error('loadSelectedOuting active event',e); }
+  if(!sameEvent){
+    currentReservation=null;
+    // Never show a previous event's shared panels while the new data is loading.
+    for(const panelId of ['messages','polls','members','mediaGrid','fundEntries']){
+      if($(panelId))$(panelId).replaceChildren();
+    }
+    for(const countId of ['memberCount','statMembers','statMessages','statPhotos'])if($(countId))$(countId).textContent='';
   }
-  currentReservation=null;
-  if(typeof loadEventReservation==='function'){
-    try{ await loadEventReservation(); }catch(e){ console.error('loadEventReservation active event',e); }
-  }
-
-  // V54.32 — Un seul gestionnaire de clic + verrou anti-double-tap.
-  // V54.31 — Un seul rendu de l'événement à l'ouverture.
-  // Le double render ici provoquait le flash : ouverture → fermeture → réouverture.
-  // renderInlineSelectedEvent() sera exécuté une seule fois après le chargement
-  // complet ci-dessous, qui reste la source de vérité du DOM.
-  global('Événement actif : '+event.name,'ok');
-
-  // Changer d'événement doit toujours ramener à l'accueil de cet événement.
-  // La restauration d'un onglet n'est autorisée que lors d'un retour/rechargement
-  // de la page avec la même session, jamais après une sélection normale.
-  let restoredTab=null;
   if(!restoreView){
     sessionStorage.removeItem('myevent_restore_view');
     document.body.classList.remove('discussionFullScreen');
-    document.querySelectorAll('.eventTab').forEach(btn=>{
-      btn.classList.remove('active');
-      btn.setAttribute('aria-selected','false');
-    });
-    document.querySelectorAll('.tabPanel').forEach(panel=>{
-      panel.classList.remove('active');
-      panel.open=false;
-    });
-  }else{
-    const savedTab=localStorage.getItem('myevent_active_tab_'+user.id+'_'+event.id)||'discussion';
-    restoredTab=['discussion','polls','media','locations','fund','hall','aioutings'].includes(savedTab)?savedTab:'discussion';
-    showEventTab(restoredTab,true);
+    document.querySelectorAll('.eventTab').forEach(btn=>{btn.classList.remove('active');btn.setAttribute('aria-selected','false');});
+    document.querySelectorAll('.tabPanel').forEach(panel=>{panel.classList.remove('active');panel.open=false;});
   }
-  // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
-  if(typeof window.loadMyEventChatStyle==='function') await window.loadMyEventChatStyle();
-  await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia(),loadFund()]);
-  if(restoredTab==='locations') await loadEventLocations();
-  await renderInlineSelectedEvent();
-  // V53.10 : second/final render = source of truth for the DOM.
-  await refreshReservationBoxes();
-  if(!restoreView){
-    // Sécurité : un changement d'événement ne doit jamais ouvrir automatiquement Discussion.
-    document.body.classList.remove('discussionFullScreen');
-    document.querySelectorAll('.eventTab').forEach(btn=>{btn.classList.remove('active');btn.setAttribute('aria-selected','false')});
-    document.querySelectorAll('.tabPanel').forEach(panel=>{panel.classList.remove('active');panel.open=false});
-  }
-  // Réapplique le thème après le rendu complet : aucune reconnexion ne doit
-  // pouvoir remplacer le fond choisi par le fond par défaut.
-  if(typeof window.loadMyEventChatStyle==='function'){
-    window.loadMyEventChatStyle();
-    setTimeout(()=>window.loadMyEventChatStyle?.(),250);
-    setTimeout(()=>window.loadMyEventChatStyle?.(),900);
-  }
-  await loadWeather();
-  await refreshNotifications(false);
-  $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
-  $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
-  $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
+  global('Événement actif : '+event.name,'ok');
+  window.myeventEventsWorkspace?.render();
   subscribeRealtime();
+  // Selection is complete. Independent, guarded hydration cannot hold the picker hostage.
+  const jobs=[loadMessages,loadPolls,loadMembers,loadMedia,loadFund,loadWeather];
+  if(typeof window.loadMyEventChatStyle==='function')jobs.push(window.loadMyEventChatStyle);
+  void Promise.allSettled(jobs.map(fn=>Promise.resolve().then(()=>{if(isCurrent())return fn();}))).then(results=>{
+    if(!isCurrent())return;
+    results.filter(r=>r.status==='rejected').forEach(r=>eventLoadWarning(r.reason));
+    window.myeventEventsWorkspace?.render();
+  });
+  void Promise.allSettled([
+    Promise.resolve().then(()=>{if(isCurrent()&&typeof loadSelectedOuting==='function')return loadSelectedOuting();}),
+    Promise.resolve().then(()=>{if(isCurrent()&&typeof loadEventReservation==='function')return loadEventReservation();})
+  ]).then(async results=>{
+    if(!isCurrent())return;
+    results.filter(r=>r.status==='rejected').forEach(r=>eventLoadWarning(r.reason));
+    await renderInlineSelectedEvent();
+    if(isCurrent()&&typeof refreshReservationBoxes==='function')await refreshReservationBoxes();
+  }).catch(error=>{if(isCurrent())eventLoadWarning(error);});
+  if(restoreView){
+    const savedTab=localStorage.getItem('myevent_active_tab_'+selectionUserId+'_'+id)||'discussion';
+    showEventTab(['discussion','polls','media','locations','fund','hall','aioutings'].includes(savedTab)?savedTab:'discussion',true);
+  }
+
 }
 
 function updateInviteUI(){
@@ -1175,15 +1228,14 @@ async function deleteEvent(id){
 
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+      forgetActiveEvent(id);
       event=null;
       localStorage.removeItem('myevent_active_'+user.id);
       $('ename').value=''; $('place').value=''; $('inviteLink').value='';
     }
     await loadEvents();
-    const remaining=await sb.from('events').select('id').eq('creator_id',user.id).limit(1);
-    const saved=localStorage.getItem('myevent_active_'+user.id);
-    if(!event && !remaining.error && remaining.data?.length) await selectEvent(remaining.data[0].id);
-    else if(!event){
+    // Deletion invalidates selection; choosing a replacement is a user action.
+    if(!event){
       $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
@@ -1208,6 +1260,7 @@ async function leaveEvent(id){
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
       if(notificationPollTimer) {clearInterval(notificationPollTimer);notificationPollTimer=null;}
+      forgetActiveEvent(id);
       event=null;
       localStorage.removeItem('myevent_active_'+user.id);
       $('eventHeroCard').classList.add('hidden');
@@ -1312,19 +1365,34 @@ async function uploadEventCover(file){
   if(up.error) throw up.error;
   return path;
 }
+let eventCoverCacheUser=null,eventCoverCache=new Map();
 async function coverDisplayUrl(value){
   if(!value) return '';
   if(/^https?:\/\//i.test(value) || /^data:/i.test(value)) return value;
-  const r=await sb.storage.from('event-media').createSignedUrl(value,60*60*24);
-  return r.error ? '' : (r.data?.signedUrl||'');
+  const uid=user?.id;
+  if(!uid)return '';
+  if(eventCoverCacheUser!==uid){eventCoverCacheUser=uid;eventCoverCache.clear();}
+  const cached=eventCoverCache.get(value);
+  if(cached&&cached.expires>Date.now())return cached.promise;
+  const promise=eventRead(sb.storage.from('event-media').createSignedUrl(value,60*60*24)).then(r=>{
+    if(user?.id!==uid)return '';
+    if(r.error){eventCoverCache.delete(value);return '';}
+    return r.data?.signedUrl||'';
+  }).catch(error=>{if(eventCoverCacheUser===uid)eventCoverCache.delete(value);throw error;});
+  eventCoverCache.set(value,{promise,expires:Date.now()+300000});
+  return promise;
 }
 async function refreshEventCover(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return;
   const value=event.cover_url||'';
-  const url=await coverDisplayUrl(value);
+  const url=await eventRead(coverDisplayUrl(value),loadScope);
   if(event?.cover_url!==value)return;
   $('eventCover').classList.toggle('hasImage',!!url);
   $('eventCover').style.backgroundImage=url?'url("'+String(url).replace(/"/g,'%22')+'")':'';
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 function renderEventHero(){
   if(!event){$('eventHeroCard').classList.add('hidden');$('editEventBox').classList.add('hidden');$('inviteCard').classList.add('hidden');return;}
@@ -1375,6 +1443,7 @@ async function updateEditCoverPreview(){
 }
 async function saveEvent(){
   if(!event)return;
+  const savedEventId=event.id,savedUserId=user?.id;
   const name=$('editEventName').value.trim();
   if(!name){msg('editEventMsg','Indique un nom d’événement.','err');return}
   setBusy('saveEventBtn',true,'Enregistrement…');
@@ -1395,6 +1464,7 @@ async function saveEvent(){
     if(event.creator_id===user.id)changes.visibility=$('editEventVisibility').value;
     const r=await sb.from('events').update(changes).eq('id',event.id).select().single();
     if(r.error)throw r.error;
+    if(event?.id!==savedEventId||user?.id!==savedUserId)return;
     event=r.data;
     $('ename').value=event.name||'';$('place').value=event.location||'';
     renderEventHero();
@@ -1590,23 +1660,29 @@ function normalizeIban(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]
 function formatIban(v){ const x=normalizeIban(v); return x.replace(/(.{4})/g,'$1 ').trim(); }
 function maskIban(v){ const x=normalizeIban(v); return x.length>8 ? x.slice(0,4)+' •• •••• •••• •••• '+x.slice(-4) : x; }
 async function loadFundMembers(selectedId){
+  const loadScope=eventLoadScope();
+  try{
   const sel=$('fundManagerSelect'); if(!sel||!event)return;
-  const r=await sb.from('event_members').select('user_id,nickname').eq('event_id',event.id).order('joined_at',{ascending:true});
+  const r=await eventRead(sb.from('event_members').select('user_id,nickname').eq('event_id',event.id).order('joined_at',{ascending:true}),loadScope);
   const members=r.data||[];
   const ids=members.map(m=>m.user_id).filter(Boolean); let profiles=[];
-  if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
+  if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope); if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   sel.innerHTML='<option value="">Organisateur de l’événement</option>' + members.filter(m=>m.user_id!==event.creator_id).map(m=>{
     const p=pmap.get(String(m.user_id))||{}; const name=m.nickname||p.display_name||p.username||'Membre';
     return '<option value="'+esc(m.user_id)+'">'+esc(name)+'</option>';
   }).join('');
   if(selectedId && members.some(m=>m.user_id===selectedId)) sel.value=selectedId;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function loadFundPayment(settings){
+  const loadScope=eventLoadScope();
+  try{
   const status=$('fundPaymentStatus'), details=$('fundPaymentDetails'), edit=$('editFundPaymentBtn');
   if(!status||!details||!edit||!event||!user)return;
   const managerId=fundManagerId(settings);
-  const pr=await sb.from('event_fund_payment_details').select('account_holder,iban,bic,payment_note,updated_at').eq('event_id',event.id).maybeSingle();
+  const pr=await eventRead(sb.from('event_fund_payment_details').select('account_holder,iban,bic,payment_note,updated_at').eq('event_id',event.id).maybeSingle(),loadScope);
   if(pr.error && !String(pr.error.message||'').includes('does not exist')){status.textContent='Impossible de charger les coordonnées.'; details.classList.add('hidden'); return;}
   const d=pr.data;
   edit.classList.toggle('hidden',!fundIsManager(settings));
@@ -1626,6 +1702,8 @@ async function loadFundPayment(settings){
   details.classList.remove('hidden');
   if(fundIsManager(settings)) edit.textContent='⚙️ Modifier les coordonnées';
   $('copyFundIbanBtn')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(normalizeIban(d.iban));status.textContent='IBAN copié dans le presse-papiers.';}catch(e){status.textContent='Copie impossible sur cet appareil.';}});
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function openFundPaymentForm(){
   if(!event||!user)return;
@@ -1749,8 +1827,10 @@ async function calculateSmartFund(opts={}){
 }
 
 async function loadFund(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event||!user||!sb)return;
-  const sr=await sb.from('event_fund_settings').select('*').eq('event_id',event.id).maybeSingle();
+  const sr=await eventRead(sb.from('event_fund_settings').select('*').eq('event_id',event.id).maybeSingle(),loadScope);
   if(sr.error && !String(sr.error.message||'').includes('does not exist')){ $('fundEntries').innerHTML='<p class="err">'+esc(sr.error.message)+'</p>'; return; }
   const settings=sr.data||{target_amount:0,description:'',manager_user_id:null};
   const target=Number(settings.target_amount||0);
@@ -1760,11 +1840,11 @@ async function loadFund(){
   const manager=fundIsManager(settings);
   $('editFundBtn').classList.toggle('hidden',!manager); if(!manager) fundSetFormOpen(false);
   const org=fundIsOrganizer();
-  if(org){ await loadFundMembers(settings.manager_user_id); }
+  if(org){ await eventRead(loadFundMembers(settings.manager_user_id),loadScope); }
   const managerSelect=$('fundManagerSelect'); if(managerSelect) managerSelect.disabled=!org;
-  await loadFundPayment(settings);
+  await eventRead(loadFundPayment(settings),loadScope);
 
-  const er=await sb.from('event_fund_entries').select('id,event_id,user_id,entry_type,amount,label,note,status,confirmed_by,confirmed_at,created_at').eq('event_id',event.id).order('created_at',{ascending:false});
+  const er=await eventRead(sb.from('event_fund_entries').select('id,event_id,user_id,entry_type,amount,label,note,status,confirmed_by,confirmed_at,created_at').eq('event_id',event.id).order('created_at',{ascending:false}),loadScope);
   if(er.error){ $('fundEntries').innerHTML='<p class="err">'+esc(er.error.message)+'</p>'; return; }
   const entries=er.data||[];
   const contributions=entries.filter(x=>x.entry_type==='contribution');
@@ -1774,7 +1854,7 @@ async function loadFund(){
   const balance=collected-spent;
   $('fundCollected').textContent=eur(collected); $('fundSpent').textContent=eur(spent); $('fundBalance').textContent=eur(balance);
   const pct=target>0?Math.min(100,(collected/target)*100):0; $('fundProgressBar').style.width=pct+'%';
-  const memberCountResult=await sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id); const memberCount=Number(memberCountResult.count||0);
+  const memberCountResult=await eventRead(sb.from('event_members').select('user_id',{count:'exact',head:true}).eq('event_id',event.id),loadScope); const memberCount=Number(memberCountResult.count||0);
   $('fundPerPerson').textContent='· '+(memberCount?eur(target/memberCount):eur(target))+' / personne';
   renderMyStripePayment(entries,target,memberCount);
   const stripeSuccess=new URLSearchParams(location.search).get('stripe_success');
@@ -1789,7 +1869,7 @@ async function loadFund(){
     pendingBox.style.display=(manager&&pending.length)?'block':'none';
     if(manager&&pending.length){
       const ids=[...new Set(pending.map(x=>x.user_id).filter(Boolean))]; let pp=[];
-      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)pp=pr.data||[];}
+      if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope); if(!pr.error)pp=pr.data||[];}
       const pm=new Map(pp.map(p=>[p.id,p]));
       pendingList.innerHTML=pending.map(x=>{
         const p=pm.get(x.user_id)||{}; const name=x.user_id===user.id?'Moi':(p.display_name||p.username||'Membre');
@@ -1805,11 +1885,11 @@ async function loadFund(){
   // V50.5 : le suivi est explicitement affiché pour le responsable / organisateur.
   if(trackingBox){ trackingBox.classList.toggle('hidden',!manager); trackingBox.style.display=manager?'block':'none'; }
   if(myBox) myBox.classList.toggle('hidden',manager);
-  const membersRes=await sb.from('event_members').select('user_id,nickname,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true});
+  const membersRes=await eventRead(sb.from('event_members').select('user_id,nickname,joined_at').eq('event_id',event.id).order('joined_at',{ascending:true}),loadScope);
   const eventMembers=membersRes.data||[];
   const memberIds=[...new Set(eventMembers.map(m=>m.user_id).filter(Boolean))];
   let memberProfiles=[];
-  if(memberIds.length){ const pr=await sb.from('profiles').select('id,display_name,username').in('id',memberIds); if(!pr.error) memberProfiles=pr.data||[]; }
+  if(memberIds.length){ const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',memberIds),loadScope); if(!pr.error) memberProfiles=pr.data||[]; }
   const memberMap=new Map(memberProfiles.map(p=>[p.id,p]));
   // V54.42 : si l'objectif manuel vaut 0, utiliser le budget intelligent
   // calculé depuis le planning, comme pour le montant recommandé du paiement.
@@ -1878,10 +1958,10 @@ async function loadFund(){
 
   // V56.1 : la cagnotte se recalcule automatiquement depuis le planning sélectionné.
   // Le bouton reste disponible pour forcer un recalcul manuel.
-  await calculateSmartFund({silent:true});
+  await eventRead(calculateSmartFund({silent:true}),loadScope);
 
   if(!entries.length){ $('fundEntries').innerHTML='<p class="muted">Aucune participation ou dépense pour le moment.</p>'; return; }
-  const ids=[...new Set(entries.map(x=>x.user_id).filter(Boolean))]; let profiles=[]; if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids); if(!pr.error)profiles=pr.data||[];}
+  const ids=[...new Set(entries.map(x=>x.user_id).filter(Boolean))]; let profiles=[]; if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope); if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
   $('fundEntries').innerHTML=entries.map(x=>{
     const p=pmap.get(x.user_id)||{}; const name=x.user_id===user.id?'Moi':(p.display_name||p.username||'Membre');
@@ -1892,6 +1972,8 @@ async function loadFund(){
     const note=x.note?'<span>'+esc(x.note)+'</span>':'';
     return '<div class="fundEntry"><div class="fundEntryMain"><b>'+esc(title)+statusHtml+'</b><span>'+esc(name)+' · '+new Date(x.created_at).toLocaleDateString('fr-FR')+'</span>'+note+'</div><b class="fundEntryAmount '+cls+'">'+sign+' '+eur(x.amount)+'</b></div>';
   }).join('');
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function updateContributionStatus(id,status){
@@ -1941,13 +2023,15 @@ async function saveExpense(){
   if(r.error){msg('fundExpenseMsg','Erreur : '+r.error.message,'err');return;} fundExpenseFormOpen(false); await loadFund();
 }
 async function loadMembers(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return;
   const activeId=event.id;
   // The directory joins each membership to its profile by the immutable auth UUID.
   // A missing profile stays visible as an unidentified row, never as a person.
-  const directory=await sb.rpc('event_member_directory',{p_event_id:activeId});
+  const directory=await eventRead(sb.rpc('event_member_directory',{p_event_id:activeId}),loadScope);
   const r=directory.error
-    ?await sb.from('event_members').select('user_id,nickname,role,status,joined_at').eq('event_id',activeId).order('joined_at',{ascending:true})
+    ?await eventRead(sb.from('event_members').select('user_id,nickname,role,status,joined_at').eq('event_id',activeId).order('joined_at',{ascending:true}),loadScope)
     :null;
   if(event?.id!==activeId)return;
   if(r?.error){ $('members').innerHTML='<p class="err">'+esc(r.error.message)+'</p>'; return; }
@@ -1962,12 +2046,12 @@ async function loadMembers(){
     // Event co-members must be able to see the public identity used by the
     // Participants UI even before they are friends. The RPC is scoped to the
     // active event and only returns profiles for members of that event.
-    const eventProfiles=await sb.rpc('event_member_profiles',{p_event_id:event.id});
+    const eventProfiles=await eventRead(sb.rpc('event_member_profiles',{p_event_id:event.id}),loadScope);
     if(!eventProfiles.error){
       profiles=eventProfiles.data||[];
     }else{
       // Backward-compatible fallback while the migration is being deployed.
-      const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);
+      const pr=await eventRead(sb.from('profiles').select('id,display_name,username,avatar').in('id',ids),loadScope);
       if(!pr.error) profiles=pr.data||[];
       else console.warn('Profils des participants indisponibles:',eventProfiles.error.message||eventProfiles.error);
     }
@@ -1998,12 +2082,16 @@ async function loadMembers(){
       eventId:event.id,ownerId:event.creator_id,canManage:event.creator_id===user.id||activeEventRole==='coorganizer',self:memberId===user.id
     }}));
   }));
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 window.myeventRefreshEventMembers=loadMembers;
 
 async function loadUnreadCount(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event||!user)return;
-  const r=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+  const r=await eventRead(sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle(),loadScope);
   if(r.error){
     console.warn('Lecture des messages non lus:',r.error.message);
     return;
@@ -2011,13 +2099,15 @@ async function loadUnreadCount(){
   const lastRead=r.data?.last_read_at||null;
   let q=sb.from('messages').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('user_id',user.id);
   if(lastRead) q=q.gt('created_at',lastRead);
-  const c=await q;
+  const c=await eventRead(q,loadScope);
   if(c.error){console.warn('Comptage des messages non lus:',c.error.message);return;}
   const count=c.count||0;
   const badge=$('discussionBadge');
   if(!badge)return;
   badge.textContent=count>99?'99+':String(count);
   badge.classList.toggle('hidden',count===0);
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function markDiscussionRead(){
@@ -2081,12 +2171,14 @@ async function initializeUnreadMarkers(){
 }
 
 async function loadUnreadPollCount(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event||!user)return;
   const key=unreadStorageKey('polls');
   const saved=localStorage.getItem(key);
   let pollCount=0;
   if(saved){
-    const r=await sb.from('polls').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
+    const r=await eventRead(sb.from('polls').select('id,created_at').eq('event_id',event.id).gt('created_at',saved),loadScope);
     if(r.error){console.warn('Comptage des sondages non lus:',r.error.message);return;}
     pollCount=(r.data||[]).filter(x=>!isLocallyCreated('polls',x.id)).length;
   }
@@ -2094,14 +2186,16 @@ async function loadUnreadPollCount(){
   let voteCount=0;
   const voteSaved=localStorage.getItem(unreadStorageKey('votes'));
   if(voteSaved){
-    const pr=await sb.from('polls').select('id').eq('event_id',event.id).eq('creator_id',user.id);
+    const pr=await eventRead(sb.from('polls').select('id').eq('event_id',event.id).eq('creator_id',user.id),loadScope);
     if(!pr.error && pr.data?.length){
       const ids=pr.data.map(x=>x.id);
-      const vr=await sb.from('poll_votes').select('poll_id,user_id,created_at').in('poll_id',ids).neq('user_id',user.id).gt('created_at',voteSaved);
+      const vr=await eventRead(sb.from('poll_votes').select('poll_id,user_id,created_at').in('poll_id',ids).neq('user_id',user.id).gt('created_at',voteSaved),loadScope);
       if(!vr.error) voteCount=(vr.data||[]).length;
     }
   }
   setUnreadBadge('pollBadge',pollCount+voteCount);
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function markPollsRead(){
@@ -2113,14 +2207,18 @@ async function markPollsRead(){
 }
 
 async function loadUnreadMediaCount(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event||!user)return;
   const key=unreadStorageKey('media');
   const saved=localStorage.getItem(key);
   if(!saved){setUnreadBadge('mediaBadge',0);return;}
-  const r=await sb.from('media').select('id,created_at').eq('event_id',event.id).gt('created_at',saved);
+  const r=await eventRead(sb.from('media').select('id,created_at').eq('event_id',event.id).gt('created_at',saved),loadScope);
   if(r.error){console.warn('Comptage des photos non lues:',r.error.message);return;}
   const rows=(r.data||[]).filter(x=>!isLocallyCreated('media',x.id));
   setUnreadBadge('mediaBadge',rows.length);
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function markMediaRead(){
@@ -2137,18 +2235,21 @@ async function markMembersRead(){
 let discussionScrollTargetId=null;
 
 async function loadMessages(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return;
   // On reconnect/open, remember the first incoming message after the last read point.
   // If there is none, the discussion opens on the latest message.
   let lastReadAt=null;
   try{
-    const read=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+    const read=await eventRead(sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle(),loadScope);
     lastReadAt=read.data?.last_read_at||null;
-  }catch{}
-  const r=await sb.from('messages').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
+  }catch{if(!loadScope.current())return;}
+  if(!loadScope.current())return;
+  const r=await eventRead(sb.from('messages').select('*').eq('event_id',event.id).order('created_at',{ascending:true}),loadScope);
   if(r.error){$('messages').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
   const rows=r.data||[];
-  const rr=rows.length?await sb.from('message_reactions').select('message_id,user_id,reaction').in('message_id',rows.map(m=>m.id)):({data:[],error:null});
+  const rr=rows.length?await eventRead(sb.from('message_reactions').select('message_id,user_id,reaction').in('message_id',rows.map(m=>m.id)),loadScope):({data:[],error:null});
   const reactions=rr.error?[]:(rr.data||[]);
   const reactionMap=new Map();
   reactions.forEach(x=>{if(!reactionMap.has(x.message_id))reactionMap.set(x.message_id,[]);reactionMap.get(x.message_id).push(x)});
@@ -2162,26 +2263,26 @@ async function loadMessages(){
   });
   if(pollMessageIds.length){
     const uniq=[...new Set(pollMessageIds)];
-    const pr=await sb.from('polls').select('id,question,allow_multiple,creator_id,created_at').in('id',uniq).eq('event_id',event.id);
-    const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',uniq);
-    const vrs=await sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',uniq);
+    const pr=await eventRead(sb.from('polls').select('id,question,allow_multiple,creator_id,created_at').in('id',uniq).eq('event_id',event.id),loadScope);
+    const ors=await eventRead(sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',uniq),loadScope);
+    const vrs=await eventRead(sb.from('poll_votes').select('poll_id,option_id,user_id').in('poll_id',uniq),loadScope);
     const options=ors.error?[]:(ors.data||[]), votes=vrs.error?[]:(vrs.data||[]);
     (pr.error?[]:(pr.data||[])).forEach(p=>pollMessageMap.set(p.id,{...p,options:options.filter(o=>o.poll_id===p.id),votes:votes.filter(v=>v.poll_id===p.id)}));
   }
-  const vr=await sb.from('voice_messages').select('id,user_id,storage_path,duration_ms,created_at').eq('event_id',event.id).order('created_at',{ascending:true});
+  const vr=await eventRead(sb.from('voice_messages').select('id,user_id,storage_path,duration_ms,created_at').eq('event_id',event.id).order('created_at',{ascending:true}),loadScope);
   if(vr.error){
     console.error('voice_messages SELECT:',vr.error);
   }
   const voices=vr.error?[]:(vr.data||[]);
   const ids=[...new Set([...rows.map(m=>m.user_id),...voices.map(m=>m.user_id)].filter(Boolean))];
   let profiles=[];
-  if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username,avatar').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+  if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username,avatar').in('id',ids),loadScope);if(!pr.error)profiles=pr.data||[];}
   const pmap=new Map(profiles.map(p=>[p.id,p]));
-  const voiceUrls=await Promise.all(voices.map(async m=>{
+  const voiceUrls=await eventRead(Promise.all(voices.map(async m=>{
     const local=voiceLocalUrls.get(String(m.id))||'';
     const x=await sb.storage.from('event-voices').createSignedUrl(m.storage_path,3600);
     return {...m,url:x.data?.signedUrl||local||'',storageError:x.error?.message||''};
-  }));
+  })),loadScope);
   const all=[
     ...rows.map(m=>({kind:'message',created_at:m.created_at,data:m})),
     ...voiceUrls.map(m=>({kind:'voice',created_at:m.created_at,data:m}))
@@ -2195,7 +2296,7 @@ async function loadMessages(){
   const callAlertIds=new Set(all.filter(item=>item.kind==='message' && typeof item.data.content==='string' && item.data.content.startsWith('[[MYEVENT_GROUP_CALL]]')).map(item=>item.data.id));
   const latestCallAlert=[...all].reverse().find(item=>callAlertIds.has(item.data?.id));
   const latestCallAlertId=latestCallAlert?.data?.id||null;
-  $('messages').innerHTML=(await Promise.all(all.map(async item=>{
+  $('messages').innerHTML=(await eventRead(Promise.all(all.map(async item=>{
     const m=item.data;
     const p=pmap.get(m.user_id)||{};
     const mine=m.user_id===user.id;
@@ -2283,7 +2384,7 @@ async function loadMessages(){
     return '<div class="messageRow '+(mine?'me':'')+'" data-message-id="'+esc(m.id)+'">'+
       avatarHtml(av,'messageAvatar')+
       '<div class="messageBody"><div class="messageMeta"><span>'+esc(name)+'</span><span>'+new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</span></div><div class="messageText">'+esc(m.content)+'</div>'+reactionHtml+'</div></div>';
-  }))).join('');
+  })),loadScope)).join('');
   document.querySelectorAll('.deleteVoice').forEach(b=>b.addEventListener('click',()=>deleteVoice(b.dataset.id,b.dataset.path)));
   document.querySelectorAll('.chatPollVote').forEach(b=>{
     b.addEventListener('click',()=>vote(b.dataset.poll,b.dataset.option,b));
@@ -2319,7 +2420,7 @@ async function loadMessages(){
   // Rétablit les vitesses 1× / 1,5× / 2× sur tous les vocaux reçus.
   bindVoiceSpeeds(document.getElementById('messages')||document);
   if($('statMessages'))$('statMessages').textContent=rows.length;
-  await loadUnreadCount();
+  await eventRead(loadUnreadCount(),loadScope);
   const restoreDiscussionPosition=()=>{
     const messagesBox=document.getElementById('messages');
     if(!messagesBox)return;
@@ -2340,6 +2441,8 @@ async function loadMessages(){
     if(!el.complete) el.addEventListener('loadeddata',restoreDiscussionPosition,{once:true});
     el.addEventListener('load',restoreDiscussionPosition,{once:true});
   });
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 function closeReactionPickers(){
@@ -2861,8 +2964,8 @@ async function vote(pollId, optionId, button){
 
 window.myeventCameraContext=function(){return {sb,user};};
 window.myeventEventsBridge={
-  context:()=>({sb,user,event,role:activeEventRole,events:eventsWorkspaceRows}),
-  load:loadEvents,select:selectEvent,tab:showEventTab,form:openEventTool,
+  context:()=>({sb,user,event,role:activeEventRole,events:eventsWorkspaceUserId===user?.id?eventsWorkspaceRows:[]}),
+  load:()=>loadEvents({useCache:true}),select:selectEvent,restoreSelection:restoreActiveEventSelection,tab:showEventTab,form:openEventTool,
   cover:coverDisplayUrl,
   closeDiscussion:()=>{document.body.classList.remove('discussionFullScreen');syncDiscussionFullscreenPortal(false);},
 };
@@ -2948,15 +3051,17 @@ async function deleteMedia(id,path){
 }
 
 async function loadMedia(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return;
-  const r=await sb.from('media').select('id,user_id,storage_path,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false});
+  const r=await eventRead(sb.from('media').select('id,user_id,storage_path,media_type,created_at').eq('event_id',event.id).order('created_at',{ascending:false}),loadScope);
   if(r.error){$('mediaGrid').innerHTML='<p class="err">'+esc(r.error.message)+'</p>';return}
   const items=(r.data||[]).filter(m=>m.media_type!=='audio');
   if(!items.length){$('mediaGrid').innerHTML='<p class="muted">Aucune photo ou vidéo pour le moment.</p>';return}
-  const urls=await Promise.all(items.map(async m=>{
+  const urls=await eventRead(Promise.all(items.map(async m=>{
     const x=await sb.storage.from('event-media').createSignedUrl(m.storage_path,3600);
     return [m,x.data?.signedUrl||''];
-  }));
+  })),loadScope);
   $('mediaGrid').innerHTML=urls.map(([m,url])=>{
     if(!url)return '';
     const mine=m.user_id===user.id;
@@ -2967,19 +3072,23 @@ async function loadMedia(){
   }).join('');
   document.querySelectorAll('.deleteMedia').forEach(b=>b.addEventListener('click',()=>deleteMedia(b.dataset.id,b.dataset.path)));
   if($('statPhotos'))$('statPhotos').textContent=items.length;
-  await loadUnreadMediaCount();
+  await eventRead(loadUnreadMediaCount(),loadScope);
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function loadPolls(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return;
 
   // On récupère les sondages et leurs choix séparément.
   // Cela évite l'erreur Supabase « more than one relationship was found »
   // provoquée par plusieurs relations entre polls et poll_options.
-  const pr=await sb.from('polls')
+  const pr=await eventRead(sb.from('polls')
     .select('*')
     .eq('event_id',event.id)
-    .order('created_at',{ascending:false});
+    .order('created_at',{ascending:false}),loadScope);
   if(pr.error){
     $('polls').innerHTML='<p class="err">'+esc(pr.error.message)+'</p>';
     return;
@@ -2988,14 +3097,14 @@ async function loadPolls(){
   const polls=pr.data||[];
   if(!polls.length){
     $('polls').innerHTML='<p class="muted">Aucun sondage pour le moment.</p>';
-    await loadUnreadPollCount();
+    await eventRead(loadUnreadPollCount(),loadScope);
     return;
   }
 
   const ids=polls.map(p=>p.id);
-  const or=await sb.from('poll_options')
+  const or=await eventRead(sb.from('poll_options')
     .select('id,poll_id,option_text')
-    .in('poll_id',ids);
+    .in('poll_id',ids),loadScope);
   if(or.error){
     $('polls').innerHTML='<p class="err">Choix du sondage indisponibles : '+esc(or.error.message)+'</p>';
     return;
@@ -3007,9 +3116,9 @@ async function loadPolls(){
     optionsByPoll.get(o.poll_id).push(o);
   }
 
-  const vr=await sb.from('poll_votes')
+  const vr=await eventRead(sb.from('poll_votes')
     .select('poll_id,option_id,user_id')
-    .in('poll_id',ids);
+    .in('poll_id',ids),loadScope);
   if(vr.error){
     $('polls').innerHTML='<p class="err">Résultats indisponibles : '+esc(vr.error.message)+'</p>';
     return;
@@ -3047,7 +3156,9 @@ async function loadPolls(){
   document.querySelectorAll('.pollAnalyzeBtn').forEach(b=>{
     b.addEventListener('click',()=>analyzePollResults(b.dataset.analyzePoll));
   });
-  await loadUnreadPollCount();
+  await eventRead(loadUnreadPollCount(),loadScope);
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function analyzePollResults(pollId){
@@ -3314,23 +3425,35 @@ async function generateMissedAiSummary(context){
   }
 }
 
-async function refreshNotifications(showSummary=false){
+const eventNotificationLoads=new Map();
+function refreshNotifications(showSummary=false){
+  if(!event||!user)return Promise.resolve();
+  const key=[user.id,event.id,activeEventSelectionVersion,showSummary].join(':');
+  if(eventNotificationLoads.has(key))return eventNotificationLoads.get(key);
+  const request=fetchEventNotifications(showSummary);
+  eventNotificationLoads.set(key,request);
+  request.finally(()=>{if(eventNotificationLoads.get(key)===request)eventNotificationLoads.delete(key);}).catch(()=>{});
+  return request;
+}
+async function fetchEventNotifications(showSummary=false){
+  const loadScope=eventLoadScope();
+  try{
   if(!event||!user)return;
   const items=[], context={eventName:event.name||'Événement',messages:[],polls:[],mediaCount:0,members:[]};
   try{
-    const mr=await sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle();
+    const mr=await eventRead(sb.from('message_reads').select('last_read_at').eq('event_id',event.id).eq('user_id',user.id).maybeSingle(),loadScope);
     const lastRead=mr.data?.last_read_at||null;
     let mcq=sb.from('messages').select('id,created_at,user_id',{count:'exact'}).eq('event_id',event.id);
     if(lastRead)mcq=mcq.gt('created_at',lastRead);
-    const mcres=await mcq;
+    const mcres=await eventRead(mcq,loadScope);
     const unreadMessages=(mcres.data||[]).filter(x=>!isLocallyCreated('messages',x.id)).length;
     let mq=sb.from('messages').select('id,content,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(lastRead)mq=mq.gt('created_at',lastRead);
-    const mres=await mq;
+    const mres=await eventRead(mq,loadScope);
     const msgs=(mres.data||[]).filter(x=>!isLocallyCreated('messages',x.id)).slice(0,10);
     if(unreadMessages){
       const ids=[...new Set(msgs.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
-      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=msgs[0], fp=pmap.get(first.user_id)||{};
       const sender=first.user_id===user.id?'Moi':(fp.display_name||fp.username||'Un membre');
       items.push({icon:'💬',tab:'discussion',title:unreadMessages+(unreadMessages>1?' nouveaux messages':' nouveau message'),detail:sender+' : '+(first.content||'').slice(0,100)+(unreadMessages>10?' · aperçu des 10 derniers':'') ,time:first.created_at});
@@ -3340,22 +3463,22 @@ async function refreshNotifications(showSummary=false){
     const pk=unreadStorageKey('polls'), ps=localStorage.getItem(pk);
     let pq=sb.from('polls').select('id,question,created_at,creator_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(ps)pq=pq.gt('created_at',ps);
-    const pres=await pq, polls=(pres.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
+    const pres=await eventRead(pq,loadScope), polls=(pres.data||[]).filter(x=>!isLocallyCreated('polls',x.id));
     if(polls.length){
       const ids=[...new Set(polls.map(x=>x.creator_id).filter(Boolean))]; let profiles=[];
-      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=polls[0], fp=pmap.get(first.creator_id)||{};
       const creator=fp.display_name||fp.username||'Un membre';
       items.push({icon:'📊',tab:'polls',title:polls.length+(polls.length>1?' nouveaux sondages':' nouveau sondage'),detail:creator+' : '+(first.question||'Nouveau sondage'),time:first.created_at});
       const pollIds=polls.map(x=>x.id);
       let pollOptions=[];
       if(pollIds.length){
-        const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds);
+        const ors=await eventRead(sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds),loadScope);
         if(!ors.error)pollOptions=ors.data||[];
       }
       let pollVotes=[];
       if(pollIds.length){
-        const vrs=await sb.from('poll_votes').select('poll_id,option_id').in('poll_id',pollIds);
+        const vrs=await eventRead(sb.from('poll_votes').select('poll_id,option_id').in('poll_id',pollIds),loadScope);
         if(!vrs.error)pollVotes=vrs.data||[];
       }
       context.polls=polls.slice().reverse().map(x=>({
@@ -3370,20 +3493,20 @@ async function refreshNotifications(showSummary=false){
 
     const vk=unreadStorageKey('votes'), vs=localStorage.getItem(vk);
     if(vs){
-      const pr=await sb.from('polls').select('id,question').eq('event_id',event.id).eq('creator_id',user.id);
+      const pr=await eventRead(sb.from('polls').select('id,question').eq('event_id',event.id).eq('creator_id',user.id),loadScope);
       if(!pr.error && pr.data?.length){
         const pollIds=pr.data.map(x=>x.id);
-        const vr=await sb.from('poll_votes').select('poll_id,user_id,option_id,created_at').in('poll_id',pollIds).neq('user_id',user.id).gt('created_at',vs).order('created_at',{ascending:false}).limit(50);
+        const vr=await eventRead(sb.from('poll_votes').select('poll_id,user_id,option_id,created_at').in('poll_id',pollIds).neq('user_id',user.id).gt('created_at',vs).order('created_at',{ascending:false}).limit(50),loadScope);
         const votes=vr.error?[]:(vr.data||[]);
         if(votes.length){
           const vmap=new Map((pr.data||[]).map(p=>[p.id,p]));
           const first=votes[0], vp=vmap.get(first.poll_id)||{};
           const ids=[...new Set(votes.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
-          if(ids.length){const pfr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pfr.error)profiles=pfr.data||[];}
+          if(ids.length){const pfr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope);if(!pfr.error)profiles=pfr.data||[];}
           const pmap=new Map(profiles.map(p=>[p.id,p])); const person=pmap.get(first.user_id)||{};
           const voter=person.display_name||person.username||'Un participant';
           items.push({icon:'🗳️',tab:'polls',title:votes.length+(votes.length>1?' nouveaux votes':' nouveau vote'),detail:voter+' a voté à « '+(vp.question||'Sondage')+' »',time:first.created_at});
-          const ors=await sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds);
+          const ors=await eventRead(sb.from('poll_options').select('id,poll_id,option_text').in('poll_id',pollIds),loadScope);
           const options=ors.error?[]:(ors.data||[]);
           const counts=new Map();
           votes.forEach(v=>counts.set(v.option_id,(counts.get(v.option_id)||0)+1));
@@ -3405,10 +3528,10 @@ async function refreshNotifications(showSummary=false){
     const mk=unreadStorageKey('media'), ms=localStorage.getItem(mk);
     let medq=sb.from('media').select('id,media_type,created_at,user_id').eq('event_id',event.id).order('created_at',{ascending:false}).limit(50);
     if(ms)medq=medq.gt('created_at',ms);
-    const medres=await medq, media=(medres.data||[]).filter(x=>!isLocallyCreated('media',x.id));
+    const medres=await eventRead(medq,loadScope), media=(medres.data||[]).filter(x=>!isLocallyCreated('media',x.id));
     if(media.length){
       const ids=[...new Set(media.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
-      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=media[0], fp=pmap.get(first.user_id)||{};
       const creator=fp.display_name||fp.username||'Un membre';
       items.push({icon:'📸',tab:'media',title:media.length+(media.length>1?' nouveaux souvenirs':' nouveau souvenir'),detail:creator+' : '+(media.some(x=>x.media_type==='video')?'photo(s) et/ou vidéo(s) ajoutée(s)':'nouvelle photo ajoutée'),time:first.created_at});
@@ -3418,14 +3541,14 @@ async function refreshNotifications(showSummary=false){
     const memKey=unreadStorageKey('members'), memSaved=localStorage.getItem(memKey);
     let memq=sb.from('event_members').select('user_id,joined_at').eq('event_id',event.id).order('joined_at',{ascending:false}).limit(50);
     if(memSaved)memq=memq.gt('joined_at',memSaved);
-    const memres=await memq, members=(memres.data||[]).filter(x=>!isLocallyCreated('members',x.user_id+'|'+x.joined_at));
+    const memres=await eventRead(memq,loadScope), members=(memres.data||[]).filter(x=>!isLocallyCreated('members',x.user_id+'|'+x.joined_at));
     // À la première ouverture, les membres déjà présents ne sont pas considérés comme nouveaux.
     if(!memSaved){
       const latest=members[0]?.joined_at;
       if(latest)localStorage.setItem(memKey,latest);
     } else if(members.length){
       const ids=[...new Set(members.map(x=>x.user_id).filter(Boolean))]; let profiles=[];
-      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)profiles=pr.data||[];}
+      if(ids.length){const pr=await eventRead(sb.from('profiles').select('id,display_name,username').in('id',ids),loadScope);if(!pr.error)profiles=pr.data||[];}
       const pmap=new Map(profiles.map(p=>[p.id,p])); const first=members[0], fp=pmap.get(first.user_id)||{};
       const name=first.user_id===user.id?'Toi':(fp.display_name||fp.username||'Un participant');
       items.push({icon:'👥',tab:'members',title:members.length+(members.length>1?' nouveaux participants':' nouveau participant'),detail:name+' a rejoint l’événement',time:first.joined_at});
@@ -3450,8 +3573,11 @@ async function refreshNotifications(showSummary=false){
       homeNotifBadge.classList.toggle('hidden',notificationCount===0);
     }
     renderNotificationList(items);
-    if(showSummary) await generateMissedAiSummary(context);
-  }catch(e){console.warn('Notifications:',e.message||e);renderNotificationList([]);}
+    if(showSummary) await eventRead(generateMissedAiSummary(context),loadScope);
+  }catch(e){if(!loadScope.current())return;console.warn('Notifications:',e.message||e);renderNotificationList([]);}
+  if(!loadScope.current())return;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function markAllNotificationsRead(){
@@ -3572,7 +3698,7 @@ async function logout(){
     activeEventRole='member';
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
-    user=null; event=null;eventsWorkspaceRows=[];
+    activeEventSelectionVersion++;user=null; event=null;eventsWorkspaceRows=[];
     window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
@@ -3763,6 +3889,8 @@ function extractWeatherCoordinates(place){
   return null;
 }
 async function loadWeather(){
+  const loadScope=eventLoadScope();
+  try{
   const root=$('weatherContent');
   if(!root)return;
   if(!event){root.innerHTML='<p class="muted">Sélectionne un événement pour afficher la météo.</p>';return}
@@ -3777,19 +3905,20 @@ async function loadWeather(){
       // Les coordonnées GPS sont utilisées directement pour les prévisions.
       // On tente seulement d'obtenir un nom lisible, sans rendre la météo dépendante du reverse-geocoding.
       try{
-        const rev=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&zoom=10&addressdetails=1',{headers:{'Accept':'application/json'}});
-        if(rev.ok){const rd=await rev.json(),a=rd.address||{};placeLabel=a.city||a.town||a.village||a.municipality||rd.name||'Position GPS';admin=a.state||a.region||'';}
-      }catch(e){}
+        const rev=await eventRead(fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon)+'&zoom=10&addressdetails=1',{headers:{'Accept':'application/json'}}),loadScope);
+        if(rev.ok){const rd=await eventRead(rev.json(),loadScope),a=rd.address||{};placeLabel=a.city||a.town||a.village||a.municipality||rd.name||'Position GPS';admin=a.state||a.region||'';}
+      }catch(e){if(!loadScope.current())return;}
+  if(!loadScope.current())return;
     }else{
-      const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(place)+'&count=1&language=fr&format=json');
+      const geo=await eventRead(fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(place)+'&count=1&language=fr&format=json'),loadScope);
       if(!geo.ok)throw new Error('Service météo indisponible');
-      const gd=await geo.json(),g=gd.results?.[0];
+      const gd=await eventRead(geo.json(),loadScope),g=gd.results?.[0];
       if(!g)throw new Error('Lieu introuvable. Vérifie le lieu ou les coordonnées GPS de l’événement.');
       lat=g.latitude;lon=g.longitude;placeLabel=g.name||place;admin=g.admin1||'';
     }
-    const rr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&forecast_days=16');
+    const rr=await eventRead(fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&timezone=auto&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&forecast_days=16'),loadScope);
     if(!rr.ok)throw new Error('Prévisions indisponibles');
-    const d=await rr.json(),c=d.current||{},day=d.daily||{},code=c.weather_code??0,targetDate=event.event_date?new Date(event.event_date):null;
+    const d=await eventRead(rr.json(),loadScope),c=d.current||{},day=d.daily||{},code=c.weather_code??0,targetDate=event.event_date?new Date(event.event_date):null;
     let idx=0;
     if(targetDate&&Array.isArray(day.time)){
       const td=targetDate.toLocaleDateString('en-CA',{timeZone:d.timezone||'UTC'});
@@ -3800,7 +3929,10 @@ async function loadWeather(){
     const days=(day.time||[]).slice(0,7).map((date,i)=>'<div class="weatherDay"><b>'+weatherDateLabel(date)+'</b><span>'+(weatherIcons[day.weather_code?.[i]]||'🌤️')+'</span><span>'+Math.round(day.temperature_2m_max?.[i]??0)+'° / '+Math.round(day.temperature_2m_min?.[i]??0)+'°</span><span>🌧️ '+(day.precipitation_probability_max?.[i]??0)+'%</span></div>').join('');
     const locationLine=coords?'📍 '+placeLabel+(admin?', '+admin:'')+' · GPS '+lat.toFixed(5)+', '+lon.toFixed(5):'📍 '+placeLabel+(admin?', '+admin:'');
     root.innerHTML='<div class="muted">'+locationLine+eventTxt+'</div><div class="weatherNow"><div class="weatherIcon">'+(weatherIcons[code]||'🌤️')+'</div><div><div class="weatherTemp">'+Math.round(c.temperature_2m??tmax??0)+'°C</div><div class="weatherMeta"><span>'+(weatherLabels[code]||'Conditions actuelles')+'</span><span>💨 '+Math.round(c.wind_speed_10m??wmax??0)+' km/h · 🌧️ '+Math.round((c.precipitation??0)*10)/10+' mm</span></div></div></div><div class="weatherHint muted">Prévision pour la date de l’événement : <b>'+Math.round(tmax??0)+'° / '+Math.round(tmin??0)+'°</b> · pluie '+(pop??0)+'% · vent jusqu’à '+Math.round(wmax??0)+' km/h</div><div class="weatherForecast">'+days+'</div>';
-  }catch(e){root.innerHTML='<p class="muted">⚠️ '+(e.message||'Impossible de charger la météo.')+'</p>'}
+  }catch(e){if(!loadScope.current())return;root.innerHTML='<p class="muted">⚠️ '+(e.message||'Impossible de charger la météo.')+'</p>'}
+  if(!loadScope.current())return;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 /* Appel de groupe — V11 : WebRTC maillé + présence Supabase + reconnexion robuste */

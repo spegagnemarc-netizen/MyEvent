@@ -335,18 +335,21 @@ async function attachSelectedOutingActions(data){
 }
 
 async function loadSelectedOuting(){
+  const loadScope=eventLoadScope();
+  try{
   const box=$('outingSelectedBox'); if(!box||!event)return;
 
   const version=++outingStateVersion;
 
-  let data=await getScopedEventOuting(event.id);
+  let data=await eventRead(getScopedEventOuting(event.id),loadScope);
   if(version!==outingStateVersion)return;
 
   // Ne jamais afficher une sortie générique/placeholder comme une sortie choisie.
   // Si une ancienne ligne générique existe malgré tout dans Supabase, on la supprime
   // afin qu'elle ne puisse pas réapparaître au prochain chargement.
   if(isPlaceholderSelectedOuting(data)){
-    try{ await sb.from('event_outings').delete().eq('event_id',event.id); }catch(_){}
+    try{ await eventRead(sb.from('event_outings').delete().eq('event_id',event.id),loadScope); }catch(_){if(!loadScope.current())return;}
+  if(!loadScope.current())return;
     data=null;
   }else{
     data=validSelectedOuting(data);
@@ -365,7 +368,7 @@ async function loadSelectedOuting(){
 
   outingSelected=data;
   renderSelectedOutingBox(data);
-  await attachSelectedOutingActions(data);
+  await eventRead(attachSelectedOutingActions(data),loadScope);
 
   renderOutingResults();
 
@@ -398,6 +401,8 @@ async function loadSelectedOuting(){
     renderOutingResults();
     msg('outingMsg','Sortie retirée de l’événement.','ok');
   });
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 
 async function selectOuting(id){
@@ -641,8 +646,10 @@ function reservationFormHtml(prefix){
     '</div><div class="reservationActions"><button type="button" class="secondary" id="'+prefix+'ReservationSave">💾 Enregistrer</button><button type="button" class="secondary" id="'+prefix+'ReservationCancel">Annuler</button></div></div>';
 }
 async function loadEventReservation(){
+  const loadScope=eventLoadScope();
+  try{
   if(!event)return null;
-  const r=await sb.rpc('get_event_reservation',{p_event_id:event.id});
+  const r=await eventRead(sb.rpc('get_event_reservation',{p_event_id:event.id}),loadScope);
   if(r.error){
     console.error('get_event_reservation:', r.error);
     currentReservation=null;
@@ -657,6 +664,8 @@ async function loadEventReservation(){
   if(currentReservation?.status==='cancelled')currentReservation=null;
   if(!currentReservation) currentReservation=loadLocalReservationSnapshot(event.id);
   return currentReservation;
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function saveEventReservation(outingId,prefix){
   if(!event||!outingSelected)return;
@@ -712,13 +721,15 @@ async function openReservationForm(prefix){
   $(prefix+'ReservationSave')?.addEventListener('click',()=>saveEventReservation(outingSelected?.id,prefix));
 }
 async function refreshReservationBoxes(){
+  const loadScope=eventLoadScope();
+  try{
   // V54.7 : aucune réservation ne doit apparaître sur un événement sans sortie réelle.
   const selected=validSelectedOuting(outingSelected);
   if(!selected){
     outingSelected=null;
     currentReservation=null;
   }else{
-    await loadEventReservation();
+    await eventRead(loadEventReservation(),loadScope);
     // Une ancienne réservation liée à une autre sortie ne doit pas être recyclée.
     if(currentReservation?.outing_id && selected.id && String(currentReservation.outing_id)!==String(selected.id)){
       currentReservation=null;
@@ -726,7 +737,7 @@ async function refreshReservationBoxes(){
   }
   const choiceKey=user&&event?'myevent_event_planning_choice_'+user.id+'_'+event.id:'';
   let planningChoice='manual';
-  try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){ }
+  try{ const saved=choiceKey?localStorage.getItem(choiceKey):null; if(saved==='ai')planningChoice='ai'; }catch(_){if(!loadScope.current())return; }
   const host=$('outingReservationHost'); if(host)host.innerHTML=reservationBoxHtml('outing');
   const home=$('homeReservationBox');
   if(home){
@@ -738,6 +749,8 @@ async function refreshReservationBoxes(){
   $('outingReservationDelete')?.addEventListener('click',cancelEventReservation);
   $('homeReservationDelete')?.addEventListener('click',cancelEventReservation);
   $('homeReserve')?.addEventListener('click',()=>openReservationForm('home'));
+
+  }catch(error){if(!loadScope.current())return;if(error?.code!=='EVENT_STALE')eventLoadWarning(error);}
 }
 async function cancelEventReservation(){
   if(!event)return;
@@ -1177,7 +1190,7 @@ function aiPlanCandidateLabel(t){
   return t==='restaurant'?'🍽️ Restaurant':t==='culture'?'🏛️ Culture':t==='nature'?'🌳 Nature':'🎯 Activité';
 }
 function aiPlanFormatPrice(v){
-  return Number.isFinite(Number(v))&&Number(v)>0?eur(Number(v))+' / pers.':'Tarif à vérifier';
+  return v!=null&&Number.isFinite(Number(v))&&Number(v)>=0?eur(Number(v))+' / pers.':'Tarif à vérifier';
 }
 function syncAiMealTime(){
   const type=$('aiPlanMealType')?.value||'none';
@@ -1196,6 +1209,8 @@ function syncAiMealTime(){
 }
 async function generateAiOutingPlan(){
   if(!event||!user)return;
+  const selectedEvent=event,selectedUserId=user.id,generationToken=++aiPlanLoadToken;
+  const isCurrent=()=>event?.id===selectedEvent.id&&user?.id===selectedUserId&&generationToken===aiPlanLoadToken;
   const btn=$('aiPlanGenerate'); if(btn?.disabled)return;
   const people=Math.max(1,Number($('aiPlanPeople')?.value||10)||10);
   const budget=Math.max(0,Number($('aiPlanBudget')?.value||0)||0);
@@ -1207,13 +1222,16 @@ async function generateAiOutingPlan(){
   const prompt=String($('aiPlanPrompt')?.value||'').trim();
   btn.disabled=true;
   $('aiPlanResults').innerHTML='';
+  $('aiPlanStatus').className='aiPlanStatus';
   $('aiPlanStatus').textContent='📍 Recherche des restaurants et activités autour du centre 🎯…';
   let searchWarning='';
   try{
     const geo=await getActivitySearchCenter();
+    if(!isCurrent())return;
     if(!geo)throw new Error('Ajoute une adresse ou un lieu à l’événement pour définir le centre de recherche.');
     const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
     const d=await r.json().catch(()=>null);
+    if(!isCurrent())return;
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
     searchWarning=d.warning||'';
     const available=(d.results||[]).map((p,i)=>({
@@ -1222,27 +1240,28 @@ async function generateAiOutingPlan(){
       type:aiPlanCandidateType(p),
       address:String(p.address||'').trim(),
       lat:Number(p.lat),lon:Number(p.lon),
-      price_per_person:Number.isFinite(Number(p.price))&&Number(p.price)>0?Number(p.price):null,
-      price_is_estimate:false,
+      price_per_person:p.price!=null&&Number.isFinite(Number(p.price))&&Number(p.price)>=0?Number(p.price):null,
+      price_is_estimate:false,capacity:p.capacity??null,
       website:p.website||null,phone:p.phone||null,
       distance_km:Number.isFinite(Number(p.distance))?Number(p.distance):null
     })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon));
     const restaurants=available.filter(x=>x.type==='restaurant').slice(0,60);
     const activities=available.filter(x=>x.type!=='restaurant').slice(0,60);
     const candidates=[...restaurants,...activities];
-    if(!restaurants.length||activities.length<steps-1){
+    if(!restaurants.length||!activities.length){
       const nextRadius=[5,10,20,50].find(km=>km>radius);
       throw new Error((d.partial?'Les résultats disponibles sont insuffisants pour composer ces étapes. ':'')+'Recherche effectuée : '+restaurants.length+' restaurant(s) et '+activities.length+' activité(s) dans '+radius+' km. Pas assez de lieux pour ces '+steps+' étapes. '+(d.partial?'Réessaie lorsque les catégories indisponibles seront rétablies, ou choisis moins d’étapes.':nextRadius?'Sélectionne un rayon de '+nextRadius+' km puis relance la recherche.':'Essaie un autre centre ou moins d’étapes.'));
     }
     $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+'🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
     const token=(await sb.auth.getSession()).data?.session?.access_token||'';
+    if(!isCurrent())return;
     const ar=await fetch('/api/generate-outing-plan',{
       method:'POST',
       headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},
       body:JSON.stringify({
-        event_name:event.name||'Événement',
-        event_date:event.event_date||null,
-        event_location:event.location||'',
+        radius,center:geo,event_name:selectedEvent.name||'Événement',
+        event_date:selectedEvent.event_date||null,
+        event_location:selectedEvent.location||'',
         people,budget_per_person:budget||null,
         requested_steps:steps,
         start_time:startTime||null,
@@ -1253,11 +1272,13 @@ async function generateAiOutingPlan(){
       })
     });
     const data=await ar.json().catch(()=>({}));
+    if(!isCurrent())return;
     if(!ar.ok)throw new Error(data.error||'Le service IA est indisponible.');
-    aiOutingPlanData=data;
+    aiOutingPlanData={...data,event_id:selectedEvent.id};
     renderAiOutingPlans(data);
-    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+((data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.');
+    $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+(data.warning?data.warning+' ':'')+((data.options||[]).length?'Choisis une proposition pour l’enregistrer dans le planning ('+(data.options||[]).length+' propositions).':'Aucune proposition adaptée.');
   }catch(e){
+    if(!isCurrent())return;
     $('aiPlanStatus').textContent=(searchWarning?searchWarning+' ':'')+(e.message||'Impossible de générer le planning.');
     $('aiPlanStatus').className='aiPlanStatus err';
   }finally{btn.disabled=false;}
@@ -1270,7 +1291,7 @@ function renderAiOutingPlans(data){
     const steps=Array.isArray(o.steps)?o.steps:[];
     const total=o.total_estimated_per_person!=null?'<div class="aiPlanOptionMeta">💶 Environ '+esc(String(o.total_estimated_per_person))+' € / pers.</div>':'';
     return '<div class="aiPlanOption"><div class="aiPlanOptionTitle">'+esc(o.title||('Proposition '+(oi+1)))+'</div>'+
-      '<div class="aiPlanOptionMeta">'+esc(o.summary||'Sortie complète')+'</div>'+total+
+      '<div class="aiPlanOptionMeta">'+esc(o.summary||'Sortie complète')+'</div>'+(o.incomplete?'<div class="aiPlanOptionMeta">Proposition partielle · '+steps.length+' / '+esc(String(o.requested_steps))+' étapes demandées</div>':'')+total+
       steps.map((s,si)=>'<div class="aiPlanStep"><div class="aiPlanStepNum">'+(si+1)+'</div><div><div class="aiPlanStepName">'+esc(s.name||'Étape')+'</div><div class="aiPlanStepMeta">'+aiPlanCandidateLabel(String(s.type||'activity'))+(s.start_time?' · 🕐 '+esc(s.start_time):'')+(s.duration_minutes?' · '+esc(String(s.duration_minutes))+' min':'')+(s.address?' · 📍 '+esc(s.address):'')+(s.price_per_person!=null?' · '+(s.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(s.price_per_person)+(s.source==='ai_estimate'?' (estimé)':''):'')+'</div></div></div>').join('')+
       '<button type="button" class="aiPlanChoose" data-ai-plan-index="'+oi+'">✅ Choisir cette proposition</button></div>';
   }).join('');
@@ -1279,30 +1300,33 @@ let aiPlanSaving=false;
 async function saveAiOutingPlan(index){
   const o=aiOutingPlanData?.options?.[Number(index)];
   if(!o||!event||!user||aiPlanSaving)return;
+  if(aiOutingPlanData.event_id&&aiOutingPlanData.event_id!==event.id){$('aiPlanStatus').textContent='Cette proposition appartient à un autre événement. Relance la recherche pour l’événement actif.';return;}
+  const planEventId=event.id,planUserId=user.id,planData=aiOutingPlanData;
+  const isCurrent=()=>event?.id===planEventId&&user?.id===planUserId;
   aiPlanSaving=true;
   const btn=document.querySelector('[data-ai-plan-index="'+index+'"]'); if(btn)btn.disabled=true;
   try{
     const planPayload={
-      event_id:event.id,
+      event_id:planEventId,
       title:String(o.title||'Sortie organisée avec l’IA').slice(0,180),
-      request:String(aiOutingPlanData.request||$('aiPlanPrompt')?.value||'').slice(0,2000),
-      people:Math.max(1,Number(aiOutingPlanData.people)||1),
-      budget_per_person:aiOutingPlanData.budget_per_person!=null?Number(aiOutingPlanData.budget_per_person):null,
+      request:String(planData.request||$('aiPlanPrompt')?.value||'').slice(0,2000),
+      people:Math.max(1,Number(planData.people)||1),
+      budget_per_person:planData.budget_per_person!=null?Number(planData.budget_per_person):null,
       status:'selected',
-      created_by:user.id
+      created_by:planUserId
     };
     const pr=await sb.from('event_outing_plans').upsert(planPayload,{onConflict:'event_id'}).select('*').single();
     if(pr.error)throw new Error(pr.error.message);
 
     const items=(o.steps||[]).map((s,i)=>({
-      plan_id:pr.data.id,event_id:event.id,step_order:i+1,
+      plan_id:pr.data.id,event_id:planEventId,step_order:i+1,
       outing_type:String(s.type||'activity'),
       name:String(s.name||'Étape'),
       address:s.address||null,lat:Number.isFinite(Number(s.lat))?Number(s.lat):null,lon:Number.isFinite(Number(s.lon))?Number(s.lon):null,
       price_per_person:s.price_per_person!=null?Number(s.price_per_person):null,
       start_time:s.start_time||null,duration_minutes:s.duration_minutes!=null?Number(s.duration_minutes):null,
       website:s.website||null,phone:s.phone||null,source:s.source||'ai',
-      created_by:user.id
+      created_by:planUserId
     }));
     if(!items.length)throw new Error('La proposition ne contient aucune étape.');
 
@@ -1325,10 +1349,10 @@ async function saveAiOutingPlan(index){
     // On conserve aussi l'id Supabase du planning pour retrouver ses réservations après actualisation.
     try{
       localStorage.setItem(
-        'myevent_ai_plan_'+user.id+'_'+event.id,
+        'myevent_ai_plan_'+planUserId+'_'+planEventId,
         JSON.stringify({
           plan_id:pr.data.id,
-          event_id:event.id,
+          event_id:planEventId,
           title:planPayload.title,
           request:planPayload.request,
           people:planPayload.people,
@@ -1339,18 +1363,20 @@ async function saveAiOutingPlan(index){
       );
     }catch(_){ }
 
+    if(!isCurrent())return;
     window.__myeventAiCurrentPlan={plan:pr.data,items};
     closeAiOutingPlanner();
     showEventTab('aioutings',true);
     // V54 : le planning IA vit dans son propre onglet et ne dépend plus
     // de la sortie individuelle sélectionnée.
     await renderInlineSelectedEvent();
+    if(!isCurrent())return;
     // V53.13 FIX 2 : afficher immédiatement le planning qui vient d'être enregistré.
     // Cela évite de dépendre d'un second SELECT Supabase au moment du rendu.
     const savedBox=$('aiPlanPanelBox');
     if(savedBox){
       savedBox.innerHTML='<div class="aiPlanSaved"><div class="aiPlanSavedTitle">✨ Planning IA sélectionné</div>'+
-        '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(aiOutingPlanData.people||1))+' pers.</div>'+
+        '<div class="muted">'+esc(o.title||'Sortie complète')+' · '+esc(String(planData.people||1))+' pers.</div>'+
         items.map((x,i)=>'<div class="aiPlanSavedStep"><b>'+(i+1)+'. '+esc(x.name||'Étape')+'</b> <span>· '+aiPlanCandidateLabel(x.outing_type)+(x.start_time?' · '+esc(x.start_time):'')+(x.price_per_person!=null?' · '+(x.source==='ai_estimate'?'≈ 💶 ':'💶 ')+aiPlanFormatPrice(x.price_per_person)+(x.source==='ai_estimate'?' (estimé)':''):'')+'</span></div>').join('')+
         '<button type="button" class="secondary" style="margin-top:9px;width:100%" data-ai-plan-edit="1" onclick="event.preventDefault();event.stopPropagation();window.__myeventOpenAiPlanEditor();return false;">✏️ Modifier le planning IA</button></div>';
       savedBox.querySelector('[data-ai-plan-edit]')?.addEventListener('click',openAiPlanEditor);
@@ -1360,6 +1386,7 @@ async function saveAiOutingPlan(index){
     await refreshReservationBoxes();
     alert('✅ Planning IA enregistré : '+items.length+' étapes.');
   }catch(e){
+    if(!isCurrent())return;
     $('aiPlanStatus').textContent='Impossible d’enregistrer : '+(e.message||String(e));
     $('aiPlanStatus').className='aiPlanStatus err';
     if(btn)btn.disabled=false;

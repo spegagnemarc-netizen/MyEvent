@@ -66,7 +66,7 @@ test('AI candidate limit retains both families and never calls the model when ac
   const fn=src.slice(src.indexOf('async function generateAiOutingPlan(){'),src.indexOf('\nfunction renderAiOutingPlans'));
   async function generate(results,metadata={}){
     const nodes={aiPlanGenerate:{disabled:false},aiPlanRadius:{value:'5'},aiPlanSteps:{value:'3'},aiPlanResults:{},aiPlanStatus:{}};let sent;
-    const c=vm.createContext({event:{name:'Fictif'},user:{id:'fictif'},$:id=>nodes[id],getActivitySearchCenter:async()=>({lat:48.8566,lon:2.3522}),aiPlanCandidateType:p=>p.type,renderAiOutingPlans(){},sb:{auth:{getSession:async()=>({data:{}})}},fetch:async(url,options)=>{
+    const c=vm.createContext({event:{id:'fictif',name:'Fictif'},aiPlanLoadToken:0,user:{id:'fictif'},$:id=>nodes[id],getActivitySearchCenter:async()=>({lat:48.8566,lon:2.3522}),aiPlanCandidateType:p=>p.type,renderAiOutingPlans(){},sb:{auth:{getSession:async()=>({data:{}})}},fetch:async(url,options)=>{
       if(options?.method==='POST'){sent=JSON.parse(options.body);return {ok:true,json:async()=>({options:[]})};}
       return {ok:true,json:async()=>({results,...metadata})};
     }});

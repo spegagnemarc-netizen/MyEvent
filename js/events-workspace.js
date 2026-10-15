@@ -37,7 +37,7 @@
  for(const [key,id] of [['weather','weatherCard'],['call','groupCallCard'],['notifications','notificationCenter']]){panels.set(key,$(id));park($(id));}
  for(const node of document.querySelectorAll('.tabPanel[data-panel]')){panels.set(node.dataset.panel,node);park(node);}
  const oldTabs=document.querySelector('.eventTabs');park(oldTabs);
- let filter='all',screen='landing',busy=false,revision=0,pendingTool=null;
+ let filter='all',screen='landing',revision=0,pendingTool=null;
  const landing=root.querySelector('.ewLanding'),toolPage=root.querySelector('.ewToolPage');
  const context=()=>bridge.context();
  function status(text){$('ewStatus').textContent=text||'';}
@@ -47,7 +47,7 @@
   for(const node of panels.values())if(node?.parentNode===body){park(node);node.open=false;node.classList.remove('active');}
   body.replaceChildren();toolPage.hidden=true;landing.hidden=false;screen='landing';
  }
- function close(){closeTool();root.hidden=true;document.body.classList.remove('eventsWorkspaceOpen');}
+ function close(){revision++;closeTool();root.hidden=true;document.body.classList.remove('eventsWorkspaceOpen');}
  function route(key){if(window.MyEventSectionNavigation){window.MyEventSectionNavigation.visit('events',key,context().event?.id);return;}if(!history.state?.eventsWorkspace&&key==='landing')history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events');else if(key!==history.state?.key)history.pushState({eventsWorkspace:true,key},'',location.pathname+location.search+'#events/'+encodeURIComponent(key));}
  function showScreen(key){
   closeTool();screen=key;landing.hidden=true;toolPage.hidden=false;$('ewToolTitle').textContent=titles[key]||'Événement';
@@ -57,24 +57,33 @@
  async function open(selectedId){
   root.hidden=false;legacy.hidden=true;document.body.classList.add('eventsWorkspaceOpen');
   nav.querySelectorAll('[data-bottom-tab]').forEach(b=>b.classList.toggle('active',b.dataset.bottomTab==='events'));
-  closeTool();if(!selectedId)route('landing');status('Chargement de vos événements…');
+  closeTool();if(!selectedId)route('landing');render();status(context().events.length?'Actualisation des événements…':'Chargement de vos événements…');
   const ticket=++revision;
   try{
    if(!context().user){status('Connectez-vous pour retrouver vos événements.');render();return;}
+   if(!selectedId&&!context().event&&context().events.length&&bridge.restoreSelection){await bridge.restoreSelection(context().events);render();}
    await bridge.load();if(ticket!==revision||!isOpen())return;
    const rows=context().events;
-   if(selectedId&&!rows.some(e=>e.id===selectedId)){close();throw new Error('Cet événement n’est pas accessible.');}
-   if(selectedId&&context().event?.id!==selectedId){busy=true;try{await bridge.select(selectedId);}finally{busy=false;}}
-   if(rows.length&&!rows.some(e=>e.id===context().event?.id)){busy=true;try{await bridge.select(rows[0].id);}finally{busy=false;}}
+   if(selectedId&&!rows.some(e=>e.id===selectedId)){throw new Error('Cet événement n’est pas accessible.');}
+   if(selectedId&&context().event?.id!==selectedId){await bridge.select(selectedId);}
+   if(!selectedId&&bridge.restoreSelection){await bridge.restoreSelection(rows);}
    if(ticket!==revision||!isOpen())return;
    status('');render();if(selectedId)route('selected');root.scrollIntoView({block:'start'});
-  }catch(error){status('Impossible de charger les événements : '+(error.message||String(error)));render();if(selectedId)throw error;}
+  }catch(error){if(ticket!==revision||!isOpen())return;status('Impossible de charger les événements : '+(error.message||String(error)));render();if(selectedId)throw error;}
  }
  async function select(id){
-  if(busy)return;busy=true;status('Ouverture de l’événement…');
-  try{await bridge.select(id);status('');render();if(pendingTool){const key=pendingTool;pendingTool=null;openTool(key);}}
-  catch(error){status(error.message||String(error));}finally{busy=false;render();}
+  const ticket=++revision;
+  // Keep the select and hero on the same committed ID while access is being checked.
+  render();status('Ouverture de l’événement…');
+  try{
+   await bridge.select(id);
+   if(ticket!==revision||!isOpen())return;
+   status('');
+   if(pendingTool){const key=pendingTool;pendingTool=null;openTool(key);}
+  }catch(error){if(ticket===revision&&isOpen())status(error.message||String(error));}
+  finally{if(ticket===revision)render();}
  }
+
  function visibleEvents(){return context().events.filter(e=>{
   if(filter==='all')return true;
   const date=Date.parse(e.event_date);if(!Number.isFinite(date))return false;
@@ -131,16 +140,16 @@
   members().slice(0,4).forEach(row=>{const avatar=row.querySelector('.avatar');if(avatar)target.querySelector('.ewHeroAvatars').appendChild(avatar.cloneNode(true));});
   try{
    let url=e.cover_url?await bridge.cover(e.cover_url):'';
-   if(!url){const image=$('mediaGrid')?.querySelector('img');if(image?.src)url=image.src;}
+
    if(ticket!==heroRevision||context().event?.id!==e.id)return;
    const card=target.querySelector('.ewHeroCard');if(url&&card){const image=document.createElement('img');image.className='ewHeroPhoto';image.alt='Photo de '+(e.name||'l’événement');image.src=url;card.prepend(image);}
   }catch(_){/* The gradient remains when no real photo is accessible. */}
  }
  let heroRevision=0;
  function render(){
-  if(!isOpen()||busy)return;
+  if(!isOpen())return;
   const rows=visibleEvents();
-  $('ewEventPicker').innerHTML=rows.length>1?`<label for="ewSelectedEvent">Votre événement</label><select id="ewSelectedEvent">${rows.map(e=>`<option value="${esc(e.id)}" ${e.id===context().event?.id?'selected':''}>${esc(e.name||'Événement')}</option>`).join('')}</select>`:'';
+  $('ewEventPicker').innerHTML=rows.length>1?`<label for="ewSelectedEvent">Votre événement</label><select id="ewSelectedEvent">${rows.some(e=>e.id===context().event?.id)?'':'<option value="" selected>Choisissez un événement</option>'}${rows.map(e=>`<option value="${esc(e.id)}" ${e.id===context().event?.id?'selected':''}>${esc(e.name||'Événement')}</option>`).join('')}</select>`:'';
   $('ewSelectedEvent')?.addEventListener('change',e=>select(e.target.value));
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
@@ -196,7 +205,7 @@
    const next=b.dataset.filter;
    if(next==='discover'){close();$('socialExploreBtn')?.click();return;}
    if(next==='invites'){form('joinCard');return;}
-   filter=next;const rows=visibleEvents();if(rows.length&&!rows.some(e=>e.id===context().event?.id))select(rows[0].id);else render();
+   filter=next;render(); // Filtering the list must not select another event.
   }
  });
  nav.addEventListener('click',event=>{
@@ -207,7 +216,7 @@
  window.myeventOpenEvents=open;
  const toolsTrack=root.querySelector('.ewTools');
  toolsTrack.addEventListener('scroll',()=>{const page=Math.round(toolsTrack.scrollLeft/Math.max(1,toolsTrack.clientWidth));root.querySelectorAll('[data-tools-page]').forEach(b=>b.setAttribute('aria-current',String(Number(b.dataset.toolsPage)===page)));},{passive:true});
- window.myeventEventsWorkspace={open,openSelected:id=>open(id),close,showForm,openTool,render,restore:async state=>{await open(state.eventId);if(state.page&&!['landing','selected'].includes(state.page))await openTool(state.page);},syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
+ window.myeventEventsWorkspace={loadWarning:message=>{if(isOpen())status(message);},open,openSelected:id=>open(id),close,showForm,openTool,render,restore:async state=>{await open();if(context().event&&state.page&&!['landing','selected'].includes(state.page))await openTool(state.page);},syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
  // Old shortcuts may still be invoked by notifications, camera or planning actions.
  oldTabs?.addEventListener('click',event=>{const b=event.target.closest('[data-tab]');if(isOpen()&&b){event.stopImmediatePropagation();openTool(b.dataset.tab);}},true);
  document.addEventListener('click',event=>{
