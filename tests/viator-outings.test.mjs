@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../api/search-places.js',import.meta.url));
 import {readFileSync} from 'node:fs';
 
 const server=readFileSync(new URL('../api/search-places.js',import.meta.url),'utf8');
@@ -12,7 +14,7 @@ const product={productCode:'TEST',title:'Sortie test',description:'Une descripti
   reviews:{combinedAverageRating:4.7,totalReviews:51}};
 function api(env={},products=[product]) {
   const calls=[];
-  const context=vm.createContext({module:{exports:{}},process:{env:{VIATOR_API_ENV:'production',VIATOR_API_KEY:'test-production',VIATOR_API_KEY_SANDBOX:'test-sandbox',...env}},
+  const context=vm.createContext({require,module:{exports:{}},process:{env:{VIATOR_API_ENV:'production',VIATOR_API_KEY:'test-production',VIATOR_API_KEY_SANDBOX:'test-sandbox',...env}},
     AbortController,setTimeout,clearTimeout,URL,console:{error(){}},fetch:async(url,options)=>{
       calls.push({url,options});
       if(url.endsWith('/destinations'))return {ok:true,json:async()=>({destinations:[{destinationId:7,name:'Gap',center:{latitude:44.56,longitude:6.08}}]})};

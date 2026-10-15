@@ -1,3 +1,4 @@
+const geoapify = require('../server/geoapify-places');
 const PHOTON_ENDPOINTS = [
   'https://photon.komoot.io/reverse'
 ];
@@ -6,12 +7,13 @@ function send(res, status, body) {
   res.status(status);
   res.setHeader(
     'Cache-Control',
-    's-maxage=180, stale-while-revalidate=600'
+    status >= 400 ? 'no-store' : 's-maxage=180, stale-while-revalidate=600'
   );
   return res.json(body);
 }
 
 function number(value) {
+  if (value == null || String(value).trim() === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -145,12 +147,16 @@ function normalizeFeature(feature, index) {
 
     website:
       extra.website ||
+      extra['contact:website'] ||
       p.website ||
+      p.contact?.website ||
       '',
 
     phone:
       extra.phone ||
+      extra['contact:phone'] ||
       p.phone ||
+      p.contact?.phone ||
       '',
 
     source:
@@ -324,18 +330,14 @@ function buildPhotonUrl(
 async function fetchNearbyOverpass(lat,lon,radius){
   // Use the already configured provider instead of the saturated public instance.
   if(process.env.GEOAPIFY_API_KEY){
-    const url=new URL('https://api.geoapify.com/v2/places');
-    url.search=new URLSearchParams({apiKey:process.env.GEOAPIFY_API_KEY,categories:'catering,entertainment,leisure,sport,tourism',filter:`circle:${lon},${lat},${Math.round(radius*1000)}`,bias:`proximity:${lon},${lat}`,limit:'150',lang:'fr'}).toString();
-    const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
-    if(!response.ok)throw new Error('Fournisseur de lieux HTTP '+response.status);
-    const data=await response.json();
-    if(!Array.isArray(data.features))throw new Error('Réponse de lieux invalide');
-    return {source:'OpenStreetMap / Geoapify',features:data.features.map(feature=>{
-      const p=feature.properties||{},raw=p.datasource?.raw||{},categories=p.categories||[];
-      const category=categories.find(x=>x.startsWith('catering.'))||categories.find(x=>x.includes('.'))||'tourism.attraction';
-      const kind=raw.amenity||raw.leisure||raw.tourism||category.split('.').slice(-1)[0];
-      return {geometry:feature.geometry,properties:{...p,source:'OpenStreetMap / Geoapify',osm_id:p.place_id,osm_key:raw.amenity?'amenity':raw.leisure?'leisure':'tourism',osm_value:kind,extra:raw}};
-    })};
+    // Independent result limits per family prevent art/monuments or dense restaurants
+    // from consuming every slot needed to compose restaurant + activity.
+    const groups = await Promise.all([
+      geoapify.places(lat, lon, radius, geoapify.FOOD),
+      geoapify.places(lat, lon, radius, geoapify.ACTIVITIES)
+    ]);
+    return { source: 'OpenStreetMap / Geoapify',
+      features: groups.flatMap(group => group.slice(0, 75).map(geoapify.feature)) };
   }
   const meters=Math.round(radius*1000);
   const clauses=[
@@ -670,7 +672,7 @@ module.exports =
       number(req.query.lon);
 
     const radius =
-      number(req.query.radius) ??
+      req.query.radius !== undefined ? number(req.query.radius) :
       (
         mode === 'hall'
           ? 5
@@ -707,6 +709,7 @@ module.exports =
 
 
     if (
+      radius === null ||
       lat === null ||
       lon === null ||
       lat < -90 ||
@@ -728,7 +731,7 @@ module.exports =
 
     if (
       mode === 'hall' &&
-      ![3, 5, 10, 20].includes(
+      ![3, 5, 10, 20, 50].includes(
         radius
       )
     ) {
@@ -748,7 +751,7 @@ module.exports =
       mode === 'nearby' &&
       (
         radius < 1 ||
-        radius > 20
+        radius > 50
       )
     ) {
 
@@ -792,24 +795,9 @@ module.exports =
 
     } catch (error) {
 
-      console.error(
-        '[MyEvent V53.15] Photon failure:',
-        error?.message ||
-        error
-      );
-
-      return send(
-        res,
-        503,
-        {
-          error:
-            'Le service OpenStreetMap est temporairement indisponible.',
-
-          detail:
-            error?.message ||
-            'Photon indisponible'
-        }
-      );
+      // Log/status metadata only: a fetch exception can contain a URL with a key.
+      console.error('[ORÉVAMI search]', error?.code || 'PROVIDER_UNAVAILABLE', error?.providerStatus || '');
+      return send(res, 503, geoapify.failure(error));
     }
 
 
@@ -937,6 +925,7 @@ module.exports =
           results.length,
 
         radius,
+        nextRadius: [5, 10, 20, 50].find(km => km > radius) || null,
 
         minCapacity:
           mode === 'hall'

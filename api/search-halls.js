@@ -1,3 +1,4 @@
+const geoapify = require('../server/geoapify-places');
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
@@ -6,11 +7,12 @@ const OVERPASS_ENDPOINTS = [
 ];
 
 function json(res, status, body) {
-  res.status(status).setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.status(status).setHeader('Cache-Control', status >= 400 ? 'no-store' : 's-maxage=300, stale-while-revalidate=600');
   return res.json(body);
 }
 
 function num(value) {
+  if (value == null || String(value).trim() === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -37,7 +39,7 @@ function normalizeElement(x, index) {
 
   const equipment = [
     t.cuisine ? '🍽️ ' + t.cuisine : '',
-    t.wheelchair ? '♿ Accessibilité' : '',
+    t.wheelchair === 'yes' ? '♿ Accessibilité' : '',
     t.parking ? '🅿️ Parking' : '',
     t.internet_access ? '📶 Wi-Fi' : ''
   ].filter(Boolean).join(' · ');
@@ -170,7 +172,7 @@ module.exports = async function handler(req, res) {
   const lon = num(req.query.lon);
 
   const radius =
-    num(req.query.radius) ?? 5;
+    req.query.radius === undefined ? 5 : num(req.query.radius);
 
   const minCapacity =
     num(req.query.minCapacity);
@@ -196,7 +198,7 @@ module.exports = async function handler(req, res) {
     );
   }
 
-  if (![3, 5, 10, 20].includes(radius)) {
+  if (![3, 5, 10, 20, 50].includes(radius)) {
 
     return json(
       res,
@@ -219,32 +221,39 @@ module.exports = async function handler(req, res) {
   );out center tags;`;
 
   let data = null;
-  const providerErrors = [];
 
-  // Try mirrors sequentially. Promise.any() only exposed an AggregateError,
-  // which hid the real HTTP/timeout reason and made production diagnosis hard.
-  for (const endpoint of OVERPASS_ENDPOINTS) {
+  let source = 'OpenStreetMap / Overpass';
+  if (process.env.GEOAPIFY_API_KEY) {
     try {
-      data = await fetchOverpass(endpoint, query, 7000);
-      if (data) break;
+      const features = await geoapify.places(lat, lon, radius, geoapify.HALLS, 200);
+      data = { elements: features.map((f, i) => {
+        const p = f.properties || {}, raw = p.datasource?.raw || {};
+        const categories = p.categories || [];
+        const coordinates = f.geometry?.coordinates || [];
+        return { id: p.place_id || i, lat: coordinates[1], lon: coordinates[0], tags: {
+          ...raw, name: p.name || p['name:fr'],
+          amenity: raw.amenity || (categories.includes('activity.events_venue') ? 'events_venue' : 'community_centre'),
+          'addr:street': p.street || raw['addr:street'],
+          'addr:housenumber': p.housenumber || raw['addr:housenumber'],
+          'addr:postcode': p.postcode || raw['addr:postcode'],
+          'addr:city': p.city || raw['addr:city'], website: raw.website || p.website,
+          phone: raw.phone || p.contact?.phone
+        }};
+      }) };
+      source = 'OpenStreetMap / Geoapify';
     } catch (error) {
-      providerErrors.push({
-        endpoint: endpoint.replace('/api/interpreter',''),
-        error: error?.name === 'AbortError' ? 'timeout' : String(error?.message || error)
-      });
+      return json(res, 503, geoapify.failure(error, 'de salles'));
+    }
+  } else {
+    // Legacy fallback when Geoapify is not configured; bound total wait time.
+    for (const endpoint of OVERPASS_ENDPOINTS.slice(0, 2)) {
+      try {
+        data = await fetchOverpass(endpoint, query, 6000);
+        if (data) break;
+      } catch (_) { /* Try the next legacy mirror. */ }
     }
   }
-
-  if (!data) {
-    return json(
-      res,
-      503,
-      {
-        error: 'Le service de recherche de salles est temporairement indisponible.',
-        detail: providerErrors.map(x => x.endpoint + ': ' + x.error).join(' | ') || 'Overpass indisponible'
-      }
-    );
-  }
+  if (!data) return json(res, 503, geoapify.failure(null, 'de salles'));
 
   const seen = new Set();
   const results = [];
@@ -271,6 +280,7 @@ module.exports = async function handler(req, res) {
 
     seen.add(key);
 
+    item.source = source;
     item.distance =
       distanceKm(
         lat,
@@ -278,6 +288,8 @@ module.exports = async function handler(req, res) {
         item.lat,
         item.lon
       );
+
+    if (item.distance > radius) continue;
 
     if (
       minCapacity !== null &&
@@ -316,6 +328,7 @@ module.exports = async function handler(req, res) {
         results.length,
 
       radius,
+      nextRadius: [5, 10, 20, 50].find(km => km > radius) || null,
 
       minCapacity:
         minCapacity || null,
@@ -323,8 +336,7 @@ module.exports = async function handler(req, res) {
       maxBudget:
         maxBudget || null,
 
-      source:
-        'OpenStreetMap / Overpass'
+      source
     }
   );
 };

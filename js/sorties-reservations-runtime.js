@@ -1214,7 +1214,7 @@ async function generateAiOutingPlan(){
     const r=await fetch('/api/search-places?mode=nearby&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(radius),{headers:{Accept:'application/json'}});
     const d=await r.json().catch(()=>null);
     if(!r.ok||!d)throw new Error(d?.error||'Recherche des lieux indisponible.');
-    const candidates=(d.results||[]).map((p,i)=>({
+    const available=(d.results||[]).map((p,i)=>({
       id:String(p.id||('candidate-'+i)),
       name:String(p.name||'').trim(),
       type:aiPlanCandidateType(p),
@@ -1224,10 +1224,14 @@ async function generateAiOutingPlan(){
       price_is_estimate:false,
       website:p.website||null,phone:p.phone||null,
       distance_km:Number.isFinite(Number(p.distance))?Number(p.distance):null
-    })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)).slice(0,120);
-    const restaurants=candidates.filter(x=>x.type==='restaurant');
-    const activities=candidates.filter(x=>x.type!=='restaurant');
-    if(!restaurants.length||!activities.length)throw new Error('Je ne trouve pas assez de lieux pour composer restaurant + activité dans ce rayon. Essaie un rayon plus large.');
+    })).filter(p=>p.name&&Number.isFinite(p.lat)&&Number.isFinite(p.lon));
+    const restaurants=available.filter(x=>x.type==='restaurant').slice(0,60);
+    const activities=available.filter(x=>x.type!=='restaurant').slice(0,60);
+    const candidates=[...restaurants,...activities];
+    if(!restaurants.length||activities.length<steps-1){
+      const nextRadius=[5,10,20,50].find(km=>km>radius);
+      throw new Error('Recherche effectuée : '+restaurants.length+' restaurant(s) et '+activities.length+' activité(s) dans '+radius+' km. Pas assez de lieux pour ces '+steps+' étapes. '+(nextRadius?'Sélectionne un rayon de '+nextRadius+' km puis relance la recherche.':'Essaie un autre centre ou moins d’étapes.'));
+    }
     $('aiPlanStatus').textContent='🤖 L’IA compose plusieurs parcours à partir des lieux trouvés…';
     const token=(await sb.auth.getSession()).data?.session?.access_token||'';
     const ar=await fetch('/api/generate-outing-plan',{

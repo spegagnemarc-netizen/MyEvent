@@ -964,7 +964,7 @@
 <div class="collapsibleBody">
 <div class="hallIntro"><b>Trouve une salle autour de ton événement</b><p class="muted">Recherche dans le rayon choisi, compare les salles et garde tes critères. Les tarifs/capacités peuvent être complétés manuellement car ils ne sont pas toujours disponibles publiquement.</p></div>
 <div class="hallControls">
-  <div><label class="smallLabel">📏 Rayon</label><select id="hallRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></div>
+  <div><label class="smallLabel">📏 Rayon</label><select id="hallRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option><option value="50">50 km</option></select></div>
   <div><label class="smallLabel">👥 Capacité min.</label><input id="hallMinCapacity" type="number" min="0" step="1" placeholder="Ex. 30"></div>
   <div><label class="smallLabel">💰 Budget max.</label><input id="hallMaxPrice" type="number" min="0" step="1" placeholder="Ex. 500"></div>
 </div>
@@ -1152,7 +1152,7 @@
     <div class="aiPlanGrid">
       <label>👥 Participants<input id="aiPlanPeople" type="number" min="1" max="5000" value="10"></label>
       <label>💰 Budget max / personne (€)<input id="aiPlanBudget" type="number" min="0" step="1" placeholder="Ex. 60"></label>
-      <label>📏 Rayon<select id="aiPlanRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></label>
+      <label>📏 Rayon<select id="aiPlanRadius"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option><option value="20">20 km</option><option value="50">50 km</option></select></label>
       <label>🎯 Nombre d’étapes<select id="aiPlanSteps"><option value="2">2 étapes</option><option value="3" selected>3 étapes</option><option value="4">4 étapes</option><option value="5">5 étapes</option></select></label>
       <label>🕐 Heure de début
         <select id="aiPlanStartTime">
