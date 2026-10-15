@@ -1,5 +1,6 @@
 /* ===== original inline script 4 ===== */
 let sb=null,user=null,event=null,activeEventRole='member';
+let activeEventSelectionVersion=0;
 let eventsWorkspaceRows=[];
 let realtimeChannel=null;
 let notificationPollTimer=null;
@@ -596,7 +597,25 @@ function renderEventLoadError(error){
   list.replaceChildren(paragraph);
 }
 
+function rememberedActiveEventId(){
+  if(!user?.id)return '';
+  try{return localStorage.getItem('myevent_active_'+user.id)||'';}catch(_){return '';}
+}
+function forgetActiveEvent(id){
+  if(!user?.id)return;
+  try{for(const key of ['myevent_active_','myevent_last_event_'])if(localStorage.getItem(key+user.id)===String(id))localStorage.removeItem(key+user.id);}catch(_){}
+  if(String(event?.id||'')===String(id)){activeEventSelectionVersion++;event=null;activeEventRole='member';}
+}
+async function restoreActiveEventSelection(rows,options={}){
+  const id=event?.id||rememberedActiveEventId();
+  if(!id)return false;
+  if(!rows.some(row=>String(row.id)===String(id))){forgetActiveEvent(id);return false;}
+  if(String(event?.id||'')!==String(id))await selectEvent(id,options);
+  return String(event?.id||'')===String(id);
+}
 async function show(u){
+  const sameUser=String(user?.id||'')===String(u?.id||'');
+  if(!sameUser){activeEventSelectionVersion++;event=null;}
   user=u;
   window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
@@ -606,6 +625,7 @@ async function show(u){
 
   try{
     const p=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
+    if(user?.id!==u.id)return;
     if(p.error) throw new Error('Profil : '+p.error.message);
 
     if(!p.data){
@@ -627,11 +647,12 @@ async function show(u){
 
     // V49.4 : connexion = accueil, sauf retour/rechargement de la même session
     // alors qu'un onglet était déjà ouvert.
-    event=null;
-    activeEventRole='member';
-    if(typeof resetOutingModuleState==='function')resetOutingModuleState();
-    if(typeof resetAiModuleState==='function')resetAiModuleState();
-    currentReservation=null;
+    if(!sameUser){
+      activeEventRole='member';
+      if(typeof resetOutingModuleState==='function')resetOutingModuleState();
+      if(typeof resetAiModuleState==='function')resetAiModuleState();
+      currentReservation=null;
+    }
     const events=await loadEvents();
     await handleJoinLink();
 
@@ -639,20 +660,16 @@ async function show(u){
     // pendant la même session et qu'un onglet était ouvert, on restaure exactement
     // cet événement et cet onglet. Un changement d'événement efface ce mode.
     const restoreSameView=sessionStorage.getItem('myevent_restore_view')==='1';
-    const savedActiveId=localStorage.getItem('myevent_active_'+u.id)||'';
-    if(restoreSameView && savedActiveId && events.some(e=>e.id===savedActiveId)){
-      await selectEvent(savedActiveId,{restoreView:true});
-    }else{
-      event=null;
-      sessionStorage.removeItem('myevent_restore_view');
-    }
+    await restoreActiveEventSelection(events,{restoreView:restoreSameView});
     $('ename').value=''; $('place').value='';
     renderEventHero();
     updateInviteUI();
+    if(!event){
     $('members').innerHTML='<p class="muted">Sélectionne un événement pour voir les participants.</p>';
     $('messages').innerHTML='<p class="muted">Sélectionne un événement pour ouvrir la discussion.</p>';
     $('polls').innerHTML='<p class="muted">Sélectionne un événement pour voir les sondages.</p>';
     $('mediaGrid').innerHTML='<p class="muted">Sélectionne un événement pour voir les souvenirs.</p>';
+    }
     global(events.length ? 'Accueil chargé. Choisis un événement pour l’ouvrir.' : 'Aucun événement pour le moment. Crée ou rejoins un groupe.','ok');
   }catch(e){
     renderEventLoadError(e);
@@ -661,12 +678,16 @@ async function show(u){
 }
 
 async function loadEvents(){
+  const loadingUserId=user?.id;
+  if(!loadingUserId)return [];
   void resumeEventStorageCleanup();
   try{
-  const owned=await sb.from('events').select('*').eq('creator_id',user.id).order('created_at',{ascending:false});
+  const owned=await sb.from('events').select('*').eq('creator_id',loadingUserId).order('created_at',{ascending:false});
+  if(user?.id!==loadingUserId)return [];
   if(owned.error) throw new Error('Événements : '+owned.error.message);
 
-  const memberships=await sb.from('event_members').select('event_id,role').eq('user_id',user.id);
+  const memberships=await sb.from('event_members').select('event_id,role').eq('user_id',loadingUserId);
+  if(user?.id!==loadingUserId)return [];
   if(memberships.error) throw new Error('Groupes : '+memberships.error.message);
 
   const memberIds=(memberships.data||[]).map(x=>x.event_id).filter(Boolean);
@@ -678,13 +699,15 @@ async function loadEvents(){
     memberEvents=r.data||[];
   }
 
+  if(user?.id!==loadingUserId)return [];
   const map=new Map();
   [...(owned.data||[]),...memberEvents].forEach(e=>map.set(e.id,e));
   const events=Array.from(map.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   eventsWorkspaceRows=events.map(e=>({...e,workspaceRole:e.creator_id===user.id?'owner':roles.get(e.id)||'member'}));
 
-  // Le dernier événement reste mémorisé, mais aucune fiche ne s'ouvre automatiquement à la connexion.
-  const savedId=event?.id || '';
+  const selectedId=event?.id||rememberedActiveEventId();
+  if(selectedId&&!events.some(e=>String(e.id)===String(selectedId)))forgetActiveEvent(selectedId);
+  const savedId=event?.id || rememberedActiveEventId();
   $('eventList').innerHTML=events.length ? events.map(e=>{
     const active=e.id===savedId?' active':'';
     const mine=e.creator_id===user.id;
@@ -802,6 +825,7 @@ async function loadEvents(){
   }
   return events;
   }catch(e){
+    if(user?.id!==loadingUserId)return [];
     renderEventLoadError(e);
     throw e;
   }
@@ -1033,14 +1057,18 @@ async function renderInlineSelectedEvent(){
 }
 
 async function selectEvent(id, options={}){
-  if(!id)return;
+  if(!id||!user?.id)return;
+  const selectionVersion=++activeEventSelectionVersion,selectionUserId=user.id;
+  const isCurrent=()=>selectionVersion===activeEventSelectionVersion&&user?.id===selectionUserId;
   const restoreView=options?.restoreView===true;
-  // Lors d'un changement d'événement, aucun détail de l'ancien ne doit rester visible.
-  document.querySelectorAll('.eventCard .inlineEventDetails').forEach(d=>d.remove());
   const r=await sb.from('events').select('*').eq('id',id).maybeSingle();
-  if(r.error) throw new Error('Sélection de l’événement : '+r.error.message);
-  if(!r.data) throw new Error('Cet événement n’est plus accessible.');
-
+  if(!isCurrent())return;
+  if(r.error)throw new Error('Sélection de l’événement : '+r.error.message);
+  if(!r.data){forgetActiveEvent(id);throw new Error('Cet événement n’est plus accessible.');}
+  const selectedEvent=r.data;
+  const roleRecord=selectedEvent.creator_id===selectionUserId?null:await sb.from('event_members').select('role').eq('event_id',id).eq('user_id',selectionUserId).maybeSingle();
+  if(!isCurrent())return;
+  if(roleRecord?.error)throw new Error('Accès à l’événement : '+roleRecord.error.message);
   // V54.21 — Ne pas effacer l'état de la sortie lorsque l'utilisateur
   // rouvre le MÊME événement depuis sa carte. Le retour à la carte d'accueil
   // passait auparavant par selectEvent(id), puis resetOutingModuleState(),
@@ -1055,16 +1083,21 @@ async function selectEvent(id, options={}){
   }
 
   if(callActive && !sameEvent) await stopGroupCall();
-  event=r.data;
-  const roleRecord=event.creator_id===user.id?null:await sb.from('event_members').select('role').eq('event_id',id).eq('user_id',user.id).maybeSingle();
-  activeEventRole=event.creator_id===user.id?'owner':roleRecord?.data?.role||'member';
-  localStorage.setItem('myevent_active_'+user.id,event.id);
-  localStorage.setItem('myevent_last_event_'+user.id,event.id);
+  if(!isCurrent())return;
+  document.querySelectorAll('.eventCard .inlineEventDetails').forEach(d=>d.remove());
+  event=selectedEvent;
+  activeEventRole=event.creator_id===selectionUserId?'owner':roleRecord?.data?.role||'member';
+  try{
+    localStorage.setItem('myevent_active_'+selectionUserId,event.id);
+    localStorage.setItem('myevent_last_event_'+selectionUserId,event.id);
+  }catch(_){}
   // Les champs du formulaire « Créer un événement » restent indépendants
   // de l’événement actuellement sélectionné.
   renderEventHero();
   updateInviteUI();
+  if(!isCurrent())return;
   await initializeUnreadMarkers();
+  if(!isCurrent())return;
 
   document.querySelectorAll('.eventCard').forEach(c=>c.classList.toggle('active',c.dataset.eventId===event.id));
 
@@ -1074,11 +1107,13 @@ async function selectEvent(id, options={}){
   if(typeof loadSelectedOuting==='function'){
     try{ await loadSelectedOuting(); }catch(e){ console.error('loadSelectedOuting active event',e); }
   }
+  if(!isCurrent())return;
   currentReservation=null;
   if(typeof loadEventReservation==='function'){
     try{ await loadEventReservation(); }catch(e){ console.error('loadEventReservation active event',e); }
   }
 
+  if(!isCurrent())return;
   // V54.32 — Un seul gestionnaire de clic + verrou anti-double-tap.
   // V54.31 — Un seul rendu de l'événement à l'ouverture.
   // Le double render ici provoquait le flash : ouverture → fermeture → réouverture.
@@ -1108,11 +1143,16 @@ async function selectEvent(id, options={}){
   }
   // Recharge le thème de discussion propre à l'utilisateur et à l'événement.
   if(typeof window.loadMyEventChatStyle==='function') await window.loadMyEventChatStyle();
+  if(!isCurrent())return;
   await Promise.all([loadMessages(),loadPolls(),loadMembers(),loadMedia(),loadFund()]);
+  if(!isCurrent())return;
   if(restoredTab==='locations') await loadEventLocations();
+  if(!isCurrent())return;
   await renderInlineSelectedEvent();
   // V53.10 : second/final render = source of truth for the DOM.
+  if(!isCurrent())return;
   await refreshReservationBoxes();
+  if(!isCurrent())return;
   if(!restoreView){
     // Sécurité : un changement d'événement ne doit jamais ouvrir automatiquement Discussion.
     document.body.classList.remove('discussionFullScreen');
@@ -1126,8 +1166,11 @@ async function selectEvent(id, options={}){
     setTimeout(()=>window.loadMyEventChatStyle?.(),250);
     setTimeout(()=>window.loadMyEventChatStyle?.(),900);
   }
+  if(!isCurrent())return;
   await loadWeather();
+  if(!isCurrent())return;
   await refreshNotifications(false);
+  if(!isCurrent())return;
   $('statMembers').textContent=$('memberCount').textContent.replace(/[^0-9]/g,'')||'0';
   $('statMessages').textContent=document.querySelectorAll('#messages .messageRow').length;
   $('statPhotos').textContent=document.querySelectorAll('#mediaGrid .mediaItem').length;
@@ -1175,15 +1218,14 @@ async function deleteEvent(id){
 
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+      forgetActiveEvent(id);
       event=null;
       localStorage.removeItem('myevent_active_'+user.id);
       $('ename').value=''; $('place').value=''; $('inviteLink').value='';
     }
     await loadEvents();
-    const remaining=await sb.from('events').select('id').eq('creator_id',user.id).limit(1);
-    const saved=localStorage.getItem('myevent_active_'+user.id);
-    if(!event && !remaining.error && remaining.data?.length) await selectEvent(remaining.data[0].id);
-    else if(!event){
+    // Deletion invalidates selection; choosing a replacement is a user action.
+    if(!event){
       $('members').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
       $('messages').innerHTML='<p class="muted">Crée ou rejoins un événement pour commencer.</p>';
       $('polls').innerHTML='<p class="muted">Aucun événement sélectionné.</p>';
@@ -1208,6 +1250,7 @@ async function leaveEvent(id){
     if(event?.id===id){
       if(realtimeChannel){await sb.removeChannel(realtimeChannel);realtimeChannel=null;}
       if(notificationPollTimer) {clearInterval(notificationPollTimer);notificationPollTimer=null;}
+      forgetActiveEvent(id);
       event=null;
       localStorage.removeItem('myevent_active_'+user.id);
       $('eventHeroCard').classList.add('hidden');
@@ -1375,6 +1418,7 @@ async function updateEditCoverPreview(){
 }
 async function saveEvent(){
   if(!event)return;
+  const savedEventId=event.id,savedUserId=user?.id;
   const name=$('editEventName').value.trim();
   if(!name){msg('editEventMsg','Indique un nom d’événement.','err');return}
   setBusy('saveEventBtn',true,'Enregistrement…');
@@ -1395,6 +1439,7 @@ async function saveEvent(){
     if(event.creator_id===user.id)changes.visibility=$('editEventVisibility').value;
     const r=await sb.from('events').update(changes).eq('id',event.id).select().single();
     if(r.error)throw r.error;
+    if(event?.id!==savedEventId||user?.id!==savedUserId)return;
     event=r.data;
     $('ename').value=event.name||'';$('place').value=event.location||'';
     renderEventHero();
@@ -2862,7 +2907,7 @@ async function vote(pollId, optionId, button){
 window.myeventCameraContext=function(){return {sb,user};};
 window.myeventEventsBridge={
   context:()=>({sb,user,event,role:activeEventRole,events:eventsWorkspaceRows}),
-  load:loadEvents,select:selectEvent,tab:showEventTab,form:openEventTool,
+  load:loadEvents,select:selectEvent,restoreSelection:restoreActiveEventSelection,tab:showEventTab,form:openEventTool,
   cover:coverDisplayUrl,
   closeDiscussion:()=>{document.body.classList.remove('discussionFullScreen');syncDiscussionFullscreenPortal(false);},
 };
@@ -3572,7 +3617,7 @@ async function logout(){
     activeEventRole='member';
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
-    user=null; event=null;eventsWorkspaceRows=[];
+    activeEventSelectionVersion++;user=null; event=null;eventsWorkspaceRows=[];
     window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');

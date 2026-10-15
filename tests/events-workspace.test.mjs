@@ -74,3 +74,13 @@ test('Empty state disables event actions and creation remains available',async()
 test('Visible hall entry opens the original search panel and preserves ten tools',async()=>{
  const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewSections [data-tool="hall"]');assert(b);assert(b.textContent.includes('Recherche de salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,10);assert.equal(d.querySelector('.ewHallSearchAccess'),null);assert.equal(d.querySelector('.ewSections [data-tool="supplies"]'),null);assert.equal(d.querySelector('.ewExtras [data-tool]'),null);for(const key of ['accommodation','outings','localtravel','hall'])assert.equal(d.querySelectorAll('.ewLanding [data-tool="'+key+'"]').length,1);await w.myeventEventsWorkspace.openTool('tasks');d.querySelector('.ewTaskActions button').click();assert.equal(d.querySelector('[data-panel="supplies"]').parentElement.id,'ewToolBody');dom.window.close();
 });
+
+test('selection survives filtering, return navigation and closing; no first-row replacement',async()=>{
+ const {w,ctx,dom}=fixture();const original=ctx.event;ctx.events.push({id:'older',name:'Passé',creator_id:'owner',event_date:'2020-01-01'});let selections=0;
+ w.myeventEventsBridge.select=async id=>{selections++;ctx.event=ctx.events.find(e=>e.id===id);};
+ try{
+  await w.myeventEventsWorkspace.open();w.document.querySelector('[data-filter="past"]').click();await flush();assert.equal(ctx.event.id,original.id);assert.equal(selections,0);
+  w.myeventEventsWorkspace.close();await w.myeventEventsWorkspace.restore({page:'landing',eventId:'older'});assert.equal(ctx.event.id,original.id);assert.equal(selections,0);
+  ctx.event=null;await w.myeventEventsWorkspace.open();assert.equal(ctx.event,null);assert.equal(selections,0);
+ }finally{dom.window.close();}
+});

@@ -65,7 +65,7 @@
    const rows=context().events;
    if(selectedId&&!rows.some(e=>e.id===selectedId)){close();throw new Error('Cet événement n’est pas accessible.');}
    if(selectedId&&context().event?.id!==selectedId){busy=true;try{await bridge.select(selectedId);}finally{busy=false;}}
-   if(rows.length&&!rows.some(e=>e.id===context().event?.id)){busy=true;try{await bridge.select(rows[0].id);}finally{busy=false;}}
+   if(!selectedId&&bridge.restoreSelection){busy=true;try{await bridge.restoreSelection(rows);}finally{busy=false;}}
    if(ticket!==revision||!isOpen())return;
    status('');render();if(selectedId)route('selected');root.scrollIntoView({block:'start'});
   }catch(error){status('Impossible de charger les événements : '+(error.message||String(error)));render();if(selectedId)throw error;}
@@ -196,7 +196,7 @@
    const next=b.dataset.filter;
    if(next==='discover'){close();$('socialExploreBtn')?.click();return;}
    if(next==='invites'){form('joinCard');return;}
-   filter=next;const rows=visibleEvents();if(rows.length&&!rows.some(e=>e.id===context().event?.id))select(rows[0].id);else render();
+   filter=next;render(); // Filtering the list must not select another event.
   }
  });
  nav.addEventListener('click',event=>{
@@ -207,7 +207,7 @@
  window.myeventOpenEvents=open;
  const toolsTrack=root.querySelector('.ewTools');
  toolsTrack.addEventListener('scroll',()=>{const page=Math.round(toolsTrack.scrollLeft/Math.max(1,toolsTrack.clientWidth));root.querySelectorAll('[data-tools-page]').forEach(b=>b.setAttribute('aria-current',String(Number(b.dataset.toolsPage)===page)));},{passive:true});
- window.myeventEventsWorkspace={open,openSelected:id=>open(id),close,showForm,openTool,render,restore:async state=>{await open(state.eventId);if(state.page&&!['landing','selected'].includes(state.page))await openTool(state.page);},syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
+ window.myeventEventsWorkspace={open,openSelected:id=>open(id),close,showForm,openTool,render,restore:async state=>{await open();if(context().event&&state.page&&!['landing','selected'].includes(state.page))await openTool(state.page);},syncTab:(key,state)=>{if(isOpen()&&state&&screen!==key)openTool(key);else if(isOpen()&&!state&&screen===key){closeTool();render();}}};
  // Old shortcuts may still be invoked by notifications, camera or planning actions.
  oldTabs?.addEventListener('click',event=>{const b=event.target.closest('[data-tab]');if(isOpen()&&b){event.stopImmediatePropagation();openTool(b.dataset.tab);}},true);
  document.addEventListener('click',event=>{
