@@ -132,7 +132,7 @@ ${JSON.stringify(safeCandidates)}
   }
   if(!options.length)return res.status(422).json({error:'Aucune combinaison de lieux disponibles ne respecte les critères connus de budget et d’étapes. Ajuste ces critères ou le rayon.',code:'NO_COMPATIBLE_COMBINATION'});
   res.setHeader('Cache-Control','no-store');
-  if(!String(body.request||'').trim())policy=planning.alternativePolicy(context,body,null);
+  if(!policy)policy=planning.alternativePolicy(context,body,null);
   const expanded=planning.expand(context,body,options,policy);
   const result=planning.response(context,body,expanded.options,failure);
   if(expanded.options.some(o=>o.generation==='deterministic')&&!failure)result.warning+=' Les variantes supplémentaires sont composées automatiquement à partir des mêmes lieux.';

@@ -21,7 +21,7 @@ function prepare(body={}) {
     if(radius!=null&&km!=null&&km>radius)continue;
     if(capacity!=null&&capacity>0&&capacity<people)continue;
     if(budget!=null&&price!=null&&price>budget)continue;
-    candidates.push({id:String(c.id||'c'+i),name:String(c.name).slice(0,180),type:c.type==='restaurant'?'restaurant':['culture','nature'].includes(c.type)?c.type:'activity',address:String(c.address||'').slice(0,240),lat,lon,price_per_person:price!=null&&price>=0?price:null,capacity:capacity!=null&&capacity>0?capacity:null,distance_km:km,website:c.website?String(c.website).slice(0,500):null,phone:c.phone?String(c.phone).slice(0,80):null});
+    candidates.push({place_type:String(c.place_type||c.type||'').slice(0,100),id:String(c.id||'c'+i),name:String(c.name).slice(0,180),type:c.type==='restaurant'?'restaurant':['culture','nature'].includes(c.type)?c.type:'activity',address:String(c.address||'').slice(0,240),lat,lon,price_per_person:price!=null&&price>=0?price:null,capacity:capacity!=null&&capacity>0?capacity:null,distance_km:km,website:c.website?String(c.website).slice(0,500):null,phone:c.phone?String(c.phone).slice(0,80):null});
   }
   // IDs must identify a single real place; ambiguous duplicates are not selectable.
   const counts=new Map();for(const c of candidates)counts.set(c.id,(counts.get(c.id)||0)+1);
@@ -76,8 +76,25 @@ function response(ctx,body,options,reason){
 }
 // Extra choices reuse the same real places. Pagination never calls a provider.
 const optionKey=o=>JSON.stringify((o?.steps||[]).map(s=>String(s.candidate_id)).sort());
+function localPreferencePolicy(ctx,body){
+  let text=String(body.request||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const all=ctx.candidates.map(c=>c.id),groups=[];
+  // Only requirements supported by actual names/types are interpreted locally.
+  // Unknown adjectives, exclusions and complex requests remain blocked, never guessed.
+  if(/\b(pas|sans|sauf|eviter|uniquement|vegetarien|vegan|accessible|romantique|calme|terrasse)\b/.test(text))return null;
+  const rules=[
+    [/\bbowling\b/g,/bowling/],[/\b(cinema|cine)\b/g,/cinema/],[/\b(musee|musees)\b/g,/museum|musee/],
+    [/\b(parc|parcs|nature)\b/g,/park|parc|garden|nature|playground/],[/\b(culture|culturel|culturelle)\b/g,/culture|museum|musee|theatre|cinema|gallery/],
+    [/\b(piscine|piscines)\b/g,/swimming_pool|piscine/],[/\b(minigolf|mini golf)\b/g,/miniature_golf|minigolf/]
+  ];
+  for(const [words,match]of rules){if(!words.test(text))continue;words.lastIndex=0;text=text.replace(words,' ');const ids=ctx.candidates.filter(c=>match.test((c.name+' '+c.place_type+' '+c.type).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())).map(c=>c.id);if(!ids.length)return null;groups.push(ids);}
+  text=text.replace(/\b(restaurant|restaurants|resto|repas|activite|activites|loisir|loisirs|sortie|sorties|soiree|journee|conviviale|convivial|equilibree|equilibre|un|une|des|de|du|le|la|les|et|avec|puis|pour|je|veux|voudrais|faire|organiser|proposer)\b/g,' ').replace(/[\s+,.!;:&/()-]/g,'');
+  return text?null:{candidate_ids:all,required_groups:groups};
+}
 function alternativePolicy(ctx,body,raw){
   if(!String(body.request||'').trim())return {candidate_ids:ctx.candidates.map(c=>c.id),required_groups:[]};
+  const local=localPreferencePolicy(ctx,body);
+  if(local)return local;
   if(raw?.preferences_checked!==true)return null;
   const allowed=new Set(ctx.candidates.map(c=>c.id));
   const ids=Array.isArray(raw.alternative_candidate_ids)?[...new Set(raw.alternative_candidate_ids.map(String))]:[];
@@ -147,7 +164,7 @@ function extraPage(ctx,primary,policy,cursor=0,limit=10){
 }
 function expand(ctx,body,primary,policy,cursor=0,additional=false){
   const page=extraPage(ctx,primary,policy,cursor,additional?10:10-primary.length);
-  return {options:additional?page.options:[...primary,...page.options],paging:{next_cursor:page.next_cursor,has_more:page.has_more,primary_options:primary.map(o=>({steps:o.steps.map(s=>({candidate_id:s.candidate_id}))})),alternative_policy:policy}};
+  return {options:additional?page.options:[...primary,...page.options],planner_version:'more-options-2',choice_summary:{candidate_count:ctx.candidates.length,primary_count:primary.length,eligible_count:policy?.candidate_ids.length||0,blocked_by:policy?null:'UNVERIFIED_PREFERENCES'},paging:{next_cursor:page.next_cursor,has_more:page.has_more,primary_options:primary.map(o=>({steps:o.steps.map(s=>({candidate_id:s.candidate_id}))})),alternative_policy:policy}};
 }
 
-module.exports={prepare,fromModel,fallback,response,alternativePolicy,extraPage,expand};
+module.exports={prepare,fromModel,fallback,response,alternativePolicy,localPreferencePolicy,extraPage,expand};

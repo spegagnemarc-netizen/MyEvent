@@ -338,10 +338,11 @@ async function fetchNearbyOverpass(lat,lon,radius){
       { category: 'outdoors', label: 'Plein air et sport', query: geoapify.OUTDOORS, cap: 25 }
     ];
     const groups = await Promise.allSettled(families.map(family =>
-      geoapify.places(lat, lon, radius, family.query, 100, geoapify.searchTimeoutMs())));
+      geoapify.searchPlaces(lat, lon, radius, family.query)));
     const categoryStatus = groups.map((group, i) => ({
       category: families[i].category, label: families[i].label,
       available: group.status === 'fulfilled',
+      ...(group.status==='fulfilled'?{resultCount:group.value.features.length,cached:group.value.cached,stale:group.value.stale,durationMs:group.value.durationMs,...(group.value.failure||{})}:{durationMs:group.reason?.durationMs}),
       ...(group.status === 'rejected' ? geoapify.failure(group.reason) : {})
     }));
     if (groups.every(group => group.status === 'rejected')) {
@@ -351,13 +352,13 @@ async function fetchNearbyOverpass(lat,lon,radius){
         providerStatus: groups[0].reason?.providerStatus, categoryStatus
       });
     }
-    const unavailable = categoryStatus.filter(status => !status.available);
+    const unavailable = categoryStatus.filter(status => !status.available||status.stale);
     return { source: 'OpenStreetMap / Geoapify', categoryStatus,
       partial: unavailable.length > 0,
       warning: unavailable.length ? 'Recherche partiellement indisponible. '+unavailable.map(status =>
-        status.label+' : '+status.error).join(' ')+' Les résultats disponibles sont affichés ; la liste peut être incomplète.' : '',
+        status.label+' : '+status.error+(status.stale?' Des lieux réellement obtenus depuis moins de dix minutes sont conservés.':'')).join(' ')+' Les résultats disponibles sont affichés ; la liste peut être incomplète.' : '',
       features: groups.flatMap((group, i) => group.status === 'fulfilled' ?
-        group.value.slice(0, families[i].cap).map(geoapify.feature) : []) };
+        group.value.features.slice(0, families[i].cap).map(geoapify.feature) : []) };
   }
   const meters=Math.round(radius*1000);
   const clauses=[
