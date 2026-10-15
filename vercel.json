@@ -24,5 +24,10 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "integrate/compact-feed-ads-test": false
+    }
+  }
 }
