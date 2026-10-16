@@ -2,6 +2,10 @@
 export const config={api:{bodyParser:{sizeLimit:'4mb'}}};
 export const maxDuration=180;
 export default async function handler(req,res){
+  if(req.query?.feed_post_delete==='1'){
+    const {default:feedPostDeletion}=await import('../server/feed-post-deletion-handler.mjs');
+    return feedPostDeletion(req,res);
+  }
   if(req.query?.event_delete==='1'){
     const {default:eventDeletion}=await import('../server/event-deletion-handler.mjs');
     return eventDeletion(req,res);

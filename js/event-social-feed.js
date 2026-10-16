@@ -11,7 +11,7 @@
     rows=result.data||[];
     $('socialFeed')?.querySelectorAll('[data-event-feed-post]').forEach(node=>node.remove());
     for(const item of rows){
-      const post=document.createElement('article');post.className='socialPost';post.dataset.eventFeedPost=item.post_id;
+      const post=document.createElement('article');post.className='socialPost';post.dataset.eventFeedPost=item.post_id;post.dataset.authorId=item.author_id||'';
       post.dataset.search=[item.body,item.event_name,item.event_location].filter(Boolean).join(' ').toLowerCase();
       const head=document.createElement('div');head.className='socialPostHead';
       const avatar=document.createElement('div');avatar.className='socialPostAvatar';

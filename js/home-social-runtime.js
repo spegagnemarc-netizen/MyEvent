@@ -738,7 +738,7 @@
     if(!item?.image)return;
     if(Array.from($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[]).some(node=>node.dataset.cameraPostId===String(item.id)))return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
-    const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
+    const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';post.dataset.authorId=item.user_id||'';
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><button type="button" class="socialPostPhotoButton" aria-label="Afficher la photo entière"><img class="socialPostPhoto" alt="Photo ORÉVAMI"></button><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
     if(item.media_type==='video'){
       const video=document.createElement('video');video.className='socialFeedMediaVideo';video.controls=true;video.playsInline=true;video.preload='metadata';video.src=item.image;video.setAttribute('aria-label','Vidéo publiée');

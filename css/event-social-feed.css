@@ -53,3 +53,20 @@
 #socialHome #socialComposerMediaPreview img,#socialHome #socialComposerMediaPreview video{display:block;max-width:100%;width:100%;max-height:250px;object-fit:contain;background:#080b10;border-radius:12px;margin-bottom:8px}
 #socialHome #socialPostMsg{overflow-wrap:anywhere}
 #socialHome .socialComposerPanel:focus-within{margin-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+
+/* Keep all three actions inside narrow, two-column cards. */
+#socialHome #socialFeed>.socialPost{min-width:0!important;max-width:100%!important;box-sizing:border-box}
+#socialHome #socialFeed .socialActions{display:flex!important;flex-wrap:wrap!important;gap:2px!important;padding:5px!important;box-sizing:border-box;max-width:100%}
+#socialHome #socialFeed .socialActions>button{flex:1 1 90px!important;min-width:0!important;max-width:100%!important;min-height:44px!important;padding:7px 3px!important;font-size:12px!important;line-height:1.3!important;white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important;box-sizing:border-box}
+#socialHome #socialFeed .socialPostHead{flex-wrap:wrap;min-width:0}
+#socialHome #socialFeed .socialPostMeta{flex:1;min-width:0!important}
+#socialHome #socialFeed .socialCommentBox input{min-width:0!important;max-width:100%;box-sizing:border-box}
+#socialHome #socialFeed .socialCommentBox>button{max-width:100%;white-space:normal;box-sizing:border-box}
+#socialHome #socialFeed .socialPostMenu{flex:0 0 44px;width:44px;min-width:0;margin:0;box-sizing:border-box}
+#socialHome #socialFeed .socialPostMenu[open]{flex-basis:100%;width:100%}
+#socialHome #socialFeed .socialPostMenu>summary{display:block;list-style:none;margin-left:auto;width:44px;min-height:44px;text-align:center;font-size:24px;line-height:44px;cursor:pointer;border-radius:10px;touch-action:manipulation}
+#socialHome #socialFeed .socialPostMenu>summary::-webkit-details-marker{display:none}
+#socialHome #socialFeed .socialPostDelete{display:block;width:100%!important;max-width:100%;min-height:44px;margin:0!important;padding:9px 5px!important;font-size:12px!important;line-height:1.4;white-space:normal!important;overflow-wrap:anywhere;color:#ffb4b4!important;background:#2b171b!important;box-sizing:border-box}
+#socialHome #socialFeed .socialPostMenu>summary:focus-visible{outline:2px solid var(--accent,#ff7a24)}
+#socialHome #socialFeedDeleteStatus{font-size:13px;overflow-wrap:anywhere}
+#socialHome #socialFeedDeleteStatus button{display:block;min-height:44px;margin-top:8px;white-space:normal;max-width:100%}

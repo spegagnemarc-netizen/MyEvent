@@ -17,6 +17,10 @@
       "dest": "/api/camera-ai?runtime_config=1"
     },
     {
+      "src": "^/api/feed-post-deletion$",
+      "dest": "/api/camera-ai?feed_post_delete=1"
+    },
+    {
       "src": "^/api/event-deletion$",
       "dest": "/api/camera-ai?event_delete=1"
     },
