@@ -756,11 +756,31 @@
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
+  let cameraFeedGeneration=0,cameraFeedOwner='';
   async function loadCameraFeedPosts(){
-    if(typeof window.myeventLoadCameraPosts!=='function')return;
-    try{const rows=await window.myeventLoadCameraPosts(30);rows.slice().reverse().forEach(item=>renderCameraFeedPost(item,true));}catch(error){console.warn('Fil caméra Supabase indisponible:',error?.message||error);}
+    const generation=++cameraFeedGeneration;
+    const owner=window.myeventCameraContext?.()?.user?.id||'';
+    if(owner!==cameraFeedOwner){
+      $s('socialFeed')?.querySelectorAll('[data-camera-post-id]').forEach(node=>node.remove());
+      if($s('socialFeedPublishStatus'))$s('socialFeedPublishStatus').textContent='';
+      cameraFeedOwner=owner;
+    }
+    if(!owner||typeof window.myeventLoadCameraPosts!=='function')return;
+    try{
+      const rows=await window.myeventLoadCameraPosts(30);
+      if(generation!==cameraFeedGeneration||owner!==(window.myeventCameraContext?.()?.user?.id||''))return;
+      rows.slice().reverse().forEach(item=>{
+        if(!Array.from($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[]).some(node=>node.dataset.cameraPostId===String(item.id)))renderCameraFeedPost(item,true);
+      });
+    }catch{
+      if(generation===cameraFeedGeneration&&owner===(window.myeventCameraContext?.()?.user?.id||'')){
+        const notice=$s('socialFeedPublishStatus');
+        if(notice)notice.textContent='Impossible de recharger tes photos. Réessaie en actualisant la page.';
+      }
+    }
   }
-  setTimeout(loadCameraFeedPosts,500);
+  window.addEventListener('myevent-camera-feed-session',loadCameraFeedPosts);
+  loadCameraFeedPosts();
   let cameraPublishing=false;
   $s('cameraPublishBtn')?.addEventListener('click',async()=>{
     const button=$s('cameraPublishBtn'),status=$s('cameraMediaStatus');

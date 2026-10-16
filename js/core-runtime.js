@@ -637,6 +637,7 @@ async function show(u){
   const sameUser=String(user?.id||'')===String(u?.id||'');
   if(!sameUser){activeEventSelectionVersion++;event=null;eventsWorkspaceRows=[];eventsWorkspaceUserId=u.id;eventsListLoadedAt=0;eventsListRequest=null;}
   user=u;
+  window.dispatchEvent(new CustomEvent('myevent-camera-feed-session'));
   window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
@@ -2987,11 +2988,13 @@ window.myeventPublishCameraPost=async function(dataUrl,onStage=()=>{}){
   return ins.data;
 };
 window.myeventLoadCameraPosts=async function(limit=30){
-  if(!user)return [];
-  const r=await sb.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',user.id).eq('media_type','image').order('created_at',{ascending:false}).limit(limit);
+  const ownerId=user?.id,client=sb;
+  if(!ownerId||!client)return [];
+  const r=await client.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',ownerId).eq('media_type','image').order('created_at',{ascending:false}).limit(limit);
   if(r.error)throw r.error;
   return await Promise.all((r.data||[]).map(async row=>{
-    const signed=await sb.storage.from('social-media').createSignedUrl(row.media_path,3600);
+    const signed=await client.storage.from('social-media').createSignedUrl(row.media_path,3600);
+    if(signed.error)throw signed.error;
     return {...row,image:signed.data?.signedUrl||''};
   }));
 };
@@ -3702,6 +3705,7 @@ async function logout(){
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
     activeEventSelectionVersion++;user=null; event=null;eventsWorkspaceRows=[];
+    window.dispatchEvent(new CustomEvent('myevent-camera-feed-session'));
     window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');
