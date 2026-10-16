@@ -2987,10 +2987,31 @@ window.myeventPublishCameraPost=async function(dataUrl,onStage=()=>{}){
   if(ins.error){await sb.storage.from('social-media').remove([path]);throw ins.error;}
   return ins.data;
 };
+// Composer media uses the same private bucket and ownership policies as camera posts.
+window.myeventPublishFeedMedia=async function(blob,content='',onStage=()=>{}){
+  const config=await window.myeventRuntime.ready;
+  if(config.environment!=='preview'||config.isTest!==true||config.projectRef!=='ahyyknfjsielnqyoxqgh')throw new Error('TEST_REQUIRED');
+  const ownerId=user?.id,client=sb;
+  if(!ownerId||!client)throw new Error('SESSION_REQUIRED');
+  const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};
+  const type=blob?.type?.split(';')[0];
+  if(!extensions[type]||!blob.size||blob.size>15728640)throw new Error('MEDIA_INVALID');
+  const assertOwner=()=>{if(user?.id!==ownerId)throw new Error('SESSION_CHANGED');};
+  const path=ownerId+'/'+crypto.randomUUID()+'-feed.'+extensions[type];
+  onStage('stockage');assertOwner();
+  const uploaded=await client.storage.from('social-media').upload(path,blob,{upsert:false,contentType:type});
+  if(uploaded.error)throw uploaded.error;
+  try{
+    assertOwner();onStage('enregistrement');
+    const saved=await client.from('social_posts').insert({user_id:ownerId,content:String(content).trim(),media_path:path,media_type:type.startsWith('video/')?'video':'image'}).select('id,user_id,media_path,media_type,content,created_at').single();
+    if(saved.error)throw saved.error;
+    return saved.data;
+  }catch(error){await client.storage.from('social-media').remove([path]).catch(()=>{});throw error;}
+};
 window.myeventLoadCameraPosts=async function(limit=30){
   const ownerId=user?.id,client=sb;
   if(!ownerId||!client)return [];
-  const r=await client.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',ownerId).eq('media_type','image').order('created_at',{ascending:false}).limit(limit);
+  const r=await client.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',ownerId).order('created_at',{ascending:false}).limit(limit);
   if(r.error)throw r.error;
   return await Promise.all((r.data||[]).map(async row=>{
     const signed=await client.storage.from('social-media').createSignedUrl(row.media_path,3600);

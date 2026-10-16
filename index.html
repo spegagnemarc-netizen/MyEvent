@@ -167,11 +167,19 @@
     </div>
     <div class="socialComposerPanel" id="socialComposerPanel">
       <textarea id="socialPostText" placeholder="Qu'est-ce que tu veux partager avec la communauté ORÉVAMI ?"></textarea>
+      <div class="socialComposerMediaTools" id="socialComposerMediaTools" hidden>
+        <button type="button" class="secondary" id="socialAddPhoto">Ajouter une photo</button>
+        <button type="button" class="secondary" id="socialAddVideo">Ajouter une vidéo</button>
+        <input type="file" id="socialPhotoInput" accept="image/*" hidden>
+        <input type="file" id="socialVideoInput" accept="video/mp4,video/quicktime,video/webm,.mov,.mp4,.webm" hidden>
+        <small>Un média par publication · 15 Mo maximum. Vidéos MP4, MOV ou WebM, selon la compatibilité de Safari.</small>
+      </div>
+      <div id="socialComposerMediaPreview" hidden></div>
       <div class="row">
         <button type="button" id="socialPublishBtn">🚀 Publier</button>
         <button type="button" class="secondary" id="socialCancelPostBtn">Annuler</button>
       </div>
-      <p class="muted" id="socialPostMsg"></p>
+      <p class="muted" id="socialPostMsg" role="status" aria-live="polite"></p>
     </div>
 
     <label id="myEventAdsPrivacy" class="adPrivacy" hidden><input id="myEventAdsConsent" type="checkbox"> Autoriser la mesure agrégée des annonces ORÉVAMI (facultatif, sans profil publicitaire).</label><label id="myEventAdsAudience" class="adPrivacy" hidden>Département des publicités (facultatif, sans GPS)<input id="myEventAdsAudienceZone" maxlength="3" pattern="[0-9]{2,3}|2A|2B" placeholder="Vide : national"></label>
@@ -1126,7 +1134,7 @@
 
 
 <script src="js/invitation-context.js?v=1"></script>
-<script src="js/core-runtime.js?v=camera-feed-session-1"></script>
+<script src="js/core-runtime.js?v=feed-composer-media-1"></script>
 
 
 <script src="js/discussion-runtime.js"></script>
@@ -1259,10 +1267,11 @@
 
 
 <script src="js/feed-media-viewer.js?v=compact-feed-1"></script>
-<script src="js/home-social-runtime.js?v=camera-feed-session-1"></script>
+<script src="js/home-social-runtime.js?v=feed-composer-media-1"></script>
+<script src="js/feed-composer-media.js?v=1"></script>
 <script src="js/feed-interactions.js?v=feed-reactions-1"></script>
 <script src="js/event-social-feed.js?v=feed-reactions-1"></script>
-<link rel="stylesheet" href="css/event-social-feed.css?v=compact-feed-1">
+<link rel="stylesheet" href="css/event-social-feed.css?v=feed-composer-media-1">
 <link rel="stylesheet" href="css/social-friends-stories.css?v=stories-toggle-1">
 <script src="js/social-friends-stories.js?v=camera-final-1"></script>
 <script src="js/music-session.js?v=1"></script>

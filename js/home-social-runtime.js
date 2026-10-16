@@ -36,19 +36,6 @@
   $s('socialExploreBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>window.scrollTo({top:$s('socialHome').offsetTop,behavior:'smooth'}),20)});
   $s('socialSoloBtn')?.addEventListener('click',()=>{tab('feed');$s('socialOpenComposer')?.click();$s('socialPostText').value='🤝 Je cherche des participants pour une sortie !\n\n📍 Lieu :\n📅 Date :\n🎯 Activité :\n👥 Places disponibles :';$s('socialPostText').focus()});
   $s('socialOpenComposer')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.add('open');$s('socialPostText').focus()});
-  $s('socialCancelPostBtn')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent=''});
-  $s('socialPublishBtn')?.addEventListener('click',async()=>{
-    const text=($s('socialPostText').value||'').trim(),context=window.myeventCameraContext?.();
-    if(!text){$s('socialPostMsg').textContent='Écris quelque chose avant de publier.';return;}
-    if(!context?.user){$s('socialPostMsg').textContent='Connecte-toi pour publier.';return;}
-    const button=$s('socialPublishBtn');button.disabled=true;
-    try{const result=await context.sb.from('event_feed_posts').insert({author_id:context.user.id,body:text});
-      if(result.error)throw result.error;
-      $s('socialPostText').value='';$s('socialComposerPanel').classList.remove('open');
-      $s('socialPostMsg').textContent='Publié.';await window.myeventRefreshSocialFeed?.();
-    }catch(error){$s('socialPostMsg').textContent='Publication impossible : '+(error.message||String(error));}
-    finally{button.disabled=false;}
-  });
   document.addEventListener('click',e=>{
     const like=e.target.closest('.socialLikeBtn');if(like){window.myeventFeedInteractions?.mutate(like.closest('.socialPost'),'like',like);return}
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
@@ -749,13 +736,18 @@
   window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
+    if(Array.from($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[]).some(node=>node.dataset.cameraPostId===String(item.id)))return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><button type="button" class="socialPostPhotoButton" aria-label="Afficher la photo entière"><img class="socialPostPhoto" alt="Photo ORÉVAMI"></button><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-    post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
+    if(item.media_type==='video'){
+      const video=document.createElement('video');video.className='socialFeedMediaVideo';video.controls=true;video.playsInline=true;video.preload='metadata';video.src=item.image;video.setAttribute('aria-label','Vidéo publiée');
+      post.querySelector('.socialPostPhotoButton').replaceWith(video);
+    }else post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
+  window.myeventRenderCameraFeedPost=renderCameraFeedPost;
   let cameraFeedGeneration=0,cameraFeedOwner='';
   async function loadCameraFeedPosts(){
     const generation=++cameraFeedGeneration;

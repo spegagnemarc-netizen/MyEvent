@@ -42,3 +42,14 @@
 .socialFeedPhotoZoom output{min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
 .socialFeedPhotoZoom button:disabled{opacity:.45;cursor:default}
 .socialFeedPhotoViewer button:focus-visible{outline:3px solid var(--accent,#ff7a24);outline-offset:2px}
+
+/* Composer stays in document flow above the existing bottom navigation. */
+#socialHome .socialComposerPanel{scroll-margin-block:80px 160px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+#socialHome .socialComposerMediaTools:not([hidden]){display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+#socialHome .socialComposerMediaTools[hidden],#socialHome #socialComposerMediaPreview[hidden]{display:none!important}
+#socialHome .socialComposerMediaTools small{flex-basis:100%;font-size:12px;line-height:1.4}
+#socialHome .socialComposerPanel button{touch-action:manipulation;min-height:44px;white-space:normal}
+#socialHome #socialComposerMediaPreview{margin-bottom:12px}
+#socialHome #socialComposerMediaPreview img,#socialHome #socialComposerMediaPreview video{display:block;max-width:100%;width:100%;max-height:250px;object-fit:contain;background:#080b10;border-radius:12px;margin-bottom:8px}
+#socialHome #socialPostMsg{overflow-wrap:anywhere}
+#socialHome .socialComposerPanel:focus-within{margin-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
