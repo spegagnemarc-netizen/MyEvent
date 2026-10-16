@@ -761,18 +761,35 @@
     try{const rows=await window.myeventLoadCameraPosts(30);rows.slice().reverse().forEach(item=>renderCameraFeedPost(item,true));}catch(error){console.warn('Fil caméra Supabase indisponible:',error?.message||error);}
   }
   setTimeout(loadCameraFeedPosts,500);
+  let cameraPublishing=false;
   $s('cameraPublishBtn')?.addEventListener('click',async()=>{
-    if(!myeventCapturedDataUrl)return;
-    const button=$s('cameraPublishBtn');button.disabled=true;
+    const button=$s('cameraPublishBtn'),status=$s('cameraMediaStatus');
+    if(cameraPublishing)return;
+    if(!myeventCapturedDataUrl){status.textContent='Photo non prête. Attends la fin de la préparation ou reprends la photo.';return;}
+    cameraPublishing=true;button.disabled=true;button.textContent='Publication…';
+    const photo=myeventCapturedDataUrl;
+    let stage='préparation';
+    status.textContent='Préparation de la publication…';
     try{
-      if(typeof window.myeventPublishCameraPost!=='function')throw new Error('Publication Supabase indisponible.');
-      const saved=await window.myeventPublishCameraPost(myeventCapturedDataUrl);
-      const signedRows=await window.myeventLoadCameraPosts?.(1);
-      renderCameraFeedPost(signedRows?.[0]||{...saved,image:myeventCapturedDataUrl},true);
+      if(typeof window.myeventPublishCameraPost!=='function')throw new Error('PUBLISH_UNAVAILABLE');
+      const saved=await window.myeventPublishCameraPost(photo,value=>{
+        stage=value;status.textContent=value==='stockage'?'Envoi de la photo…':value==='enregistrement'?'Enregistrement de la publication…':'Préparation de la publication…';
+      });
+      // A failed refresh must never turn an already-saved post into a failed publication.
+      const notice=$s('socialFeedPublishStatus')||$s('socialPostMsg');
+      notice.textContent='Photo publiée dans le fil.';
+      try{renderCameraFeedPost({...saved,image:photo},true);}catch{
+        notice.textContent='Photo publiée. Actualise le fil pour la retrouver.';
+      }
       closeMyEventCamera();
     }catch(error){
-      cameraPlaceholder.textContent='Publication impossible : '+(error?.message||String(error));cameraPlaceholder.style.display='grid';
-    }finally{button.disabled=false;}
+      const code=String(error?.code||error?.statusCode||error?.status||'');
+      const safeCode=/^[A-Za-z0-9_-]{1,24}$/.test(code)?' · '+code:'';
+      const message=String(error?.message||'').toLowerCase();
+      const reason=message.includes('bucket not found')?'Le stockage photo TEST est absent.':message.includes('row-level security')||code==='42501'?'L’accès est refusé par les permissions TEST.':message.includes('failed to fetch')||message.includes('network')||message.includes('load failed')?'Connexion au service TEST impossible.':message.includes('photo ou utilisateur')?'Session ou photo indisponible. Reconnecte-toi au compte TEST.':'Le service TEST a refusé la publication.';
+      status.textContent='Publication impossible — '+stage+safeCode+'. '+reason+' La photo est conservée.';
+      status.setAttribute('role','alert');
+    }finally{cameraPublishing=false;button.disabled=false;button.textContent='Publier';}
   });
   $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));

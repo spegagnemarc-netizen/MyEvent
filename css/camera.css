@@ -332,3 +332,6 @@ body.camera-is-open{overflow:hidden;overscroll-behavior:none}
 #myeventCameraModal[data-camera-state="processing"] .cameraDecorationTools{top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))}
 #myeventCameraModal[data-media-kind="video"] .cameraDecorationTools{bottom:calc(64px + env(safe-area-inset-bottom))}
 @media(max-height:450px){#myeventCameraModal .cameraSideTools.right,#myeventCameraModal[data-camera-state="preview"] .cameraSideTools.right{justify-content:flex-start!important}}
+
+/* Publication errors must remain visible over the captured photo. */
+#myeventCameraModal .cameraMediaStatus[role="alert"]{left:12px!important;right:12px!important;z-index:30;font-size:14px!important;padding:10px;border-radius:10px;background:rgba(80,15,15,.96);color:#fff;line-height:1.45}

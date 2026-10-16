@@ -2972,13 +2972,16 @@ window.myeventEventsBridge={
 window.myeventGameContext=function(){return {sb,user,event};};
 window.myeventMusicContext=function(){return {sb,user,event};};
 
-window.myeventPublishCameraPost=async function(dataUrl){
+window.myeventPublishCameraPost=async function(dataUrl,onStage=()=>{}){
+  onStage('préparation');
   if(!dataUrl||!user)throw new Error('Photo ou utilisateur manquant.');
   const response=await fetch(dataUrl),blob=await response.blob();
   if(!blob.type.startsWith('image/'))throw new Error('La capture n’est pas une image valide.');
   const path=user.id+'/'+crypto.randomUUID()+'-feed.jpg';
+  onStage('stockage');
   const up=await sb.storage.from('social-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
   if(up.error)throw up.error;
+  onStage('enregistrement');
   const ins=await sb.from('social_posts').insert({user_id:user.id,media_path:path,media_type:'image',content:'📸 Nouveau moment partagé sur ORÉVAMI.'}).select('id,user_id,media_path,media_type,content,created_at').single();
   if(ins.error){await sb.storage.from('social-media').remove([path]);throw ins.error;}
   return ins.data;
