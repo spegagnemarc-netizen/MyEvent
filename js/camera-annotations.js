@@ -13,28 +13,29 @@
     function signature(ctx,style,size,color){
       ctx.fillStyle=ctx.strokeStyle=color;ctx.lineCap=ctx.lineJoin='round';
       if(style==='handwritten'){
-        ctx.save();ctx.scale(size/40,size/40);ctx.translate(-96,-18);ctx.lineWidth=2.3;
+        ctx.save();ctx.scale(size/40,size/40);ctx.translate(-108,-18);ctx.lineWidth=2.3;
         const paths=[
-          'M 0 32 C 3 12 3 3 6 2 C 9 4 13 25 14 27 C 17 21 25 3 29 1 C 27 12 24 31 28 33',
-          'M 33 16 C 30 30 39 31 45 16 C 43 29 43 46 33 49 C 23 48 39 35 48 31',
-          'M 52 31 C 55 20 57 6 60 1 M 58 3 C 66 0 73 0 78 2 M 55 18 L 71 16 M 52 31 C 61 28 70 29 74 30',
-          'M 79 16 C 77 27 81 36 85 31 L 98 14',
-          'M 99 24 C 112 22 113 12 106 15 C 93 20 96 40 114 28',
-          'M 118 16 L 115 32 C 119 23 130 12 131 18 C 129 24 126 37 136 29',
-          'M 145 4 C 140 13 136 34 142 32 L 154 25 M 134 16 L 153 13',
-          'M -3 42 C 48 36 103 40 150 38 C 130 41 125 44 117 43',
-          'M 157 30 C 151 22 157 18 161 24 C 165 15 175 20 170 27 L 159 37 L 157 30'
+          // O R É V A M I, drawn as pen strokes in both preview and export.
+          'M 23 5 C 2 -5 -7 32 8 35 C 27 40 36 1 19 2 C 10 3 7 10 8 14',
+          'M 33 34 L 42 2 C 69 -2 62 20 39 20 M 45 20 C 53 24 50 37 62 32',
+          'M 86 3 C 75 -1 68 3 67 8 L 60 33 C 69 30 77 32 82 29 M 65 18 L 80 16 M 73 -5 L 83 -12',
+          'M 91 3 C 88 14 87 27 92 34 C 100 26 109 10 115 1',
+          'M 112 34 C 121 21 131 3 136 1 L 137 34 M 121 23 L 140 21',
+          'M 146 34 L 155 2 L 163 28 L 181 1 L 176 34',
+          'M 190 4 L 205 2 M 199 3 L 191 32 M 183 34 L 205 31',
+          'M -4 43 C 57 35 140 44 219 36'
         ];
         for(const path of paths)ctx.stroke(new Path2D(path));ctx.restore();return;
       }
       ctx.font='italic 700 '+size+'px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ORÉVAMI',0,0);
-      if(style==='heart'){ctx.save();ctx.translate(size*2.12,-size*.32);ctx.scale(size/40,size/40);ctx.lineWidth=2.4;ctx.stroke(new Path2D('M 0 4 C -20 -10 -9 -23 0 -12 C 10 -24 25 -10 0 4 Z'));ctx.restore();}
-      if(style==='crown'){ctx.save();ctx.translate(size*1.55,-size*.85);ctx.scale(size/40,size/40);ctx.lineWidth=2;const path=new Path2D('M -15 8 L -19 -9 L -7 0 L 0 -16 L 7 0 L 19 -9 L 15 8 Z');ctx.stroke(path);ctx.restore();}
+      if(style==='heart'){ctx.save();ctx.translate(ctx.measureText('ORÉVAMI').width/2+size*.55,0);ctx.scale(size/40,size/40);ctx.lineWidth=2.4;ctx.stroke(new Path2D('M 0 4 C -20 -10 -9 -23 0 -12 C 10 -24 25 -10 0 4 Z'));ctx.restore();}
+      if(style==='crown'){ctx.save();ctx.translate(0,-size*1.05);ctx.scale(size/40,size/40);ctx.lineWidth=2;const path=new Path2D('M -15 8 L -19 -9 L -7 0 L 0 -16 L 7 0 L 19 -9 L 15 8 Z');ctx.stroke(path);ctx.restore();}
     }
     function metrics(ctx,item,w,h){
       const size=Math.min(w,h)*item.size/100;
-      ctx.font='700 '+size+'px system-ui, -apple-system, sans-serif';
-      return {size,width:item.kind==='signature'?size*5.2:Math.min(ctx.measureText(item.text).width,w*.88),x:w*item.x/100,y:h*item.y/100};
+      ctx.font=(item.kind==='signature'?'italic 700 '+size+'px Georgia, serif':'700 '+size+'px system-ui, -apple-system, sans-serif');
+      const signatureWidth=item.signature==='handwritten'?size*5.8:ctx.measureText('ORÉVAMI').width+(item.signature==='heart'?size*2.1:0);
+      return {size,width:item.kind==='signature'?signatureWidth:Math.min(ctx.measureText(item.text).width,w*.88),top:item.kind==='signature'?size*1.55:size*.65,bottom:item.kind==='signature'?size*.9:size*.65,x:w*item.x/100,y:h*item.y/100};
     }
     function bubble(ctx,item,m){
       const x=-m.width/2-m.size*.45,y=-m.size*.9,w=m.width+m.size*.9,h=m.size*1.8;
@@ -65,7 +66,7 @@
         const m=metrics(ctx,item,w,h);ctx.save();ctx.translate(m.x,m.y);ctx.rotate(item.rotation*Math.PI/180);
         ctx.globalAlpha=item.opacity??1;ctx.shadowColor=item.shadowColor||'#000000';ctx.shadowBlur=m.size*(item.shadow??0)/100;ctx.shadowOffsetY=m.size*(item.shadow??0)/300;ctx.lineJoin='round';if(item.kind==='text'&&item.bubble&&item.bubble!=='none')bubble(ctx,item,m);ctx.fillStyle=item.color;ctx.strokeStyle=item.outlineColor||'#000000';ctx.lineWidth=m.size*(item.outlineWidth??6)/100;
         if(item.kind==='signature'){if((item.outlineWidth??6)>0){ctx.save();ctx.shadowBlur=0;const pad=ctx.lineWidth/2;for(const [x,y] of [[pad,0],[-pad,0],[0,pad],[0,-pad]]){ctx.save();ctx.translate(x,y);signature(ctx,item.signature,m.size,item.outlineColor||'#000000');ctx.restore();}ctx.restore();}signature(ctx,item.signature,m.size,item.color);}else{if(item.kind==='text'&&(item.outlineWidth??6)>0)ctx.strokeText(item.text,0,0,w*.88);ctx.fillText(item.text,0,0,w*.88);}ctx.globalAlpha=1;ctx.shadowBlur=ctx.shadowOffsetY=0;
-        if(selection&&index===selected){ctx.strokeStyle=modal.dataset.cameraTier==='premium'?'#d6b866':'#ffffff';ctx.lineWidth=Math.max(1,w/layer.getBoundingClientRect().width*2);ctx.strokeRect(-m.width/2-m.size*.15,-m.size*.65,m.width+m.size*.3,m.size*1.3);}
+        if(selection&&index===selected){ctx.strokeStyle=modal.dataset.cameraTier==='premium'?'#d6b866':'#ffffff';ctx.lineWidth=Math.max(1,w/layer.getBoundingClientRect().width*2);ctx.strokeRect(-m.width/2-m.size*.15,-m.top,m.width+m.size*.3,m.top+m.bottom);}
         ctx.restore();
       });ctx.restore();
     }
@@ -84,7 +85,7 @@
     function hit(p){const ctx=layer.getContext('2d');for(let i=items.length-1;i>=0;i--){const item=items[i],m=metrics(ctx,item,layer.width,layer.height),angle=-item.rotation*Math.PI/180,dx=p.x-m.x,dy=p.y-m.y;
       const x=dx*Math.cos(angle)-dy*Math.sin(angle),y=dx*Math.sin(angle)+dy*Math.cos(angle);
       const pad=Math.max(m.size*.2,22*layer.width/layer.getBoundingClientRect().width);
-      if(Math.abs(x)<=m.width/2+m.size*.5+pad&&Math.abs(y)<=m.size*(item.bubble&&item.bubble!=='none'?1.5:.65)+pad)return i;
+      if(Math.abs(x)<=m.width/2+m.size*.5+pad&&y>=-Math.max(m.top,item.bubble&&item.bubble!=='none'?m.size*1.5:0)-pad&&y<=Math.max(m.bottom,item.bubble&&item.bubble!=='none'?m.size*1.5:0)+pad)return i;
     }return -1;}
     function anchor(){
       if(selected<0||!pointers.size){gesture=null;return;}
@@ -131,8 +132,8 @@
       if(mode==='signatures'){
         const gallery=document.createElement('div');gallery.className='cameraSignatureGallery';
         for(const [style,name] of Object.entries(signatureNames)){
-          const button=document.createElement('button');button.type='button';button.dataset.signature=style;button.setAttribute('aria-label','Signature '+name);
-          const thumb=document.createElement('canvas');thumb.width=260;thumb.height=100;const ctx=thumb.getContext('2d');ctx.translate(125,55);signature(ctx,style,40,'#ffffff');
+          const button=document.createElement('button');button.type='button';button.dataset.signature=style;button.setAttribute('aria-label','Signature ORÉVAMI '+name);button.setAttribute('aria-pressed',String(items[selected]?.kind==='signature'&&items[selected].signature===style));
+          const thumb=document.createElement('canvas');thumb.width=300;thumb.height=120;const ctx=thumb.getContext('2d');ctx.translate(140,65);signature(ctx,style,34,'#ffffff');
           const label=document.createElement('span');label.textContent=name;button.append(thumb,label);
           button.onclick=()=>{if(items[selected]?.kind==='signature'){items[selected].signature=style;items[selected].text='ORÉVAMI · '+name;changed();panel(host,mode);}else create('ORÉVAMI · '+name,'signature',style);};gallery.append(button);
         }host.append(gallery);
