@@ -1,0 +1,6 @@
+/* Only the official advert in Discover OREVAMI. */
+#myeventDiscoverCard .myeventOfficialAdvert{box-sizing:border-box;max-width:100%;min-width:0;padding:10px;border:1px solid rgba(150,150,150,.3);border-radius:13px;background:#080b10;color:#e8ecf0;text-align:center}
+#myeventDiscoverCard .myeventOfficialAdvert video{display:block;box-sizing:border-box;width:auto;height:auto;max-width:100%;max-height:70vh;max-height:70svh;margin:0 auto;background:#080b10;border-radius:8px;object-fit:contain}
+#myeventDiscoverCard .myeventOfficialAdvert p{font-size:12px;line-height:1.45;margin:10px 0 0;overflow-wrap:anywhere}
+#myeventDiscoverCard #myeventOfficialAdvertStatus{color:#ffd0bd}
+#myeventDiscoverCard #myeventOfficialAdvertStatus[hidden]{display:none!important}
