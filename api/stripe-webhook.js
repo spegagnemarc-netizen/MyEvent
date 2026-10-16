@@ -195,7 +195,7 @@ module.exports = async function handler(req, res) {
         }
 
         console.log(
-          "Participation MyEvent automatiquement confirmée :",
+          "Participation ORÉVAMI automatiquement confirmée :",
           fundEntryId
         );
 

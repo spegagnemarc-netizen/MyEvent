@@ -190,7 +190,14 @@
   if(b.hasAttribute('data-event-menu')){
    const original=legacy.querySelector(`.eventCard[data-event-id="${CSS.escape(String(context().event?.id))}"] .eventCardMenu`);
    showScreen('actions');$('ewToolTitle').textContent='Actions de l’événement';
-   if(original)original.querySelectorAll('button').forEach(action=>{const b=action.cloneNode(true);b.onclick=()=>action.click();body.appendChild(b);});return;
+   const actions=document.createElement('div');actions.className='ewEventActions';actions.setAttribute('aria-label','Actions de l’événement');
+   if(original)original.querySelectorAll('button').forEach(action=>{
+    const b=action.cloneNode(true);
+    b.classList.add('ewEventAction');
+    b.dataset.eventAction=action.classList.contains('deleteEventBtn')?'delete':action.classList.contains('editEventListBtn')?'edit':action.classList.contains('inviteEventListBtn')?'invite':action.classList.contains('leaveEventBtn')?'leave':'other';
+    b.onclick=()=>{if(!action.disabled)action.click();};actions.appendChild(b);
+   });
+   if(actions.children.length)body.appendChild(actions);else body.textContent='Aucune action disponible pour cet événement.';return;
   }
   if(b.dataset.filter){
    const next=b.dataset.filter;
