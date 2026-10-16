@@ -36,19 +36,6 @@
   $s('socialExploreBtn')?.addEventListener('click',()=>{tab('discover');setTimeout(()=>window.scrollTo({top:$s('socialHome').offsetTop,behavior:'smooth'}),20)});
   $s('socialSoloBtn')?.addEventListener('click',()=>{tab('feed');$s('socialOpenComposer')?.click();$s('socialPostText').value='🤝 Je cherche des participants pour une sortie !\n\n📍 Lieu :\n📅 Date :\n🎯 Activité :\n👥 Places disponibles :';$s('socialPostText').focus()});
   $s('socialOpenComposer')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.add('open');$s('socialPostText').focus()});
-  $s('socialCancelPostBtn')?.addEventListener('click',()=>{$s('socialComposerPanel').classList.remove('open');$s('socialPostMsg').textContent=''});
-  $s('socialPublishBtn')?.addEventListener('click',async()=>{
-    const text=($s('socialPostText').value||'').trim(),context=window.myeventCameraContext?.();
-    if(!text){$s('socialPostMsg').textContent='Écris quelque chose avant de publier.';return;}
-    if(!context?.user){$s('socialPostMsg').textContent='Connecte-toi pour publier.';return;}
-    const button=$s('socialPublishBtn');button.disabled=true;
-    try{const result=await context.sb.from('event_feed_posts').insert({author_id:context.user.id,body:text});
-      if(result.error)throw result.error;
-      $s('socialPostText').value='';$s('socialComposerPanel').classList.remove('open');
-      $s('socialPostMsg').textContent='Publié.';await window.myeventRefreshSocialFeed?.();
-    }catch(error){$s('socialPostMsg').textContent='Publication impossible : '+(error.message||String(error));}
-    finally{button.disabled=false;}
-  });
   document.addEventListener('click',e=>{
     const like=e.target.closest('.socialLikeBtn');if(like){window.myeventFeedInteractions?.mutate(like.closest('.socialPost'),'like',like);return}
     const comment=e.target.closest('.socialCommentBtn');if(comment){comment.closest('.socialPost').querySelector('.socialCommentBox').classList.toggle('open');return}
@@ -747,56 +734,74 @@
   }
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
-  let feedPhotoViewer;
-  function openFeedPhoto(photo,opener){
-    if(!feedPhotoViewer){
-      feedPhotoViewer=document.createElement('dialog');feedPhotoViewer.className='socialFeedPhotoViewer';
-      feedPhotoViewer.setAttribute('aria-label','Photo entière');
-      feedPhotoViewer.innerHTML='<button type="button" class="socialFeedPhotoClose" aria-label="Fermer la photo">✕</button><img alt="Photo entière">';
-      document.body.append(feedPhotoViewer);
-      feedPhotoViewer.querySelector('button').onclick=()=>feedPhotoViewer.close();
-      feedPhotoViewer.addEventListener('click',event=>{if(event.target===feedPhotoViewer)feedPhotoViewer.close();});
-    }
-    if(feedPhotoViewer.open)return;
-    const x=window.scrollX,y=window.scrollY,body=document.body,keys=['position','top','left','right','width','overflow'];
-    const saved=keys.map(key=>[key,body.style[key]]),scroll=[];
-    for(let el=opener.parentElement;el;el=el.parentElement)scroll.push([el,el.scrollLeft,el.scrollTop]);
-    feedPhotoViewer.querySelector('img').src=photo.currentSrc||photo.src;
-    feedPhotoViewer.onclose=()=>{
-      saved.forEach(([key,value])=>{body.style[key]=value;});
-      const root=document.documentElement,behavior=root.style.scrollBehavior;root.style.scrollBehavior='auto';
-      scroll.forEach(([el,left,top])=>{el.scrollLeft=left;el.scrollTop=top;});window.scrollTo(x,y);root.style.scrollBehavior=behavior;
-      opener.focus({preventScroll:true});feedPhotoViewer.querySelector('img').removeAttribute('src');
-    };
-    Object.assign(body.style,{position:'fixed',top:-y+'px',left:-x+'px',right:'0',width:'100%',overflow:'hidden'});
-    feedPhotoViewer.showModal();
-  }
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
+    if(Array.from($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[]).some(node=>node.dataset.cameraPostId===String(item.id)))return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><button type="button" class="socialPostPhotoButton" aria-label="Afficher la photo entière"><img class="socialPostPhoto" alt="Photo ORÉVAMI"></button><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
-    post.querySelector('img').src=item.image;post.querySelector('.socialPostPhotoButton').onclick=event=>openFeedPhoto(post.querySelector('img'),event.currentTarget);post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
+    if(item.media_type==='video'){
+      const video=document.createElement('video');video.className='socialFeedMediaVideo';video.controls=true;video.playsInline=true;video.preload='metadata';video.src=item.image;video.setAttribute('aria-label','Vidéo publiée');
+      post.querySelector('.socialPostPhotoButton').replaceWith(video);
+    }else post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
+  window.myeventRenderCameraFeedPost=renderCameraFeedPost;
+  let cameraFeedGeneration=0,cameraFeedOwner='';
   async function loadCameraFeedPosts(){
-    if(typeof window.myeventLoadCameraPosts!=='function')return;
-    try{const rows=await window.myeventLoadCameraPosts(30);rows.slice().reverse().forEach(item=>renderCameraFeedPost(item,true));}catch(error){console.warn('Fil caméra Supabase indisponible:',error?.message||error);}
-  }
-  setTimeout(loadCameraFeedPosts,500);
-  $s('cameraPublishBtn')?.addEventListener('click',async()=>{
-    if(!myeventCapturedDataUrl)return;
-    const button=$s('cameraPublishBtn');button.disabled=true;
+    const generation=++cameraFeedGeneration;
+    const owner=window.myeventCameraContext?.()?.user?.id||'';
+    if(owner!==cameraFeedOwner){
+      $s('socialFeed')?.querySelectorAll('[data-camera-post-id]').forEach(node=>node.remove());
+      if($s('socialFeedPublishStatus'))$s('socialFeedPublishStatus').textContent='';
+      cameraFeedOwner=owner;
+    }
+    if(!owner||typeof window.myeventLoadCameraPosts!=='function')return;
     try{
-      if(typeof window.myeventPublishCameraPost!=='function')throw new Error('Publication Supabase indisponible.');
-      const saved=await window.myeventPublishCameraPost(myeventCapturedDataUrl);
-      const signedRows=await window.myeventLoadCameraPosts?.(1);
-      renderCameraFeedPost(signedRows?.[0]||{...saved,image:myeventCapturedDataUrl},true);
+      const rows=await window.myeventLoadCameraPosts(30);
+      if(generation!==cameraFeedGeneration||owner!==(window.myeventCameraContext?.()?.user?.id||''))return;
+      rows.slice().reverse().forEach(item=>{
+        if(!Array.from($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[]).some(node=>node.dataset.cameraPostId===String(item.id)))renderCameraFeedPost(item,true);
+      });
+    }catch{
+      if(generation===cameraFeedGeneration&&owner===(window.myeventCameraContext?.()?.user?.id||'')){
+        const notice=$s('socialFeedPublishStatus');
+        if(notice)notice.textContent='Impossible de recharger tes photos. Réessaie en actualisant la page.';
+      }
+    }
+  }
+  window.addEventListener('myevent-camera-feed-session',loadCameraFeedPosts);
+  loadCameraFeedPosts();
+  let cameraPublishing=false;
+  $s('cameraPublishBtn')?.addEventListener('click',async()=>{
+    const button=$s('cameraPublishBtn'),status=$s('cameraMediaStatus');
+    if(cameraPublishing)return;
+    if(!myeventCapturedDataUrl){status.textContent='Photo non prête. Attends la fin de la préparation ou reprends la photo.';return;}
+    cameraPublishing=true;button.disabled=true;button.textContent='Publication…';
+    const photo=myeventCapturedDataUrl;
+    let stage='préparation';
+    status.textContent='Préparation de la publication…';
+    try{
+      if(typeof window.myeventPublishCameraPost!=='function')throw new Error('PUBLISH_UNAVAILABLE');
+      const saved=await window.myeventPublishCameraPost(photo,value=>{
+        stage=value;status.textContent=value==='stockage'?'Envoi de la photo…':value==='enregistrement'?'Enregistrement de la publication…':'Préparation de la publication…';
+      });
+      // A failed refresh must never turn an already-saved post into a failed publication.
+      const notice=$s('socialFeedPublishStatus')||$s('socialPostMsg');
+      notice.textContent='Photo publiée dans le fil.';
+      try{renderCameraFeedPost({...saved,image:photo},true);}catch{
+        notice.textContent='Photo publiée. Actualise le fil pour la retrouver.';
+      }
       closeMyEventCamera();
     }catch(error){
-      cameraPlaceholder.textContent='Publication impossible : '+(error?.message||String(error));cameraPlaceholder.style.display='grid';
-    }finally{button.disabled=false;}
+      const code=String(error?.code||error?.statusCode||error?.status||'');
+      const safeCode=/^[A-Za-z0-9_-]{1,24}$/.test(code)?' · '+code:'';
+      const message=String(error?.message||'').toLowerCase();
+      const reason=message.includes('bucket not found')?'Le stockage photo est absent.':message.includes('row-level security')||code==='42501'?'L’accès est refusé par les permissions.':message.includes('failed to fetch')||message.includes('network')||message.includes('load failed')?'Connexion au service impossible.':message.includes('photo ou utilisateur')?'Session ou photo indisponible. Reconnecte-toi au compte.':'Le service a refusé la publication.';
+      status.textContent='Publication impossible — '+stage+safeCode+'. '+reason+' La photo est conservée.';
+      status.setAttribute('role','alert');
+    }finally{cameraPublishing=false;button.disabled=false;button.textContent='Publier';}
   });
   $s('cameraAttachEventBtn')?.addEventListener('click',openCameraEventDestination);
   $s('socialBackToFeedBtn')?.addEventListener('click',()=>tab('feed'));

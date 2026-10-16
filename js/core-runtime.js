@@ -637,6 +637,7 @@ async function show(u){
   const sameUser=String(user?.id||'')===String(u?.id||'');
   if(!sameUser){activeEventSelectionVersion++;event=null;eventsWorkspaceRows=[];eventsWorkspaceUserId=u.id;eventsListLoadedAt=0;eventsListRequest=null;}
   user=u;
+  window.dispatchEvent(new CustomEvent('myevent-camera-feed-session'));
   window.restoreMyEventCardOrder?.();
   $('auth').classList.add('hidden');
   $('main').classList.remove('hidden');
@@ -2972,23 +2973,49 @@ window.myeventEventsBridge={
 window.myeventGameContext=function(){return {sb,user,event};};
 window.myeventMusicContext=function(){return {sb,user,event};};
 
-window.myeventPublishCameraPost=async function(dataUrl){
+window.myeventPublishCameraPost=async function(dataUrl,onStage=()=>{}){
+  onStage('préparation');
   if(!dataUrl||!user)throw new Error('Photo ou utilisateur manquant.');
   const response=await fetch(dataUrl),blob=await response.blob();
   if(!blob.type.startsWith('image/'))throw new Error('La capture n’est pas une image valide.');
   const path=user.id+'/'+crypto.randomUUID()+'-feed.jpg';
+  onStage('stockage');
   const up=await sb.storage.from('social-media').upload(path,blob,{upsert:false,contentType:'image/jpeg'});
   if(up.error)throw up.error;
+  onStage('enregistrement');
   const ins=await sb.from('social_posts').insert({user_id:user.id,media_path:path,media_type:'image',content:'📸 Nouveau moment partagé sur ORÉVAMI.'}).select('id,user_id,media_path,media_type,content,created_at').single();
   if(ins.error){await sb.storage.from('social-media').remove([path]);throw ins.error;}
   return ins.data;
 };
+// Composer media uses the same private bucket and ownership policies as camera posts.
+window.myeventPublishFeedMedia=async function(blob,content='',onStage=()=>{}){
+  const config=await window.myeventRuntime.ready;
+  if(!((config.environment==='preview'&&config.isTest===true&&config.projectRef==='ahyyknfjsielnqyoxqgh')||(config.environment==='production'&&config.isTest===false&&config.projectRef==='nxxvadbliinhvkirqkkl')))throw new Error('ENVIRONMENT_REQUIRED');
+  const ownerId=user?.id,client=sb;
+  if(!ownerId||!client)throw new Error('SESSION_REQUIRED');
+  const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};
+  const type=blob?.type?.split(';')[0];
+  if(!extensions[type]||!blob.size||blob.size>15728640)throw new Error('MEDIA_INVALID');
+  const assertOwner=()=>{if(user?.id!==ownerId)throw new Error('SESSION_CHANGED');};
+  const path=ownerId+'/'+crypto.randomUUID()+'-feed.'+extensions[type];
+  onStage('stockage');assertOwner();
+  const uploaded=await client.storage.from('social-media').upload(path,blob,{upsert:false,contentType:type});
+  if(uploaded.error)throw uploaded.error;
+  try{
+    assertOwner();onStage('enregistrement');
+    const saved=await client.from('social_posts').insert({user_id:ownerId,content:String(content).trim(),media_path:path,media_type:type.startsWith('video/')?'video':'image'}).select('id,user_id,media_path,media_type,content,created_at').single();
+    if(saved.error)throw saved.error;
+    return saved.data;
+  }catch(error){await client.storage.from('social-media').remove([path]).catch(()=>{});throw error;}
+};
 window.myeventLoadCameraPosts=async function(limit=30){
-  if(!user)return [];
-  const r=await sb.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',user.id).eq('media_type','image').order('created_at',{ascending:false}).limit(limit);
+  const ownerId=user?.id,client=sb;
+  if(!ownerId||!client)return [];
+  const r=await client.from('social_posts').select('id,user_id,media_path,media_type,content,created_at').eq('user_id',ownerId).order('created_at',{ascending:false}).limit(limit);
   if(r.error)throw r.error;
   return await Promise.all((r.data||[]).map(async row=>{
-    const signed=await sb.storage.from('social-media').createSignedUrl(row.media_path,3600);
+    const signed=await client.storage.from('social-media').createSignedUrl(row.media_path,3600);
+    if(signed.error)throw signed.error;
     return {...row,image:signed.data?.signedUrl||''};
   }));
 };
@@ -3699,6 +3726,7 @@ async function logout(){
     window.MyEventReservationLinkUI?.clearDownloads();
     window.MyEventReservationLinkUI?.clearMap();
     activeEventSelectionVersion++;user=null; event=null;eventsWorkspaceRows=[];
+    window.dispatchEvent(new CustomEvent('myevent-camera-feed-session'));
     window.myeventEventsWorkspace?.close();
     document.body.classList.remove('discussionFullScreen');
     $('main').classList.add('hidden');

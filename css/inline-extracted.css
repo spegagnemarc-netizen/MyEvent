@@ -798,9 +798,15 @@ body:has(#socialHome) .app > h1{display:none!important}
 #socialHome .socialStory.me > div:last-child{background:transparent!important;color:#d9dfe4!important}
 #socialHome .socialFilters{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important;padding:4px 0 10px!important}
 #socialHome .socialFilter,#socialHome .socialFilter:not(.active){font-size:10px!important;padding:8px 1px!important;height:34px!important}
-/* L'accueil ne doit plus être dominé par le compositeur */
-#socialHome .socialComposer{display:none!important}
-#socialHome .socialComposerPanel{display:none!important}
+/* Publication compacte : accès visible, formulaire ouvert seulement sur demande. */
+#socialHome .socialComposer{display:flex!important;gap:8px;align-items:center;margin:10px 0}
+#socialHome .socialMiniAvatar{flex:0 0 32px;text-align:center}
+#socialHome .socialComposerInput{flex:1;min-width:0;min-height:44px;text-align:left;white-space:normal;padding:10px;border:1px solid;border-radius:12px}
+#socialHome .socialComposerPanel{display:none!important;padding:12px;margin-bottom:12px;border:1px solid;border-radius:12px}
+#socialHome .socialComposerPanel.open{display:block!important}
+#socialHome .socialComposerPanel textarea{display:block;width:100%;box-sizing:border-box;min-height:100px;resize:vertical;margin-bottom:10px;font-size:16px}
+#socialHome .socialComposerPanel .row{display:flex;gap:8px;flex-wrap:wrap}
+#socialHome .socialComposerPanel button{min-height:44px}
 #socialHome .socialSectionHead{margin:1px 4px 7px!important}
 #socialHome .socialSectionHead h3{font-size:18px!important}
 #socialHome .socialFeed{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;align-items:start!important}
@@ -3279,7 +3285,7 @@ button:not(#myeventCameraModal button):not(.cameraSideTool):not(.cameraModeBtn){
 #socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon{font-size:31px!important;filter:drop-shadow(0 0 6px rgba(var(--myevent-accent-rgb),.65))}
 
 /* Camera feed: preserve the complete published JPEG, including vertical annotations. */
-#socialHome .socialPost[data-camera-post-id] img[alt="Photo MyEvent"]{display:block;width:100%!important;height:250px!important;max-height:250px!important;aspect-ratio:auto!important;object-fit:cover!important}
+#socialHome .socialPost[data-camera-post-id] .socialPostPhoto{display:block;width:100%!important;height:250px!important;max-height:250px!important;aspect-ratio:auto!important;object-fit:cover!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostHead{padding-top:10px!important;padding-bottom:6px!important}
 #socialHome .socialPost[data-camera-post-id] .socialPostText{padding-top:5px!important;padding-bottom:8px!important}
 
