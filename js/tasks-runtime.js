@@ -4,21 +4,39 @@ function taskIsManager(){return !!(event&&user&&(event.creator_id===user.id||act
 function taskPerson(id){const p=eventTaskProfiles.find(x=>x.id===id);return p?.display_name||p?.username||'Participant';}
 function taskStatusLabel(s){return s==='done'?'🟢 Terminé':s==='doing'?'🔵 En cours':'🟠 À faire';}
 function taskDueLabel(v){if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?'':'📅 '+d.toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'});}
+let eventTasksScope='',eventTasksLoadRevision=0,eventTasksLoadingController=null;
 async function loadEventTasks(){
-  if(!event||!user)return;
-  const box=$('eventTasksList');if(!box)return;
-  box.innerHTML='<p class="muted">Chargement…</p>';
-  const [tr,ar,mr]=await Promise.all([
-    sb.from('event_tasks').select('*').eq('event_id',event.id).order('created_at',{ascending:true}),
-    sb.from('event_task_assignees').select('*').eq('event_id',event.id).order('created_at',{ascending:true}),
-    sb.from('event_members').select('user_id').eq('event_id',event.id)
-  ]);
-  if(tr.error){box.innerHTML='<p class="muted">Impossible de charger les tâches : '+esc(tr.error.message)+'</p>';return;}
-  eventTasks=tr.data||[];eventTaskAssignees=ar.error?[]:(ar.data||[]);
-  const ids=[...new Set([...(mr.data||[]).map(x=>x.user_id),event.creator_id,...eventTaskAssignees.map(x=>x.user_id)].filter(Boolean))];
-  eventTaskProfiles=[];
-  if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids);if(!pr.error)eventTaskProfiles=pr.data||[];}
-  renderEventTasks();startEventTasksRealtime();
+  const box=$('eventTasksList');if(!box||!event||!user)return;
+  const eventId=event.id,userId=user.id,creatorId=event.creator_id,scope=userId+':'+eventId,ticket=++eventTasksLoadRevision;
+  const current=()=>ticket===eventTasksLoadRevision&&event?.id===eventId&&user?.id===userId;
+  eventTasksLoadingController?.abort();
+  const controller=new AbortController();eventTasksLoadingController=controller;let timer;
+  if(eventTasksScope===scope)renderEventTasks();
+  else{eventTasks=[];eventTaskAssignees=[];eventTaskProfiles=[];eventTasksScope='';box.innerHTML='<p class="muted">Chargement…</p>';if($('eventTasksSummary'))$('eventTasksSummary').textContent='';}
+  try{
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('Le chargement des tâches prend trop de temps.'));},20000);});
+    const work=(async()=>{
+      const [tr,ar,mr]=await Promise.all([
+        sb.from('event_tasks').select('*').eq('event_id',eventId).order('created_at',{ascending:true}).abortSignal(controller.signal),
+        sb.from('event_task_assignees').select('*').eq('event_id',eventId).order('created_at',{ascending:true}).abortSignal(controller.signal),
+        sb.from('event_members').select('user_id').eq('event_id',eventId).abortSignal(controller.signal)
+      ]);
+      if(tr.error)throw new Error('Impossible de charger les tâches. Vérifie ta connexion et ton accès à cet événement.');
+      const tasks=tr.data||[],assignees=ar.error?[]:(ar.data||[]);
+      const ids=[...new Set([...(mr.data||[]).map(x=>x.user_id),creatorId,...assignees.map(x=>x.user_id)].filter(Boolean))];
+      let profiles=[];
+      if(ids.length){const pr=await sb.from('profiles').select('id,display_name,username').in('id',ids).abortSignal(controller.signal);if(!pr.error)profiles=pr.data||[];}
+      return {tasks,assignees,profiles,partial:!!ar.error||!!mr.error};
+    })();
+    const data=await Promise.race([work,deadline]);if(!current())return;
+    eventTasks=data.tasks;eventTaskAssignees=data.assignees;eventTaskProfiles=data.profiles;eventTasksScope=scope;
+    renderEventTasks();startEventTasksRealtime();
+    if(data.partial)msg('eventTasksMsg','Les tâches sont chargées, mais certains participants ou responsables sont indisponibles.','err');
+  }catch(error){
+    if(!current())return;
+    if(eventTasksScope===scope){renderEventTasks();msg('eventTasksMsg','Actualisation impossible. Les dernières tâches chargées restent affichées.','err');}
+    else box.innerHTML='<p class="muted">'+esc(error.name==='AbortError'?'Le chargement des tâches a été interrompu.':error.message||'Impossible de charger les tâches.')+'</p><button type="button" id="eventTasksRetryBtn">Réessayer le chargement</button>';
+  }finally{clearTimeout(timer);if(eventTasksLoadingController===controller)eventTasksLoadingController=null;}
 }
 function renderEventTasks(){
   const box=$('eventTasksList'),sum=$('eventTasksSummary');if(!box)return;
@@ -75,6 +93,7 @@ async function startEventTasksRealtime(){
     .subscribe();
 }
 document.addEventListener('click',e=>{
+  if(e.target.closest('#eventTasksRetryBtn')){loadEventTasks();return;}
   if(e.target.closest('#eventTaskAddBtn')){taskForm(true);return;}
   if(e.target.closest('#eventTaskCancelBtn')){taskForm(false);return;}
   if(e.target.closest('#eventTaskSaveBtn')){addEventTask();return;}

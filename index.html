@@ -1045,6 +1045,17 @@
 <div class="collapsibleBody">
   <div class="suppliesBox">
     <div class="suppliesHead"><div><b>✅ Qui fait quoi ?</b><p class="muted">Répartis les tâches entre les participants et suis leur avancement.</p></div><button type="button" id="eventTaskAddBtn">➕ Ajouter une tâche</button></div>
+    <div class="materialAiBox" id="tasksAiBox">
+      <div class="materialAiHead"><div><b>✨ Assistant IA</b><p class="muted">Propose des tâches d’organisation, sans attribuer de responsable automatiquement.</p></div><button type="button" id="tasksAiOpenBtn">✨ Proposer des tâches</button></div>
+      <div id="tasksAiForm" class="editEventBox hidden" style="margin-top:10px">
+        <label>Nombre de participants<input id="tasksAiPeople" type="number" min="1" max="5000" value="30"></label>
+        <label>Repas ou réception<input id="tasksAiMeal" maxlength="300" placeholder="Ex. Buffet dînatoire"></label>
+        <label>Précisions<input id="tasksAiDetails" maxlength="1500" placeholder="Ex. En salle, installation, accueil et rangement"></label>
+        <div class="materialAiActions"><button type="button" id="tasksAiGenerateBtn">✨ Générer les tâches</button><button type="button" id="tasksAiCancelBtn" class="secondary">Annuler</button></div>
+        <p id="tasksAiMsg" class="muted" role="status" aria-live="polite"></p>
+        <div id="tasksAiResults" class="materialAiResults"></div>
+      </div>
+    </div>
     <p id="eventTasksMsg" class="muted"></p>
     <div id="eventTaskForm" class="editEventBox hidden" style="margin-top:10px">
       <input id="eventTaskTitle" maxlength="180" placeholder="Ex. Réserver le restaurant, préparer la décoration…">
@@ -1239,8 +1250,10 @@
 
 
 
-<script src="js/hall-finances-runtime.js?v=materials-recovery-1"></script>
-<script src="js/tasks-runtime.js"></script>
+<script src="js/hall-finances-runtime.js?v=hall-selection-compact-3"></script>
+<script src="js/tasks-runtime.js?v=tasks-load-recovery-1"></script>
+<script src="js/tasks-ai.js?v=1"></script>
+<link rel="stylesheet" href="css/tasks-ai.css?v=1">
 
 
 
@@ -1608,8 +1621,9 @@ body.myeventAdminOpen{overflow:hidden}
     d.body.appendChild(widgetScript);
   })(document);
 </script>
-<link rel="stylesheet" href="css/events-workspace.css?v=orevami-actions-2">
-<script src="js/events-workspace.js?v=orevami-actions-2" defer></script>
+<link rel="stylesheet" href="css/events-workspace.css?v=hall-selection-1">
+<link rel="stylesheet" href="css/event-ai-compact.css?v=3">
+<script src="js/events-workspace.js?v=hall-selection-1" defer></script>
 <link rel="stylesheet" href="css/ads-placement.css?v=1">
 <script src="js/ads-placement.js?v=1" defer></script>
 </body>

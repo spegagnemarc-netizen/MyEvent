@@ -183,3 +183,9 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 #eventsWorkspace .ewEventActions .ewEventAction:active{background:rgba(var(--action-rgb),.22)!important}
 #eventsWorkspace .ewEventActions .ewEventAction:disabled{opacity:.45;box-shadow:none}
 @media(max-width:350px){#eventsWorkspace .ewEventActions{grid-template-columns:1fr}}
+
+#eventsWorkspace .ewSelectedHall{padding:14px;margin:0 0 16px;border:1px solid #45758b;border-radius:14px;overflow-wrap:anywhere}
+#eventsWorkspace .ewSelectedHall:empty{display:none}
+#eventsWorkspace .ewSelectedHall p{margin:8px 0}
+#eventsWorkspace .ewSelectedHall a{display:inline-block;margin-right:12px}
+#eventsWorkspace .ewSelectedHall button{margin-top:8px;min-height:44px;max-width:100%}
