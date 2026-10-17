@@ -172,6 +172,8 @@
   const panel=panels.get(key);if(!panel){body.textContent='Cette rubrique est indisponible.';return;}
   if(panel.dataset.panel)bridge.tab(key,true);
   body.appendChild(panel);panel.hidden=false;panel.classList.remove('hidden');panel.classList.add('active');panel.open=true;
+  // bridge.tab(key,true) restores panel state and intentionally skips its loaders.
+  if(key==='tasks'&&typeof loadEventTasks==='function')loadEventTasks();
  }
  function showForm(id){
   if(!root.hidden){showScreen(id);const panel=panels.get(id);if(panel){body.appendChild(panel);panel.open=true;panel.hidden=false;panel.classList.remove('hidden');}}

@@ -14,3 +14,11 @@ function setup(response){let expire;const box={innerHTML:''},summary={textConten
 test('stalled task reads leave loading with explicit retry',async()=>{const x=setup(new Promise(()=>{}));const p=x.run();x.expire();await p;assert.match(x.box.innerHTML,/trop de temps/);assert.match(x.box.innerHTML,/Réessayer/);});
 test('database error leaves loading',async()=>{const x=setup(Promise.resolve({error:{message:'fixture'}}));await x.run();assert.match(x.box.innerHTML,/Impossible de charger/);});
 test('late task reads cannot replace a different event',async()=>{let done;const x=setup(new Promise(r=>done=r));const p=x.run();x.c.event={id:'other-event'};done({data:[]});await p;assert.equal(x.renders(),0);});
+test('opening the tasks workspace actually starts its loader',()=>{
+ const workspace=readFileSync(new URL('../js/events-workspace.js',import.meta.url),'utf8');
+ const start=workspace.indexOf(' async function openTool(key){');const end=workspace.indexOf('\n }',start)+3;
+ const node=()=>({classList:{add(){},remove(){}},appendChild(){}}),panel={...node(),dataset:{panel:'tasks'}},body=node();let loads=0;
+ const c=vm.createContext({context:()=>({event:{id:'test'}}),nav:{},showScreen(){},document:{createElement:node},body,panels:new Map([['tasks',panel]]),bridge:{tab(){}},loadEventTasks(){loads++;}});
+ vm.runInContext(workspace.slice(start,end)+';openTool("tasks");',c);
+ assert.equal(loads,1);assert.equal(panel.open,true);
+});
