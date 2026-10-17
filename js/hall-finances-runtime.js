@@ -166,22 +166,45 @@ async function toggleSupplyBrought(id){
   if(r.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;} await loadSupplies();
 }
 
+// Restored from the version before 22d3993: generation needs both declarations.
+let materialAiItems=[];
+let materialAiPending=false;
+function materialAiContext(){
+  const h=(typeof hallSelected==='function'?hallSelected():null);
+  return {event_name:event?.name||'',event_type:event?.event_type||'',people:Math.max(1,Number($('materialAiPeople')?.value||30)),meal:String($('materialAiMeal')?.value||'').trim(),details:String($('materialAiDetails')?.value||'').trim(),hall:h?{name:h.name||'',capacity:h.capacity||null,equipment:h.equipment||''}:null};
+}
 function renderMaterialAiResults(){
   const box=$('materialAiResults'); if(!box)return;
   if(!materialAiItems.length){box.innerHTML='';return;}
   box.innerHTML='<div class="muted">🤖 Proposition — '+materialAiItems.length+' éléments. Modifie les noms ou quantités avant de les ajouter.</div>'+materialAiItems.map((x,i)=>'<label class="materialAiItem"><input type="checkbox" data-ai-check="'+i+'" checked><input data-ai-title="'+i+'" value="'+esc(x.title||'')+'" aria-label="Nom"><input data-ai-qty="'+i+'" type="number" min="1" value="'+esc(String(Math.max(1,Number(x.quantity)||1)))+'" aria-label="Quantité"><button type="button" class="secondary" data-ai-remove="'+i+'">✕</button>'+(x.note?'<input class="aiNote" data-ai-note="'+i+'" value="'+esc(x.note)+'" aria-label="Note">':'<input class="aiNote" data-ai-note="'+i+'" placeholder="Note (optionnel)" aria-label="Note">')+'</label>').join('')+'<button type="button" class="materialAiAdd" id="materialAiAddBtn">✅ Ajouter la sélection à mon événement</button>';
 }
 async function generateMaterialAi(){
-  const msgEl=$('materialAiMsg'); const btn=$('materialAiGenerateBtn'); if(!event||!user)return;
-  const ctx=materialAiContext(); if(!ctx.meal&& !ctx.details){msg('materialAiMsg','Indique au moins le type de repas ou quelques précisions.','err');return;}
-  btn.disabled=true; msg('materialAiMsg','🤖 L’IA prépare une liste adaptée…'); $('materialAiResults').innerHTML='';
+  const btn=$('materialAiGenerateBtn'); if(!event||!user||!btn||materialAiPending)return;
+  const eventId=event.id,userId=user.id;
+  const current=()=>event?.id===eventId&&user?.id===userId;
+  const controller=new AbortController();let timer;
+  materialAiPending=true;btn.disabled=true;
   try{
-    const session=await sb.auth.getSession(); const token=session.data?.session?.access_token||'';
-    const r=await fetch('/api/generate-materials',{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(ctx)});
-    const data=await r.json().catch(()=>({})); if(!r.ok)throw new Error(data.error||'Service IA indisponible.');
-    materialAiItems=Array.isArray(data.items)?data.items:[]; renderMaterialAiResults(); msg('materialAiMsg',materialAiItems.length?'Liste générée. Tu peux maintenant la modifier.':'Aucun élément proposé.','ok');
-  }catch(e){msg('materialAiMsg',e.message||'Impossible de générer la liste.','err');}
-  finally{btn.disabled=false;}
+    const ctx=materialAiContext();
+    if(!ctx.meal&&!ctx.details)throw new Error('Indique au moins le type de repas ou quelques précisions.');
+    materialAiItems=[];$('materialAiResults').innerHTML='';msg('materialAiMsg','🤖 L’IA prépare une liste adaptée…');
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('La génération prend trop de temps. Réessaie dans quelques instants.'));},60000);});
+    const work=(async()=>{
+      const session=await sb.auth.getSession();
+      const token=session.data?.session?.access_token;
+      if(session.error||!token)throw new Error('Ta session a expiré. Reconnecte-toi pour générer la liste.');
+      if(controller.signal.aborted)return null;
+      const r=await fetch('/api/generate-materials',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(ctx)});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(data.error||(r.status===429?'Le service IA est momentanément limité. Réessaie plus tard.':'Le service IA est indisponible. Réessaie dans quelques instants.'));
+      if(!Array.isArray(data.items)||!data.items.length)throw new Error('L’IA n’a retourné aucun élément. Précise le repas ou le lieu puis réessaie.');
+      return data.items;
+    })();
+    const items=await Promise.race([work,deadline]);
+    if(!current()||!items)return;
+    materialAiItems=items;renderMaterialAiResults();msg('materialAiMsg','Liste générée. Tu peux maintenant la modifier.','ok');
+  }catch(e){if(current())msg('materialAiMsg',e.name==='AbortError'?'La génération prend trop de temps. Réessaie dans quelques instants.':e instanceof TypeError?'Connexion au service IA impossible. Vérifie ta connexion puis réessaie.':e.message||'Impossible de générer la liste.','err');}
+  finally{clearTimeout(timer);controller.abort();materialAiPending=false;btn.disabled=false;}
 }
 async function addSelectedAiMaterials(){
   const rows=[...document.querySelectorAll('.materialAiItem')]; if(!rows.length)return;
