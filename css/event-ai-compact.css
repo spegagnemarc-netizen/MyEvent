@@ -60,4 +60,14 @@
  #eventTasksPanel .supplyCard>div[style]{margin-top:3px!important;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
  #eventTasksPanel .supplyCompactActions{margin-top:4px;gap:4px}
  #eventTasksPanel .supplyCompactActions button{flex:1 1 auto!important;margin:0;min-height:44px!important}
+
+ /* Material drafts only: short text starts at one touch-height, long text grows. */
+ #suppliesPanel .materialAiResults{gap:4px}
+ #suppliesPanel .materialAiItem{padding:4px;gap:3px}
+ #suppliesPanel .materialAiItem [data-ai-title]{grid-column:1/-1;grid-row:1}
+ #suppliesPanel .materialAiItem [data-ai-check]{grid-column:1;grid-row:2;align-self:center}
+ #suppliesPanel .materialAiItem [data-ai-qty]{grid-column:2;grid-row:2;width:100%;min-height:44px;padding:5px 8px}
+ #suppliesPanel .materialAiItem [data-ai-remove]{grid-column:3;grid-row:2;min-width:44px;min-height:44px;padding:5px;margin:0}
+ #suppliesPanel .materialAiItem .aiNote{grid-column:1/-1;grid-row:3}
+ #suppliesPanel .materialAiItem textarea{min-height:44px;padding:5px 8px;line-height:1.25}
 }
