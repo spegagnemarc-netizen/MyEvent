@@ -1,7 +1,10 @@
+import {handleTasksAi} from '../server/tasks-ai-handler.mjs';
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée.' });
   }
+
+  if (req.body?.mode === 'tasks') return handleTasksAi(req,res);
 
   if (!process.env.OPENAI_API_KEY) {
     return res.status(503).json({

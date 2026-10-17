@@ -1,0 +1,4 @@
+#tasksAiBox .taskAiSuggestion{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid #28445b;border-radius:10px;min-width:0}
+#tasksAiBox .taskAiSuggestion input{margin:0;min-width:0}
+#tasksAiBox .taskAiNote{grid-column:2/4;font-size:12px}
+#tasksAiBox .taskAiSuggestion button{min-height:44px;min-width:44px;padding:6px}
