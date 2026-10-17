@@ -209,10 +209,16 @@ function materialAiContext(){
   const h=(typeof hallSelected==='function'?hallSelected():null);
   return {event_name:event?.name||'',event_type:event?.event_type||'',people:Math.max(1,Number($('materialAiPeople')?.value||30)),meal:String($('materialAiMeal')?.value||'').trim(),details:String($('materialAiDetails')?.value||'').trim(),hall:h?{name:h.name||'',capacity:h.capacity||null,equipment:h.equipment||''}:null};
 }
+function fitMaterialAiText(field){
+  if(!field?.matches?.('#materialAiResults textarea'))return;
+  field.style.height='auto';
+  if(field.scrollHeight)field.style.height=(field.scrollHeight+field.offsetHeight-field.clientHeight)+'px';
+}
 function renderMaterialAiResults(){
   const box=$('materialAiResults'); if(!box)return;
   if(!materialAiItems.length){box.innerHTML='';return;}
-  box.innerHTML='<div class="muted">🤖 Proposition — '+materialAiItems.length+' éléments. Modifie les noms ou quantités avant de les ajouter.</div>'+materialAiItems.map((x,i)=>'<label class="materialAiItem"><input type="checkbox" data-ai-check="'+i+'" checked><input data-ai-title="'+i+'" value="'+esc(x.title||'')+'" aria-label="Nom"><input data-ai-qty="'+i+'" type="number" min="1" value="'+esc(String(Math.max(1,Number(x.quantity)||1)))+'" aria-label="Quantité"><button type="button" class="secondary" data-ai-remove="'+i+'">✕</button>'+(x.note?'<input class="aiNote" data-ai-note="'+i+'" value="'+esc(x.note)+'" aria-label="Note">':'<input class="aiNote" data-ai-note="'+i+'" placeholder="Note (optionnel)" aria-label="Note">')+'</label>').join('')+'<button type="button" class="materialAiAdd" id="materialAiAddBtn">✅ Ajouter la sélection à mon événement</button>';
+  box.innerHTML='<div class="muted">🤖 Proposition — '+materialAiItems.length+' éléments. Modifie les noms ou quantités avant de les ajouter.</div>'+materialAiItems.map((x,i)=>'<label class="materialAiItem"><input type="checkbox" data-ai-check="'+i+'" checked><textarea rows="2" data-ai-title="'+i+'" aria-label="Nom">'+esc(x.title||'')+'</textarea><input data-ai-qty="'+i+'" type="number" min="1" value="'+esc(String(Math.max(1,Number(x.quantity)||1)))+'" aria-label="Quantité"><button type="button" class="secondary" data-ai-remove="'+i+'">✕</button>'+(x.note?'<textarea rows="2" class="aiNote" data-ai-note="'+i+'" aria-label="Note">'+esc(x.note)+'</textarea>':'<textarea rows="2" class="aiNote" data-ai-note="'+i+'" placeholder="Note (optionnel)" aria-label="Note"></textarea>')+'</label>').join('')+'<button type="button" class="materialAiAdd" id="materialAiAddBtn">✅ Ajouter la sélection à mon événement</button>';
+  requestAnimationFrame(()=>box.querySelectorAll('textarea').forEach(fitMaterialAiText));
 }
 async function generateMaterialAi(){
   const btn=$('materialAiGenerateBtn'); if(!event||!user||!btn||materialAiPending)return;
@@ -253,6 +259,7 @@ async function addSelectedAiMaterials(){
   suppliesData=[...suppliesData,...(r.data||[])]; materialAiItems=[]; $('materialAiResults').innerHTML=''; msg('materialAiMsg','✅ '+(r.data?.length||selected.length)+' éléments ajoutés à ton événement.','ok'); $('materialAiForm')?.classList.add('hidden'); $('materialAiBox')?.classList.add('collapsed'); renderSupplies(); if(btn)btn.disabled=false;
 }
 document.addEventListener('input',e=>{
+  fitMaterialAiText(e.target);
   const i=e.target.dataset?.aiTitle; if(i!==undefined&&materialAiItems[i])materialAiItems[i].title=e.target.value;
   const q=e.target.dataset?.aiQty; if(q!==undefined&&materialAiItems[q])materialAiItems[q].quantity=Math.max(1,Number(e.target.value)||1);
   const n=e.target.dataset?.aiNote; if(n!==undefined&&materialAiItems[n])materialAiItems[n].note=e.target.value;
