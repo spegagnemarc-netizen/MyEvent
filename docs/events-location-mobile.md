@@ -1,0 +1,9 @@
+# Événements et navigation — Preview TEST
+
+- La photo utilise exclusivement `events.cover_url` et le bucket privé `event-media`, avec signature par la session courante. Cache de promesses de 45 minutes isolé par utilisateur, événement et chemin ; évite les signatures concurrentes déclenchées par les mises à jour des membres/médias. Aucun média voisin n’est substitué à une couverture absente. Calques explicites image/dégradé/contenu pour Safari.
+- Diagnostic TEST en lecture seule : 5 événements, aucun `cover_url` renseigné. Le visuel de remplacement est donc normal sur ces données. Persistance réelle d’une couverture après reconnexion : à vérifier sur un événement fictif avec couverture ; aucune écriture de données pour cet audit.
+- Voir ouvre les informations de l’événement déjà chargé et accessible via les règles existantes. Localiser réutilise le panneau Leaflet existant. La refonte workspace ouvrait ce panneau avec `initialRestore=true`, ce qui sautait son chargeur ; appel explicite ajouté après déplacement du panneau.
+- Navigation ouvre Google Maps avec le lieu principal, jamais la salle ni le centre de recherche déplaçable. Les coordonnées présentes sont réutilisées ; sinon géocodage existant borné à 12 s. L’origine courante est gérée par le GPS, sans partage dans ORÉVAMI. Refus de localisation : saisie de l’origine dans le GPS ; carte ORÉVAMI reste accessible.
+- Réponses tardives de géocodage ignorées après changement d’événement ou d’utilisateur ; indicateur terminé en finally. Localiser n’effectue pas de recherche de lieux ni de lecture des positions partagées inutile.
+- Vérifications ciblées : syntaxe, diff, couverture concurrente et changement d’événement ; ouverture Voir/Localiser avec le chargeur existant. Les tests DOM ne constituent pas une validation sur iPhone matériel.
+- Aucun SQL, aucune permission, aucun réglage Production modifié.

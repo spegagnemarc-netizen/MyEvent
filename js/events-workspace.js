@@ -128,15 +128,21 @@
   if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div>';return;}
   const date=Date.parse(e.event_date),upcoming=!Number.isFinite(date)||date>=Date.now(),canManage=['owner','coorganizer'].includes(context().role);
   target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-tool="notifications" class="ewHeroNotifications" aria-label="Notifications de cet événement" title="Notifications">🔔</button><button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
+  const actions=document.createElement('div');actions.className='ewHeroActions';actions.innerHTML='<button type="button" data-event-details>👁 Voir</button><button type="button" data-tool="locations">📍 Localiser</button>';target.appendChild(actions);
   const hall=document.createElement('section');hall.id='ewSelectedHall';hall.className='ewSelectedHall';target.appendChild(hall);window.myeventHallSelection?.ensure();
   members().slice(0,4).forEach(row=>{const avatar=row.querySelector('.avatar');if(avatar)target.querySelector('.ewHeroAvatars').appendChild(avatar.cloneNode(true));});
   try{
-   let url=e.cover_url?await bridge.cover(e.cover_url):'';
-   if(!url){const image=$('mediaGrid')?.querySelector('img');if(image?.src)url=image.src;}
+   const owner=context().user?.id,key=JSON.stringify([owner,e.id,e.cover_url]);
+   for(const [k,v] of coverCache)if(v.owner!==owner||v.expires<Date.now())coverCache.delete(k);
+   let entry=coverCache.get(key);
+   if(!entry&&e.cover_url){entry={owner,expires:Date.now()+45*60*1000,promise:Promise.resolve().then(()=>bridge.cover(e.cover_url)).catch(error=>{coverCache.delete(key);throw error;})};coverCache.set(key,entry);}
+   const url=entry?await entry.promise:'';
+   if(!url)coverCache.delete(key);
    if(ticket!==heroRevision||context().event?.id!==e.id)return;
-   const card=target.querySelector('.ewHeroCard');if(url&&card){const image=document.createElement('img');image.className='ewHeroPhoto';image.alt='Photo de '+(e.name||'l’événement');image.src=url;card.prepend(image);}
+   const card=target.querySelector('.ewHeroCard');if(url&&card){const image=document.createElement('img');image.className='ewHeroPhoto';image.alt='Photo de '+(e.name||'l’événement');image.onerror=()=>{coverCache.delete(key);image.remove();};image.src=url;card.prepend(image);}
   }catch(_){/* The gradient remains when no real photo is accessible. */}
  }
+ const coverCache=new Map();
  let heroRevision=0;
  function render(){
   if(!isOpen()||busy)return;
@@ -157,6 +163,10 @@
   }
   if(key==='discussion'){showScreen(key);bridge.tab('discussion',true);return;}
   showScreen(key);
+  if(key==='details'){
+   const e=context().event;body.innerHTML='<h3>'+esc(e.name||'Événement')+'</h3><p>'+esc(e.description||'Aucune description.')+'</p><p>📅 '+esc(e.event_date?new Date(e.event_date).toLocaleString('fr-FR'):'Date à définir')+'</p><p>📍 '+esc(e.location||'Lieu à définir')+'</p>';
+   const participants=document.createElement('button');participants.type='button';participants.textContent='Voir les participants';participants.onclick=()=>openTool('members');body.appendChild(participants);return;
+  }
   if(key==='programme'){renderProgramme(body,true);return;}
   if(key==='tasks'){
    const actions=document.createElement('div');actions.className='ewTaskActions';
@@ -175,6 +185,7 @@
   body.appendChild(panel);panel.hidden=false;panel.classList.remove('hidden');panel.classList.add('active');panel.open=true;
   // bridge.tab(key,true) restores panel state and intentionally skips its loaders.
   if(key==='tasks'&&typeof loadEventTasks==='function')loadEventTasks();
+  if(key==='locations')bridge.locations?.();
   if(key==='hall'&&typeof loadHall==='function')loadHall();
  }
  function showForm(id){
@@ -188,6 +199,7 @@
   const b=event.target.closest('button');if(!b||b.disabled)return;
   if(b.hasAttribute('data-tools-page')){const track=root.querySelector('.ewTools');track.scrollTo({left:Number(b.dataset.toolsPage)*track.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
   if(b.hasAttribute('data-back')){if(window.MyEventSectionNavigation)window.MyEventSectionNavigation.back();else history.back();return;}
+  if(b.hasAttribute('data-event-details')){openTool('details');return;}
   if(b.dataset.form){form(b.dataset.form);return;}
   if(b.dataset.tool){openTool(b.dataset.tool);return;}
   if(b.dataset.select){select(b.dataset.select);return;}

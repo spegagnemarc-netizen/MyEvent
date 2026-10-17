@@ -19,8 +19,8 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #ewEventPicker{display:flex;align-items:center;gap:12px;margin:3px 0 14px;color:#9eb9c9;font-size:13px}
 #ewEventPicker select{min-width:0;flex:1;background:#0b1922;border:1px solid #244353;border-radius:12px;padding:10px;color:white;font:inherit}
 #eventsWorkspace .ewHeroCard{position:relative;overflow:hidden;border:1px solid #45758b;border-radius:26px;background:linear-gradient(120deg,#173446,#064653);min-height:235px;isolation:isolate;margin-bottom:18px}
-.ewHeroPhoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
-.ewHeroShade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,4,8,.85),rgba(0,4,8,.12)),linear-gradient(0deg,rgba(0,4,8,.5),transparent);z-index:-1}
+.ewHeroPhoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+.ewHeroShade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,4,8,.85),rgba(0,4,8,.12)),linear-gradient(0deg,rgba(0,4,8,.5),transparent);z-index:1;pointer-events:none}
 .ewHeroTop{display:flex;align-items:center;justify-content:space-between;padding:17px 20px 0;gap:8px}
 #eventsWorkspace .ewHeroTop button{background:#111b2566!important;border:1px solid #ffffff33!important;border-radius:24px!important;color:#fff!important;padding:8px 12px!important;backdrop-filter:blur(8px);font-size:13px}
 .ewHeroTop>div{display:flex;gap:7px}
@@ -196,3 +196,13 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 #eventsWorkspace .ewSelectedHall p{margin:8px 0}
 #eventsWorkspace .ewSelectedHall a{display:inline-block;margin-right:12px}
 #eventsWorkspace .ewSelectedHall button{margin-top:8px;min-height:44px;max-width:100%}
+
+/* Explicit layers work consistently in Safari; text stays above the real cover. */
+.ewHeroTop,.ewHeroCopy,.ewDots{position:relative;z-index:2}
+#eventsWorkspace .ewDots{position:absolute}
+.ewHeroActions{display:flex;gap:10px;margin:0 0 14px}
+#eventsWorkspace .ewHeroActions button{flex:1;min-height:44px;border-radius:14px;border:1px solid #45758b;background:#102633;color:#fff;font-weight:700}
+#eventsWorkspace .ewHeroTop button{min-height:44px}
+
+#locNavigateBtn:not([hidden]){display:inline-flex;align-items:center;min-height:44px}
+#locNavigateBtn[hidden]{display:none!important}

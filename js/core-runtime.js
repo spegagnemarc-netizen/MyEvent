@@ -296,7 +296,8 @@ function updateLocationSearchCircle(){
 }
 async function geocodeEventLocation(){
   if(!event)return null; const text=String(event.location||'').trim(); if(!text)return null;
-  try{ const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'}}); if(!r.ok)return null; const d=await r.json(); if(d?.[0])return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name}; }catch(e){} return null;
+  const coordinates=extractWeatherCoordinates(text);if(coordinates)return {...coordinates,address:text};
+  try{ const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=fr&q='+encodeURIComponent(text),{headers:{'Accept':'application/json'},signal:AbortSignal.timeout(12000)}); if(!r.ok)return null; const d=await r.json(); if(d?.[0])return {lat:+d[0].lat,lon:+d[0].lon,address:d[0].display_name}; }catch(e){} return null;
 }
 let locationSearchRadiusKm=3;
 function distanceKm(a,b,c,d){ const R=6371,rad=Math.PI/180, x=(c-a)*rad, y=(d-b)*rad; const q=Math.sin(x/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin(y/2)**2; return 2*R*Math.asin(Math.sqrt(q)); }
@@ -382,8 +383,16 @@ async function updateMyLocation(mode){
     $('locationMsg').textContent=r.error?'Impossible de partager la position : '+r.error.message:'Position partagée avec les membres de cet événement.'; await loadSharedMemberLocations();
   },err=>{$('locationMsg').textContent=err?.code===1?'⚠️ Autorisation refusée. Vérifie Réglages → Confidentialité et sécurité → Service de localisation → Safari.':'⚠️ Impossible d’obtenir ta position. Vérifie que la localisation est activée.';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
-async function loadEventLocations(){
+async function loadEventLocations({nearby=true}={}){
+  const selected=event,owner=user?.id,token=++eventLocationRevision;
+  const current=()=>token===eventLocationRevision&&event?.id===selected?.id&&user?.id===owner;
+  const nav=$('locNavigateBtn');if(nav){nav.hidden=true;nav.removeAttribute('href');}
+  locationEventCoords=null;
+  try{
   if(!event||!$('locationMap'))return; const loader=$('locationMapLoading'); if(loader)loader.style.display='grid'; initLocationMap(); const geo=await geocodeEventLocation();
+  if(!current())return;
+  if(nav&&selected.location?.trim()){nav.href='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(geo?geo.lat+','+geo.lon:selected.location);nav.hidden=false;nav.style.minHeight='44px';}
+  // Origin is requested by the GPS app; no position is shared with other members.
   if(geo){
     locationEventCoords=geo;
     initLocationMap(geo.lat,geo.lon,14);
@@ -392,15 +401,18 @@ async function loadEventLocations(){
     $('locationEventAddress').textContent=geo.address||event.location||'Lieu';
     const saved=getStoredActivitySearchCenter(event.id);
     const center=saved&&Number.isFinite(+saved.lat)&&Number.isFinite(+saved.lon)?saved:geo;
-    renderLocationSearchCenter(center.lat,center.lon,{fit:false,load:true});
+    renderLocationSearchCenter(center.lat,center.lon,{fit:false,load:nearby});
   }
   else{
     $('locationEventAddress').textContent=event.location||'Lieu non renseigné';
     locationPlacesData=[];
     $('locationPlaces').innerHTML='<p class="muted">Ajoute une adresse ou un lieu à l’événement pour afficher les activités autour.</p>';
   }
-  await loadSharedMemberLocations();await window.MyEventReservationLinkUI?.map();if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);
+  if(nearby){await loadSharedMemberLocations();if(current())await window.MyEventReservationLinkUI?.map();}
+  }catch(error){if(current()&&$('locationMsg'))$('locationMsg').textContent='La carte est indisponible. Utilise Navigation pour ouvrir ton GPS.';}
+  finally{if(current()){const loader=$('locationMapLoading');if(loader)loader.style.display='none';setTimeout(()=>locationMap?.invalidateSize(),100);}}
 }
+let eventLocationRevision=0;
 document.addEventListener('change',e=>{if(e.target?.id==='locationShareMode')updateMyLocation(e.target.value);});
 document.addEventListener('input',e=>{if(e.target?.id==='locationPlaceSearch'){locationPlaceSearch=e.target.value||'';renderNearbyPlaces();}});
 document.addEventListener('click',e=>{
@@ -2831,7 +2843,7 @@ window.myeventCameraContext=function(){return {sb,user};};
 window.myeventEventsBridge={
   context:()=>({sb,user,event,role:activeEventRole,events:eventsWorkspaceRows}),
   load:loadEvents,select:selectEvent,tab:showEventTab,form:openEventTool,
-  cover:coverDisplayUrl,
+  cover:coverDisplayUrl,locations:()=>loadEventLocations({nearby:false}),
   closeDiscussion:()=>{document.body.classList.remove('discussionFullScreen');syncDiscussionFullscreenPortal(false);},
 };
 window.myeventGameContext=function(){return {sb,user,event};};

@@ -74,3 +74,23 @@ test('Empty state disables event actions and creation remains available',async()
 test('Visible hall entry opens the original search panel and preserves twelve tools',async()=>{
  const {dom,w}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,b=d.querySelector('.ewToolsPage .ew-hall');assert(b);assert(b.textContent.includes('Salles'));assert.equal(b.disabled,false);b.click();await flush();assert.equal(d.getElementById('hallPanel').parentElement.id,'ewToolBody');assert(d.getElementById('hallSearchBtn'));assert.equal(d.querySelectorAll('.ewTool').length,12);dom.window.close();
 });
+
+test('Cover resolves once per user and late cover cannot replace a different event',async()=>{
+ const {w,dom,ctx}=fixture();let resolve,calls=0;
+ ctx.event.cover_url='event-1/cover.jpg';
+ w.myeventEventsBridge.cover=()=>{calls++;return new Promise(r=>resolve=r);};
+ await w.myeventEventsWorkspace.open();await flush();
+ w.myeventEventsWorkspace.render();await flush();assert.equal(calls,1);
+ const next={id:'event-2',name:'Autre événement'};ctx.events.push(next);ctx.event=next;
+ w.myeventEventsWorkspace.render();resolve('https://example.test/first.jpg');await flush();
+ assert.equal(w.document.querySelector('.ewHeroPhoto'),null);
+ assert.equal(w.document.querySelector('#ewHero h2').textContent,'Autre événement');dom.window.close();
+});
+test('See and Locate use the selected accessible event and existing location loader',async()=>{
+ const {w,dom,ctx}=fixture();let loads=0;ctx.event.description='Description enregistrée';
+ w.myeventEventsBridge.locations=()=>loads++;
+ await w.myeventEventsWorkspace.open();w.document.querySelector('[data-event-details]').click();
+ assert.match(w.document.getElementById('ewToolBody').textContent,/Description enregistrée/);
+ await w.myeventEventsWorkspace.openTool('locations');assert.equal(loads,1);
+ assert.equal(w.document.getElementById('locationsPanel').parentElement.id,'ewToolBody');dom.window.close();
+});
