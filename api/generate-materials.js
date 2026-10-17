@@ -1,10 +1,16 @@
-import {handleTasksAi} from '../server/tasks-ai-handler.mjs';
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée.' });
   }
 
-  if (req.body?.mode === 'tasks') return handleTasksAi(req,res);
+  if (req.body?.mode === 'tasks') {
+    try {
+      const {handleTasksAi}=await import('../server/tasks-ai-handler.mjs');
+      return await handleTasksAi(req,res);
+    } catch {
+      return res.status(503).json({error:'Le service de proposition de tâches ne peut pas démarrer. Réessaie plus tard.'});
+    }
+  }
 
   if (!process.env.OPENAI_API_KEY) {
     return res.status(503).json({
