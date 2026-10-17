@@ -128,6 +128,7 @@
   if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div>';return;}
   const date=Date.parse(e.event_date),upcoming=!Number.isFinite(date)||date>=Date.now(),canManage=['owner','coorganizer'].includes(context().role);
   target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-tool="notifications" class="ewHeroNotifications" aria-label="Notifications de cet événement" title="Notifications">🔔</button><button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
+  const hall=document.createElement('section');hall.id='ewSelectedHall';hall.className='ewSelectedHall';target.appendChild(hall);window.myeventHallSelection?.ensure();
   members().slice(0,4).forEach(row=>{const avatar=row.querySelector('.avatar');if(avatar)target.querySelector('.ewHeroAvatars').appendChild(avatar.cloneNode(true));});
   try{
    let url=e.cover_url?await bridge.cover(e.cover_url):'';
@@ -174,6 +175,7 @@
   body.appendChild(panel);panel.hidden=false;panel.classList.remove('hidden');panel.classList.add('active');panel.open=true;
   // bridge.tab(key,true) restores panel state and intentionally skips its loaders.
   if(key==='tasks'&&typeof loadEventTasks==='function')loadEventTasks();
+  if(key==='hall'&&typeof loadHall==='function')loadHall();
  }
  function showForm(id){
   if(!root.hidden){showScreen(id);const panel=panels.get(id);if(panel){body.appendChild(panel);panel.open=true;panel.hidden=false;panel.classList.remove('hidden');}}
