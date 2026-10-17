@@ -635,3 +635,9 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
   flex:0 0 auto!important;
   margin:0!important;
 }
+
+/* DJ controls remain usable at iPhone widths. */
+#musicScreen .musicDJSettingsGrid label{display:flex;flex-direction:column;min-width:0;gap:6px}
+#musicScreen .musicDJSettingsGrid input[type=range]{width:100%;min-width:0;min-height:44px}
+#musicScreen .musicDJSettingsGrid button,#musicScreen .musicPersonalActions button{min-height:44px;white-space:normal;overflow-wrap:anywhere}
+#musicScreen .musicDJSettingsGrid p{grid-column:1/-1;font-size:13px;color:#adc5d6}
