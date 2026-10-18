@@ -8,7 +8,7 @@ test('analysis API rejects production, wrong TEST, invalid payloads and private 
  const request={method:'POST',query:{mode:'analyse-venue'},headers:{'content-type':'application/json'},body:{url:'https://127.0.0.1'}};
  try{
   for(const [env,url] of [['production','https://ahyyknfjsielnqyoxqgh.supabase.co'],['preview','https://wrong.supabase.co']]){
-   process.env.VERCEL_ENV=env;process.env.SUPABASE_URL=url;const res=response();await handler(request,res);assert.equal(res.statusCode,404);
+   process.env.VERCEL_ENV=env;process.env.SUPABASE_URL=url;const res=response();await handler(request,res);assert.equal(res.statusCode,404);const details=response();await handler({method:'GET',query:{mode:'activity-venue-detail',id:'osm-way-123'}},details);assert.equal(details.statusCode,404);
   }
   process.env.VERCEL_ENV='preview';process.env.SUPABASE_URL='https://ahyyknfjsielnqyoxqgh.supabase.co';
   for(const [extra,expected] of [[{headers:{}},415],[{body:'{'},400],[{body:{url:'x'.repeat(2001)}},400],[{body:null},400],[{},422]]){
