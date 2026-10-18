@@ -4,6 +4,7 @@
   let rows=[],lastUser='';
   const date=value=>value?new Date(value).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'Date à définir';
   async function refresh(){
+    window.myeventRefreshActivitiesFeed?.();
     const {sb,user}=window.myeventCameraContext?.()||{};
     if(!sb||!user)return;
     const result=await sb.rpc('event_social_feed',{p_limit:30});
