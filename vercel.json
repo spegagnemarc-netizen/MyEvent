@@ -1,15 +1,24 @@
 {
   "functions": {
-    "api/create-payment-session.js": {"maxDuration":30},
+    "api/create-payment-session.js": {
+      "maxDuration": 30
+    },
     "api/[search].js": {
       "maxDuration": 180
     },
     "api/camera-ai.js": {
       "maxDuration": 180
+    },
+    "api/search-places.js": {
+      "maxDuration": 60,
+      "includeFiles": "lib/venue-pdf-worker.js"
     }
   },
   "routes": [
-    {"src":"^/server/ads-handler\\.js$","status":404},
+    {
+      "src": "^/server/ads-handler\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/search-(accommodation|transport)\\.js$",
       "status": 404

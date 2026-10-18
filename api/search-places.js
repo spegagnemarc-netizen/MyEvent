@@ -610,6 +610,15 @@ async function searchViator(req,lat,lon) {
 module.exports =
   async function handler(req, res) {
 
+    if (req.method === 'POST' && req.query.mode === 'analyse-venue') {
+      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Analyse indisponible dans cet environnement.'});
+      if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});
+      let data=req.body;try{if(typeof data==='string'){if(data.length>3000)throw Error();data=JSON.parse(data);}}catch{return send(res,400,{error:'Requête invalide.'});}
+      if(!data||typeof data.url!=='string'||data.url.length>2000)return send(res,400,{error:'Lien invalide.'});
+      const {analyseVenue}=require('../lib/venue-analysis');
+      try{const result=await analyseVenue(data.url);res.setHeader('Cache-Control','no-store');return res.status(200).json(result);}catch(error){const {VenueError}=require('../lib/venue-safe-fetch');return send(res,error instanceof VenueError?error.status:503,{error:error instanceof VenueError?error.message:'Analyse indisponible. La saisie manuelle reste possible.'});}
+    }
+
     if (req.method !== 'GET') {
 
       res.setHeader(
