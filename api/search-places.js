@@ -633,6 +633,14 @@ module.exports =
         'nearby'
       ).toLowerCase();
 
+    if (mode === 'activity-venue') {
+      // New activity workspace remains exclusive to the authorised TEST environment.
+      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
+      const {searchActivityVenues}=require('../lib/activity-venue-search');
+      try {const result=await searchActivityVenues({q:req.query.q,city:req.query.city});res.setHeader('Cache-Control','no-store');return res.status(200).json(result);}
+      catch(error){return send(res,error.status||503,{error:error.message});}
+    }
+
     if (mode === 'outings') {
       const lat=number(req.query.lat),lon=number(req.query.lon),radius=number(req.query.radius)??5;
       if(lat===null||lon===null||Math.abs(lat)>90||Math.abs(lon)>180||![5,20,50,100].includes(radius))return send(res,400,{error:'Coordonnées ou rayon invalide.'});
