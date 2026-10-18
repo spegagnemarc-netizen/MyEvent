@@ -270,7 +270,7 @@ const targetIds={users:'myeventAdminUsers',events:'myeventAdminEvents',listings:
 function renderCentralReports(rows,target){
  for(const report of rows){
   const card=item('article',null,'adminCard');
-  const type=report.target_kind==='event'?'Événement':'Annonce';
+  const type=({event:'Événement',listing:'Annonce',activity:'Activité',user:'Utilisateur'})[report.target_kind]||'Signalement';
   card.append(item('h4',type+' · '+report.reason),item('small',report.status+' · '+stamp(report.created_at)+' · ID '+report.target_id));
   const actions=item('div',null,'adminActions');
   for(const [label,action] of report.status==='open'?[['Résoudre','resolve'],['Classer','dismiss']]:[['Rouvrir','reopen']])actions.append(actionButton(label,()=>perform('report',report.id,action)));

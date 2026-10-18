@@ -1,0 +1,43 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {PGlite} from '@electric-sql/pglite';
+import {readFile} from 'node:fs/promises';
+const A='10000000-0000-0000-0000-000000000001',B='10000000-0000-0000-0000-000000000002',D='10000000-0000-0000-0000-000000000003';
+test('activity foundation: transactional seats, privacy, owner rights, RLS deny and cancellation',async()=>{
+ const db=new PGlite();
+ try{
+ await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;
+ create table public.profiles(id uuid primary key,display_name text);
+ create function public.myevent_account_active() returns boolean language sql as $$select true$$;
+ create function public.are_friends(uuid,uuid) returns boolean language sql as $$select false$$;
+ create table public.admin_reports(id uuid primary key default gen_random_uuid(),reporter_id uuid,target_kind text constraint admin_reports_target_kind_check check(target_kind in ('event','listing')),target_id uuid,reason text,status text default 'open',created_at timestamptz default now());
+ create unique index reports_one on public.admin_reports(reporter_id,target_kind,target_id) where status='open';
+ insert into auth.users values('${A}'),('${B}'),('${D}');insert into public.profiles values('${A}','Test A'),('${B}','Test B'),('${D}','Test C');`);
+ await db.exec(await readFile(new URL('../docs/activities/proposal.sql',import.meta.url),'utf8'));
+ const as=async id=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');};
+ const rpc=async(name,args=[])=>{const qs=args.map((_,i)=>'$'+(i+1)).join(',');return (await db.query(`select public.${name}(${qs}) as result`,args)).rows[0].result;};
+ await as(A);assert.equal((await rpc('activities_capabilities')).enabled,false);
+ const payload={title:'Randonnée fictive',description:'Une sortie de TEST',category:'randonnee',starts_at:'2030-10-20T10:00:00Z',city:'Gap',venue:'Parc public',address:'adresse privée fictive',latitude:44.558,longitude:6.075,capacity:2,visibility:'public',join_mode:'direct',cost_mode:'free',conditions:''};
+ await assert.rejects(rpc('activities_save',[null,payload]),/non autorisé/);
+ await db.exec(`reset role;update activities_private.settings set enabled=true;insert into activities_private.adult_access(user_id,approved_by) values('${A}','${A}'),('${B}','${A}'),('${D}','${A}');`);
+ await as(A);const id=await rpc('activities_save',[null,payload]);
+ await as(B);let a=await rpc('activities_detail',[id]);assert.equal(a.address,null);assert.deepEqual(a.members,[]);assert.equal(a.position.lat,44.56);assert.equal(a.remaining,1);
+ await assert.rejects(db.query('select * from activities_private.activities'),/permission denied/);
+ await assert.rejects(rpc('activities_save',[id,payload]),/non autorisée/);
+ await rpc('activities_participate',[id,'join',null]);await rpc('activities_participate',[id,'join',null]);a=await rpc('activities_detail',[id]);assert.equal(a.participants_count,2);assert.equal(a.address,payload.address);
+ await as(D);await assert.rejects(rpc('activities_participate',[id,'join',null]),/complète/);
+ await as(B);await rpc('activities_participate',[id,'leave',null]);assert.equal((await rpc('activities_detail',[id])).address,null);
+ await as(A);await rpc('activities_save',[id,{...payload,join_mode:'approval'}]);
+ await as(D);await rpc('activities_participate',[id,'join',null]);assert.equal((await rpc('activities_detail',[id])).membership,'pending');
+ await assert.rejects(rpc('activities_participate',[id,'accept',D]),/non modifiable/);
+ await as(A);await rpc('activities_participate',[id,'decline',D]);
+ await as(D);await assert.rejects(rpc('activities_participate',[id,'join',null]),/refusée/);
+ await as(B);await rpc('activities_participate',[id,'join',null]);
+ await as(A);await rpc('activities_participate',[id,'accept',B]);
+ await as(B);assert.equal((await rpc('activities_detail',[id])).membership,'accepted');await rpc('activities_safety',[id,'report',null,'Signalement fictif de test']);
+ await as(A);await rpc('activities_participate',[id,'cancel',null]);
+ await as(B);a=await rpc('activities_detail',[id]);assert.equal(a.status,'cancelled');assert.equal(a.address,'');await assert.rejects(rpc('activities_participate',[id,'join',null]),/fermées/);
+ await as(A);await rpc('activities_participate',[id,'delete',null]);assert.equal(await rpc('activities_detail',[id]),null);
+ await db.exec('reset role;set role anon');await assert.rejects(rpc('activities_list'),/permission denied/);
+ }finally{await db.close();}
+});
