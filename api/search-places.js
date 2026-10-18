@@ -642,6 +642,12 @@ module.exports =
         'nearby'
       ).toLowerCase();
 
+    if (mode === 'activity-venue-detail') {
+      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Fiche indisponible dans cet environnement.'});
+      const {venueDetails}=require('../lib/activity-venue-details');
+      try{const result=await venueDetails(req.query.id);res.setHeader('Cache-Control','no-store');return res.status(200).json(result);}catch(error){return send(res,error.status||503,{error:error.message});}
+    }
+
     if (mode === 'activity-venue') {
       // New activity workspace remains exclusive to the authorised TEST environment.
       if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
