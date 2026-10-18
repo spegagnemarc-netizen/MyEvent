@@ -2,8 +2,8 @@
 
 ## Résultat réel
 
-Phase A réalisée, socle de Phase B développé. La V1 complète n’est pas opérationnelle.
-Aucune écriture distante SQL, aucune migration, aucune donnée fictive créée sur Supabase pendant cette mission. Aucun déploiement de production. Travail limité à `spegagnemarc-netizen/MyEvent`, branche `refactor-final`, départ `13d01fda3a74f1c6322216c909a30f51f2738a12`.
+Phase A réalisée, socle de Phase B développé et socle SQL installé sur TEST avec autorisation explicite. La V1 complète n’est pas opérationnelle.
+Migration unique `20261018191842` / `activities_rencontres_v1_foundation`, activation fermée. Voir [le bilan d’installation](INSTALLATION-TEST.md). Aucune donnée fictive créée à distance pendant cette installation. Aucun déploiement de production. Travail limité à `spegagnemarc-netizen/MyEvent`, branche `refactor-final`, départ `13d01fda3a74f1c6322216c909a30f51f2738a12`.
 
 L’entrée accueil apparaît uniquement si la configuration runtime valide `isTest` et la référence `ahyyknfjsielnqyoxqgh`. Pas de stockage local faisant croire à une inscription réussie. Sans base installée et autorisation adulte serveur, l’interface montre un état d’attente et interdit la publication.
 
@@ -17,7 +17,7 @@ L’entrée accueil apparaît uniquement si la configuration runtime valide `isT
 | Amis | `friendships` et RPC `friend_action`, `are_friends` disponibles sur TEST | Visibilité amis calculée côté SQL ; demande explicite avec acceptation réciproque. Aucun ajout automatique. |
 | Carte / GPS | Leaflet et tuiles OSM dans `map-runtime.js` | Même bibliothèque et fournisseur, calque dédié évitant d’exposer la position des amis. GPS seulement sur action explicite, position de recherche gardée en mémoire. Points d’activité arrondis à 2 décimales. |
 | Fil | Compositeur `socialOpenComposer`, `socialPostText` | Préremplir une publication avec lien de fiche ; l’utilisateur déclenche la publication existante. Refuser le partage public des activités amis. |
-| Modération | `admin_reports`, outils Administration V2/V3 et contrôle `myevent_account_active` disponibles | Même file de signalements ; libellés activité/utilisateur ajoutés au rendu central. Extension SQL proposée, pas appliquée. Masquage admin d’activité à ajouter avant activation. |
+| Modération | `admin_reports`, outils Administration V2/V3 et contrôle `myevent_account_active` disponibles | Même file de signalements ; libellés activité/utilisateur ajoutés au rendu central. Extension SQL autorisée et appliquée sur TEST. Masquage admin d’activité à ajouter avant activation. |
 | Notifications / DM | Code `social-inbox.js` et migration `202609280001_social_inbox.sql` présents, mais `social_inbox_snapshot`, `social_notifications` et `dm_conversations` absents de TEST lors de l’audit | Écart dépôt/base à résoudre explicitement. Les notices du projet SQL sont une boîte de sortie privée, pas une seconde messagerie ; aucun affichage ni double notification généré. Adaptateur vers la boîte sociale encore nécessaire. |
 | Âge | `profiles` ne contient aucun contrôle d’âge serveur | Aucun parcours mineur activé. Autorisation adulte administrative fermée par défaut. Ce socle n’est pas une procédure de vérification d’âge validée, ni un badge « vérifié ». |
 | Météo / sondages / IA | Modules existants liés aux événements | Pas d’appel automatique ni de copie de données ; intégration à réaliser après le contexte activité partagé. |
@@ -34,9 +34,9 @@ Audit distant en lecture seule : inventaire des tables et indicateurs RLS, colon
 - Fiche et raccordement aux RPC proposées : inscription, demande, retrait, acceptation/refus organisateur, modification, annulation et retrait logique ; aucune réussite simulée.
 - Signalement d’activité, blocage de l’organisateur, demandes d’amis et préparation d’un partage sur le fil. Ces actions ne sont pas annoncées comme validées sur TEST.
 
-## SQL proposé — ne pas appliquer automatiquement
+## SQL autorisé — installé sur TEST, réexécution contrôlée
 
-Fichier : `docs/activities/proposal.sql`. Il est volontairement **hors** du dossier des migrations exécutables. Une fois autorisé, créer la migration avec la CLI Supabase, comparer de nouveau les dépendances, appliquer exclusivement au projet TEST indiqué et exécuter les contrôles distants ciblés.
+Fichier : `docs/activities/proposal.sql`. Il est volontairement **hors** du dossier des migrations exécutables. Le script corrigé et son catalogue ont été vérifiés localement puis installés par le connecteur Supabase, dans une migration unique, après autorisation. Toute divergence lors d’une réexécution provoque un arrêt sans réparation automatique.
 
 Effet exact du socle :
 
@@ -60,7 +60,7 @@ Limites SQL connues avant activation : liste limitée aux 300 premières activit
 
 Commande : `node --test tests/activities-core.test.mjs tests/activities-db.test.mjs tests/activities-ui.test.mjs`.
 
-Cinq tests passent :
+Les cinq tests initiaux passent, ainsi que trois tests de garde/atomicité décrits dans le bilan d’installation :
 
 1. Filtres ville/catégorie/week-end dimanche, gratuité, disponibilité, distance, activités personnelles annulées.
 2. Validation titre/description/date/capacité/GPS/frais.
@@ -72,7 +72,7 @@ Cinq tests passent :
 
 | Parcours demandé | Validation distante TEST |
 | --- | --- |
-| Création, persistance après actualisation | Non : autorisation SQL manquante |
+| Création, persistance après actualisation | Non : activation volontairement fermée |
 | Découverte, recherche | Logique locale validée ; stockage non validé |
 | Inscription directe, demandes, capacité | PostgreSQL local validé ; pas de test concurrent distant |
 | Discussion/photos des participants | Non intégrées, bouton fermé |
@@ -81,6 +81,6 @@ Cinq tests passent :
 
 ## Suite conditionnée à l’autorisation
 
-L’autorisation nécessaire porte uniquement sur l’installation de ce socle SQL sur `ahyyknfjsielnqyoxqgh`, avec activation toujours fermée. Elle n’autorise ni la production ni l’ouverture des rencontres. Après autorisation : installation TEST, tests distants avec comptes fictifs autorisés, puis finalisation et revue des adaptateurs discussion/Storage/notifications et procédure adulte avant activation et essai iPhone complet.
+Le socle SQL est installé sur `ahyyknfjsielnqyoxqgh`, avec activation toujours fermée. L’autorisation ne couvre ni la production ni l’ouverture des rencontres. La finalisation et la revue des adaptateurs discussion/Storage/notifications et de la procédure adulte restent à réaliser avant activation et essai iPhone complet.
 
 Documentation consultée : guide officiel Supabase RLS (https://supabase.com/docs/guides/database/postgres/row-level-security). Le changelog markdown n’a pas pu être récupéré dans cet environnement. Aucun nouveau SDK ou service externe ajouté.
