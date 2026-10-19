@@ -2,6 +2,10 @@
   "functions": {
     "api/camera-ai.js": {
       "maxDuration": 180
+    },
+    "api/integration-venues.js": {
+      "maxDuration": 60,
+      "includeFiles": "lib/venue-pdf-worker.js"
     }
   },
   "routes": [
