@@ -1,7 +1,9 @@
-// Independent Preview-only read endpoint. Existing Production search routes are untouched.
+// Environment-isolated venue read endpoint. Existing Production search routes are untouched.
 function send(res,status,body){res.setHeader('Cache-Control','no-store, max-age=0');res.setHeader('X-Content-Type-Options','nosniff');return res.status(status).json(body);}
 module.exports=async function handler(req,res){
- if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Atelier indisponible dans cet environnement.'});
+ const environment=process.env.VERCEL_ENV,url=String(process.env.SUPABASE_URL||'').trim().replace(/\/$/,'');
+ const allowed=(environment==='preview'&&url==='https://ahyyknfjsielnqyoxqgh.supabase.co')||(environment==='production'&&url==='https://nxxvadbliinhvkirqkkl.supabase.co');
+ if(!allowed)return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
  const mode=String(req.query?.mode||'');
  try{
   if(req.method==='POST'&&mode==='analyse-venue'){
