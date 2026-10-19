@@ -14,5 +14,6 @@
 .activities button.primary,.activities button[aria-pressed=true]{background:var(--myevent-accent-fill,#278cff);color:#fff}
 .activities .act-note,.activities .act-badge,.activities .act-place-art{background:#102131;color:#b7c9d7;border-color:#28445b}
 .activities .act-place-top,.activities .act-place-footer{background:#102131;color:#fff;border-color:#28445b}
+.activities .act-tabs button[aria-pressed=true],.activities .act-family-tabs button[aria-pressed=true],.activities .act-type-card[aria-pressed=true]{background:var(--myevent-accent-fill,#ff6a34);border-color:var(--myevent-accent,#ff6a34);color:#fff}
 .activities #act-close{white-space:normal;max-width:150px}
 @media(max-width:600px){.activities .act-wrap{min-height:calc(100dvh - 90px)}.activities #act-close{font-size:13px;max-width:110px}}
