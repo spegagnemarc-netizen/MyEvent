@@ -9,11 +9,11 @@ Références vérifiées avant intervention : main `be4622bf10d0d7726f3056901f84
 
 Aucune fusion de refactor-final. Aucun changement de main, refactor-final, MyEvent-API, Supabase ou du domaine. La base comprend les quatre publications après main : 5b0a42b, 0545b44, ac38eb4 et 14b89e0.
 
-348 fichiers Production conservés à l'identique, empreintes dans production-preservation.json et contrôle automatisé. Cela inclut les quatre jeux supplémentaires, le moteur de chargement/les protections contre les réponses périmées, les médias/suppressions du fil, les handlers de suppression, les styles du site, les migrations, le lecteur Musique, la Marketplace et les modules caméra.
+347 fichiers Production conservés à l'identique, empreintes dans production-preservation.json et contrôle automatisé. Cela inclut les quatre jeux supplémentaires, le moteur de chargement/les protections contre les réponses périmées, les médias/suppressions du fil, les handlers de suppression, les styles du site, les migrations, le lecteur Musique, la Marketplace et les modules caméra.
 
-Seuls quatre fichiers existants évoluent : index.html (ajout d'un bloc autonome sans retirer de balisage/script), package.json (quatre dépendances d'analyse ajoutées, scripts existants conservés), pnpm-lock.yaml (résolutions additives ; Stripe maintenu à 22.6.2), vercel.json (une configuration de fonction ajoutée, routes existantes identiques).
+Seuls cinq fichiers existants évoluent : index.html (ajout d'un bloc autonome sans retirer de balisage/script), package.json (quatre dépendances d'analyse ajoutées, scripts existants conservés), pnpm-lock.yaml (résolutions additives ; Stripe maintenu à 22.6.2), vercel.json (configuration de la fonction de recherche existante et nouvelle route TEST, routes existantes conservées). api/search-places.js reçoit uniquement un aiguillage explicite vers le module TEST ; son corps de recherche original est conservé et vérifié.
 
-Les autres fichiers sont nouveaux. Les changements source sont limités aux modules Activités, bibliothèques de lieux et contrôles associés. La recherche d'origine `/api/search-places` n'est pas remplacée : les nouveaux composants appellent `/api/integration-venues`.
+Les autres fichiers sont nouveaux. Les changements source sont limités aux modules Activités, bibliothèques de lieux et contrôles associés. La recherche d'origine `/api/search-places` conserve son corps intégral : les nouveaux composants appellent `/api/integration-venues`.
 
 ## Interface intégrée
 
@@ -51,7 +51,7 @@ Sept patchs équivalents reconnus par Git, à ne pas réappliquer : f7842ba (pho
 
 ## Vérifications ciblées
 
-32 tests distincts : conservation des 348 fichiers et du HTML/routes existants, catalogue, contrôles uniques, navigation cadre/page/retour, écriture interdite même avec capacité serveur active, filtrage du fil/adultes/dates/session, géographie française, repli fournisseur, conservation des faits partiels, API inaccessible en Production et mauvais TEST, sécurité des URL/DNS/redirections/robots, analyse HTML et PDF réel isolé. Aucun rejeu des parties Jeux déjà validées ; conservation vérifiée par empreinte.
+32 tests distincts : conservation des 347 fichiers et du HTML/routes existants, catalogue, contrôles uniques, navigation cadre/page/retour, écriture interdite même avec capacité serveur active, filtrage du fil/adultes/dates/session, géographie française, repli fournisseur, conservation des faits partiels, API inaccessible en Production et mauvais TEST, sécurité des URL/DNS/redirections/robots, analyse HTML et PDF réel isolé. Aucun rejeu des parties Jeux déjà validées ; conservation vérifiée par empreinte.
 
 La validation visuelle, le SHA final et l'URL de déploiement sont consignés dans le bilan livré dans le chat. Une Preview READY ne vaut pas certification des parcours authentifiés ni autorisation de publication Production.
 
@@ -62,3 +62,5 @@ La validation visuelle, le SHA final et l'URL de déploiement sont consignés da
 3. Préparer séparément PDF location puis Musique locale/DJ, sans changement global des runtimes.
 4. Décider explicitement du SQL TEST nécessaire pour persistance Activités et des validations adultes/visibilité.
 5. Seulement après validation et autorisation de publication : définir un lot public et une stratégie de retour arrière. Aucune fusion/promotion Production n'est exécutée dans cette mission.
+
+Contrainte de déploiement constatée : plafond Vercel de 12 fonctions. Le premier build a échoué avant activation de la Preview. Correction : module serveur séparé derrière un aiguillage dans la fonction de recherche existante et une route dédiée ; aucune fonction supplémentaire, aucune route de suppression supprimée. Aucune modification de forfait ni de paramètre distant.

@@ -3,12 +3,16 @@
     "api/camera-ai.js": {
       "maxDuration": 180
     },
-    "api/integration-venues.js": {
+    "api/search-places.js": {
       "maxDuration": 60,
       "includeFiles": "lib/venue-pdf-worker.js"
     }
   },
   "routes": [
+    {
+      "src": "^/api/integration-venues$",
+      "dest": "/api/search-places?integration_venues=1"
+    },
     {
       "src": "^/server/search-(accommodation|transport)\\.js$",
       "status": 404

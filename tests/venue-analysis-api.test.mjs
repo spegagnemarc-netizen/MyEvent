@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url),handler=require('../api/integration-venues.js');
+const require=createRequire(import.meta.url),handler=require('../server/integration-venues.js');
 function response(){return {headers:{},status(n){this.statusCode=n;return this;},setHeader(k,v){this.headers[k]=v;},json(body){this.body=body;return this;}};}
 test('analysis API rejects production, wrong TEST, invalid payloads and private URLs without network access',async()=>{
  const previous={VERCEL_ENV:process.env.VERCEL_ENV,SUPABASE_URL:process.env.SUPABASE_URL};

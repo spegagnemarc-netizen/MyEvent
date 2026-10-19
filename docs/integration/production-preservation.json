@@ -5,7 +5,8 @@
     "index.html",
     "package.json",
     "pnpm-lock.yaml",
-    "vercel.json"
+    "vercel.json",
+    "api/search-places.js"
   ],
   "files": [
     {
@@ -55,10 +56,6 @@
     {
       "file": "api/search-music.js",
       "sha256": "1bb0e035a764e56c7cbc70f091d4f3a449ce17c83987373dc60a53ef45a94411"
-    },
-    {
-      "file": "api/search-places.js",
-      "sha256": "c349c987576aa9dbfefbeac943f57ba951c405c3faa77a82b0714f27e1d70ba4"
     },
     {
       "file": "api/stripe-webhook.js",

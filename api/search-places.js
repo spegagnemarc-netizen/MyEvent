@@ -646,6 +646,8 @@ async function searchViator(req,lat,lon) {
 
 module.exports =
   async function handler(req, res) {
+    if(req.query?.integration_venues==='1')return require('../server/integration-venues')(req,res);
+
 
     if (req.method !== 'GET') {
 
