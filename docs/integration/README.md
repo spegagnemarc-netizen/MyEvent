@@ -64,3 +64,7 @@ La validation visuelle, le SHA final et l'URL de déploiement sont consignés da
 5. Seulement après validation et autorisation de publication : définir un lot public et une stratégie de retour arrière. Aucune fusion/promotion Production n'est exécutée dans cette mission.
 
 Contrainte de déploiement constatée : plafond Vercel de 12 fonctions. Le premier build a échoué avant activation de la Preview. Correction : module serveur séparé derrière un aiguillage dans la fonction de recherche existante et une route dédiée ; aucune fonction supplémentaire, aucune route de suppression supprimée. Aucune modification de forfait ni de paramètre distant.
+
+La construction suivante a réussi (298f308), mais le runtime a correctement refusé de démarrer sans configuration Supabase. Ajout de trois variables publiques **sur la seule branche integration/production-preserved-20261019 et la seule cible Preview** : SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, MYEVENT_TEST_SUPABASE_REF. Elles pointent vers le TEST existant ahyyknfjsielnqyoxqgh ; aucune valeur Production ou secret fournisseur n'a été copié, aucun paramètre de refactor-final modifié. Le runtime Production reste inchangé. La relance se fait par le déclenchement Git habituel de cette branche.
+
+Contrôle de conservation après aiguillage : tests/integration-baseline.test.mjs, deux contrôles réussis (347 fichiers inchangés, corps original de recherche conservé, HTML et routes d'origine conservés, Stripe 22.6.2). Les tests affectés de l'API ont été exécutés après le déplacement du module serveur et passent.
