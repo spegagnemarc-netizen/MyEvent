@@ -108,8 +108,8 @@
 @media(max-width:900px){.activities .act-venue-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){
  .activities .act-sheet{padding:16px}.activities .act-venue-finder{padding:16px;border-radius:20px}
- .activities .act-venue-query{padding:12px;gap:12px;grid-template-columns:1fr}
- .activities .act-venue-query>label:nth-child(3),.activities .act-venue-query>button{grid-column:auto}
+ .activities .act-venue-query{padding:12px;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .activities .act-venue-query>label:nth-child(3),.activities .act-venue-query>button{grid-column:1/-1}
  .activities .act-venue-results{grid-template-columns:1fr;gap:14px}
  .activities .act-place-result .act-place-art{min-height:155px}
  .activities .act-place-dialog{width:100%;max-width:100%;border-radius:24px 24px 0 0;border-bottom:0}
