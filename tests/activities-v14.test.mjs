@@ -6,3 +6,9 @@ test('city and illustrated category search use the existing endpoint and retain 
  row.querySelector('input[autocomplete="address-level2"]').value='Marseille';const categories=row.querySelector('select');assert.equal(categories.options.length,43);categories.value='bowling';categories.dispatchEvent(new d.window.Event('change'));await new Promise(r=>setTimeout(r,0));const u=new URL(called,'https://preview.invalid');assert.equal(u.pathname,'/api/search-places');assert.equal(u.searchParams.get('mode'),'activity-venue');assert.equal(u.searchParams.get('q'),'Bowling');assert.equal(u.searchParams.get('city'),'Marseille');assert.equal(form.elements.city.value,'');for(const n of ['venue','address','city','latitude','longitude'])assert.equal(form.querySelectorAll('[name='+n+']').length,1);widget.destroy();
  }finally{d.window.close();}
 });
+
+test('partial detail data cannot erase a known city and full source address before organising',async()=>{
+ const d=new JSDOM('<main class="activities" id="host"></main>',{url:'https://preview.invalid',runScripts:'outside-only'});
+ try{for(const n of ['activities-core','activity-venue-sheet'])d.window.eval(await readFile(new URL('../js/'+n+'.js',import.meta.url),'utf8'));let selected;d.window.fetch=async()=>({ok:true,json:async()=>({venue:{id:'osm-way-42',name:'Bowlingstar',address:'13012',city:null,lat:43.3,lon:5.42,website:null}})});const w=d.window.OrevamiVenueSheet.create({host:d.window.document.querySelector('#host'),onAdd:v=>selected=v});await w.open({id:'osm-way-42',name:'Bowlingstar',address:'Impasse Joseph Clérissy 13012 Marseille',city:'Marseille',lat:43.3,lon:5.42,website:'https://example.org/'});w.element.querySelector('.act-place-footer button').click();assert.equal(selected.city,'Marseille');assert.equal(selected.address,'Impasse Joseph Clérissy 13012 Marseille');assert.equal(selected.website,'https://example.org/');w.destroy();
+ }finally{d.window.close();}
+});
