@@ -17,3 +17,8 @@
 .activities .act-tabs button[aria-pressed=true],.activities .act-family-tabs button[aria-pressed=true],.activities .act-type-card[aria-pressed=true]{background:var(--myevent-accent-fill,#ff6a34);border-color:var(--myevent-accent,#ff6a34);color:#fff}
 .activities #act-close{white-space:normal;max-width:150px}
 @media(max-width:600px){.activities .act-wrap{min-height:calc(100dvh - 90px)}.activities #act-close{font-size:13px;max-width:110px}}
+
+.activities .act-detail-map{height:280px;min-width:0;margin:16px 0;isolation:isolate;border-radius:14px;overflow:hidden}
+.activities .act-preference-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;border:1px solid var(--act-line);border-radius:14px;min-width:0}
+.activities .act-preference-types label{display:flex;gap:8px;align-items:center;font-size:14px}
+.activities .act-preference-types legend{padding:8px}.activities #act-preferences{margin-bottom:16px}

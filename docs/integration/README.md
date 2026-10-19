@@ -5,6 +5,10 @@ Base réelle Production : `14b89e021906071bcb56f81c340f6cb839f54423`.
 Source sélectionnée : `048b7955280c12e1a3b567c572116bbab0f280a0`.
 Références vérifiées avant intervention : main `be4622bf10d0d7726f3056901f841a3e38b75b7c`, refactor-final identique au SHA source, domaine orevami.com sur dpl_4NKRbJpZNkhvuHWHQSWH8eJXpcKs.
 
+## Mise à jour V1.5 — préparation sans migration
+
+Voir [état exact et autorisations](../activities/v15/INTEGRATION-STATUS.md). Le verrou client en lecture seule décrit plus bas correspond au premier lot `411f933`. Le nouveau client ne permet la création que pour le compte fictif dédié, après schéma V1.5 et activation serveur autorisés séparément ; aucun droit distant n’est ajouté par le déploiement. Les inscriptions restent interdites.
+
 ## Principe de conservation
 
 Aucune fusion de refactor-final. Aucun changement de main, refactor-final, MyEvent-API, Supabase ou du domaine. La base comprend les quatre publications après main : 5b0a42b, 0545b44, ac38eb4 et 14b89e0.
