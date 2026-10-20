@@ -27,10 +27,18 @@ function filter(rows,f={},now=new Date()){
  const range=weekend(now),q=String(f.city||'').trim().toLocaleLowerCase('fr');
  return rows.filter(a=>{
   const t=new Date(a.starts_at),d=distance(f.position,a.position);
-  return (f.mine||a.status==='open')&&(f.mine||t>=now)&&(!q||String(a.city).toLocaleLowerCase('fr').includes(q))&&(!f.category||a.category===f.category)&&typeMatches(a,f.activity_type)&&(!f.free||fullyFree(a))&&(!f.available||a.remaining>0)&&(!f.today||localDate(t)===localDate(now))&&(!f.date||localDate(t)===f.date)&&(!f.weekend||(t>=range.start&&t<range.end))&&(!f.position||(d!=null&&d<=Number(f.radius||20)))&&(!f.mine||a.is_owner||['accepted','pending'].includes(a.membership));
+  return (f.mine||a.status==='open')&&(f.mine||t>=now)&&(!q||String(a.city).toLocaleLowerCase('fr').includes(q))&&(!f.category||a.category===f.category)&&typeMatches(a,f.activity_type)&&(!f.free||fullyFree(a))&&(!f.available||a.remaining>0)&&(!f.today||activityDate(t,a)===activityDate(now,a))&&(!f.date||activityDate(t,a)===f.date)&&(!f.weekend||activityWeekend(t,now,a))&&(!f.position||(d!=null&&d<=Number(f.radius||20)))&&(!f.mine||a.is_owner||['accepted','pending'].includes(a.membership));
  });
 }
 function localDate(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function activityZone(a={}){const zone=a.time_zone||a.timezone||'Europe/Paris';try{new Intl.DateTimeFormat('fr',{timeZone:zone});return zone;}catch{return 'Europe/Paris';}}
+function activityDate(value,a={}){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:activityZone(a),year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(value)),get=k=>parts.find(p=>p.type===k)?.value;return `${get('year')}-${get('month')}-${get('day')}`;}
+function activityWeekend(value,now,a={}){const day=activityDate(now,a),start=new Date(day+'T12:00:00Z'),weekday=start.getUTCDay();start.setUTCDate(start.getUTCDate()+(weekday===0?-1:(6-weekday+7)%7));const end=new Date(start);end.setUTCDate(end.getUTCDate()+2);const key=activityDate(value,a);return key>=start.toISOString().slice(0,10)&&key<end.toISOString().slice(0,10);}
+function coverURL(value){try{const u=new URL(value,typeof location==='undefined'?'https://orevami.com':location.origin);if(u.username||u.password)return null;const local=u.origin===(typeof location==='undefined'?'https://orevami.com':location.origin)&&u.pathname.startsWith('/assets/');const storage=u.protocol==='https:'&&['nxxvadbliinhvkirqkkl.supabase.co','ahyyknfjsielnqyoxqgh.supabase.co'].includes(u.hostname)&&/^\/storage\/v1\/object\/(public|sign)\//.test(u.pathname);return local||storage?u.href:null;}catch{return null;}}
+function fallbackCover(a){const type=a.activity_type||a.category;return '/assets/activities/'+(type==='patinoire'?'ice':type==='bowling'?'bowling':['randonnee','promenade','velo','parc','famille'].includes(type)||a.category==='randonnee'?'nature':'together')+'.svg';}
+function cover(a,className='activityVisual'){
+ const node=document.createElement('div');node.className=className;const img=document.createElement('img'),label=document.createElement('small');const real=coverURL(a.cover_url);img.src=real||fallbackCover(a);img.alt=real?'Photo de '+a.title:'Illustration de la catégorie '+(findType(a.activity_type)?.label||categories[a.category]||'Sorties');img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';label.textContent=real?'':'Photo non fournie · illustration';label.hidden=!!real;img.addEventListener('error',()=>{if(img.dataset.fallback)return;img.dataset.fallback='true';img.src=fallbackCover(a);label.textContent='Photo indisponible · illustration';label.hidden=false;});node.append(img,label);return node;
+}
 function validate(a,now=new Date()){
  if(!String(a.title||'').trim()||a.title.trim().length>120)throw Error('Titre requis, 120 caractères maximum.');
  if(!categories[a.category])throw Error('Choisis une catégorie.');
@@ -48,6 +56,6 @@ function validate(a,now=new Date()){
  if((lat!=null||lon!=null)&&(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180))throw Error('Coordonnées GPS invalides.');
  return a;
 }
-const api=Object.freeze({categories,families,activityTypes,fold,findType,searchTypes,typeMatches,safeLink,distance,weekend,filter,validate,localDate,fees,fullyFree,recommend});root.OrevamiActivitiesCore=api;
+const api=Object.freeze({categories,families,activityTypes,fold,findType,searchTypes,typeMatches,safeLink,distance,weekend,filter,validate,localDate,fees,fullyFree,recommend,activityZone,activityDate,activityWeekend,coverURL,fallbackCover,cover});root.OrevamiActivitiesCore=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof globalThis==='undefined'?window:globalThis);

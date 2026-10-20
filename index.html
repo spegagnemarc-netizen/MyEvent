@@ -137,6 +137,7 @@
     <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview">👥</div><b>Amis</b></button>
     <button type="button" class="homeFeatureCard storyCard" id="socialStoriesShortcut" aria-controls="friendStoriesSection" aria-expanded="false"><div class="homeStoriesArt" aria-hidden="true"><span></span><span></span></div><b>Stories</b></button>
     <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><img class="homeFeatureArt" src="assets/ui/calendar-star.svg" alt=""><b>Événements</b></button>
+    <button type="button" class="homeFeatureCard activitiesCard" id="activitiesShortcut" aria-haspopup="dialog" aria-controls="activitiesPanel"><div class="homeFeatureIcon" aria-hidden="true">🌍</div><b>Sorties &amp;<br>Rencontres</b></button>
     <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><img class="homeFeatureArt" src="assets/ui/games-purple.svg" alt=""><b>Jeux</b></button>
     <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
     <button type="button" class="homeFeatureCard musicCard" id="socialHeaderMusicBtn"><img class="homeFeatureArt" src="assets/ui/music-pink.svg" alt=""><b>Musique</b></button>
@@ -1628,14 +1629,16 @@ body.myeventAdminOpen{overflow:hidden}
 <script src="js/ads-placement.js?v=1" defer></script>
 
 <!-- Isolated integration modules: exact Preview TEST only; Production components retained. -->
-<button type="button" id="activitiesShortcut" hidden>Sorties & Rencontres</button>
+
 <link rel="stylesheet" href="css/activities.css?v=integration-1">
-<link rel="stylesheet" href="css/integration-activities.css?v=integration-1">
-<script src="js/activities-core.js?v=integration-1"></script>
+<link rel="stylesheet" href="css/integration-activities.css?v=showcase-20261020">
+<script src="js/activities-core.js?v=showcase-20261020"></script>
 <script src="js/venue-analysis-review.js?v=integration-1"></script>
 <script src="js/activity-venue-sheet.js?v=integration-1"></script>
 <script src="js/activities-widgets.js?v=integration-1"></script>
-<script src="js/activities-runtime.js?v=inclusive-v4-20261020"></script>
-<script src="js/activity-social-feed.js?v=inclusive-v4-20261020"></script>
+<script src="js/activity-discovery.js?v=showcase-20261020"></script>
+<script src="js/activity-social-feed.js?v=showcase-20261020"></script>
+<script src="js/activities-runtime.js?v=showcase-20261020"></script>
+
 </body>
 </html>

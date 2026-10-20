@@ -1,28 +1,51 @@
-/* Read-only activity cards. No social-post copy and no activation or enrolment write. */
-(function(root){'use strict';const C=root.OrevamiActivitiesCore;
+/* Same authorised snapshot, cards and discovery state as the full Activities workspace. */
+(function(root){'use strict';const C=root.OrevamiActivitiesCore,D=root.OrevamiActivityDiscovery;if(!C)return;
 function node(tag,text,cls){const n=document.createElement(tag);if(text!=null)n.textContent=String(text);if(cls)n.className=cls;return n;}
-function card(a,{onOpen=()=>{},onParticipate=onOpen,participationEnabled=false,now=Date.now()}={}){if(!a||!/^[0-9a-f-]{36}$/i.test(a.id||'')||a.visibility!=='public'||a.status!=='open'||!Number.isFinite(Date.parse(a.starts_at))||Date.parse(a.starts_at)<=now)return null;
- const article=node('article',null,'socialPost activityFeedPost'),body=node('div',null,'socialEventCard'),cover=node('div',null,'socialEventCover activityFeedCover'),info=node('div',null,'socialEventInfo');article.dataset.activityId=a.id;
- cover.append(node('span',C?.findType(a.activity_type)?.icon||'🌍'));let image=null;try{const u=new URL(a.cover_url,location.origin);if(a.cover_url&&u.origin===location.origin&&u.pathname.startsWith('/assets/'))image=u.href;}catch{}if(image){const img=node('img');img.src=image;img.alt='';cover.replaceChildren(img);}
- const title=node('h3',a.title||'Activité','socialEventTitle'),date=Date.parse(a.starts_at);const when=Number.isFinite(date)?new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'}):'Date à confirmer';info.append(node('small','🌍 Sortie publique'),title,node('p','📅 '+when+' · 📍 '+(a.city||'Ville à préciser'),'socialEventMeta'));
- const count=Number.isInteger(a.participants_count)?a.participants_count:0,capacity=Number.isInteger(a.capacity)?a.capacity:0,remaining=Number.isInteger(a.remaining)?Math.max(0,a.remaining):0;
- info.append(node('p',`${count} / ${capacity} participants · ${remaining===0?'Complet':remaining+' place(s) disponible(s)'}`,'socialEventMeta'),node('small',C.fees(a)));
- const view=node('button','Voir l’activité','secondary');view.type='button';view.addEventListener('click',()=>onOpen(a.id));const join=node('button',a.is_owner?'Organisateur':a.membership==='accepted'?'Inscrit':a.membership==='pending'?'Demande en attente':remaining===0?'Complet':a.join_mode==='approval'?'Demander à rejoindre':'Participer','activityFeedJoin');join.type='button';join.disabled=!participationEnabled||a.is_owner===true||remaining===0||['accepted','pending'].includes(a.membership);if(!participationEnabled)join.title='Inscriptions fermées';join.addEventListener('click',()=>onParticipate(a.id));const actions=node('div',null,'activityFeedActions');actions.append(view,join);info.append(actions);body.append(cover,info);article.append(body);article.setAttribute('role','listitem');article.setAttribute('aria-label',a.title||'Sortie');article.addEventListener('click',e=>{if(!e.target.closest('button,a'))onOpen(a.id);});return article;
+function action(label,fn,cls=''){const b=node('button',label,cls);b.type='button';b.addEventListener('click',fn);return b;}
+function card(a,{onOpen=()=>{},onParticipate=onOpen,participationEnabled=false,showJoin=false,publicOnly=true,includeUnavailable=false,now=Date.now(),position=null}={}){
+ if(!a||!/^[0-9a-f-]{36}$/i.test(a.id||'')||!['public','friends'].includes(a.visibility)||(publicOnly&&a.visibility!=='public')||(!includeUnavailable&&(a.status!=='open'||Date.parse(a.starts_at)<=now||a.remaining<=0))||!Number.isFinite(Date.parse(a.starts_at)))return null;
+ const article=node('article',null,'activityShowcaseCard'),visual=C.cover(a),body=node('div',null,'activityShowcaseBody');article.dataset.activityId=a.id;article.setAttribute('role','listitem');article.setAttribute('aria-label',a.title||'Sortie');
+ const distance=C.distance(position,a.position),type=C.findType(a.activity_type),badge=node('span',type?.label||C.categories[a.category]||'Sortie','activityCategory');visual.append(badge);
+ if(distance!==null)visual.append(node('span',`📍 ${distance<1?'Moins de 1':Math.round(distance)} km`,'activityDistance'));
+ if(a.is_owner)visual.append(node('span','Votre sortie','activityOwner'));
+ const title=node('h3',a.title||'Sortie'),city=node('p',a.city||'Lieu à préciser','activityCity');
+ const date=new Intl.DateTimeFormat('fr-FR',{timeZone:C.activityZone(a),weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(a.starts_at));
+ const info=node('div',null,'activityFacts');info.append(node('span','◷ '+date),node('span',`${a.participants_count??0} / ${a.capacity??'—'} · ${a.remaining??0} places`));
+ const price=node('p',C.fullyFree(a)?'Gratuit · groupe et établissement':a.cost_mode==='on_site'?`${a.cost_amount} € / personne · frais du lieu à vérifier`:'Groupe gratuit · tarif du lieu à vérifier','activityPrice');price.title=C.fees(a);
+ const view=action('Voir la sortie ↗',()=>onOpen(a.id),'activityView');const actions=node('div',null,'activityShowcaseActions');actions.append(view);
+ if(showJoin&&!a.is_owner&&!['accepted','pending'].includes(a.membership)&&a.status==='open'){const join=action(a.join_mode==='approval'?'Demander à rejoindre':'Participer',()=>onParticipate(a.id),'activityJoin');join.disabled=!participationEnabled||a.remaining<=0;actions.append(join);}
+ body.append(title,city,info,price,actions);article.append(visual,body);article.addEventListener('click',e=>{if(!e.target.closest('button,a'))onOpen(a.id);});return article;
 }
 root.OrevamiActivityFeed=Object.freeze({card});
-async function init(){if(!root.myeventRuntime?.ready)return;let config;try{config=await root.myeventRuntime?.ready;}catch{return;}const feed=document.getElementById('socialFeed');const production=config?.environment==='production'&&config.isTest===false&&config.projectRef==='nxxvadbliinhvkirqkkl';if(!feed||(!production&&(config?.isTest!==true||config.environment!=='preview'||config.projectRef!=='ahyyknfjsielnqyoxqgh')))return;
- const section=node('section',null,'activityFeedSection');section.id='orevamiActivityFeed';section.setAttribute('aria-label','Sorties & Rencontres');const header=node('div',null,'socialSectionHead'),title=node('h3','🌍 Sorties & Rencontres'),browse=node('button','Voir toutes les sorties ›');browse.type='button';browse.addEventListener('click',()=>root.myeventOpenActivities?root.myeventOpenActivities():document.getElementById('activitiesShortcut')?.click());header.append(title,browse);section.tabIndex=0;section.setAttribute('aria-description','Ouvrir la page Sorties et Rencontres');const openWorkspace=()=>{section.focus({preventScroll:true});root.myeventOpenActivities?.();};section.addEventListener('click',e=>{if(!e.target.closest('button,a,input,select,textarea,.activityFeedPost'))openWorkspace();});section.addEventListener('keydown',e=>{if(e.target===section&&['Enter',' '].includes(e.key)){e.preventDefault();openWorkspace();}});const status=node('p','Chargement…','activityFeedStatus'),list=node('div',null,'activityFeedList');status.setAttribute('role','status');list.setAttribute('role','list');list.setAttribute('aria-label','Sorties publiques à venir');list.tabIndex=0;section.append(header,status,list);feed.before(section);
- let version=0,pending=null,owner='',lastId='';const context=()=>root.myeventCameraContext?.()||{};
- function reset(text){list.replaceChildren();status.textContent=text;}
- async function refresh(){const {sb,user}=context(),id=user?.id||'';if(!sb||!id){version++;pending=null;owner='';lastId='';reset('Connecte-toi pour voir les activités accessibles.');return;}if(pending&&owner===id)return pending;
- const ticket=++version;owner=id;lastId=id;reset('Chargement des activités…');const valid=()=>ticket===version&&context().user?.id===id;
- pending=(async()=>{try{const cap=await sb.rpc('activities_capabilities');if(!valid())return;if(cap.error)throw cap.error;if(cap.data?.enabled!==true||cap.data?.version!==4||cap.data?.account_access!==true){reset('Connecte-toi à un compte autorisé. Les sorties apparaîtront après ouverture du service.');return;}
- const r=await sb.rpc('activities_list');if(!valid())return;if(r.error)throw r.error;list.replaceChildren();const seen=new Set();for(const a of (Array.isArray(r.data)?r.data:[]).slice().sort((a,b)=>Date.parse(a.starts_at)-Date.parse(b.starts_at))){if(seen.has(a.id))continue;const n=card({...a,join_mode:cap.data?.protected_participation===true?'approval':a.join_mode},{onOpen:id=>root.myeventOpenActivity?.(id),onParticipate:id=>root.myeventOpenActivity?.(id,'participate'),participationEnabled:cap.data?.version===4&&cap.data?.can_participate===true&&cap.data?.registrations_enabled===true});if(n){seen.add(a.id);list.append(n);}}status.textContent=seen.size?'':'Aucune sortie publique à venir. Prépare ta prochaine sortie.';
- }catch{if(valid())reset('Activités indisponibles. Les autres publications restent accessibles.');}finally{if(ticket===version)pending=null;}})();return pending;}
- root.myeventRefreshActivitiesFeed=refresh;
- // Reuses the existing social-feed refresh and auth transition handling; no new polling.
- root.addEventListener('focus',()=>{if((context().user?.id||'')!==lastId)refresh();});
- context().sb?.auth?.onAuthStateChange((_event,session)=>{if((session?.user?.id||'')!==lastId){version++;pending=null;reset('Session modifiée. Actualisation des activités…');setTimeout(refresh,0);}});
- refresh();
+async function init(){
+ if(!D||!root.myeventRuntime?.ready)return;let config;try{config=await root.myeventRuntime.ready;}catch{return;}
+ const feed=document.getElementById('socialFeed'),production=config?.environment==='production'&&config.isTest===false&&config.projectRef==='nxxvadbliinhvkirqkkl';
+ if(!feed||(!production&&(config?.isTest!==true||config.environment!=='preview'||config.projectRef!=='ahyyknfjsielnqyoxqgh')))return;
+ const section=node('section',null,'activityFeedSection');section.id='orevamiActivityFeed';section.setAttribute('aria-label','Sorties & Rencontres');
+ const header=node('div',null,'activityShowcaseHeader'),heading=node('div'),eyebrow=node('small','À PARTAGER, PRÈS DE VOUS'),title=node('h2','🌍 Sorties & Rencontres');heading.append(eyebrow,title);
+ const open=()=>root.myeventOpenActivities?.();header.append(heading,action('Découvrir toutes les sorties ›',open,'activityBrowse'));
+ const area=node('form',null,'activityAreaForm'),cityLabel=node('label','Votre ville'),city=node('input');city.name='city';city.placeholder='Ville, ex. Gap';city.maxLength=100;city.autocomplete='address-level2';cityLabel.append(city);
+ const radiusLabel=node('label','Rayon'),radius=node('select');radius.name='radius';for(const v of [5,20,50,100])radius.add(new Option(v+' km',v));radiusLabel.append(radius);
+ const search=node('button','Rechercher','activityAreaSearch');search.type='submit';const gps=action('⌖ Ma position',async()=>{gps.disabled=true;status.textContent='Autorisez la localisation ou choisissez une ville.';const ok=await D.locate();gps.disabled=false;if(!ok)status.textContent='GPS indisponible : choisissez une ville. Les autres fonctions restent disponibles.';},'activityLocate');area.append(cityLabel,radiusLabel,search,gps);
+ const scope=node('p','','activityScope'),status=node('p','Chargement…','activityFeedStatus');status.setAttribute('role','status');
+ const list=node('div',null,'activityFeedList');list.setAttribute('role','list');list.setAttribute('aria-label','Sorties accessibles dans votre secteur');list.tabIndex=0;
+ const next=action('›',()=>list.scrollBy({left:list.clientWidth*.85,behavior:'smooth'}),'activityCarouselNext');next.setAttribute('aria-label','Sorties suivantes');
+ const rail=node('div',null,'activityRail');rail.append(list,next);
+ const footer=action('＋ Organiser une sortie ici',()=>root.myeventCreateActivity?.(),'activityCreate');section.append(header,area,scope,status,rail,footer);feed.before(section);
+ const names={foryou:'Pour vous',today:'Aujourd’hui',weekend:'Ce week-end',free:'Gratuit',nearby:'À proximité',discover:'Toutes les sorties',mine:'Mes activités'};
+ const filters=[...document.querySelectorAll('#socialHome .socialFilter')],views=['foryou','today','weekend','free','nearby'];
+ filters.forEach((b,i)=>{b.dataset.activityFilter=views[i];b.setAttribute('aria-controls',section.id);b.addEventListener('click',()=>D.update({view:views[i]}));});
+ area.addEventListener('submit',async e=>{e.preventDefault();const selectedCity=city.value;D.update({radius:Number(radius.value)});await D.area(selectedCity);await D.refresh();});radius.addEventListener('change',()=>D.update({radius:Number(radius.value)}));
+ function draw({state,cap,error,loading}){
+  if(document.activeElement!==city)city.value=state.city;radius.value=String(state.radius);filters.forEach(b=>{const active=b.dataset.activityFilter===state.view;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+  const hasArea=state.city||state.position;scope.textContent=(names[state.view]||'Toutes les sorties')+' · '+(state.geoSource==='gps'?'autour de ma position':state.city||'choisissez votre secteur')+(state.position?` · ${state.radius} km`:'');
+  const rows=D.select();list.replaceChildren();for(const a of rows){const item=card(a,{publicOnly:false,position:state.position,onOpen:id=>root.myeventOpenActivity?.(id,'view',{origin:'feed'})});if(item)list.append(item);}
+  next.hidden=list.childElementCount<2;footer.disabled=cap.can_create!==true;
+  status.textContent=error||(loading?'Chargement des sorties…':!hasArea?'Choisissez une ville ou utilisez votre position pour découvrir les sorties de votre secteur.':!list.childElementCount?'Aucune sortie disponible pour ces critères. Élargissez le rayon ou découvrez toutes les sorties.':'');
+  if(state.city&&!state.position&&!error&&!loading)status.textContent+=(status.textContent?' ':'')+'Ville non localisée : seules les sorties de cette ville sont affichées ; rayon non appliqué.';
+ }
+ const active=filters.findIndex(b=>b.classList.contains('active'));D.subscribe(draw);draw(D.get());root.myeventRefreshActivitiesFeed=()=>D.refresh({force:true});
+ if(active>=0)D.update({view:views[active]});D.refresh();
+ root.addEventListener('focus',()=>D.refresh());
 }
 init();})(window);

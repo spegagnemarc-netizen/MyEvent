@@ -13,6 +13,7 @@ module.exports=async function handler(req,res){
    return send(res,200,await require('../lib/venue-analysis').analyseVenue(data.url));
   }
   if(req.method!=='GET'){res.setHeader('Allow','GET, POST');return send(res,405,{error:'Méthode non autorisée.'});}
+  if(mode==='activity-area')return send(res,200,await require('../lib/activity-venue-search').resolveActivityArea(req.query.q));
   if(mode==='activity-venue')return send(res,200,await require('../lib/activity-venue-search').searchActivityVenues({q:req.query.q,city:req.query.city}));
   if(mode==='activity-venue-detail')return send(res,200,await require('../lib/activity-venue-details').venueDetails(req.query.id));
   return send(res,404,{error:'Recherche inconnue.'});

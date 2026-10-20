@@ -22,3 +22,46 @@
 .activities .act-preference-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;border:1px solid var(--act-line);border-radius:14px;min-width:0}
 .activities .act-preference-types label{display:flex;gap:8px;align-items:center;font-size:14px}
 .activities .act-preference-types legend{padding:8px}.activities #act-preferences{margin-bottom:16px}
+/* Shared compact showcase: home rail and existing full workspace. */
+#orevamiActivityFeed{cursor:default;background:linear-gradient(145deg,#101827,#0b111b);padding:16px;box-shadow:0 8px 28px #0003}
+#orevamiActivityFeed .activityShowcaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+#orevamiActivityFeed .activityShowcaseHeader h2{font-size:19px;line-height:1.3;margin:5px 0;color:#fff}
+#orevamiActivityFeed .activityShowcaseHeader small{font-size:10px;letter-spacing:.12em}
+#orevamiActivityFeed .activityBrowse{border:0;background:transparent;color:var(--myevent-accent,#ff6a34);padding:4px 0;font-weight:700;font-size:12px;text-align:left}
+#orevamiActivityFeed .activityAreaForm{display:grid;grid-template-columns:minmax(80px,1fr) 78px auto;gap:8px;align-items:end}
+#orevamiActivityFeed .activityAreaForm label{display:grid;gap:4px;color:#b7c9d7;font-size:11px;min-width:0}
+#orevamiActivityFeed .activityAreaForm input,#orevamiActivityFeed .activityAreaForm select{width:100%;min-width:0;height:40px;border:1px solid #344157;border-radius:10px;padding:8px;background:#0b1521;color:#fff;font:inherit;font-size:13px}
+#orevamiActivityFeed .activityAreaForm button{font-size:12px;padding:8px 10px;min-height:40px}
+#orevamiActivityFeed .activityLocate{grid-column:1/-1;justify-self:start;border:0;background:transparent;padding:0;min-height:30px}
+#orevamiActivityFeed .activityScope{font-size:12px;color:#b7c9d7;margin:6px 0 12px}
+#orevamiActivityFeed .activityRail{position:relative}
+#orevamiActivityFeed .activityFeedList{gap:12px;padding:0 0 10px}
+#orevamiActivityFeed .activityShowcaseCard{flex:0 0 268px;max-width:100%;scroll-snap-align:start}
+.activityShowcaseCard{min-width:0;overflow:hidden;border-radius:18px;border:1px solid #3c365a;background:#0c1220;color:#fff;display:flex;flex-direction:column;text-align:left;box-shadow:0 3px 14px #0003;cursor:pointer}
+.activityVisual{height:162px;position:relative;overflow:hidden;background:#182137;flex-shrink:0}
+.activityVisual>img{width:100%;height:100%;display:block;object-fit:cover}
+.activityVisual>small{position:absolute;bottom:8px;left:8px;right:8px;color:#fff!important;background:#080c15cc;padding:3px 6px;border-radius:5px;font-size:10px!important;line-height:1.3}
+.activityVisual>small[hidden]{display:none}
+.activityVisual .activityCategory,.activityVisual .activityDistance,.activityVisual .activityOwner{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);padding:4px 7px;border-radius:8px;font-size:11px;background:#101222db;color:#fff;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.activityVisual .activityDistance{left:auto;right:8px;top:40px}.activityVisual .activityOwner{top:auto;bottom:32px;font-size:10px}
+.activityShowcaseBody{display:flex;flex-direction:column;gap:6px;padding:12px;flex:1;min-width:0}
+#orevamiActivityFeed .activityShowcaseBody h3,.activities .activityShowcaseBody h3{font-size:17px;line-height:1.25;margin:0;color:#fff;overflow-wrap:anywhere}
+#orevamiActivityFeed .activityCity,.activities .activityCity{font-size:13px;color:#b7c9d7;margin:0}
+.activityFacts{display:grid;gap:5px;color:#cfcee1;font-size:12px;line-height:1.4}
+#orevamiActivityFeed .activityPrice,.activities .activityPrice{font-size:11px;line-height:1.4;color:#b7c9d7;margin:2px 0 5px}
+.activityShowcaseActions{margin-top:auto;display:grid;gap:6px}
+#orevamiActivityFeed .activityView,#orevamiActivityFeed .activityCreate,.activities .activityView{background:var(--myevent-accent-fill,#ff6a34);border:1px solid var(--myevent-accent,#ff6a34);color:#fff;font-weight:700;min-height:40px;font-size:13px;padding:9px 12px;border-radius:11px}
+#orevamiActivityFeed .activityCreate{width:100%;margin-top:10px}
+#orevamiActivityFeed .activityCarouselNext{position:absolute;right:-8px;top:58px;border-radius:50%;width:36px;height:36px;min-height:36px;padding:0;font-size:28px;box-shadow:0 2px 10px #0009;background:#20172f}
+#orevamiActivityFeed [hidden]{display:none!important}
+#orevamiActivityFeed button:disabled{opacity:.5;cursor:default}
+#orevamiActivityFeed :focus-visible,.activities .activityShowcaseCard :focus-visible{outline:2px solid var(--myevent-accent,#ff6a34);outline-offset:3px}
+.activities{padding-top:calc(24px + env(safe-area-inset-top))}
+.activities #act-close{position:sticky;top:0;align-self:start;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:0;font-size:30px;border-radius:50%;z-index:5;line-height:1}
+.activities .act-filters{grid-template-columns:repeat(4,minmax(0,1fr))}.activities .act-toolbar{margin:4px 0 10px}.activities .act-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.activities .act-catalog{padding:10px 14px;margin:8px 0 14px}.activities .act-catalog summary{font-size:14px}.activities .act-detail>.activityVisual{height:240px}.activities #act-detail>.activityVisual{height:240px;border-radius:16px;margin:14px 0}
+#activitiesShortcut.activitiesCard{border-color:var(--myevent-accent,#ff6a34)}
+@media(max-width:800px){.activities .act-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.activities .act-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){#orevamiActivityFeed{padding:12px}#orevamiActivityFeed .activityShowcaseCard{flex-basis:250px}.activities .act-grid{grid-template-columns:1fr}.activities .act-filters{gap:9px}.activities .act-toolbar button{font-size:12px;padding:9px}.activities header{gap:10px}.activities h1{font-size:27px}.activityVisual{height:150px}}
+#orevamiActivityFeed *,#orevamiActivityFeed *::before,#orevamiActivityFeed *::after{box-sizing:border-box}
+@media(min-width:600px){#orevamiActivityFeed .activityAreaForm{grid-template-columns:minmax(100px,1fr) 78px auto auto}#orevamiActivityFeed .activityLocate{grid-column:auto;align-self:end;min-height:40px;padding:8px}}
