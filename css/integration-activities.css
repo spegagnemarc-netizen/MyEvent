@@ -65,3 +65,8 @@
 @media(max-width:500px){#orevamiActivityFeed{padding:12px}#orevamiActivityFeed .activityShowcaseCard{flex-basis:250px}.activities .act-grid{grid-template-columns:1fr}.activities .act-filters{gap:9px}.activities .act-toolbar button{font-size:12px;padding:9px}.activities header{gap:10px}.activities h1{font-size:27px}.activityVisual{height:150px}}
 #orevamiActivityFeed *,#orevamiActivityFeed *::before,#orevamiActivityFeed *::after{box-sizing:border-box}
 @media(min-width:600px){#orevamiActivityFeed .activityAreaForm{grid-template-columns:minmax(100px,1fr) 78px auto auto}#orevamiActivityFeed .activityLocate{grid-column:auto;align-self:end;min-height:40px;padding:8px}}
+/* Reference visual approved 2026-10-20: violet activity controls. */
+#orevamiActivityFeed,.activities,#activitiesShortcut{--myevent-accent:#c521ff;--myevent-accent-fill:linear-gradient(115deg,#8500f5,#dc00f5)}
+#socialHome .socialFilter.active,#socialHome .socialFilter[aria-pressed=true]{background:linear-gradient(115deg,#8500f5,#dc00f5)!important;border-color:#bd22ff!important;color:#fff!important;box-shadow:0 0 16px #a000f533}
+#activitiesShortcut.activitiesCard{background:linear-gradient(145deg,#131528,#241038);border-color:#a938ff;box-shadow:0 0 15px #9e28ff44}
+#orevamiActivityFeed{border-color:#4b2b70;background:linear-gradient(145deg,#101322,#0b0d19)}
