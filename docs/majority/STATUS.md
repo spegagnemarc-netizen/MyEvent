@@ -1,5 +1,7 @@
 # ORÉVAMI — Activités & Rencontres, 20 octobre 2026
 
+**Décision remplacée :** l'obligation générale de majorité/Yoti est abandonnée pour le moment. La proposition 003 ne doit pas être appliquée. Voir INCLUSIVE-STATUS.md et la proposition alternative 004, directement depuis le schéma V2 fermé existant. Les composants Yoti restent non raccordés et désactivés, conservés pour l'historique.
+
 ## Reprise et vérification
 
 Le candidat cee926fd46f5d154f1f5facae881133596eee34d, absent de GitHub, a été retrouvé dans le clone local du 18 octobre. Son histoire (222fea1 puis cee926f) a été importée par archive Git et fusionnée dans work/orevami-majority-audit-20261020. Le travail antérieur est conservé. Aucun changement sur main.

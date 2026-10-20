@@ -60,14 +60,14 @@ test('server preparation: disabled default, server auth, provider reread, bindin
  result.threshold=18;assert.equal((await service.complete('valid',started.receipt)).verified,true);
  result.binding='wrong';await assert.rejects(service.complete('valid',started.receipt),/indisponible/);
 });
-test('client: arbitrary eligible account uses existing join/accept RPC; old/manual capabilities remain closed',async()=>{
+test('client: V4 account uses existing join/accept RPC; obsolete capabilities remain closed',async()=>{
  const sources=await Promise.all(['js/activities-core.js','js/activities-runtime.js'].map(read));
- for(const cap of [{enabled:true,adult_access:true,version:2,registrations_enabled:false},{enabled:true,adult_access:true,version:3,automatic_majority:true,can_create:true,registrations_enabled:true,can_participate:true}]){
+ for(const cap of [{enabled:true,adult_access:true,version:2,registrations_enabled:false},{enabled:true,adult_access:true,version:4,account_access:true,can_create:true,registrations_enabled:true,can_participate:true}]){
   const d=new JSDOM('<button id="activitiesShortcut">Sorties</button>',{url:'https://preview.invalid',runScripts:'outside-only',pretendToBeVisual:true});const calls=[];let owner=false;
   const activity={id:C,title:'Local',starts_at:'2099-01-01T12:00:00Z',city:'Gap',description:'Local',venue:'Public',capacity:3,remaining:2,participants_count:1,status:'open',join_mode:'direct',visibility:'public',members:[]};
   d.window.scrollTo=()=>{};d.window.confirm=()=>true;d.window.HTMLElement.prototype.scrollIntoView=()=>{};d.window.myeventRuntime={ready:Promise.resolve({environment:'preview',isTest:true,projectRef:'ahyyknfjsielnqyoxqgh'})};d.window.myeventCameraContext=()=>({user:{id:A},sb:{rpc:async(name,args)=>{calls.push({name,args});return {data:name==='activities_capabilities'?cap:name==='activities_list'?[]:name==='activities_detail'?{...activity,is_owner:owner,members:owner?[{user_id:B,status:'pending',display_name:'B'}]:[]}:null};}}});
-  try{for(const source of sources)d.window.eval(source);await new Promise(r=>setTimeout(r,0));await d.window.myeventOpenActivity(C);const join=d.window.document.querySelector('[data-act-join]');assert.equal(join.disabled,cap.version!==3);join.click();await new Promise(r=>setTimeout(r,0));assert.equal(calls.some(x=>x.name==='activities_participate'&&x.args.p_action==='join'),cap.version===3);
-   if(cap.version===3){owner=true;await d.window.myeventOpenActivity(C);[...d.window.document.querySelectorAll('button')].find(x=>x.textContent==='Accepter').click();await new Promise(r=>setTimeout(r,0));assert.equal(calls.find(x=>x.args?.p_action==='accept').args.p_user,B);}
+  try{for(const source of sources)d.window.eval(source);await new Promise(r=>setTimeout(r,0));await d.window.myeventOpenActivity(C);const join=d.window.document.querySelector('[data-act-join]');assert.equal(join?.disabled??true,cap.version!==4);join?.click();await new Promise(r=>setTimeout(r,0));assert.equal(calls.some(x=>x.name==='activities_participate'&&x.args.p_action==='join'),cap.version===4);
+   if(cap.version===4){owner=true;await d.window.myeventOpenActivity(C);[...d.window.document.querySelectorAll('button')].find(x=>x.textContent==='Accepter').click();await new Promise(r=>setTimeout(r,0));assert.equal(calls.find(x=>x.args?.p_action==='accept').args.p_user,B);}
   }finally{d.window.close();}
  }
 });

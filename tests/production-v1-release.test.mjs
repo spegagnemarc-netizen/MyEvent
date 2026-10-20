@@ -22,12 +22,12 @@ test('new Production installation is atomic, empty, closed and preserves existin
  await assert.rejects(db.exec(sql),/Existing module/);await db.exec('rollback');
  }finally{await db.close();}
 });
-test('Production client requires exact project and server adult eligibility; TEST UUID is not required in Production',async()=>{
+test('Production client requires exact project and active account eligibility; TEST UUID is not required in Production',async()=>{
  const sources=await Promise.all(['js/activities-core.js','js/activities-runtime.js'].map(read));
  for(const [projectRef,adult,visible,save] of [['nxxvadbliinhvkirqkkl',true,true,true],['nxxvadbliinhvkirqkkl',false,true,false],['ahyyknfjsielnqyoxqgh',true,false,false]]){
  const d=new JSDOM('<button id="activitiesShortcut">Sorties</button>',{url:'https://orevami.com',runScripts:'outside-only',pretendToBeVisual:true});
  d.window.scrollTo=()=>{};d.window.myeventRuntime={ready:Promise.resolve({environment:'production',isTest:false,projectRef})};
- d.window.myeventCameraContext=()=>({user:{id:'00000000-0000-4000-8000-000000000001'},sb:{rpc:async name=>({data:name==='activities_capabilities'?{enabled:true,adult_access:adult,version:3,automatic_majority:adult,can_create:adult,registrations_enabled:false}:[]})}});
+ d.window.myeventCameraContext=()=>({user:{id:'00000000-0000-4000-8000-000000000001'},sb:{rpc:async name=>({data:name==='activities_capabilities'?{enabled:true,adult_access:adult,version:4,account_access:adult,can_create:adult,registrations_enabled:false}:[]})}});
  for(const source of sources)d.window.eval(source);await new Promise(r=>setTimeout(r,0));
  assert.equal(!!d.window.document.querySelector('#activitiesPanel'),visible);
  if(visible){d.window.document.querySelector('#activitiesShortcut').click();await new Promise(r=>setTimeout(r,0));d.window.document.querySelector('[data-act-tab="create"]').click();assert.equal(!d.window.document.querySelector('#act-editor button[type="submit"]').disabled,save);}
