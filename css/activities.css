@@ -329,3 +329,83 @@
     max-height: 55px;
   }
 }
+
+/* Compact discovery only. The approved header and editor styles remain unchanged. */
+.activities #act-browser{--act-line:#17354b;--act-accent:#ca00f5;color:#f1f5ff}
+.activities #act-browser .act-quick-categories{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;margin:2px 0 18px;padding:3px 2px 6px;overflow-x:auto;scrollbar-width:thin}
+.activities #act-browser .act-quick-category{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #17354b;background:linear-gradient(160deg,#071725,#03101d);color:#f4f5fc;border-radius:15px;min-height:86px;padding:10px 5px;font-size:13px;white-space:nowrap;box-shadow:none}
+.activities #act-browser .act-quick-category>span:first-child{font-size:29px;line-height:1.2;filter:drop-shadow(0 3px 7px #8e00ff55)}
+.activities #act-browser .act-quick-category img{display:block;width:56px;height:36px;object-fit:cover;border-radius:9px}
+.activities #act-browser .act-quick-category[aria-pressed=true]{border-color:#ed13ff;background:linear-gradient(150deg,#350955,#10091f);box-shadow:0 0 12px #db00ff44}
+.activities #act-browser .act-search-compact{display:block;margin:0 0 12px;padding:0;background:none;border:0}
+.activities #act-browser .act-search-main{display:grid;grid-template-columns:minmax(170px,1.65fr) minmax(90px,.7fr) minmax(140px,1fr) auto auto;align-items:end;gap:10px}
+.activities #act-browser .act-search-main>label{font-size:10px;gap:3px;letter-spacing:.02em;color:#9bacbd;min-width:0}
+.activities #act-browser .act-search-main input,.activities #act-browser .act-search-main select,.activities #act-browser .act-search-main>button{height:46px;min-height:46px;border:1px solid var(--act-line);border-radius:12px;background:#041320;color:#e9f1ff;font-size:14px;padding:9px 12px;margin:0}
+.activities #act-browser .act-city-controls{display:flex;align-items:center;height:46px;border:1px solid var(--act-line);border-radius:12px;overflow:hidden;background:#041320}
+.activities #act-browser .act-city-controls input{border:0;background:none;min-width:0;flex:1;height:44px;padding:8px 10px}
+.activities #act-browser .act-city-controls button{flex:0 0 32px;width:32px;min-height:40px;padding:0;border:0;background:none;color:#ff20c9;font-size:22px;border-radius:6px}
+.activities #act-browser .act-search-advanced{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px;margin-top:10px;border:1px solid var(--act-line);border-radius:14px;background:#061725}
+.activities #act-browser .act-search-advanced>.act-catalog{margin:0;padding:8px 10px}
+.activities #act-browser .act-search-advanced label{font-size:12px}
+.activities #act-browser .act-search-advanced .act-toolbar{margin:0;gap:8px}
+.activities #act-browser .act-search-advanced .act-toolbar button{min-height:36px;font-size:12px;padding:6px 10px}
+.activities #act-browser .act-results-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}
+.activities #act-browser .act-results-head h2{font-size:21px;line-height:1.3;margin:0;color:#fff;letter-spacing:-.02em}
+.activities #act-browser .act-results-count{font-size:12px;color:#94a9bf;white-space:nowrap}
+.activities #act-browser #act-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;align-items:stretch}
+.activities #act-list .act-modern-card{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid #17354b;border-radius:16px;background:linear-gradient(145deg,#071729,#021120);box-shadow:0 8px 24px #0003}
+.activities #act-list .act-card-visual{height:132px;position:relative;overflow:hidden;background:#092238}
+.activities #act-list .act-card-visual img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.activities #act-list .act-card-visual::after{content:'';position:absolute;inset:60% 0 0;background:linear-gradient(transparent,#04142488);pointer-events:none}
+.activities #act-list .act-card-distance{position:absolute;top:8px;left:8px;z-index:1;background:#06152be8;border:1px solid #35506d;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700;color:#fff}
+.activities #act-list .act-card-body{display:flex;flex-direction:column;gap:6px;padding:11px;flex:1}
+.activities #act-list h3{font-size:15px;line-height:1.3;color:#fff;margin:0;overflow-wrap:anywhere}
+.activities #act-list .act-card-place{font-size:12px;color:#b9c9dc;margin:0;line-height:1.4}
+.activities #act-list .act-badge{align-self:start;font-size:10px;padding:2px 9px;border-radius:20px;background:#1b3158;color:#dce7ff;margin:1px 0 3px;max-width:100%}
+.activities #act-list .act-card-meta{font-size:11px;line-height:1.35;color:#c2cfdf;margin:0}
+.activities #act-list .act-card-price{font-size:11px;line-height:1.4;color:#e0e9f9;margin:0 0 4px}
+.activities #act-list .act-card-view{margin-top:auto;min-height:37px;width:100%;padding:7px 10px;border:0;border-radius:10px;background:linear-gradient(115deg,#ff285a,#ff6336);font-size:12px;font-weight:750;color:white}
+.activities #act-list>.act-status{grid-column:1/-1}
+@media(hover:hover){.activities #act-list .act-modern-card:hover .act-card-visual img{transform:scale(1.035)}}
+@media(max-width:900px){.activities #act-browser #act-list{grid-template-columns:repeat(3,minmax(0,1fr))}.activities #act-browser .act-quick-categories{display:flex}.activities #act-browser .act-quick-category{flex:0 0 92px}.activities #act-browser .act-search-main{grid-template-columns:minmax(140px,1.3fr) 90px minmax(130px,1fr)}.activities #act-browser .act-search-main>button{grid-row:2}.activities #act-browser .act-search-main>button:last-child{grid-column:3}.activities #act-browser .act-search-main>button.act-filter-toggle{grid-column:1/3}}
+@media(max-width:600px){.activities #act-browser .act-quick-categories{gap:8px;margin-bottom:12px}.activities #act-browser .act-quick-category{flex-basis:82px;min-height:78px;font-size:12px}.activities #act-browser .act-search-main{grid-template-columns:1fr 1fr;gap:8px}.activities #act-browser .act-search-city{grid-column:1/-1}.activities #act-browser .act-search-main>button{grid-row:auto!important;grid-column:auto!important}.activities #act-browser .act-search-advanced{grid-template-columns:1fr 1fr}.activities #act-browser #act-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.activities #act-list .act-card-visual{height:110px}.activities #act-list .act-card-body{padding:9px;gap:5px}.activities #act-list h3{font-size:14px}.activities #act-browser .act-results-head h2{font-size:19px}}
+@media(max-width:380px){.activities #act-browser #act-list{grid-template-columns:1fr}.activities #act-list .act-card-visual{height:160px}}
+@media(prefers-reduced-motion:reduce){.activities #act-list .act-card-visual img{transition:none}}
+
+/* Five compact commands on one line; mobile scroll stays inside the search row. */
+.activities #act-browser .act-search-main{display:flex;flex-wrap:nowrap;align-items:flex-end;gap:6px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding:0 0 5px}
+.activities #act-browser .act-search-main>label{flex:0 0 auto;min-width:0}
+.activities #act-browser .act-search-main>.act-search-city{flex:1 0 160px;min-width:160px}
+.activities #act-browser .act-search-main>.act-search-radius{flex:0 0 80px}
+.activities #act-browser .act-search-main>.act-search-date{flex:1 0 132px;min-width:132px}
+.activities #act-browser .act-search-main>button{flex:0 0 76px;height:38px;min-height:38px;padding:7px 9px;font-size:13px;white-space:nowrap;margin:0}
+.activities #act-browser .act-search-main input,.activities #act-browser .act-search-main select{height:38px;min-height:38px;padding:7px 9px;font-size:13px}
+.activities #act-browser .act-city-controls{height:38px;min-height:38px}
+.activities #act-browser .act-city-controls input{height:36px;min-height:36px;padding:6px 8px}
+.activities #act-browser .act-city-controls button{height:36px;min-height:36px;flex-basis:28px;width:28px;font-size:20px}
+
+/* Smaller discovery illustrations; header, activity covers and commands unchanged. */
+.activities #act-browser .act-quick-categories{gap:6px;margin-bottom:10px}
+.activities #act-browser .act-quick-category{min-height:60px;padding:6px 4px;gap:4px;font-size:11px;border-radius:11px}
+.activities #act-browser .act-quick-category>span:first-child{font-size:22px}
+.activities #act-browser .act-quick-category img{width:38px;height:24px;border-radius:6px}
+@media(max-width:900px){.activities #act-browser .act-quick-category{flex-basis:68px}}
+@media(max-width:600px){.activities #act-browser .act-quick-category{flex-basis:64px;min-height:56px;font-size:10px}.activities #act-browser .act-quick-category img{width:34px;height:22px}}
+
+/* iPhone: six category tiles visible, followed by five fitted search commands. */
+@media(max-width:600px){
+ .activities #act-browser .act-quick-categories{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 25px)/6);gap:5px;padding-left:0;padding-right:0;scroll-snap-type:x proximity}
+ .activities #act-browser .act-quick-category{min-width:0;width:100%;min-height:52px;padding:5px 2px;gap:3px;font-size:9px;scroll-snap-align:start}
+ .activities #act-browser .act-quick-category>span:last-child{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .activities #act-browser .act-quick-category img{width:30px;height:20px}
+ .activities #act-browser .act-quick-category>span:first-child{font-size:20px}
+ .activities #act-browser .act-search-main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.85fr) minmax(0,1.35fr) minmax(0,.85fr) minmax(0,.8fr);gap:4px;overflow:visible;align-items:end}
+ .activities #act-browser .act-search-main>.act-search-city,.activities #act-browser .act-search-main>.act-search-radius,.activities #act-browser .act-search-main>.act-search-date{min-width:0;width:100%;grid-column:auto}
+ .activities #act-browser .act-search-main>label{font-size:9px;gap:3px}
+ .activities #act-browser .act-search-main>button{min-width:0;width:100%;height:34px;min-height:34px;padding:4px 2px;font-size:10px;border-radius:9px}
+ .activities #act-browser .act-search-main input,.activities #act-browser .act-search-main select{min-width:0;width:100%;height:34px;min-height:34px;padding:4px;font-size:10px;border-radius:9px}
+ .activities #act-browser .act-city-controls{min-width:0;width:100%;height:34px;min-height:34px;border-radius:9px}
+ .activities #act-browser .act-city-controls input{width:0;min-width:0;height:32px;min-height:32px;padding:4px;flex:1 1 0}
+ .activities #act-browser .act-city-controls button{flex:0 0 18px;width:18px;height:32px;min-height:32px;font-size:15px}
+ .activities #act-browser .act-search-date input::-webkit-calendar-picker-indicator{margin:0;padding:0;width:12px}
+}
