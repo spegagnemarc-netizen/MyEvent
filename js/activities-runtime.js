@@ -30,7 +30,10 @@ actOrganize.className = 'primary';
 actOrganize.textContent = '+ Organiser';
 actOrganize.addEventListener('click', () => switchTab('create'));
 
-actHeader.insertBefore(actOrganize, panel.querySelector('#act-close'));
+const actTitleRow = document.createElement('div');
+actTitleRow.className = 'act-title-row';
+actTitle.before(actTitleRow);
+actTitleRow.append(actTitle, actOrganize);
 document.body.append(panel);
 const organizerAccessNote=panel.querySelector('#act-gate');organizerAccessNote.hidden=true;panel.querySelector('#act-editor').before(organizerAccessNote);
 panel.querySelector('.act-tabs').after(panel.querySelector('#act-status'));

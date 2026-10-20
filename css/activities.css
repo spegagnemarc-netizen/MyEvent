@@ -409,3 +409,18 @@
  .activities #act-browser .act-city-controls button{flex:0 0 18px;width:18px;height:32px;min-height:32px;font-size:15px}
  .activities #act-browser .act-search-date input::-webkit-calendar-picker-indicator{margin:0;padding:0;width:12px}
 }
+
+/* iPhone adjustments: retain the current page width, six-tile rail and type scale. */
+.activities header{position:relative}
+.activities header>div{width:100%}
+.activities header .act-title-row{display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;gap:8px;width:100%;min-width:0}
+.activities header .act-title-row #act-title{min-width:0;max-width:none;overflow-wrap:anywhere}
+.activities header .act-title-row #act-organize{margin:0;justify-self:end;flex:none;white-space:nowrap}
+.activities header #act-close{position:absolute;right:0;top:8px}
+@media(max-width:600px){
+ .activities #act-browser .act-quick-category{height:90px;min-height:90px;padding:2px;gap:4px;justify-content:flex-start}
+ .activities #act-browser .act-quick-category>span:first-child{display:block;width:100%;min-height:0;flex:1;overflow:hidden;border-radius:9px}
+ .activities #act-browser .act-quick-category img{width:100%;height:100%;max-width:none;object-fit:cover;border-radius:9px}
+ .activities #act-browser .act-quick-category>span:last-child{flex:0 0 auto;line-height:13px}
+}
+@media(max-width:390px){.activities #act-browser .act-quick-category{height:88px;min-height:88px}}
