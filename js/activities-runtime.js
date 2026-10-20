@@ -48,7 +48,20 @@ let compactGroup='all';
 const compactGroups=[['all','🌍','Toutes',null],['sport','🏋️','Sport',['sport']],['games','🎳','Loisirs',['jeux','bowling']],['nature','🌿','Nature',['randonnee','famille']],['food','🍽️','Restaurants',['restaurant']],['culture','🎭','Culture',['culture']],['music','🎵','Musique',null],['friends','🫶','Rencontres',['autres']],['other','✨','Autres',['autres']]];
 const quickCategories=el('nav',null,'act-quick-categories');quickCategories.setAttribute('aria-label','Catégories d’activités');
 const quickButtons=[];
-for(const group of compactGroups){const b=button('',()=>{compactGroup=group[0];discoveryType='';discoveryPicker?.setValue('');$('act-search').elements.category.value='';syncQuickCategories();render();});b.className='act-quick-category';b.dataset.group=group[0];const icon=el('span',group[1]),art={sport:'sport',games:'bowling',nature:'nature',food:'restaurant',culture:'culture',music:'culture',friends:'jeux_societe',other:'velo'}[group[0]];if(art){const img=el('img');img.src='/assets/activities-ui/'+art+'.svg';img.alt='';icon.replaceChildren(img);}icon.setAttribute('aria-hidden','true');b.append(icon,el('span',group[2]));quickButtons.push(b);quickCategories.append(b);}
+for(const group of compactGroups){const b=button('',()=>{compactGroup=group[0];discoveryType='';discoveryPicker?.setValue('');$('act-search').elements.category.value='';syncQuickCategories();render();});b.className='act-quick-category';b.dataset.group=group[0];const icon=el('span',group[1]),art={sport:'sport',games:'bowling',nature:'nature',food:'restaurant',culture:'culture',music:'culture',friends:'jeux_societe',other:'velo'}[group[0]];if(art){const img=el('img');const photos={
+  sport:'sport',
+  games:'bowling',
+  nature:'nature',
+  food:'restaurant',
+  culture:'culture',
+  music:'musique'
+};
+const photo=photos[group[0]];
+img.src='/assets/activities-ui/'+(photo||art)+(photo?'.jpg':'.svg');
+img.onerror=()=>{
+  img.onerror=null;
+  img.src='/assets/activities-ui/'+art+'.svg';
+};img.alt='';icon.replaceChildren(img);}icon.setAttribute('aria-hidden','true');b.append(icon,el('span',group[2]));quickButtons.push(b);quickCategories.append(b);}
 function syncQuickCategories(){quickButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.group===compactGroup)));}
 syncQuickCategories();
 const search=$('act-search'),mapToggle=$('act-map-toggle'),gps=$('act-gps'),main=el('div',null,'act-search-main'),advanced=el('div',null,'act-search-advanced');advanced.id='act-advanced-filters';advanced.hidden=true;
