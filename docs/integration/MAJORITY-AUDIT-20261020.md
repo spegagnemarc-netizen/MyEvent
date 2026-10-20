@@ -1,5 +1,7 @@
 # ORÉVAMI — reprise bloquée par un candidat absent
 
+**Mise à jour : blocage levé.** Après autorisation de poursuivre depuis 5c857f2, recherche élargie aux anciens dossiers locaux : cee926fd retrouvé dans le clone du 18 octobre, importé par archive Git puis fusionné sans conflit dans la branche de travail. Le catalogue distant correspond exactement à celui de son installation corrigée, module et inscriptions fermés. Voir ../majority/STATUS.md pour la suite. Le texte ci-dessous conserve le constat initial limité à GitHub et au nouveau clone.
+
 Contrôle du 20 octobre 2026. Aucune modification applicative ou distante.
 
 ## Git vérifié

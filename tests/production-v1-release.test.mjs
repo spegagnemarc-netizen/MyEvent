@@ -27,7 +27,7 @@ test('Production client requires exact project and server adult eligibility; TES
  for(const [projectRef,adult,visible,save] of [['nxxvadbliinhvkirqkkl',true,true,true],['nxxvadbliinhvkirqkkl',false,true,false],['ahyyknfjsielnqyoxqgh',true,false,false]]){
  const d=new JSDOM('<button id="activitiesShortcut">Sorties</button>',{url:'https://orevami.com',runScripts:'outside-only',pretendToBeVisual:true});
  d.window.scrollTo=()=>{};d.window.myeventRuntime={ready:Promise.resolve({environment:'production',isTest:false,projectRef})};
- d.window.myeventCameraContext=()=>({user:{id:'00000000-0000-4000-8000-000000000001'},sb:{rpc:async name=>({data:name==='activities_capabilities'?{enabled:true,adult_access:adult,version:2,registrations_enabled:false}:[]})}});
+ d.window.myeventCameraContext=()=>({user:{id:'00000000-0000-4000-8000-000000000001'},sb:{rpc:async name=>({data:name==='activities_capabilities'?{enabled:true,adult_access:adult,version:3,automatic_majority:adult,can_create:adult,registrations_enabled:false}:[]})}});
  for(const source of sources)d.window.eval(source);await new Promise(r=>setTimeout(r,0));
  assert.equal(!!d.window.document.querySelector('#activitiesPanel'),visible);
  if(visible){d.window.document.querySelector('#activitiesShortcut').click();await new Promise(r=>setTimeout(r,0));d.window.document.querySelector('[data-act-tab="create"]').click();assert.equal(!d.window.document.querySelector('#act-editor button[type="submit"]').disabled,save);}
@@ -37,6 +37,6 @@ test('all 347 protected Production files and original search implementation are 
  const manifest=JSON.parse(await read('docs/integration/production-preservation.json')),hash=s=>createHash('sha256').update(s).digest('hex');
  for(const f of manifest.files){const bytes=await readFile(new URL(f.file,root));assert.ok(hash(bytes)===f.sha256||hash(bytes.toString().replaceAll('\r\n','\n'))===f.sha256,f.file);}
  const original=execFileSync('git',['show',manifest.base+':api/search-places.js'],{cwd:root,encoding:'utf8'});
- assert.equal((await read('api/search-places.js')).replace("\n    if(req.query?.integration_venues==='1')return require('../server/integration-venues')(req,res);\n",'').replaceAll('\r\n','\n'),original.replaceAll('\r\n','\n'));
+ assert.equal((await read('api/search-places.js')).replaceAll('\r\n','\n').replace("\n    if(req.query?.integration_venues==='1')return require('../server/integration-venues')(req,res);\n",''),original.replaceAll('\r\n','\n'));
  const sql=await read('docs/production-v1/001-install-closed.sql');assert.ok(!sql.includes('864beda0-b216-4b9a-9697-4dc8fd8c41f9'));assert.ok(!sql.includes('tutoriel-organisatrice'));
 });
