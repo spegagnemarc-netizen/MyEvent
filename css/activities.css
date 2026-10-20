@@ -371,3 +371,15 @@
 @media(max-width:600px){.activities #act-browser .act-quick-categories{gap:8px;margin-bottom:12px}.activities #act-browser .act-quick-category{flex-basis:82px;min-height:78px;font-size:12px}.activities #act-browser .act-search-main{grid-template-columns:1fr 1fr;gap:8px}.activities #act-browser .act-search-city{grid-column:1/-1}.activities #act-browser .act-search-main>button{grid-row:auto!important;grid-column:auto!important}.activities #act-browser .act-search-advanced{grid-template-columns:1fr 1fr}.activities #act-browser #act-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.activities #act-list .act-card-visual{height:110px}.activities #act-list .act-card-body{padding:9px;gap:5px}.activities #act-list h3{font-size:14px}.activities #act-browser .act-results-head h2{font-size:19px}}
 @media(max-width:380px){.activities #act-browser #act-list{grid-template-columns:1fr}.activities #act-list .act-card-visual{height:160px}}
 @media(prefers-reduced-motion:reduce){.activities #act-list .act-card-visual img{transition:none}}
+
+/* Five compact commands on one line; mobile scroll stays inside the search row. */
+.activities #act-browser .act-search-main{display:flex;flex-wrap:nowrap;align-items:flex-end;gap:6px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding:0 0 5px}
+.activities #act-browser .act-search-main>label{flex:0 0 auto;min-width:0}
+.activities #act-browser .act-search-main>.act-search-city{flex:1 0 160px;min-width:160px}
+.activities #act-browser .act-search-main>.act-search-radius{flex:0 0 80px}
+.activities #act-browser .act-search-main>.act-search-date{flex:1 0 132px;min-width:132px}
+.activities #act-browser .act-search-main>button{flex:0 0 76px;height:38px;min-height:38px;padding:7px 9px;font-size:13px;white-space:nowrap;margin:0}
+.activities #act-browser .act-search-main input,.activities #act-browser .act-search-main select{height:38px;min-height:38px;padding:7px 9px;font-size:13px}
+.activities #act-browser .act-city-controls{height:38px;min-height:38px}
+.activities #act-browser .act-city-controls input{height:36px;min-height:36px;padding:6px 8px}
+.activities #act-browser .act-city-controls button{height:36px;min-height:36px;flex-basis:28px;width:28px;font-size:20px}
