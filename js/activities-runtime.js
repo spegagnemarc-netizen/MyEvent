@@ -65,7 +65,10 @@ function render(){
  const target=$('act-list');target.replaceChildren();const filtered=C.filter(rows,filters());
  for(const a of filtered){const card=el('article',null,'act-card'),cover=el('div','🌿','act-cover'),image=safeImage(a.cover_url);if(image){const img=el('img');img.src=image;img.alt='';img.className='act-cover';card.append(img);}else card.append(cover);
  const body=el('div',null,'act-card-body');body.append(el('span',C.categories[a.category]||'Activité','act-badge'),el('h3',a.title),el('p',dates(a.starts_at)),el('p',a.city),el('p',`${a.participants_count} / ${a.capacity} personnes · ${a.remaining} place(s)`),el('p',a.status==='cancelled'?'Annulé':a.membership==='pending'?'Demande en attente':a.membership==='accepted'?'Inscrit':a.remaining===0?'Complet':a.cost_mode==='free'?'Gratuit':'Frais sur place'),button('Voir la sortie',()=>detail(a.id)));card.append(body);target.append(card);}
- if(!filtered.length){const empty=el('div',null,'act-empty wide');empty.append(el('span','🌍'),el('h2','Les prochaines sorties commencent ici'),el('p',enabled?'Aucune activité ne correspond. Essayez une autre ville ou préparez votre sortie.':'Préparez votre première sortie. Les activités apparaîtront après activation sécurisée de TEST.'),button('Préparer une activité',()=>switchTab('create'),true));target.append(empty);}
+if(!filtered.length){
+  const empty=el('p','Aucune activité disponible pour le moment.','act-status');
+  target.append(empty);
+}
  if(!$('act-map').hidden)renderMap(filtered);
 }
 function switchTab(value){venueWidget?.destroy();venueWidget=null;panel.scrollTop=0;tab=value;panel.querySelectorAll('[data-act-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.actTab===value)));$('act-browser').hidden=value==='create';$('act-editor').hidden=value!=='create';$('act-detail').hidden=true;if(value==='create')editor();else{if(value==='nearby'&&!position)message('Touchez « Utiliser ma position » pour autoriser une recherche à proximité.');render();}}
