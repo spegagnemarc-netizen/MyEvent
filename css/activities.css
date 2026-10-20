@@ -391,3 +391,21 @@
 .activities #act-browser .act-quick-category img{width:38px;height:24px;border-radius:6px}
 @media(max-width:900px){.activities #act-browser .act-quick-category{flex-basis:68px}}
 @media(max-width:600px){.activities #act-browser .act-quick-category{flex-basis:64px;min-height:56px;font-size:10px}.activities #act-browser .act-quick-category img{width:34px;height:22px}}
+
+/* iPhone: six category tiles visible, followed by five fitted search commands. */
+@media(max-width:600px){
+ .activities #act-browser .act-quick-categories{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 25px)/6);gap:5px;padding-left:0;padding-right:0;scroll-snap-type:x proximity}
+ .activities #act-browser .act-quick-category{min-width:0;width:100%;min-height:52px;padding:5px 2px;gap:3px;font-size:9px;scroll-snap-align:start}
+ .activities #act-browser .act-quick-category>span:last-child{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .activities #act-browser .act-quick-category img{width:30px;height:20px}
+ .activities #act-browser .act-quick-category>span:first-child{font-size:20px}
+ .activities #act-browser .act-search-main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.85fr) minmax(0,1.35fr) minmax(0,.85fr) minmax(0,.8fr);gap:4px;overflow:visible;align-items:end}
+ .activities #act-browser .act-search-main>.act-search-city,.activities #act-browser .act-search-main>.act-search-radius,.activities #act-browser .act-search-main>.act-search-date{min-width:0;width:100%;grid-column:auto}
+ .activities #act-browser .act-search-main>label{font-size:9px;gap:3px}
+ .activities #act-browser .act-search-main>button{min-width:0;width:100%;height:34px;min-height:34px;padding:4px 2px;font-size:10px;border-radius:9px}
+ .activities #act-browser .act-search-main input,.activities #act-browser .act-search-main select{min-width:0;width:100%;height:34px;min-height:34px;padding:4px;font-size:10px;border-radius:9px}
+ .activities #act-browser .act-city-controls{min-width:0;width:100%;height:34px;min-height:34px;border-radius:9px}
+ .activities #act-browser .act-city-controls input{width:0;min-width:0;height:32px;min-height:32px;padding:4px;flex:1 1 0}
+ .activities #act-browser .act-city-controls button{flex:0 0 18px;width:18px;height:32px;min-height:32px;font-size:15px}
+ .activities #act-browser .act-search-date input::-webkit-calendar-picker-indicator{margin:0;padding:0;width:12px}
+}
