@@ -70,3 +70,40 @@
 #socialHome .socialFilter.active,#socialHome .socialFilter[aria-pressed=true]{background:linear-gradient(115deg,#8500f5,#dc00f5)!important;border-color:#bd22ff!important;color:#fff!important;box-shadow:0 0 16px #a000f533}
 #activitiesShortcut.activitiesCard{background:linear-gradient(145deg,#131528,#241038);border-color:#a938ff;box-shadow:0 0 15px #9e28ff44}
 #orevamiActivityFeed{border-color:#4b2b70;background:linear-gradient(145deg,#101322,#0b0d19)}
+/* Validated reference: one dark showcase and a direct, image-first detail sheet. */
+#orevamiActivityFeed{border:1px solid #8e24d2;border-radius:22px;background:linear-gradient(130deg,#0b1123,#070e1b);padding:16px}
+#orevamiActivityFeed .activityShowcaseHeader{margin-bottom:6px}#orevamiActivityFeed .activityShowcaseHeader small{display:none}
+#orevamiActivityFeed .activityShowcaseHeader h2{font-size:21px;font-weight:800}
+#orevamiActivityFeed .activityScope{display:inline-block;margin:4px 0 10px;font-size:12px;color:#c6cbe0}
+#orevamiActivityFeed .activityAreaDetails{margin:0 0 12px;font-size:12px;color:#c6b0ef}
+#orevamiActivityFeed .activityAreaDetails>summary{cursor:pointer;list-style:none;min-height:26px;display:flex;align-items:center}
+#orevamiActivityFeed .activityAreaDetails[open] .activityAreaForm{padding-top:8px}
+#orevamiActivityFeed .activityShowcaseCard{border-color:#562285;border-radius:18px;background:linear-gradient(135deg,#101328,#070f23);flex-basis:258px;box-shadow:none}
+#orevamiActivityFeed .activityVisual{height:165px}#orevamiActivityFeed .activityShowcaseBody{padding:12px;gap:5px}
+#orevamiActivityFeed .activityShowcaseBody h3{font-size:19px;font-weight:800}#orevamiActivityFeed .activityCity{font-size:13px;color:#b4bad1}
+#orevamiActivityFeed .activityFacts{color:#bbc1d8;font-size:13px}.activityFacts>span:first-child::first-letter{color:#d32aff}
+#orevamiActivityFeed .activityView{font-size:14px;min-height:42px;border-radius:12px}
+#orevamiActivityFeed .activityDistance{top:10px;left:10px;right:auto;background:#121232dc;font-size:12px;font-weight:700}
+#orevamiActivityFeed .activityDistance~.activityCategory{top:44px}
+#orevamiActivityFeed .activityCategory{top:auto;bottom:32px;font-size:10px}#orevamiActivityFeed .activityOwner{display:none}
+#orevamiActivityFeed .activityCreate{width:auto;min-height:32px;margin:3px 0 0;padding:4px 0;background:transparent;border:0;color:#c994ff;font-size:12px}
+.activities.act-detail-mode{background:#070c15;padding-top:20px}
+.activities.act-detail-mode .act-wrap{max-width:780px;min-height:0}
+.activities.act-detail-mode .act-wrap>header{position:absolute;right:max(16px,env(safe-area-inset-right));top:12px;z-index:2}
+.activities.act-detail-mode .act-wrap>header>div,.activities.act-detail-mode #act-gate,.activities.act-detail-mode .act-tabs{display:none}
+.activities.act-detail-mode #act-close{width:38px;height:38px;min-height:38px;font-size:27px;background:#202639}
+.activities.act-detail-mode #act-status:empty{display:none}
+.activities.act-detail-mode #act-detail{padding:12px;border-radius:22px;background:#141820;border:1px solid #303346;box-shadow:0 16px 70px #0005}
+.activities .actDetailHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 10px;color:#eceefa;font-size:13px}
+.activities .actDetailHead .actDetailBack{border:0;background:transparent;color:#b8b2ed;font-size:12px;min-height:30px;padding:3px}
+.activities #act-detail>.actDetailVisual{height:clamp(220px,40vw,400px);margin:0 0 12px;border-radius:13px}
+.activities #act-detail .actDetailCategory{color:#bca9f7;font-size:11px;font-weight:800;margin:8px 0 5px}
+.activities #act-detail .actDetailTitle{font-size:clamp(23px,4vw,30px);line-height:1.2;margin:4px 0 10px;color:#fff}
+.activities #act-detail>p{color:#c0c5d3;margin:9px 0;font-size:14px;white-space:pre-line}
+.activities #act-detail .actDetailActions{border-top:1px solid #313246;padding-top:14px;margin-top:16px}
+.activities #act-detail>.act-person{border-bottom:1px solid #303346;padding:10px 0}
+@media(max-width:500px){#orevamiActivityFeed{padding:12px}#orevamiActivityFeed .activityShowcaseHeader h2{font-size:18px}#orevamiActivityFeed .activityShowcaseCard{flex-basis:242px}.activities.act-detail-mode{padding:60px 8px 24px}.activities.act-detail-mode .act-wrap>header{top:10px}.activities .actDetailHead{align-items:start}.activities .actDetailHead .actDetailBack{max-width:145px;text-align:right;font-size:11px}}
+#orevamiActivityFeed .activityShowcaseCard:only-child{flex-basis:100%;display:grid;grid-template-columns:45% minmax(0,1fr)}
+#orevamiActivityFeed .activityShowcaseCard:only-child .activityVisual{height:100%;min-height:220px}
+.activities.act-detail-mode .act-wrap>header{position:fixed}
+@media(max-width:500px){#orevamiActivityFeed .activityShowcaseCard:only-child{grid-template-columns:1fr}#orevamiActivityFeed .activityShowcaseCard:only-child .activityVisual{height:160px;min-height:160px}}
