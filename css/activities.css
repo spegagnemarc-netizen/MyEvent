@@ -119,3 +119,66 @@
  .activities .act-fields,.activities .act-filters{grid-template-columns:1fr}
  .activities .act-type-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* ORÉVAMI — En-tête compact Activités & Rencontres */
+.activities header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 16px;
+}
+
+.activities header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.activities .act-header-logo {
+  display: block;
+  width: 140px;
+  max-width: 100%;
+  height: auto;
+  max-height: 58px;
+  object-fit: contain;
+  object-position: left center;
+  margin-bottom: 6px;
+}
+
+.activities header h1 {
+  font-size: clamp(20px, 3vw, 28px);
+  margin: 4px 0;
+}
+
+.activities header p {
+  font-size: 13px;
+  margin: 2px 0;
+}
+
+.activities #act-organize {
+  flex-shrink: 0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.activities #act-close {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .activities header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .activities header > div {
+    flex-basis: 100%;
+  }
+
+  .activities .act-header-logo {
+    width: 115px;
+  }
+
+  .activities #act-organize {
+    flex: 1;
+  }
+}
