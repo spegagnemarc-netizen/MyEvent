@@ -119,3 +119,213 @@
  .activities .act-fields,.activities .act-filters{grid-template-columns:1fr}
  .activities .act-type-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* ORÉVAMI — En-tête compact Activités & Rencontres */
+.activities header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 16px;
+}
+
+.activities header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.activities .act-header-logo {
+  display: block;
+  width: 140px;
+  max-width: 100%;
+  height: auto;
+  max-height: 58px;
+  object-fit: contain;
+  object-position: left center;
+  margin-bottom: 6px;
+}
+
+.activities header h1 {
+  font-size: clamp(20px, 3vw, 28px);
+  margin: 4px 0;
+}
+
+.activities header p {
+  font-size: 13px;
+  margin: 2px 0;
+}
+
+.activities #act-organize {
+  flex-shrink: 0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.activities #act-close {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .activities header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .activities header > div {
+    flex-basis: 100%;
+  }
+
+  .activities .act-header-logo {
+    width: 115px;
+  }
+
+  .activities #act-organize {
+    flex: 1;
+  }
+}
+
+/* ORÉVAMI — Recherche et catégories compactes */
+.activities .act-tabs {
+  padding: 10px 0;
+  gap: 7px;
+}
+
+.activities .act-tabs button {
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.activities #act-search {
+  gap: 10px;
+  margin: 8px 0 12px;
+  align-items: end;
+}
+
+.activities #act-search label {
+  gap: 4px;
+  font-size: 12px;
+}
+
+.activities #act-search input:not([type=checkbox]),
+.activities #act-search select {
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.activities #act-search .act-toolbar {
+  margin: 4px 0;
+  gap: 8px;
+}
+
+.activities #act-search .act-toolbar button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.activities #act-search .act-catalog {
+  grid-column: 1 / -1;
+  padding: 2px 12px;
+}
+
+.activities #act-search .act-family-tabs {
+  padding: 8px 0;
+}
+
+.activities #act-search .act-type-card {
+  min-height: 72px;
+  padding: 7px 5px;
+}
+
+.activities #act-search .act-type-card > span:first-child {
+  font-size: 24px;
+}
+
+.activities #act-list {
+  gap: 12px;
+}
+
+.activities #act-list .act-cover {
+  height: 130px;
+}
+
+.activities #act-list .act-card-body {
+  padding: 14px;
+}
+
+@media (max-width: 600px) {
+  .activities #act-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .activities #act-search .act-toolbar {
+    grid-column: 1 / -1;
+  }
+
+  .activities #act-search .act-toolbar button {
+    flex: 1 1 auto;
+  }
+}
+
+/* ORÉVAMI — Bouton Organiser à droite */
+.activities header {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.activities header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.activities #act-organize {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.activities #act-close {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+  .activities header {
+    flex-wrap: nowrap;
+  }
+
+  .activities header > div {
+    flex: 1 1 auto;
+  }
+}
+
+/* Activités — mêmes réglages que les autres pages ORÉVAMI */
+.activities .act-header-logo {
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  max-height: 72px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.activities header #act-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 750;
+  line-height: 1.5;
+  letter-spacing: 2.1px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 1px 2px #0009;
+}
+
+@media (max-width: 400px) {
+  .activities .act-header-logo {
+    width: 155px;
+    max-height: 55px;
+  }
+}
