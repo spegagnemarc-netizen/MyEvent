@@ -40,7 +40,7 @@ async function init(){
  function draw({state,cap,error,loading}){
   if(document.activeElement!==city)city.value=state.city;radius.value=String(state.radius);filters.forEach(b=>{const active=b.dataset.activityFilter===state.view;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
   const hasArea=state.city||state.position;areaDetails.open=!hasArea;areaSummary.textContent=hasArea?'⌖ Modifier mon secteur':'⌖ Choisir mon secteur';scope.textContent=(names[state.view]||'Toutes les sorties')+' · '+(state.geoSource==='gps'?'autour de ma position':state.city||'choisissez votre secteur')+(state.position?` · ${state.radius} km`:'');
-  const rows=D.select();list.replaceChildren();for(const a of rows){const item=card(a,{publicOnly:false,position:state.position,onOpen:id=>root.myeventOpenActivity?.(id,'view',{origin:'feed'})});if(item)list.append(item);}
+  const rows=D.select().slice(0,3);list.replaceChildren();for(const a of rows){const item=card(a,{publicOnly:false,position:state.position,onOpen:id=>root.myeventOpenActivity?.(id,'view',{origin:'feed'})});if(item)list.append(item);}
   next.hidden=list.childElementCount<2;footer.disabled=cap.can_create!==true;
   status.textContent=error||(loading?'Chargement des sorties…':!hasArea?'Choisissez une ville ou utilisez votre position pour découvrir les sorties de votre secteur.':!list.childElementCount?'Aucune sortie disponible pour ces critères. Élargissez le rayon ou découvrez toutes les sorties.':'');
   if(state.city&&!state.position&&!error&&!loading)status.textContent+=(status.textContent?' ':'')+'Ville non localisée : seules les sorties de cette ville sont affichées ; rayon non appliqué.';

@@ -103,7 +103,10 @@
 .activities #act-detail .actDetailActions{border-top:1px solid #313246;padding-top:14px;margin-top:16px}
 .activities #act-detail>.act-person{border-bottom:1px solid #303346;padding:10px 0}
 @media(max-width:500px){#orevamiActivityFeed{padding:12px}#orevamiActivityFeed .activityShowcaseHeader h2{font-size:18px}#orevamiActivityFeed .activityShowcaseCard{flex-basis:242px}.activities.act-detail-mode{padding:60px 8px 24px}.activities.act-detail-mode .act-wrap>header{top:10px}.activities .actDetailHead{align-items:start}.activities .actDetailHead .actDetailBack{max-width:145px;text-align:right;font-size:11px}}
-#orevamiActivityFeed .activityShowcaseCard:only-child{flex-basis:100%;display:grid;grid-template-columns:45% minmax(0,1fr)}
-#orevamiActivityFeed .activityShowcaseCard:only-child .activityVisual{height:100%;min-height:220px}
 .activities.act-detail-mode .act-wrap>header{position:fixed}
-@media(max-width:500px){#orevamiActivityFeed .activityShowcaseCard:only-child{grid-template-columns:1fr}#orevamiActivityFeed .activityShowcaseCard:only-child .activityVisual{height:160px;min-height:160px}}
+
+/* Home only: up to three narrow cards; a lone result never expands. */
+#orevamiActivityFeed .activityFeedList{display:flex;flex-wrap:nowrap;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory}
+#orevamiActivityFeed .activityShowcaseCard{display:flex;flex-direction:column;flex:0 0 clamp(220px,calc((100% - 24px)/3),320px);min-width:0;scroll-snap-align:start}
+#orevamiActivityFeed .activityShowcaseCard .activityVisual{height:165px;min-height:165px}
+@media(max-width:600px){#orevamiActivityFeed .activityShowcaseCard{flex-basis:242px;max-width:calc(100vw - 64px)}}
