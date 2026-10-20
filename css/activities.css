@@ -182,3 +182,89 @@
     flex: 1;
   }
 }
+
+/* ORÉVAMI — Recherche et catégories compactes */
+.activities .act-tabs {
+  padding: 10px 0;
+  gap: 7px;
+}
+
+.activities .act-tabs button {
+  min-height: 38px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.activities #act-search {
+  gap: 10px;
+  margin: 8px 0 12px;
+  align-items: end;
+}
+
+.activities #act-search label {
+  gap: 4px;
+  font-size: 12px;
+}
+
+.activities #act-search input:not([type=checkbox]),
+.activities #act-search select {
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.activities #act-search .act-toolbar {
+  margin: 4px 0;
+  gap: 8px;
+}
+
+.activities #act-search .act-toolbar button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.activities #act-search .act-catalog {
+  grid-column: 1 / -1;
+  padding: 2px 12px;
+}
+
+.activities #act-search .act-family-tabs {
+  padding: 8px 0;
+}
+
+.activities #act-search .act-type-card {
+  min-height: 72px;
+  padding: 7px 5px;
+}
+
+.activities #act-search .act-type-card > span:first-child {
+  font-size: 24px;
+}
+
+.activities #act-list {
+  gap: 12px;
+}
+
+.activities #act-list .act-cover {
+  height: 130px;
+}
+
+.activities #act-list .act-card-body {
+  padding: 14px;
+}
+
+@media (max-width: 600px) {
+  .activities #act-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .activities #act-search .act-toolbar {
+    grid-column: 1 / -1;
+  }
+
+  .activities #act-search .act-toolbar button {
+    flex: 1 1 auto;
+  }
+}
