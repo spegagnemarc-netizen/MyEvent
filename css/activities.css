@@ -383,3 +383,11 @@
 .activities #act-browser .act-city-controls{height:38px;min-height:38px}
 .activities #act-browser .act-city-controls input{height:36px;min-height:36px;padding:6px 8px}
 .activities #act-browser .act-city-controls button{height:36px;min-height:36px;flex-basis:28px;width:28px;font-size:20px}
+
+/* Smaller discovery illustrations; header, activity covers and commands unchanged. */
+.activities #act-browser .act-quick-categories{gap:6px;margin-bottom:10px}
+.activities #act-browser .act-quick-category{min-height:60px;padding:6px 4px;gap:4px;font-size:11px;border-radius:11px}
+.activities #act-browser .act-quick-category>span:first-child{font-size:22px}
+.activities #act-browser .act-quick-category img{width:38px;height:24px;border-radius:6px}
+@media(max-width:900px){.activities #act-browser .act-quick-category{flex-basis:68px}}
+@media(max-width:600px){.activities #act-browser .act-quick-category{flex-basis:64px;min-height:56px;font-size:10px}.activities #act-browser .act-quick-category img{width:34px;height:22px}}
