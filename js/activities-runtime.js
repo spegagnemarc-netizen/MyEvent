@@ -50,9 +50,9 @@ const quickCategories=el('nav',null,'act-quick-categories');quickCategories.setA
 const quickButtons=[];
 for(const group of compactGroups){const b=button('',()=>{compactGroup=group[0];discoveryType='';discoveryPicker?.setValue('');$('act-search').elements.category.value='';syncQuickCategories();render();});b.className='act-quick-category';b.dataset.group=group[0];const icon=el('span',group[1]),art={sport:'sport',games:'bowling',nature:'nature',food:'restaurant',culture:'culture',music:'culture',friends:'jeux_societe',other:'velo'}[group[0]];if(art){const img=el('img');const photos={
   sport:'sport',
-  games:'bowling',
+  games:'loisirs',
   nature:'nature',
-  food:'restaurant',
+  food:'restaurants',
   culture:'culture',
   music:'musique'
 };
