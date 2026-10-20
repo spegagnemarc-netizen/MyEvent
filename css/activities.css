@@ -268,3 +268,35 @@
     flex: 1 1 auto;
   }
 }
+
+/* ORÉVAMI — Bouton Organiser à droite */
+.activities header {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.activities header > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.activities #act-organize {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.activities #act-close {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 600px) {
+  .activities header {
+    flex-wrap: nowrap;
+  }
+
+  .activities header > div {
+    flex: 1 1 auto;
+  }
+}
