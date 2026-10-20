@@ -48,14 +48,18 @@ let compactGroup='all';
 const compactGroups=[['all','🌍','Toutes',null],['sport','🏋️','Sport',['sport']],['games','🎳','Loisirs',['jeux','bowling']],['nature','🌿','Nature',['randonnee','famille']],['food','🍽️','Restaurants',['restaurant']],['culture','🎭','Culture',['culture']],['music','🎵','Musique',null],['friends','🫶','Rencontres',['autres']],['other','✨','Autres',['autres']]];
 const quickCategories=el('nav',null,'act-quick-categories');quickCategories.setAttribute('aria-label','Catégories d’activités');
 const quickButtons=[];
-for(const group of compactGroups){const b=button('',()=>{compactGroup=group[0];discoveryType='';discoveryPicker?.setValue('');$('act-search').elements.category.value='';syncQuickCategories();render();});b.className='act-quick-category';b.dataset.group=group[0];const icon=el('span',group[1]),art={sport:'sport',games:'bowling',nature:'nature',food:'restaurant',culture:'culture',music:'culture',friends:'jeux_societe',other:'velo'}[group[0]];if(art){const img=el('img');const photos={
+for(const group of compactGroups){const b=button('',()=>{compactGroup=group[0];discoveryType='';discoveryPicker?.setValue('');$('act-search').elements.category.value='';syncQuickCategories();render();});b.className='act-quick-category';b.dataset.group=group[0];const icon=el('span',group[1]),art={sport:'sport',games:'bowling',nature:'nature',food:'restaurant',culture:'culture',music:'culture',friends:'jeux_societe',other:'velo'}[group[0]];if(art||group[0]==='all'){const img=el('img');
+const photos={
+  all:'toutes',
   sport:'sport',
   games:'loisirs',
   nature:'nature',
   food:'restaurants',
   culture:'culture',
-  music:'musique'
-};
+  music:'musique',
+  friends:'rencontres',
+  other:'autres'
+};                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 const photo=photos[group[0]];
 img.src='/assets/activities-ui/'+(photo||art)+(photo?'.jpg':'.svg');
 img.onerror=()=>{
