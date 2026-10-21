@@ -31,6 +31,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "^/politique-de-confidentialite/?$",
+      "dest": "/politique-de-confidentialite.html"
+    },
+    {
       "src": "^/api/runtime-config$",
       "dest": "/api/camera-ai?runtime_config=1"
     },
