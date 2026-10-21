@@ -27,8 +27,8 @@ async function publish({config,sb,userId,identity,requestId,targetId=null,data,b
 async function cancel({config,sb,requestId}){testOnly(config);if(requestId)await rpc(sb,'activities_cover_cancel',{p_request:requestId});}
 async function resolveRows({config,sb,rows,userId,identity}){
  testOnly(config);const paths=[...new Set(rows.map(a=>a.cover_path).filter(Boolean))];if(!paths.length)return rows;
- const signed=new Map();for(let offset=0;offset<paths.length;offset+=25){const batch=paths.slice(offset,offset+25),r=await sb.storage.from('activity-media').createSignedUrls(batch,300);if(identity()!==userId)throw Error('Session modifiée.');if(!r.error)for(const item of r.data||[])if(item.signedUrl&&!item.error)signed.set(item.path,item.signedUrl);}
- return rows.map(a=>a.cover_path?{...a,cover_url:signed.get(a.cover_path)||null}:a);
+ const signed=new Map();for(let offset=0;offset<paths.length;offset+=25){const batch=paths.slice(offset,offset+25);let r=await sb.storage.from('activity-media').createSignedUrls(batch,300);if(identity()!==userId)throw Error('Session modifiée.');if(r.error)r=await sb.storage.from('activity-media').createSignedUrls(batch,300);if(identity()!==userId)throw Error('Session modifiée.');if(!r.error)for(const item of r.data||[])if(item.signedUrl&&!item.error)signed.set(item.path,item.signedUrl);}
+ return rows.map(a=>a.cover_path?{...a,cover_url:signed.get(a.cover_path)||root.OrevamiActivitiesCore?.coverURL(a.cover_url)||null}:a);
 }
 const api=Object.freeze({normalise,publish,cancel,resolveRows});root.OrevamiActivitiesMedia=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
