@@ -26,7 +26,7 @@
    const capabilities=await sb.rpc('activities_capabilities');if(version!==ticket||id!==context().user?.id)return snapshot();if(capabilities.error)throw capabilities.error;
    cap=capabilities.data||{};if(cap.enabled!==true||cap.version!==4||cap.account_access!==true){rows=[];error='Les sorties ne sont pas accessibles pour ce compte.';return snapshot();}
    const result=await sb.rpc('activities_list');if(version!==ticket||id!==context().user?.id)return snapshot();if(result.error)throw result.error;
-   const seen=new Set();rows=(Array.isArray(result.data)?result.data:[]).filter(a=>a?.id&&!seen.has(a.id)&&seen.add(a.id));error='';loadedAt=Date.now();
+   const seen=new Set();rows=(Array.isArray(result.data)?result.data:[]).filter(a=>a?.id&&!seen.has(a.id)&&seen.add(a.id));if(root.OrevamiActivitiesMedia){const hydrated=await root.OrevamiActivitiesMedia.resolveRows({config:await root.myeventRuntime.ready,sb,rows,userId:id,identity:()=>context().user?.id||''});if(version!==ticket||id!==context().user?.id)return snapshot();rows=hydrated;}error='';loadedAt=Date.now();
   }catch{if(version===ticket){rows=[];cap={};error='Sorties indisponibles pour le moment. Le reste de l’accueil reste accessible.';}}
   finally{if(version===ticket){pending=null;emit();}}return snapshot();})();
   emit();return pending;
