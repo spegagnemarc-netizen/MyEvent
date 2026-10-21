@@ -31,6 +31,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "^/suppression-compte/?$",
+      "dest": "/suppression-compte.html"
+    },
+    {
       "src": "^/politique-de-confidentialite/?$",
       "dest": "/politique-de-confidentialite.html"
     },
