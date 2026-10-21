@@ -70,3 +70,44 @@
 #socialHome .socialFilter.active,#socialHome .socialFilter[aria-pressed=true]{background:linear-gradient(115deg,#8500f5,#dc00f5)!important;border-color:#bd22ff!important;color:#fff!important;box-shadow:0 0 16px #a000f533}
 #activitiesShortcut.activitiesCard{background:linear-gradient(145deg,#131528,#241038);border-color:#a938ff;box-shadow:0 0 15px #9e28ff44}
 #orevamiActivityFeed{border-color:#4b2b70;background:linear-gradient(145deg,#101322,#0b0d19)}
+/* Compact home activity showcase only; ordinary social posts are untouched. */
+#orevamiActivityFeed{padding:10px;border-radius:16px;background:linear-gradient(135deg,#100c21,#061321);border-color:#4c246c}
+#orevamiActivityFeed .activityShowcaseHeader{margin:0 0 5px;gap:6px;flex-wrap:nowrap}
+#orevamiActivityFeed .activityShowcaseHeader small{display:none}
+#orevamiActivityFeed .activityShowcaseHeader h2{font-size:16px;margin:0;line-height:1.25}
+#orevamiActivityFeed .activityBrowse{font-size:10px;min-height:28px;white-space:nowrap;padding:3px 0}
+#orevamiActivityFeed .activitySector{margin:0 0 6px;color:#bcb3dc;font-size:11px}
+#orevamiActivityFeed .activitySector>summary{min-height:26px;cursor:pointer;list-style:none;display:flex;align-items:center}
+#orevamiActivityFeed .activitySector[open]{border:1px solid #29344b;border-radius:10px;padding:8px}
+#orevamiActivityFeed .activitySector .activityScope{margin:4px 0;font-size:10px}
+#orevamiActivityFeed .activityFeedStatus{font-size:11px;line-height:1.3;margin:3px 0 7px}
+#orevamiActivityFeed .activityFeedStatus:empty{display:none}
+#orevamiActivityFeed .activityFeedList{gap:8px;padding:0 0 5px;flex-wrap:nowrap}
+#orevamiActivityFeed .activityShowcaseCard{flex:0 0 clamp(110px,calc((100% - 16px)/3),240px);border-radius:12px;border-color:#4b256c;background:linear-gradient(#101126,#071022);min-width:0}
+#orevamiActivityFeed .activityVisual{height:96px}
+#orevamiActivityFeed .activityVisual>small{font-size:8px!important;left:4px;right:4px;bottom:4px;padding:2px 3px}
+#orevamiActivityFeed .activityCategory,#orevamiActivityFeed .activityOwner{display:none}
+#orevamiActivityFeed .activityDistance{top:5px;left:5px;right:auto;font-size:9px;padding:3px 5px}
+#orevamiActivityFeed .activityShowcaseBody{padding:7px;gap:4px}
+#orevamiActivityFeed .activityShowcaseBody h3{font-size:13px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityCity{font-size:10px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityFacts{font-size:10px;gap:3px;line-height:1.25}
+#orevamiActivityFeed .activityPrice{font-size:9px;line-height:1.2;margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityView{font-size:11px;min-height:31px;padding:5px;border-radius:8px;width:100%}
+#orevamiActivityFeed .activityCreate{min-height:26px;margin:3px 0 0;padding:3px 0;border:0;background:none;color:#c9a6fa;font-size:10px;width:auto}
+#orevamiActivityFeed .activityCarouselNext{height:30px;min-height:30px;width:30px;top:36px;right:-5px;font-size:24px}
+@media(max-width:500px){#orevamiActivityFeed .activityVisual{height:80px}#orevamiActivityFeed .activityShowcaseHeader h2{font-size:14px}#orevamiActivityFeed .activityBrowse{font-size:9px}#orevamiActivityFeed .activityShowcaseBody h3{font-size:12px}}
+/* Only feed-origin details receive the approved photo-first presentation. */
+.activities.feed-detail-mode{padding-top:16px;background:#080d16}
+.activities.feed-detail-mode .act-wrap{max-width:780px;min-height:0}
+.activities.feed-detail-mode .act-wrap>header{position:fixed;right:12px;top:10px;z-index:2;padding:0;width:38px;height:38px}
+.activities.feed-detail-mode .act-wrap>header>div,.activities.feed-detail-mode .act-tabs,.activities.feed-detail-mode #act-gate{display:none}
+.activities.feed-detail-mode #act-close{position:static;min-height:36px;width:36px;height:36px;font-size:25px;background:#20283a}
+.activities.feed-detail-mode #act-detail{margin:0;padding:12px;background:#141820;border:1px solid #343647;border-radius:20px}
+.activities .feedDetailHead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;margin-bottom:10px;color:#f1f1fa}
+.activities .feedDetailHead button{min-height:28px;border:0;background:none;color:#b5b0e5;font-size:11px;padding:3px}
+.activities.feed-detail-mode #act-detail>.actDetailVisual{height:clamp(200px,40vw,400px);margin:0 0 10px;border-radius:12px}
+.activities.feed-detail-mode #act-detail h2{font-size:26px;line-height:1.2;margin:6px 0 10px}
+.activities .feedDetailCategory{color:#b5a4ee;font-weight:700;font-size:11px}
+.activities.feed-detail-mode #act-detail>p{font-size:14px;line-height:1.45;white-space:pre-line}
+@media(max-width:500px){.activities.feed-detail-mode{padding:52px 8px 20px}.activities.feed-detail-mode #act-detail{padding:10px}.activities.feed-detail-mode #act-detail>.actDetailVisual{height:220px}.activities.feed-detail-mode #act-detail h2{font-size:23px}}
