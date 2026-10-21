@@ -32,7 +32,7 @@ async function init(){
  const list=node('div',null,'activityFeedList');list.setAttribute('role','list');list.setAttribute('aria-label','Sorties accessibles dans votre secteur');list.tabIndex=0;
  const next=action('›',()=>list.scrollBy({left:list.clientWidth*.85,behavior:'smooth'}),'activityCarouselNext');next.setAttribute('aria-label','Sorties suivantes');
  const rail=node('div',null,'activityRail');rail.append(list,next);
- const footer=action('＋ Organiser une sortie ici',()=>root.myeventCreateActivity?.(),'activityCreate');const sector=node('details',null,'activitySector'),sectorSummary=node('summary','Choisir mon secteur');sector.append(sectorSummary,area,scope);section.append(header,sector,status,rail,footer);feed.before(section);
+ const footer=action('＋ Organiser une sortie ici',()=>root.myeventCreateActivity?.(),'activityCreate');const sector=node('details',null,'activitySector'),sectorSummary=node('summary','Choisir mon secteur');sector.append(sectorSummary,area,scope);section.append(header,status,rail,footer);feed.before(section);
  const names={foryou:'Pour vous',today:'Aujourd’hui',weekend:'Ce week-end',free:'Gratuit',nearby:'À proximité',discover:'Toutes les sorties',mine:'Mes activités'};
  const filters=[...document.querySelectorAll('#socialHome .socialFilter')],views=['foryou','today','weekend','free','nearby'];
  filters.forEach((b,i)=>{b.dataset.activityFilter=views[i];b.setAttribute('aria-controls',section.id);b.addEventListener('click',()=>D.update({view:views[i]}));});
