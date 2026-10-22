@@ -11,7 +11,7 @@ async function normalise(file){
  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Conversion de la photo impossible.')),'image/jpeg',.85));if(blob.size>MAX)throw Error('Photo encore trop volumineuse.');return blob;
  }finally{image.close();}
 }
-async function publish({config,sb,userId,identity,requestId,targetId=null,data,blob,onProgress=()=>{}}){
+async function publish({config,sb,userId,identity,requestId,targetId=null,data,blob,venueSheet=null,onProgress=()=>{}}){
  testOnly(config);if(!requestId||!userId||identity()!==userId)throw Error('Session modifiée.');if(blob.type!=='image/jpeg'||blob.size<1||blob.size>MAX)throw Error('Photo normalisée invalide.');
  onProgress('Préparation de la photo…');const reservation=await rpc(sb,'activities_cover_begin',{p_request:requestId,p_target:targetId,p_bytes:blob.size});
  if(identity()!==userId)throw Error('Session modifiée.');
@@ -22,7 +22,7 @@ async function publish({config,sb,userId,identity,requestId,targetId=null,data,b
  }
  if(identity()!==userId)throw Error('Session modifiée.');onProgress('Enregistrement de la sortie…');
  // Keep requestId after a lost response. Repeating this RPC returns the same activity, not a duplicate.
- const id=await rpc(sb,'activities_save_with_cover',{p_request:requestId,p_target:targetId,p_data:data});onProgress('Activité et photo enregistrées.');return id;
+ const id=venueSheet?await rpc(sb,'activities_save_with_venue',{p_id:targetId,p_data:data,p_sheet:venueSheet,p_cover:requestId}):await rpc(sb,'activities_save_with_cover',{p_request:requestId,p_target:targetId,p_data:data});onProgress('Activité et photo enregistrées.');return id;
 }
 async function cancel({config,sb,requestId}){testOnly(config);if(requestId)await rpc(sb,'activities_cover_cancel',{p_request:requestId});}
 async function resolveRows({config,sb,rows,userId,identity}){
