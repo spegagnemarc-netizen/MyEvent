@@ -607,11 +607,18 @@ async function searchViator(req,lat,lon) {
   };
 }
 
+function activityEnvironmentAllowed(){
+  const environment=process.env.VERCEL_ENV;
+  const url=String(process.env.SUPABASE_URL||'').trim().replace(/\/$/,'');
+  return (environment==='preview'&&url==='https://ahyyknfjsielnqyoxqgh.supabase.co')||
+    (environment==='production'&&url==='https://nxxvadbliinhvkirqkkl.supabase.co');
+}
+
 module.exports =
   async function handler(req, res) {
 
     if (req.method === 'POST' && req.query.mode === 'analyse-venue') {
-      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Analyse indisponible dans cet environnement.'});
+      if(!activityEnvironmentAllowed())return send(res,404,{error:'Analyse indisponible dans cet environnement.'});
       if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});
       let data=req.body;try{if(typeof data==='string'){if(data.length>3000)throw Error();data=JSON.parse(data);}}catch{return send(res,400,{error:'Requête invalide.'});}
       if(!data||typeof data.url!=='string'||data.url.length>2000)return send(res,400,{error:'Lien invalide.'});
@@ -643,14 +650,14 @@ module.exports =
       ).toLowerCase();
 
     if (mode === 'activity-venue-detail') {
-      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Fiche indisponible dans cet environnement.'});
+      if(!activityEnvironmentAllowed())return send(res,404,{error:'Fiche indisponible dans cet environnement.'});
       const {venueDetails}=require('../lib/activity-venue-details');
       try{const result=await venueDetails(req.query.id);res.setHeader('Cache-Control','no-store');return res.status(200).json(result);}catch(error){return send(res,error.status||503,{error:error.message});}
     }
 
     if (mode === 'activity-venue') {
-      // New activity workspace remains exclusive to the authorised TEST environment.
-      if(process.env.VERCEL_ENV!=='preview'||!/^https:\/\/ahyyknfjsielnqyoxqgh\.supabase\.co\/?$/.test(String(process.env.SUPABASE_URL||'').trim()))return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
+      // Keep activity requests isolated to the matching Preview or Production project.
+      if(!activityEnvironmentAllowed())return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
       const {searchActivityVenues}=require('../lib/activity-venue-search');
       try {const result=await searchActivityVenues({q:req.query.q,city:req.query.city});res.setHeader('Cache-Control','no-store');return res.status(200).json(result);}
       catch(error){return send(res,error.status||503,{error:error.message});}
