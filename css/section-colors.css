@@ -1,0 +1,41 @@
+/* ORÉVAMI — Identité chromatique des rubriques.
+   Modifications purement visuelles, sans logique métier ni thème global. */
+:root{
+  --orevami-activities:#8b5cf6;
+  --orevami-events:#2563eb;
+  --orevami-games:#e53935;
+  --orevami-market:#16a34a;
+  --orevami-music:#ec4899;
+  --orevami-tickets:#eab308;
+  --orevami-explorer:#f97316;
+  --orevami-weather:#06b6d4;
+}
+/* Accueil : chaque raccourci garde une identité immédiatement reconnaissable. */
+#socialHome .homeFeatureCard#activitiesShortcut{border:2px solid var(--orevami-activities)!important;background:linear-gradient(150deg,#8b5cf633,#8b5cf610)!important;box-shadow:inset 0 0 0 1px #8b5cf620!important}
+#socialHome .homeFeatureCard.eventsCard{border:2px solid var(--orevami-events)!important;background:linear-gradient(150deg,#2563eb30,#2563eb0b)!important}
+#socialHome .homeFeatureCard.gamesCard{border:2px solid var(--orevami-games)!important;background:linear-gradient(150deg,#e5393530,#e539350b)!important}
+#socialHome .homeFeatureCard.marketCard{border:2px solid var(--orevami-market)!important;background:linear-gradient(150deg,#16a34a30,#16a34a0b)!important}
+#socialHome .homeFeatureCard.musicCard{border:2px solid var(--orevami-music)!important;background:linear-gradient(150deg,#ec489930,#ec48990b)!important}
+#socialHome .homeFeatureCard.ticketCard{border:2px solid var(--orevami-tickets)!important;background:linear-gradient(150deg,#eab30830,#eab3080b)!important}
+#socialHome .homeFeatureCard.explorerCard{border:2px solid var(--orevami-explorer)!important;background:linear-gradient(150deg,#f9731630,#f973160b)!important}
+#socialHome .homeFeatureCard.weatherCard{border:2px solid var(--orevami-weather)!important;background:linear-gradient(150deg,#06b6d430,#06b6d40b)!important}
+/* Le contenu reste lisible sur les thèmes clair et sombre. */
+#socialHome .homeFeatureCard:focus-visible{outline-offset:3px!important}
+/* Identité interne des rubriques intégrées. */
+#eventsWorkspace{--orevami-section-color:var(--orevami-events)}
+#entertainmentLounge{--orevami-section-color:var(--orevami-games)}
+#musicHome{--orevami-section-color:var(--orevami-music)}
+#activitiesPanel,.activities{--orevami-section-color:var(--orevami-activities)}
+#eventsWorkspace .meSectionHeader,#entertainmentLounge .meSectionHeader,#musicHome .meSectionHeader{border-bottom:2px solid var(--orevami-section-color)!important}
+#eventsWorkspace .meSectionClose,#entertainmentLounge .meSectionClose,#musicHome .meSectionClose{border-color:var(--orevami-section-color)!important}
+#eventsWorkspace .meSectionHeader h1{color:var(--orevami-events)!important}
+#entertainmentLounge .meSectionHeader h1{color:var(--orevami-games)!important}
+#musicHome .meSectionHeader h1{color:var(--orevami-music)!important}
+/* Activités : conserver le fond clair existant, renforcer uniquement l'identité violette. */
+.activities .act-card{border-color:#bba5f3!important}
+.activities .act-sheet,.activities .act-venue-finder{border:1px solid #bba5f3!important}
+.activities .act-eyebrow,.activities .act-status{color:#6841b5!important}
+.activities button.primary{background:var(--orevami-activities)!important;border-color:var(--orevami-activities)!important;color:#fff!important}
+/* Marketplace : conserver ses cartes et son thème existants, renforcer le vert. */
+#myeventMarketplace .marketHeader{border-bottom:2px solid var(--orevami-market)!important}
+#myeventMarketplace .marketHeader .brand small{color:var(--orevami-market)!important}
