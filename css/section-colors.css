@@ -68,3 +68,18 @@
 .activities .act-eyebrow{color:#8755bb!important}
 /* Marketplace : garder le design existant et ajouter un accent fin. */
 #myeventMarketplace .marketHeader{border-bottom:1px solid rgba(56,174,113,.55)!important}
+
+
+/* ORÉVAMI — Ma story : doré brillant */
+#socialHome #socialMyStory {
+  --ov-from: #fff0a6;
+  --ov-to: #b87912;
+  --ov-glow: #ffd166;
+}
+
+/* ORÉVAMI — Stories : argent métallisé */
+#socialHome #socialStoriesShortcut {
+  --ov-from: #f5f7fa;
+  --ov-to: #8795a5;
+  --ov-glow: #e1e7ef;
+}
