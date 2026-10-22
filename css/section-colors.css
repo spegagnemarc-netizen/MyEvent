@@ -83,3 +83,10 @@
   --ov-to: #8795a5;
   --ov-glow: #e1e7ef;
 }
+
+/* ORÉVAMI — limiter les effets aux cadres */
+#socialHome #socialMyStory,
+#socialHome #socialStoriesShortcut {
+  box-shadow: inset 0 0 0 1px var(--ov-to) !important;
+  filter: none !important;
+}
