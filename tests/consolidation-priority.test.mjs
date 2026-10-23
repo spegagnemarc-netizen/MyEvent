@@ -30,6 +30,10 @@ test('design palette is exact without duplicate metallic rules; existing profile
  assert.equal((inline.match(/--ov-metal-base:#57401b/g)||[]).length,1);
  assert.equal((inline.match(/--ov-metal-base:#45515f/g)||[]).length,1);
  assert.match(inline,/box-shadow:inset 0 0 14px 2px var\(--ov-metal-light\),inset 0 1px 0 var\(--ov-from\)!important/);
+ const dom=new JSDOM(read('index.html'));
+ for(const selector of ['#socialHome #homeFeatureCarousel > #socialMyStory','#socialHome #homeFeatureCarousel > #socialStoriesShortcut'])assert.equal(dom.window.document.querySelectorAll(selector).length,1,'Metallic rule does not match its actual card: '+selector);
+ assert.equal(dom.window.document.querySelectorAll('#homeFeatureCarousel').length,1);
+ dom.window.close();
  const nav=read('css/section-navigation.css');
  assert.match(nav,/^@import url\("\.\/section-colors\.css/);
  assert.equal(nav.slice(nav.indexOf('\n')+1).replace(/\r\n/g,'\n').trim(),git('show',audit.production+':css/section-navigation.css').replace(/\r\n/g,'\n').trim());
