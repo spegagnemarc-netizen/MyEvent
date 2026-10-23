@@ -18,6 +18,10 @@
       "status": 404
     },
     {
+      "src": "^/suppression-compte$",
+      "dest": "/delete-account.html"
+    },
+    {
       "handle": "filesystem"
     },
     {
