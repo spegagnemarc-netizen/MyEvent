@@ -5,6 +5,21 @@ import vm from 'node:vm';
 import {JSDOM} from 'jsdom';
 import {setupRecovery} from '../js/password-recovery.mjs';
 
+test('Site URL recovery fallback reaches the dedicated page before navigation or main auth starts',async()=>{
+ const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+ assert.ok(html.indexOf('js/section-navigation.js')<html.indexOf('@supabase/supabase-js'));
+ const source=await readFile(new URL('../js/section-navigation.js',import.meta.url),'utf8');
+ let target;const window={};
+ const location={origin:'https://app.example',search:'',hash:'#type=recovery&expires_in=3600',replace:value=>{target=new URL(value);}};
+ vm.runInNewContext(source,{window,location,URL,URLSearchParams});
+ assert.equal(target.pathname,'/reset-password.html');
+ assert.equal(target.hash,location.hash);assert.equal(window.myeventRecoveryRedirecting,true);
+ const core=await readFile(new URL('../js/core-runtime.js',import.meta.url),'utf8');
+ const connect=core.slice(core.indexOf('async function connect(){'),core.indexOf('\nasync function signup(){'));
+ const context=vm.createContext({window});vm.runInContext(connect,context);
+ await context.connect(); // No DOM or Supabase calls are allowed on the redirecting page.
+});
+
 test('ordinary accommodation pages keep partners without loading the paused Sabre search',async()=>{
  for(const file of ['index.html','explorer-partners-accommodation.html']){
   const html=await readFile(new URL('../'+file,import.meta.url),'utf8');

@@ -1,6 +1,13 @@
 /* Shared section headers and same-origin navigation. No database operations. */
 (()=>{
  'use strict';
+ // Supabase can fall back to the Site URL when redirectTo is not allow-listed.
+ // Hand recovery links to their page before mount() replaces the auth fragment.
+ if(new URLSearchParams(location.hash.slice(1)).get('type')==='recovery'){
+  window.myeventRecoveryRedirecting=true;
+  location.replace(new URL('/reset-password.html'+location.search+location.hash,location.origin).href);
+  return;
+ }
  const names={events:'Événements',marketplace:'Marketplace',music:'Musique',games:'Jeux',profile:'Profil'};
  const storeKey='myevent-navigation-v1';
  let epoch=Date.now(),stack=[{section:'home'}],restoring=false,ready=false;

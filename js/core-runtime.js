@@ -441,6 +441,8 @@ document.addEventListener('click',e=>{
 });
 
 async function connect(){
+  // The dedicated recovery page must be the only client consuming this link.
+  if(window.myeventRecoveryRedirecting)return;
   msg('status','Connexion à Supabase…');
   try{
     if(!window.supabase) throw new Error('La bibliothèque Supabase ne s’est pas chargée. Recharge la page.');
