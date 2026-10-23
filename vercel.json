@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "consolidation/orevami-priorites-20261024": false
+    }
+  },
   "functions": {
     "api/camera-ai.js": {
       "maxDuration": 180
@@ -18,8 +23,12 @@
       "status": 404
     },
     {
-      "src": "^/suppression-compte$",
+      "src": "^/suppression-compte(?:\\.html|/)?$",
       "dest": "/delete-account.html"
+    },
+    {
+      "src": "^/(confidentialite|politique-de-confidentialite)(?:\\.html|/)?$",
+      "dest": "/privacy.html"
     },
     {
       "handle": "filesystem"

@@ -1,0 +1,70 @@
+/* ORÉVAMI — identité chromatique douce, dégradés et contours fins.
+   Uniquement visuel : ne change ni dimensions, ni navigation, ni données. */
+:root{
+ --orevami-activities:#8b5cf6;--orevami-events:#2563eb;
+ --orevami-games:#d94350;--orevami-market:#16a34a;
+ --orevami-music:#ec4899;--orevami-tickets:#eab308;
+ --orevami-explorer:#f97316;--orevami-weather:#06b6d4;
+ --orevami-stories:#d946ef;--orevami-friends:#14b8a6;
+ --orevami-nearby:#84cc16;--orevami-popular:#ef6a53;
+}
+/* Des touches de couleur et une brillance douce, pas des aplats saturés. */
+#socialHome .homeFeatureCard:is(#activitiesShortcut,.eventsCard,.gamesCard,.marketCard,.musicCard,.ticketCard,.explorerCard,.weatherCard,.friendsCard,.storyCard,.nearbyCard,.popularCard){
+ border:1px solid transparent!important;
+ background:
+  linear-gradient(145deg,rgba(17,28,44,.94),rgba(17,28,44,.79)) padding-box,
+  linear-gradient(125deg,var(--ov-from),var(--ov-to) 62%,var(--ov-from)) border-box!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 3px 15px var(--ov-glow,transparent)!important;
+ transition:border-color .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+#socialHome .homeFeatureCard:is(#activitiesShortcut,.eventsCard,.gamesCard,.marketCard,.musicCard,.ticketCard,.explorerCard,.weatherCard,.friendsCard,.storyCard,.nearbyCard,.popularCard):hover{
+ filter:brightness(1.09);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 5px 20px var(--ov-glow,transparent)!important;
+}
+#socialHome #activitiesShortcut{--ov-from:#f0a6f6;--ov-to:#8254d8;--ov-glow:#8b5cf61c}
+#socialHome .eventsCard{--ov-from:#7fd1fa;--ov-to:#3069df;--ov-glow:#2563eb18}
+#socialHome .gamesCard{--ov-from:#ff9a90;--ov-to:#bc304b;--ov-glow:#d943501a}
+#socialHome .marketCard{--ov-from:#a3e6ae;--ov-to:#168e67;--ov-glow:#16a34a18}
+#socialHome .musicCard{--ov-from:#ffc1e7;--ov-to:#a44de5;--ov-glow:#ec48991a}
+#socialHome .ticketCard{--ov-from:#fff1a4;--ov-to:#c79425;--ov-glow:#eab30818}
+#socialHome .explorerCard{--ov-from:#ffd09b;--ov-to:#e26c38;--ov-glow:#f9731618}
+#socialHome .weatherCard{--ov-from:#b7f3ff;--ov-to:#2696cf;--ov-glow:#06b6d418}
+#socialHome .friendsCard{--ov-from:#a2f5e5;--ov-to:#138f96;--ov-glow:#14b8a618}
+#socialHome .storyCard{--ov-from:#ffb2e8;--ov-to:#9b50de;--ov-glow:#d946ef1a}
+#socialHome .nearbyCard{--ov-from:#dcf7a1;--ov-to:#78a92b;--ov-glow:#84cc1618}
+#socialHome .popularCard{--ov-from:#ffc19b;--ov-to:#d94b65;--ov-glow:#ef6a5318}
+#socialHome .homeFeatureCard:focus-visible{outline:2px solid var(--ov-from,#fff)!important;outline-offset:3px!important}
+/* Fil : uniquement les publications dont le type est explicitement connu. */
+#socialHome #socialFeed .socialPost[data-event-feed-post]{
+ border:1px solid rgba(91,157,238,.46)!important;
+ background:linear-gradient(150deg,rgba(37,99,235,.09),rgba(37,99,235,0) 65%)!important;
+ box-shadow:0 3px 16px rgba(37,99,235,.06)!important;
+}
+#socialHome #socialFeed .socialPost[data-event-feed-post] .socialEventCard{
+ border:1px solid rgba(91,157,238,.32)!important;
+}
+/* Les autres types de posts ne sont pas recolorés sans catégorie fiable. */
+/* Univers internes : soulignement discret plutôt qu'un panneau coloré. */
+#eventsWorkspace{--orevami-section-color:#6da7ee}
+#entertainmentLounge{--orevami-section-color:#e67c86}
+#musicHome{--orevami-section-color:#e98bcb}
+#eventsWorkspace .meSectionHeader,#entertainmentLounge .meSectionHeader,#musicHome .meSectionHeader{
+ border-bottom:1px solid var(--orevami-section-color)!important;
+}
+#eventsWorkspace .meSectionClose,#entertainmentLounge .meSectionClose,#musicHome .meSectionClose{
+ border-color:var(--orevami-section-color)!important;
+}
+/* Activités et rencontres : rose → violet en douceur, fond clair préservé. */
+.activities .act-card,.activities .act-sheet,.activities .act-venue-finder{
+ border:1px solid rgba(151,108,207,.34)!important;
+ box-shadow:0 5px 20px rgba(115,74,168,.055);
+}
+.activities button.primary{
+ background:linear-gradient(115deg,#dc78bf,#8356cb)!important;
+ border:1px solid rgba(147,85,194,.42)!important;
+ color:#fff!important;
+ box-shadow:0 4px 13px rgba(154,77,174,.15);
+}
+.activities .act-eyebrow{color:#8755bb!important}
+/* Marketplace : garder le design existant et ajouter un accent fin. */
+#myeventMarketplace .marketHeader{border-bottom:1px solid rgba(56,174,113,.55)!important}
