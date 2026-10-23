@@ -111,8 +111,10 @@ test('deployment stays within Hobby budget; runtime-config and raw Stripe body c
   assert.equal(functions.length,12);assert(functions.includes('stripe-webhook.js'));
   const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
   assert.deepEqual(config.routes.find(r=>r.src==='^/api/runtime-config$'),{src:'^/api/runtime-config$',dest:'/api/camera-ai?runtime_config=1'});
-  assert.equal(config.routes[0].status,404);
-  for(const path of ['/server/search-accommodation.js','/server/search-transport.js'])assert(new RegExp(config.routes[0].src).test(path));
+  for(const path of ['/server/search-accommodation.js','/server/search-transport.js','/server/search-ticketmaster.js']) {
+    const route=config.routes.find(r=>r.src && new RegExp(r.src).test(path));
+    assert.equal(route?.status,404);
+  }
   assert.equal(require('../api/stripe-webhook').config.api.bodyParser,false);
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
   assert(html.includes('data-omio-widget="true"'));assert(html.includes('https://www.omio.com/gcs-proxy/b2b-nemo-prod/bundle/fr/bundle.js'));
