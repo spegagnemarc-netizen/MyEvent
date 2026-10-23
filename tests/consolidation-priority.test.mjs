@@ -10,8 +10,9 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const read=file=>readFileSync(path.join(root,file),'utf8');
 const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:2*1024*1024}).trim();
 const audit=JSON.parse(read('docs/consolidation/audit-20261024.json'));
-const intentional=['index.html','marketplace.html','css/section-navigation.css','css/explorer.css','vercel.json'];
-test('all Production files and every main-specific change are retained; only five reviewed files differ from Production',()=>{
+// Legal deletion text now includes the manual procedure explicitly approved by the owner.
+const intentional=['index.html','marketplace.html','css/section-navigation.css','css/explorer.css','vercel.json','delete-account.html'];
+test('all Production files and every main-specific change are retained; only reviewed files differ from Production',()=>{
  for(const file of Object.keys(audit.productionFiles)){
   assert(existsSync(path.join(root,file)),'Missing Production file: '+file);
  }
