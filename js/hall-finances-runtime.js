@@ -3,10 +3,35 @@
 let hallResultsData=[];
 let hallSelectedId=null;
 let hallSelectedFundExpenseId=null;
+let hallSelectionData=null,hallSelectionScope='',hallSelectionError='',hallSelectionVersion=0,hallSelectionSaving=false,hallSelectionLoadingScope='';
+function hallScope(){return user&&event?user.id+':'+event.id:'';}
+function hallSelectionContext(){
+  if(!event||!user)throw Error('Connecte-toi et sélectionne un événement.');
+  const picker=$('ewSelectedEvent');if(picker?.value&&picker.value!==event.id)throw Error('L’ouverture de l’événement est encore en cours. Attends sa fiche avant de sélectionner une salle.');
+  return {eventId:event.id,userId:user.id,scope:hallScope()};
+}
+function hallContextCurrent(c){return hallScope()===c.scope;}
+async function hallRequest(work){
+  const controller=new AbortController();let timer;
+  try{return await Promise.race([work(controller.signal),new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('Le service met trop de temps à répondre. Actualise la salle pour vérifier son enregistrement.'));},15000);})]);}
+  finally{clearTimeout(timer);controller.abort();}
+}
+function hallFromRow(row){return row?.selected_hall_name?{id:'selected',name:row.selected_hall_name,address:row.selected_hall_address,lat:row.selected_hall_lat,lon:row.selected_hall_lon,capacity:row.selected_hall_capacity,price:row.selected_hall_price,equipment:row.selected_hall_equipment,website:hallEscapeUrl(row.selected_hall_website),phone:row.selected_hall_phone,distance:null}:null;}
+function hallApplyRow(row,scope){hallSelectionScope=scope;hallSelectionData=hallFromRow(row);hallSelectedId=hallSelectionData?.id||null;hallSelectedFundExpenseId=row?.fund_expense_entry_id||null;hallSelectionError='';renderHallSelected();renderEventHallSummary();}
+function renderEventHallSummary(){
+  const box=$('ewSelectedHall');if(!box)return;box.replaceChildren();
+  const h=hallSelected();
+  if(!h){if(hallSelectionError&&hallSelectionScope===hallScope()){const p=document.createElement('p');p.textContent=hallSelectionError;const retry=document.createElement('button');retry.type='button';retry.textContent='Actualiser la salle';retry.onclick=()=>loadHall();box.append(p,retry);}return;}
+  const title=document.createElement('strong');title.textContent='🏢 Salle retenue : '+h.name;box.append(title);
+  if(h.address){const address=document.createElement('p');address.textContent=h.address;box.append(address);}
+  if(h.lat!=null&&h.lon!=null&&Number.isFinite(Number(h.lat))&&Number.isFinite(Number(h.lon))){const link=document.createElement('a');link.textContent='📍 Localiser la salle';link.href='https://www.openstreetmap.org/?mlat='+encodeURIComponent(h.lat)+'&mlon='+encodeURIComponent(h.lon)+'#map=17/'+encodeURIComponent(h.lat)+'/'+encodeURIComponent(h.lon);link.target='_blank';link.rel='noopener noreferrer';box.append(link);}
+  const button=document.createElement('button');button.type='button';button.textContent='Voir / changer la salle';button.onclick=()=>window.myeventEventsWorkspace?.openTool('hall');box.append(button);
+}
+window.myeventHallSelection={get:()=>hallSelected(),ensure:()=>{if(hallScope()&&hallSelectionScope!==hallScope()&&hallSelectionLoadingScope!==hallScope())loadHall();renderEventHallSummary();},load:()=>loadHall(),renderSummary:renderEventHallSummary};
 function hallIsOrganizer(){ return !!(event&&user&&(event.creator_id===user.id||activeEventRole==='coorganizer')); }
 function hallOpenManualForm(open){ $('hallManualForm')?.classList.toggle('hidden',!open); if(!open && $('hallManualMsg'))$('hallManualMsg').textContent=''; }
 function hallEscapeUrl(u){ return /^https?:\/\//i.test(String(u||'')) ? String(u) : ''; }
-function hallSelected(){ return hallResultsData.find(x=>x.id===hallSelectedId)||null; }
+function hallSelected(){ return hallSelectionScope===hallScope()?hallSelectionData:null; }
 function hallPerPerson(price){
   const n=Number(price); if(!Number.isFinite(n)||n<=0)return null;
   const count=Number($('fundMemberTrackingSummary')?.dataset?.memberCount||0);
@@ -19,36 +44,47 @@ function renderHallSelected(){
   box.classList.remove('hidden');
   const canEdit=hallIsOrganizer();
   const per=hallPerPerson(h.price);
-  box.innerHTML='<div>🏢 <b>Salle sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(h.name)+'</b></div>'+    '<div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'<span class="hallChip">👥 Capacité à vérifier</span>')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'<span class="hallChip">💶 Tarif à demander</span>')+(h.distance!=null?'<span class="hallChip">📍 '+h.distance.toFixed(1)+' km</span>':'')+(per!=null?'<span class="hallChip">👤 '+eur(per)+' / personne</span>':'')+'</div>'+    '<div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Informations à compléter')+'</div>'+    (h.address?'<div class="muted" style="margin-top:6px">📍 '+esc(h.address)+'</div>':'')+    (h.phone?'<div class="muted" style="margin-top:4px">📞 '+esc(h.phone)+'</div>':'')+    '<div class="hallCardActions">'+    (h.lat&&h.lon?'<button type="button" class="secondary" data-hall-selected-map="'+h.lat+'|'+h.lon+'">📍 Voir</button>':'')+    (h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+    (canEdit?'<button type="button" class="secondary" data-hall-edit>✏️ Modifier</button>':'')+    '<button type="button" class="secondary" data-hall-unselect>✕ Désélectionner</button></div>'+    (canEdit && h.price!=null && Number(h.price)>0 ? '<button type="button" id="hallFundBtn" style="margin-top:10px" '+(hallSelectedFundExpenseId?'disabled':'')+'>'+      (hallSelectedFundExpenseId?'✅ Prix ajouté à la cagnotte':'💰 Ajouter le prix à la cagnotte')+'</button>' : '')+    (canEdit?'<div id="hallEditForm" class="editEventBox hidden" style="margin-top:10px">'+      '<input id="hallEditName" placeholder="Nom de la salle"><input id="hallEditAddress" placeholder="Adresse / ville">'+      '<div class="fieldRow"><input id="hallEditCapacity" type="number" min="0" placeholder="Capacité"><input id="hallEditPrice" type="number" min="0" step="0.01" placeholder="Prix (€)"></div>'+      '<input id="hallEditEquipment" placeholder="Équipements"><input id="hallEditWebsite" placeholder="Site / lien de réservation"><input id="hallEditPhone" placeholder="Téléphone">'+      '<button type="button" id="hallSaveEditBtn">💾 Enregistrer</button><button type="button" id="hallCancelEditBtn" class="secondary">Annuler</button><p id="hallEditMsg" class="muted"></p></div>':'');
+  box.innerHTML='<div>🏢 <b>Salle sélectionnée</b></div><div style="margin-top:5px"><b>'+esc(h.name)+'</b></div>'+    '<div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'<span class="hallChip">👥 Capacité à vérifier</span>')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'<span class="hallChip">💶 Tarif à demander</span>')+(h.distance!=null?'<span class="hallChip">📍 '+h.distance.toFixed(1)+' km</span>':'')+(per!=null?'<span class="hallChip">👤 '+eur(per)+' / personne</span>':'')+'</div>'+    '<div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Informations à compléter')+'</div>'+    (h.address?'<div class="muted" style="margin-top:6px">📍 '+esc(h.address)+'</div>':'')+    (h.phone?'<div class="muted" style="margin-top:4px">📞 '+esc(h.phone)+'</div>':'')+    '<div class="hallCardActions">'+    (h.lat!=null&&h.lon!=null?'<button type="button" class="secondary" data-hall-selected-map="'+h.lat+'|'+h.lon+'">📍 Voir</button>':'')+    (h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+    (canEdit?'<button type="button" class="secondary" data-hall-edit>✏️ Modifier</button>':'')+    (canEdit?'<button type="button" class="secondary" data-hall-unselect>✕ Désélectionner</button>':'')+'</div>'+    (canEdit && h.price!=null && Number(h.price)>0 ? '<button type="button" id="hallFundBtn" style="margin-top:10px" '+(hallSelectedFundExpenseId?'disabled':'')+'>'+      (hallSelectedFundExpenseId?'✅ Prix ajouté à la cagnotte':'💰 Ajouter le prix à la cagnotte')+'</button>' : '')+    (canEdit?'<div id="hallEditForm" class="editEventBox hidden" style="margin-top:10px">'+      '<input id="hallEditName" placeholder="Nom de la salle"><input id="hallEditAddress" placeholder="Adresse / ville">'+      '<div class="fieldRow"><input id="hallEditCapacity" type="number" min="0" placeholder="Capacité"><input id="hallEditPrice" type="number" min="0" step="0.01" placeholder="Prix (€)"></div>'+      '<input id="hallEditEquipment" placeholder="Équipements"><input id="hallEditWebsite" placeholder="Site / lien de réservation"><input id="hallEditPhone" placeholder="Téléphone">'+      '<button type="button" id="hallSaveEditBtn">💾 Enregistrer</button><button type="button" id="hallCancelEditBtn" class="secondary">Annuler</button><p id="hallEditMsg" class="muted"></p></div>':'');
 }
 function renderHallResults(){
   const el=$('hallResults'); if(!el)return;
   const min=Math.max(0,Number($('hallMinCapacity')?.value||0)); const max=Number($('hallMaxPrice')?.value||0);
   const arr=hallResultsData.filter(h=>(!min||!h.capacity||h.capacity>=min)&&(!max||h.price==null||h.price<=max));
   if(!arr.length){el.innerHTML='<div class="hallEmpty">Aucune salle ne correspond aux critères. Essaie un rayon plus large ou ajoute une salle manuellement.</div>';return;}
-  el.innerHTML=arr.map(h=>'<div class="hallCard"><div class="hallCardTop"><div class="hallCardName">🏢 '+esc(h.name)+'</div><div class="hallDistance">'+(h.distance!=null?h.distance.toFixed(1)+' km':'')+'</div></div><div class="muted" style="margin-top:3px">'+esc(h.address||'Adresse non disponible')+'</div><div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'<span class="hallChip">👥 Capacité à vérifier</span>')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'<span class="hallChip">💶 Tarif à demander</span>')+'</div><div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Salle / lieu événementiel trouvé sur OpenStreetMap')+'</div><div class="hallCardActions"><button type="button" data-hall-select="'+esc(h.id)+'">⭐ Sélectionner</button>'+(h.lat&&h.lon?'<button type="button" class="secondary" data-hall-map="'+h.lat+'|'+h.lon+'">📍 Voir</button>':'')+(h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>').join('');
+  el.innerHTML=arr.map(h=>'<div class="hallCard"><div class="hallCardTop"><div class="hallCardName">🏢 '+esc(h.name)+'</div><div class="hallDistance">'+(h.distance!=null?h.distance.toFixed(1)+' km':'')+'</div></div><div class="muted" style="margin-top:3px">'+esc(h.address||'Adresse non disponible')+'</div><div class="hallMeta">'+(h.capacity?'<span class="hallChip">👥 '+esc(String(h.capacity))+' pers.</span>':'<span class="hallChip">👥 Capacité à vérifier</span>')+(h.price!=null?'<span class="hallChip">💶 '+eur(h.price)+'</span>':'<span class="hallChip">💶 Tarif à demander</span>')+'</div><div class="hallEquipment">'+esc(h.equipment||h.typeLabel||'Salle / lieu événementiel trouvé sur OpenStreetMap')+'</div><div class="hallCardActions"><button type="button" data-hall-select="'+esc(h.id)+'" '+(!hallIsOrganizer()||hallSelectionSaving?'disabled':'')+'>⭐ Sélectionner</button>'+(h.lat!=null&&h.lon!=null?'<button type="button" class="secondary" data-hall-map="'+h.lat+'|'+h.lon+'">📍 Voir</button>':'')+(h.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(h.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+'</div></div>').join('');
 }
-async function saveHallSelection(h){
-  hallSelectedId=h.id; hallSelectedFundExpenseId=null; renderHallSelected();
-  if(event&&user){
-    const payload={event_id:event.id,selected_hall_name:h.name,selected_hall_address:h.address||null,selected_hall_lat:h.lat||null,selected_hall_lon:h.lon||null,selected_hall_capacity:h.capacity||null,selected_hall_price:h.price??null,selected_hall_equipment:h.equipment||null,selected_hall_website:h.website||null,selected_hall_phone:h.phone||null,updated_by:user.id,updated_at:new Date().toISOString()};
-    const r=await sb.from('event_hall_settings').upsert(payload,{onConflict:'event_id'});
-    if(r.error){msg('hallMsg','Salle sélectionnée localement, mais sauvegarde impossible : '+r.error.message,'err');return;}
-    msg('hallMsg','Salle sélectionnée et enregistrée.','ok');
-  }
+async function persistHallSelection(h,message='Salle sélectionnée et enregistrée dans cet événement.',resetFund=true){
+  if(hallSelectionSaving)return false;
+  let c;
+  try{
+    c=hallSelectionContext();if(!hallIsOrganizer())throw Error('Seul un organisateur autorisé peut choisir la salle.');
+    hallSelectionSaving=true;++hallSelectionVersion;renderHallResults();msg('hallMsg','Enregistrement de la salle…');
+    const payload={event_id:c.eventId,selected_hall_name:h?.name||null,selected_hall_address:h?.address||null,selected_hall_lat:h?.lat??null,selected_hall_lon:h?.lon??null,selected_hall_capacity:h?.capacity??null,selected_hall_price:h?.price??null,selected_hall_equipment:h?.equipment||null,selected_hall_website:hallEscapeUrl(h?.website)||null,selected_hall_phone:h?.phone||null,...(resetFund?{fund_expense_entry_id:null}:{}),updated_by:c.userId,updated_at:new Date().toISOString()};
+    const r=await hallRequest(signal=>sb.from('event_hall_settings').upsert(payload,{onConflict:'event_id'}).select('*').single().abortSignal(signal));
+    if(r.error||!r.data)throw Error(r.error?.code==='42501'?'Ton compte n’a pas les droits nécessaires pour modifier la salle de cet événement.':'La sauvegarde de la salle n’a pas été confirmée. Actualise avant de réessayer.');
+    if(!hallContextCurrent(c))return true;
+    hallApplyRow(r.data,c.scope);msg('hallMsg',message,'ok');return true;
+  }catch(error){if(!c||hallContextCurrent(c))msg('hallMsg',error.message||'Impossible d’enregistrer la salle.','err');return false;}
+  finally{hallSelectionSaving=false;renderHallResults();}
 }
+async function saveHallSelection(h){return persistHallSelection(h);}
+async function removeHallSelection(){return persistHallSelection(null,'La salle a été désélectionnée et ce choix est enregistré.');}
 async function loadHall(){
-  if(!event)return;
-  const r=await sb.from('event_hall_settings').select('*').eq('event_id',event.id).maybeSingle();
-  if(!r.error&&r.data){
-    $('hallRadius').value=String(r.data.radius_km||5); $('hallMinCapacity').value=r.data.min_capacity||''; $('hallMaxPrice').value=r.data.max_budget||'';
-    hallSelectedFundExpenseId=r.data.fund_expense_entry_id||null;
-    if(r.data.selected_hall_name){
-      const h={id:'selected',name:r.data.selected_hall_name,address:r.data.selected_hall_address,lat:r.data.selected_hall_lat,lon:r.data.selected_hall_lon,capacity:r.data.selected_hall_capacity,price:r.data.selected_hall_price,equipment:r.data.selected_hall_equipment,website:r.data.selected_hall_website,phone:r.data.selected_hall_phone,distance:null};
-      hallResultsData=[h]; hallSelectedId='selected'; renderHallSelected();
-    }
-  }
+  if(!event||!user||hallSelectionSaving||hallSelectionLoadingScope===hallScope())return;
+  const c={eventId:event.id,userId:user.id,scope:hallScope()},ticket=++hallSelectionVersion;
+  hallSelectionLoadingScope=c.scope;
+  if(hallSelectionScope!==c.scope){hallSelectionData=null;hallSelectedId=null;hallSelectedFundExpenseId=null;hallResultsData=[];hallSelectionScope=c.scope;hallSelectionError='';renderHallSelected();renderEventHallSummary();}
+  try{
+    const r=await hallRequest(signal=>sb.from('event_hall_settings').select('*').eq('event_id',c.eventId).maybeSingle().abortSignal(signal));
+    if(ticket!==hallSelectionVersion||!hallContextCurrent(c))return;
+    if(r.error)throw Error('Impossible de recharger la salle enregistrée. Vérifie ta connexion ou ton accès à cet événement.');
+    const row=r.data;
+    if(row){if($('hallRadius'))$('hallRadius').value=String(row.radius_km||5);if($('hallMinCapacity'))$('hallMinCapacity').value=row.min_capacity||'';if($('hallMaxPrice'))$('hallMaxPrice').value=row.max_budget||'';}
+    hallApplyRow(row,c.scope);
+  }catch(error){if(ticket===hallSelectionVersion&&hallContextCurrent(c)){hallSelectionError=error.message||'Impossible de recharger la salle.';msg('hallMsg',hallSelectionError,'err');renderEventHallSummary();}}
+  finally{if(hallSelectionLoadingScope===c.scope)hallSelectionLoadingScope='';}
 }
+async function loadHallSettings(){return loadHall();}
 async function saveHallCriteria(){
   if(!event||!user||!hallIsOrganizer())return;
   const radius=Number($('hallRadius')?.value||5), min=Math.max(0,Number($('hallMinCapacity')?.value||0)), max=Math.max(0,Number($('hallMaxPrice')?.value||0));
@@ -77,9 +113,9 @@ async function saveHallEdit(){
   const h=hallSelected(); if(!h||!hallIsOrganizer()||!event||!user)return;
   const name=String($('hallEditName').value||'').trim(); if(!name){msg('hallEditMsg','Indique le nom de la salle.','err');return;}
   const next={...h,name,address:String($('hallEditAddress').value||'').trim(),capacity:Number($('hallEditCapacity').value||0)||null,price:$('hallEditPrice').value!==''?Number($('hallEditPrice').value):null,equipment:String($('hallEditEquipment').value||'').trim(),website:hallEscapeUrl($('hallEditWebsite').value.trim()),phone:String($('hallEditPhone').value||'').trim()};
-  const payload={event_id:event.id,selected_hall_name:next.name,selected_hall_address:next.address||null,selected_hall_lat:next.lat||null,selected_hall_lon:next.lon||null,selected_hall_capacity:next.capacity||null,selected_hall_price:next.price??null,selected_hall_equipment:next.equipment||null,selected_hall_website:next.website||null,selected_hall_phone:next.phone||null,updated_by:user.id,updated_at:new Date().toISOString()};
-  const r=await sb.from('event_hall_settings').upsert(payload,{onConflict:'event_id'}); if(r.error){msg('hallEditMsg','Erreur : '+r.error.message,'err');return;}
-  hallResultsData=hallResultsData.map(x=>x.id===h.id?{...next}:x); hallSelectedId=h.id; $('hallEditForm').classList.add('hidden'); renderHallSelected(); msg('hallMsg','Informations de la salle mises à jour.','ok');
+  const saved=await persistHallSelection(next,'Informations de la salle mises à jour.',false);
+  if(saved&&$('hallEditForm'))$('hallEditForm').classList.add('hidden');
+
 }
 async function addHallPriceToFund(){
   const h=hallSelected(); if(!h||!event||!user||!hallIsOrganizer()||!(Number(h.price)>0))return;
@@ -95,7 +131,7 @@ async function addHallPriceToFund(){
 }
 document.addEventListener('click',e=>{
   const sel=e.target.closest('[data-hall-select]'); if(sel){const h=hallResultsData.find(x=>x.id===sel.dataset.hallSelect);if(h)saveHallSelection(h);return;}
-  if(e.target.closest('[data-hall-unselect]')){hallSelectedId=null;hallSelectedFundExpenseId=null;renderHallSelected();msg('hallMsg','Sélection retirée.');return;}
+  if(e.target.closest('[data-hall-unselect]')){removeHallSelection();return;}
   if(e.target.closest('[data-hall-edit]')){openHallEdit();return;}
   if(e.target.closest('#hallSaveEditBtn')){saveHallEdit();return;}
   if(e.target.closest('#hallCancelEditBtn')){$('hallEditForm')?.classList.add('hidden');return;}
@@ -166,22 +202,51 @@ async function toggleSupplyBrought(id){
   if(r.error){msg('suppliesMsg','Erreur : '+r.error.message,'err');return;} await loadSupplies();
 }
 
+// Restored from the version before 22d3993: generation needs both declarations.
+let materialAiItems=[];
+let materialAiPending=false;
+function materialAiContext(){
+  const h=(typeof hallSelected==='function'?hallSelected():null);
+  return {event_name:event?.name||'',event_type:event?.event_type||'',people:Math.max(1,Number($('materialAiPeople')?.value||30)),meal:String($('materialAiMeal')?.value||'').trim(),details:String($('materialAiDetails')?.value||'').trim(),hall:h?{name:h.name||'',capacity:h.capacity||null,equipment:h.equipment||''}:null};
+}
+function fitMaterialAiText(field){
+  if(!field?.matches?.('#materialAiResults textarea'))return;
+  field.style.height='auto';
+  if(field.scrollHeight)field.style.height=(field.scrollHeight+field.offsetHeight-field.clientHeight)+'px';
+}
 function renderMaterialAiResults(){
   const box=$('materialAiResults'); if(!box)return;
   if(!materialAiItems.length){box.innerHTML='';return;}
-  box.innerHTML='<div class="muted">🤖 Proposition — '+materialAiItems.length+' éléments. Modifie les noms ou quantités avant de les ajouter.</div>'+materialAiItems.map((x,i)=>'<label class="materialAiItem"><input type="checkbox" data-ai-check="'+i+'" checked><input data-ai-title="'+i+'" value="'+esc(x.title||'')+'" aria-label="Nom"><input data-ai-qty="'+i+'" type="number" min="1" value="'+esc(String(Math.max(1,Number(x.quantity)||1)))+'" aria-label="Quantité"><button type="button" class="secondary" data-ai-remove="'+i+'">✕</button>'+(x.note?'<input class="aiNote" data-ai-note="'+i+'" value="'+esc(x.note)+'" aria-label="Note">':'<input class="aiNote" data-ai-note="'+i+'" placeholder="Note (optionnel)" aria-label="Note">')+'</label>').join('')+'<button type="button" class="materialAiAdd" id="materialAiAddBtn">✅ Ajouter la sélection à mon événement</button>';
+  box.innerHTML='<div class="muted">🤖 Proposition — '+materialAiItems.length+' éléments. Modifie les noms ou quantités avant de les ajouter.</div>'+materialAiItems.map((x,i)=>'<label class="materialAiItem"><input type="checkbox" data-ai-check="'+i+'" checked><textarea rows="1" data-ai-title="'+i+'" aria-label="Nom">'+esc(x.title||'')+'</textarea><input data-ai-qty="'+i+'" type="number" min="1" value="'+esc(String(Math.max(1,Number(x.quantity)||1)))+'" aria-label="Quantité"><button type="button" class="secondary" data-ai-remove="'+i+'">✕</button>'+(x.note?'<textarea rows="1" class="aiNote" data-ai-note="'+i+'" aria-label="Note">'+esc(x.note)+'</textarea>':'<textarea rows="1" class="aiNote" data-ai-note="'+i+'" placeholder="Note (optionnel)" aria-label="Note"></textarea>')+'</label>').join('')+'<button type="button" class="materialAiAdd" id="materialAiAddBtn">✅ Ajouter la sélection à mon événement</button>';
+  requestAnimationFrame(()=>box.querySelectorAll('textarea').forEach(fitMaterialAiText));
 }
 async function generateMaterialAi(){
-  const msgEl=$('materialAiMsg'); const btn=$('materialAiGenerateBtn'); if(!event||!user)return;
-  const ctx=materialAiContext(); if(!ctx.meal&& !ctx.details){msg('materialAiMsg','Indique au moins le type de repas ou quelques précisions.','err');return;}
-  btn.disabled=true; msg('materialAiMsg','🤖 L’IA prépare une liste adaptée…'); $('materialAiResults').innerHTML='';
+  const btn=$('materialAiGenerateBtn'); if(!event||!user||!btn||materialAiPending)return;
+  const eventId=event.id,userId=user.id;
+  const current=()=>event?.id===eventId&&user?.id===userId;
+  const controller=new AbortController();let timer;
+  materialAiPending=true;btn.disabled=true;
   try{
-    const session=await sb.auth.getSession(); const token=session.data?.session?.access_token||'';
-    const r=await fetch('/api/generate-materials',{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(ctx)});
-    const data=await r.json().catch(()=>({})); if(!r.ok)throw new Error(data.error||'Service IA indisponible.');
-    materialAiItems=Array.isArray(data.items)?data.items:[]; renderMaterialAiResults(); msg('materialAiMsg',materialAiItems.length?'Liste générée. Tu peux maintenant la modifier.':'Aucun élément proposé.','ok');
-  }catch(e){msg('materialAiMsg',e.message||'Impossible de générer la liste.','err');}
-  finally{btn.disabled=false;}
+    const ctx=materialAiContext();
+    if(!ctx.meal&&!ctx.details)throw new Error('Indique au moins le type de repas ou quelques précisions.');
+    materialAiItems=[];$('materialAiResults').innerHTML='';msg('materialAiMsg','🤖 L’IA prépare une liste adaptée…');
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('La génération prend trop de temps. Réessaie dans quelques instants.'));},60000);});
+    const work=(async()=>{
+      const session=await sb.auth.getSession();
+      const token=session.data?.session?.access_token;
+      if(session.error||!token)throw new Error('Ta session a expiré. Reconnecte-toi pour générer la liste.');
+      if(controller.signal.aborted)return null;
+      const r=await fetch('/api/generate-materials',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(ctx)});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(data.error||(r.status===429?'Le service IA est momentanément limité. Réessaie plus tard.':'Le service IA est indisponible. Réessaie dans quelques instants.'));
+      if(!Array.isArray(data.items)||!data.items.length)throw new Error('L’IA n’a retourné aucun élément. Précise le repas ou le lieu puis réessaie.');
+      return data.items;
+    })();
+    const items=await Promise.race([work,deadline]);
+    if(!current()||!items)return;
+    materialAiItems=items;renderMaterialAiResults();msg('materialAiMsg','Liste générée. Tu peux maintenant la modifier.','ok');
+  }catch(e){if(current())msg('materialAiMsg',e.name==='AbortError'?'La génération prend trop de temps. Réessaie dans quelques instants.':e instanceof TypeError?'Connexion au service IA impossible. Vérifie ta connexion puis réessaie.':e.message||'Impossible de générer la liste.','err');}
+  finally{clearTimeout(timer);controller.abort();materialAiPending=false;btn.disabled=false;}
 }
 async function addSelectedAiMaterials(){
   const rows=[...document.querySelectorAll('.materialAiItem')]; if(!rows.length)return;
@@ -194,6 +259,7 @@ async function addSelectedAiMaterials(){
   suppliesData=[...suppliesData,...(r.data||[])]; materialAiItems=[]; $('materialAiResults').innerHTML=''; msg('materialAiMsg','✅ '+(r.data?.length||selected.length)+' éléments ajoutés à ton événement.','ok'); $('materialAiForm')?.classList.add('hidden'); $('materialAiBox')?.classList.add('collapsed'); renderSupplies(); if(btn)btn.disabled=false;
 }
 document.addEventListener('input',e=>{
+  fitMaterialAiText(e.target);
   const i=e.target.dataset?.aiTitle; if(i!==undefined&&materialAiItems[i])materialAiItems[i].title=e.target.value;
   const q=e.target.dataset?.aiQty; if(q!==undefined&&materialAiItems[q])materialAiItems[q].quantity=Math.max(1,Number(e.target.value)||1);
   const n=e.target.dataset?.aiNote; if(n!==undefined&&materialAiItems[n])materialAiItems[n].note=e.target.value;

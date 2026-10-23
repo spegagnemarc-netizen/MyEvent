@@ -1,0 +1,1401 @@
+{
+  "base": "14b89e021906071bcb56f81c340f6cb839f54423",
+  "source": "048b7955280c12e1a3b567c572116bbab0f280a0",
+  "allowedExistingChanges": [
+    "index.html",
+    "package.json",
+    "pnpm-lock.yaml",
+    "vercel.json",
+    "api/search-places.js"
+  ],
+  "files": [
+    {
+      "file": ".env.example",
+      "sha256": "42b669e5dd3b560ab5186b69ce0f2da8505dbd540c20a85da8f98ffd9cac7fdf"
+    },
+    {
+      "file": ".gitattributes",
+      "sha256": "ecb59d6963f53660cdc4941ac7032ec5f805495415567f04a02afb4690bbe38e"
+    },
+    {
+      "file": ".gitignore",
+      "sha256": "07a524839f5336fb7c4142f3e8adfd699c840350d80ff4a9e5c210a33add5e74"
+    },
+    {
+      "file": "api/[search].js",
+      "sha256": "5bf446cff1d5e4fe2d0000912bb0dec6c0376e686d7bf4539fa7d14a8bf199c5"
+    },
+    {
+      "file": "api/analyze-poll.js",
+      "sha256": "f7a5503ed7b4817e4cf2c6be29a3cd79e96e2966afdf55ae5f9a3b2428603b85"
+    },
+    {
+      "file": "api/camera-ai.js",
+      "sha256": "44d5387dbbc3582280969199df3d51ef73b48c4dee46743c3013edb13161b44d"
+    },
+    {
+      "file": "api/create-payment-session.js",
+      "sha256": "3579dd2fb70629fd451955c3f31f0247cd128d419fc6c59f36555392ca471cf2"
+    },
+    {
+      "file": "api/generate-avatar.js",
+      "sha256": "e53dd1fb70f5972fde1184650c775fa4e2902227c500f3cb0289179071254e2e"
+    },
+    {
+      "file": "api/generate-materials.js",
+      "sha256": "0079b136bbc85d044bad4722f99e72f795c26171edb3b0127b596bff34bf985a"
+    },
+    {
+      "file": "api/generate-outing-plan.js",
+      "sha256": "1c1078201294fcec89f37c84bce948315d6df16c5222f7065dce06aa1a19209f"
+    },
+    {
+      "file": "api/search-halls.js",
+      "sha256": "2f8be69e52f4765405d6a1a527255eac417d994f0b1335beea7fb42499417573"
+    },
+    {
+      "file": "api/search-music.js",
+      "sha256": "1bb0e035a764e56c7cbc70f091d4f3a449ce17c83987373dc60a53ef45a94411"
+    },
+    {
+      "file": "api/stripe-webhook.js",
+      "sha256": "ba77b344d181fe024d5d44cdf84da0d302a1560d5f46821ea9b0d580c8867f91"
+    },
+    {
+      "file": "api/summarize-event.js",
+      "sha256": "9cbc6bc23d41f6d8c7df522837894d550b82c1f6fbfafeb6f579b8ed1e891abe"
+    },
+    {
+      "file": "assets/camera-me-logo.jpeg",
+      "sha256": "147c479ce1df197e21527465379f4192be92bb59b7238cba1b5ad7cb6f2a5cdd"
+    },
+    {
+      "file": "assets/inline-01-d8a0a21318e1.webp",
+      "sha256": "7a33ee249246f55c5a6a9c7a3c6d192162d5338913e112b01aee304272fa3926"
+    },
+    {
+      "file": "assets/inline-02-a859fcc3ba30.svg",
+      "sha256": "99f6d7b3f4b9dd14cd9f38e5ce49780aaf1452181411511767d002469a77cd0c"
+    },
+    {
+      "file": "assets/inline-03-9de2e9dc0617.webp",
+      "sha256": "ab00e223bb9b30f8f4c719ddd7b29df47713303479a55b4b6cbaec2e8bd4dbf9"
+    },
+    {
+      "file": "assets/inline-04-f9af3c769b0b.webp",
+      "sha256": "3a1f24cd0b093484f6d6be707f9ebd255b0f43422d9811f2fa22aa29a8f1adc4"
+    },
+    {
+      "file": "assets/inline-05-9b43f08a89b3.webp",
+      "sha256": "5bf2f43e7a4afd47fb54107a0593ad4e32c6fbfd5069e3f0f77a45497a299b22"
+    },
+    {
+      "file": "assets/inline-06-68e2d02476f9.webp",
+      "sha256": "3c3f23f1a68cd406307ad95946ddb72e673ad103be3fbf650c2749b0ff5b1249"
+    },
+    {
+      "file": "assets/inline-07-a77ca92a99b7.webp",
+      "sha256": "f691c1bcd0811318174179de71b029b45f246e9b4189fe69922006855a48c25b"
+    },
+    {
+      "file": "assets/inline-08-7cf68d20b4e4.webp",
+      "sha256": "0b4872b7e7fc8162e5f128faad6ce33dc23408f5f5ddcd65f36d547056193b38"
+    },
+    {
+      "file": "assets/inline-09-bc42d555020d.webp",
+      "sha256": "becb0b964d20a0d19fe288bf412136d9ae96271d2b4113f753b6266ef7adda1f"
+    },
+    {
+      "file": "assets/inline-10-1da91d3c7d54.webp",
+      "sha256": "106ba8b44a39f7778e5dddea380f9aa5237830e2b644d34c9033cff4904dc692"
+    },
+    {
+      "file": "assets/inline-11-2d76c538fce9.webp",
+      "sha256": "640bbd88ee01c6986411579f0dda74528b60c11a37c2f89058fc4b18dc6d8008"
+    },
+    {
+      "file": "assets/inline-12-92b9847920f1.svg",
+      "sha256": "da8feb03c2a8cb048498ca91ea26229b926b2d9cd56a1e3087bd5d1541c29fd1"
+    },
+    {
+      "file": "assets/inline-13-837ccdddb311.svg",
+      "sha256": "abda44a4d2c8755978b0403b1d4f986a7a593ec5e6c6873ec9edf15b23912cea"
+    },
+    {
+      "file": "assets/inline-14-94c180fca402.jpg",
+      "sha256": "90335ef8b0f4bcdf7d07f86ae2d2ebb92d3ca618975e5e106a2d86c76a498655"
+    },
+    {
+      "file": "assets/inline-15-ed9bbb43ab5a.jpg",
+      "sha256": "a0ed9f4d098dcdbcfafb271bbbe346c4963dec56d91d65b9a8f0bf6ff6858134"
+    },
+    {
+      "file": "assets/inline-16-ccde11dbda15.jpg",
+      "sha256": "f11293d3520e32fb0e9e5b9a015e0d12f052eb6e237364b6eda2e738f4be1a0c"
+    },
+    {
+      "file": "assets/inline-17-71cf8de9c2fe.jpg",
+      "sha256": "2094e9f4c107067fa1650394250134a65e862dfae282869bfc112a643538b08e"
+    },
+    {
+      "file": "assets/inline-18-4eef06dadfdd.jpg",
+      "sha256": "c7249739789431ac5a1b4ae883ef69b4bd70c4c9e72e70198aa53e43b5596f4c"
+    },
+    {
+      "file": "assets/inline-19-7dcfc8cd87be.jpg",
+      "sha256": "64e619f7f3be3a17710553f4efd97d52b1dfd24b0e7e78d48c168ffce13ac400"
+    },
+    {
+      "file": "assets/inline-20-d7ea803f24fe.jpg",
+      "sha256": "723b7d8fbd308b84f8ea118e3b2203c1874781776a998e13f1952ac6308fe469"
+    },
+    {
+      "file": "assets/inline-21-1613fbc7daaa.jpg",
+      "sha256": "bf535d31c2981429a82d921b9c3dd96ba1449ca3cc0730a9ac8b488e7b33768b"
+    },
+    {
+      "file": "assets/inline-22-c67a4e3fbfc1.png",
+      "sha256": "ef484fc8549de1ee748eacbd64900282e5f07d68938d9bc58578eef4a59dfa95"
+    },
+    {
+      "file": "assets/inline-23-81d478274bc4.jpg",
+      "sha256": "8dbdbd3d1b07f42da981858e0ec58bd5160d982539907da8a5086f7ad4406d3e"
+    },
+    {
+      "file": "assets/inline-24-8a87e389cae3.jpg",
+      "sha256": "f540b536d29bc78516176588641e4e9ecdb8b71fe6cd43c2fc9efb48a8c6821e"
+    },
+    {
+      "file": "assets/inline-25-c2aeeb141cb6.jpg",
+      "sha256": "09d7d50c219bd12b9dcc6fe12456e53d426c6649ca1867ca9fbc698e8e1c43e7"
+    },
+    {
+      "file": "assets/music-ai.svg",
+      "sha256": "d131b373c7dd3bdc8426d6041fa779bbed2be74211b11d8360be078acd264798"
+    },
+    {
+      "file": "assets/music-discover.svg",
+      "sha256": "9c7d1c8177f4985715af70e86004e1cbd12a090d8f20b0f76f0109ef49b7495e"
+    },
+    {
+      "file": "assets/music-dj.svg",
+      "sha256": "8166673003fa081515d091ec7bd88e908767507c625027ec42b18b487f86828a"
+    },
+    {
+      "file": "assets/music-genre.svg",
+      "sha256": "d74fefa6e550a1826a10ec013e72ce1aa81777c0efaa18ad4d0cf92a46d01f51"
+    },
+    {
+      "file": "assets/music-hero-ai.webp",
+      "sha256": "4f64f65383d2ef1b00740fc403aa9105fa6c30c9a4cefc5f831bf2b926a086ee"
+    },
+    {
+      "file": "assets/music-hero-discover.webp",
+      "sha256": "9ac95b5df2cc272ae9276af0ff9f1708c7990392f85a27b3e05c1f51ff2a0414"
+    },
+    {
+      "file": "assets/music-hero-library.webp",
+      "sha256": "c18eda26e838f38db4a6c6d5d97f64709176eae6d1e5e32f18ddcfb2168985e8"
+    },
+    {
+      "file": "assets/music-library.svg",
+      "sha256": "7cd6df282913dd689b4c12f0f153b79adef82401a53ac101d42b92a69b8abe3b"
+    },
+    {
+      "file": "assets/music-mood-80s.webp",
+      "sha256": "e04deb0bbc17987ddf2bd9653124386466d79ab1d94c4812342eeafe4e7ab82e"
+    },
+    {
+      "file": "assets/music-mood-chill.webp",
+      "sha256": "6edec5a4440c1e2f5ce045ce9e22ebbf1dc9d83554a92e3a19e012984d4e5f99"
+    },
+    {
+      "file": "assets/music-mood-electro.webp",
+      "sha256": "4b43f988dd44fe2be9fb46127ca9e942088e35d60c3dc1abc911f5d15ea60d1d"
+    },
+    {
+      "file": "assets/music-mood-party.webp",
+      "sha256": "0845ea971aaa5379a057a357efbbc8de1bcdc7b6a5db6dd59d785062b9f123fc"
+    },
+    {
+      "file": "assets/music-mood-rap.webp",
+      "sha256": "30cec3951fc20c1c8ae0d7ec8e13a762e70a166c37dc7863730b0747e4cd4013"
+    },
+    {
+      "file": "assets/music-mood-variete.webp",
+      "sha256": "8a45bf05cdb60df7b4e109a047627f562672c49ead043f70545b8e3446dbfd27"
+    },
+    {
+      "file": "assets/music-playlist-dj.webp",
+      "sha256": "4d8e6100947fe1b3d310cc8fec49bb8334a48cc086a4877bec005dd01a5d628f"
+    },
+    {
+      "file": "assets/music-playlist-event.webp",
+      "sha256": "0ac857834b79b3448e7c6669a05a5f8bf56bda686626cab11774485448980ce6"
+    },
+    {
+      "file": "assets/music-playlist-favorites.webp",
+      "sha256": "8a83f356a40f689806a46419e4d8bd5f09f1c61efd0096b459e8b02b77f381e3"
+    },
+    {
+      "file": "assets/music-playlists-provided.png",
+      "sha256": "6a6370fb9fb5eddcf925ce9024de5fe73da50bb6367a7e2dd23131199ccd984c"
+    },
+    {
+      "file": "assets/music-vinyl.svg",
+      "sha256": "41da41b20b18d7bdf69ddb2f83b9170bcda769ee9fc12bec407fdc000733a065"
+    },
+    {
+      "file": "assets/music-wave.svg",
+      "sha256": "00c8ca105ba0d587e40886e0aad790a26fec26e2fe442940093793496d7f90aa"
+    },
+    {
+      "file": "assets/orevami/README.md",
+      "sha256": "bebc0d70615d64081eb07af4040ed68ff52187640bb4c1f3a0339351f3431deb"
+    },
+    {
+      "file": "assets/orevami/icon-180.png",
+      "sha256": "2029b441813ff25badcc99b50a2aaa632d4300b5960ce7fff812d7a44a805cdb"
+    },
+    {
+      "file": "assets/orevami/icon-192.png",
+      "sha256": "7bf04fb21951a9c0877d8ecd007919718af6379c6874dca3e1287d5c2f332854"
+    },
+    {
+      "file": "assets/orevami/icon-32.png",
+      "sha256": "c1e6f61aa418c4909785c48d9e2a376b97a1ad32c100c59348aea15ef2e2fb91"
+    },
+    {
+      "file": "assets/orevami/icon-512.png",
+      "sha256": "4ce7db0f61ac28af02be413831c1faebaa8f44b0fda5c3e73c2b7ad4e5926b7f"
+    },
+    {
+      "file": "assets/orevami/logo-dark.png",
+      "sha256": "00fdce111c0bbe12730ccba6e545f4d9729dab1a5792f26fe1d633c63384b719"
+    },
+    {
+      "file": "assets/orevami/logo-light.png",
+      "sha256": "dd2fd7f571b7a9d5424af62f8fd16850a8535de7051db310d1ee01e8604cffcf"
+    },
+    {
+      "file": "assets/orevami/logo-transparent.png",
+      "sha256": "cbdd5ab1b2406caa802a85aa3a2aa04825c6bda13dbc3a9fb3c91768e9da5aab"
+    },
+    {
+      "file": "assets/orevami/symbol-dark.png",
+      "sha256": "181d187d03b90bd7fb32c301489b7b893af2c215ba038c1f10d70a7c7e61a704"
+    },
+    {
+      "file": "assets/orevami/symbol-light.png",
+      "sha256": "46ad1e4184f93a648f33b1ad4cadd47a9aec3f96e4d2d5fe53518b2933b6f259"
+    },
+    {
+      "file": "assets/ui/calendar-star.svg",
+      "sha256": "2a692809fb10a68b331bc458616be1b8df53821edaf9db0f61afeea4d2b14034"
+    },
+    {
+      "file": "assets/ui/games-purple.svg",
+      "sha256": "4a6e85793e659ead061a2014710648359b171ccbb6c6937f7cdc7cb9552a3465"
+    },
+    {
+      "file": "assets/ui/home-orange.svg",
+      "sha256": "8c25c14dc11a5cf465cff4f1b797bd5f1669b170e64e1ac601d468100dd3ff11"
+    },
+    {
+      "file": "assets/ui/market-bags.svg",
+      "sha256": "b54145c44e506f3c9b0466667461d6db94a8e747300ae85108fb8682c1a33e4f"
+    },
+    {
+      "file": "assets/ui/me-card-aioutings.svg",
+      "sha256": "3f7fe75b6da0b54e967e8e458eff0b54c5102f8653c047e2626eeae1c1c81df1"
+    },
+    {
+      "file": "assets/ui/me-card-call.svg",
+      "sha256": "2d1ff00f1fd29ca2902935f2400fa6e2b49c047ed7ce197cff665018fb56bee7"
+    },
+    {
+      "file": "assets/ui/me-card-discussion.svg",
+      "sha256": "0498f6d7cf2af7d03b0b591c30e0bc6738a855340e4d5536f8cf0416c46e86ad"
+    },
+    {
+      "file": "assets/ui/me-card-fund.svg",
+      "sha256": "497b8c97f2630388bfef422d2d97da670bd32beae81500b3cc9b65f510e95084"
+    },
+    {
+      "file": "assets/ui/me-card-games.svg",
+      "sha256": "3bd046d6b2b66f7a7d3e7fbd4e7644e2b0866b190e5b5aabbddc09db9fa66b5d"
+    },
+    {
+      "file": "assets/ui/me-card-media.svg",
+      "sha256": "07b4180a1ce3402383c96a1a177190a4e07a90d7a9b097784249410a7e05368d"
+    },
+    {
+      "file": "assets/ui/me-card-music.svg",
+      "sha256": "c924f45a1e6c24d2aaf61080e107bf34f078aa6dd126a2e8c9753c3d94c8f7dd"
+    },
+    {
+      "file": "assets/ui/me-card-polls.svg",
+      "sha256": "79d247bc72e4dd807a20fe6fa8dea01fd762db5799672d135f1f22ee37591011"
+    },
+    {
+      "file": "assets/ui/me-card-tasks.svg",
+      "sha256": "355581bb18f50c3f53c41fe3f63654605b55b26cd61c89586230ae69506b0f36"
+    },
+    {
+      "file": "assets/ui/me-card-weather.svg",
+      "sha256": "735b37dc1dde3e7bef329af18e175c69a86fbe715320602e38a22d8b1ce3b539"
+    },
+    {
+      "file": "assets/ui/me-nav-camera.svg",
+      "sha256": "68e332a1e469e1a2701bc08722aed457a102a2ab997395ad689f61e8ef9eac7a"
+    },
+    {
+      "file": "assets/ui/me-nav-events.svg",
+      "sha256": "7389466359df1abb8e9fc7b46bcf3d657fa82ae9c38cd8860f811d2b72dd33a6"
+    },
+    {
+      "file": "assets/ui/me-nav-games.svg",
+      "sha256": "cc7aeeed610dadbadfd074d837d9802dcc3ca285b45ba6ff3fc347acb27d8e87"
+    },
+    {
+      "file": "assets/ui/me-nav-home.svg",
+      "sha256": "3d49a0d059c8413afc97e5c0b31fbac35aa2c36317dd91ded80e6e3a5c76f20a"
+    },
+    {
+      "file": "assets/ui/me-nav-marketplace.svg",
+      "sha256": "2017c1f2833700ba0ef3ac220b8d34f8fe0d47202833f330fd4d70b807c1cb29"
+    },
+    {
+      "file": "assets/ui/me-nav-music.svg",
+      "sha256": "7e6a7241d31fd26974a8e9524c9370ee790a6c3c2a82c195ab5ff12af4e39f33"
+    },
+    {
+      "file": "assets/ui/me-nav-profile.svg",
+      "sha256": "52159f9da1a8ae3d3e672515ba87ed8452d3b2182d3d045ee223ebbea789dfd4"
+    },
+    {
+      "file": "assets/ui/music-pink.svg",
+      "sha256": "b4bc7192ee9b8316f958684f48ad847327602e7e8b76794b996de8c42882e896"
+    },
+    {
+      "file": "assets/ui/profile-white.svg",
+      "sha256": "992ba80835f6dbeeead4412d76f32052b1152201a05c10105c615d6c9d3c0d64"
+    },
+    {
+      "file": "assets/ui/weather-sun-cloud.svg",
+      "sha256": "d274cd64a4ec08618df76636b7cbe503b04e237763b0f80b142b85c7ec8710e5"
+    },
+    {
+      "file": "assets/vendor/mediapipe/0.10.21/vision_bundle.mjs",
+      "sha256": "40f4123dfcd75cfa58add046919cc6f52fde66f009ff582997c09ba54c6ba27c"
+    },
+    {
+      "file": "assets/vendor/mediapipe/0.10.21/wasm/vision_wasm_internal.js",
+      "sha256": "4a97e2520ba506c680ecd6ba6acfb146888afa0e2746d57f205352bc6ebb82eb"
+    },
+    {
+      "file": "assets/vendor/mediapipe/0.10.21/wasm/vision_wasm_internal.wasm",
+      "sha256": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7"
+    },
+    {
+      "file": "assets/vendor/mediapipe/0.10.21/wasm/vision_wasm_nosimd_internal.js",
+      "sha256": "927def7b465c51b86e4b3060f93646aca4e27121f4b8fc0483786e407ea9cf1f"
+    },
+    {
+      "file": "assets/vendor/mediapipe/0.10.21/wasm/vision_wasm_nosimd_internal.wasm",
+      "sha256": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4"
+    },
+    {
+      "file": "assets/vendor/mediapipe/LICENSE",
+      "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8"
+    },
+    {
+      "file": "assets/vendor/mediapipe/manifest.json",
+      "sha256": "ce41f43efcf11ce5d4d1e41dcfdaf9f1ea05005a027e373dff0c75ed3032bcaa"
+    },
+    {
+      "file": "assets/vendor/mediapipe/models/face_landmarker-float16-v1.task",
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
+    },
+    {
+      "file": "assets/videos/orevami_publicite_croix_unique.mp4",
+      "sha256": "3418ccfcc05067d44363ed72265fb9da92578275d27ac010dfcdc2347f5ff02b"
+    },
+    {
+      "file": "css/admin-v2.css",
+      "sha256": "38d7358d6c0e06e9790d3def4990b2aba90e9287e79559455c095430b17991f5"
+    },
+    {
+      "file": "css/ads-placement.css",
+      "sha256": "7975bff6d1d684738de3c516574dedfc68e85e9aad6d3c3aa70e08f7ac58a8a6"
+    },
+    {
+      "file": "css/camera-stories-creative.css",
+      "sha256": "cc3b8aa5194370602fbbb3fa9c46a0e49ff94f556ebb4cf8b8bd5e21f026a4be"
+    },
+    {
+      "file": "css/camera.css",
+      "sha256": "aeac9e360c6abf93cc8c9a57106d60b5bde9d07f8cb10dba9d546e7a1f5f07ec"
+    },
+    {
+      "file": "css/entertainment-lounge.css",
+      "sha256": "b9f4301f1639afbf0424728e2cd95bff640ecbedfcaeee46891d473bbbc8249c"
+    },
+    {
+      "file": "css/event-ai-compact.css",
+      "sha256": "ffa7830d40137d9d5aeb414584c82cb823f52c55565ef559d443249db7bb7d14"
+    },
+    {
+      "file": "css/event-social-feed.css",
+      "sha256": "d30f174aa801b0f4a61ed8ea39d145465ec2d543fef9b43b22dac882cff846ce"
+    },
+    {
+      "file": "css/events-workspace.css",
+      "sha256": "7e559b653c43db6b0887a11ca998de633f99ac2720d9e32fea366a593a5b988c"
+    },
+    {
+      "file": "css/explorer.css",
+      "sha256": "9b8fca33c675257c8735a49fb316fd22b79de60d6fbd4ac3341729aacaaacee0"
+    },
+    {
+      "file": "css/inline-extracted.css",
+      "sha256": "c14c946a5324238948c3b10a861a420bf9a37194fea5911285664bb7b98d81ec"
+    },
+    {
+      "file": "css/marketplace-entry.css",
+      "sha256": "5ec86d70729b368b5bb1dec462f5f487a6a215f64581d27471670f697bf53778"
+    },
+    {
+      "file": "css/marketplace.css",
+      "sha256": "5053320481337c44bb0c38ccbdb30b1d6772d8e35f26ef022e1ca32520163cd5"
+    },
+    {
+      "file": "css/music-workspace.css",
+      "sha256": "2a511ffdc03947ec130a7ebab7c367b3472d57d36f41ca5c78cdbc9bb2ad3094"
+    },
+    {
+      "file": "css/official-advert.css",
+      "sha256": "34fc63cf6b3afc4d4072732843531151157f51d14a0ba55f7b2e634e7aee8099"
+    },
+    {
+      "file": "css/orevami-brand.css",
+      "sha256": "571d515b84bca3a2616f120df2a589942ea5027940c4380724c7775cae7c4f9e"
+    },
+    {
+      "file": "css/section-navigation.css",
+      "sha256": "09cd2788084033097915095decef58110f4523ecc04d0e5c92d55273ecf352e2"
+    },
+    {
+      "file": "css/social-friends-stories.css",
+      "sha256": "09afcf8cbbe2ebcc6ac0b30f8dd34f3757d34f4312679a13cf6cf8015bf86a44"
+    },
+    {
+      "file": "css/social-inbox.css",
+      "sha256": "57e7a3af30862c91bd4be5b323e6b02fe4818c05a60891ba2c7de6e8fe1893bf"
+    },
+    {
+      "file": "css/tasks-ai.css",
+      "sha256": "52681749a7291312de49ff94b1c20ec046ea3aab886cd8a7bd81f66f36d934af"
+    },
+    {
+      "file": "css/theme-accent.css",
+      "sha256": "b1fa1c4f57a3712496e732e67a6b04443c18783ee7e71ceeb333c356f6151e51"
+    },
+    {
+      "file": "docs/admin-v21.md",
+      "sha256": "b160d3124d5a17e22e4084ff0b8a38cb849e8c13ab842788ed4018b9e434c0d1"
+    },
+    {
+      "file": "docs/admin-v22.md",
+      "sha256": "a07786eb013fd966b530c42564f67d623d3167208fc015fa46c2aba14d8f5f83"
+    },
+    {
+      "file": "docs/audit-production-explorer-admin-2026-10-05.md",
+      "sha256": "5b88a40dc80ea8ff39519bbdb11e707bd87881614a78cb38b32893c284d7869a"
+    },
+    {
+      "file": "docs/camera-ai.md",
+      "sha256": "7ae8c87b3c0d465cacf64003bd32709527d343eaf84770d7a3bffa847adfc263"
+    },
+    {
+      "file": "docs/camera-appearance.md",
+      "sha256": "8bcc995aba49f5a6495075e7bcdf69d08aa55b1b3dbb305aa6cbedc58c10c71b"
+    },
+    {
+      "file": "docs/explorer-v1.md",
+      "sha256": "04e04d23d6f55a3c8b4ba4034c79235143304e51d5b5ee484e5e75d5fda34f2f"
+    },
+    {
+      "file": "docs/games.md",
+      "sha256": "e40f507983aa971fbf8dc13c88b38c9beec9a5df5405330e0d0d9518127b1d32"
+    },
+    {
+      "file": "docs/marketplace.md",
+      "sha256": "d6020dbb7332d562f176c351d7bd7793dff383670bbdae1d9be545800a132f86"
+    },
+    {
+      "file": "docs/mobile-v1-restaurants-marketplace-audit.md",
+      "sha256": "ab55526ec1c512ae642b3f0a728d894cb47817cccb67bc2d495b0f28b56e3190"
+    },
+    {
+      "file": "docs/music-v2.md",
+      "sha256": "1eee490027bd80b406cdb3c0e8ab55f33037f2d90caabbc2228ce82efd1f5ec6"
+    },
+    {
+      "file": "docs/orevami-event-loading-correction.md",
+      "sha256": "026a2434f7da999ad03df572a3300219df09523a7ceaaef7197c0d252dc3166e"
+    },
+    {
+      "file": "docs/orevami-games-test-activation.md",
+      "sha256": "2b6b311397362cdee6030be6dc3777f9a37bfd7503364ea61fe1b905a764763a"
+    },
+    {
+      "file": "docs/orevami-geoapify-partial-results.md",
+      "sha256": "27e8b23a47136751a625f85e03d17a48f436934eb3d15a85ddbe07a4d74b5567"
+    },
+    {
+      "file": "docs/orevami-outing-active-event-fix.md",
+      "sha256": "bf22818ff5d843b274929c8b487a60425a692059e9db7b62748371ef66631f86"
+    },
+    {
+      "file": "docs/orevami-outing-more-options.md",
+      "sha256": "7df33a969cedfea6a8acf11690fc1f1162d76358a1c68c56e915dcf2029ab7da"
+    },
+    {
+      "file": "docs/orevami-pagination-correction.md",
+      "sha256": "c1f279802d629b573930180556c8bdc98029c432d09c3c8dfd2f88cec48dadb6"
+    },
+    {
+      "file": "docs/orevami-search-restoration.md",
+      "sha256": "fa867bb6a9652c2c85401f82362a016ef900c05cedd730e1b1f248ebc1991342"
+    },
+    {
+      "file": "docs/orevami/finalization-status.md",
+      "sha256": "def4407b9c494474729657502a2fc5aecc1306a18038805cda7d8259b2dabd52"
+    },
+    {
+      "file": "docs/orevami/launch-readiness.md",
+      "sha256": "eb8893b3272d46158680ea584519e84ffef90a6c1434c4890f692d8ae0f53406"
+    },
+    {
+      "file": "docs/orevami/migration-preview.md",
+      "sha256": "aff1259d6f40ca477b89f49d02930596e6ebcbdfff58da7384a27873ea4150bb"
+    },
+    {
+      "file": "docs/orevami/storage-finalization.md",
+      "sha256": "9e41efdcc351e8aa6b5bfc63fa367398c5945284ce9fa5b287a6c545beb4dbf0"
+    },
+    {
+      "file": "docs/orevami/storage-ready-for-publication.md",
+      "sha256": "30ee8d6cb85f978ea366dce280acb122ed1910ef319dd4e87c05643518df07f0"
+    },
+    {
+      "file": "docs/orevami/storage-test-result.json",
+      "sha256": "d45c0c97520e981af7b57a1b19da291782785d1b7c80ffde3f6ab62f52b3d2ef"
+    },
+    {
+      "file": "docs/orevami/storage-validation-blocked.md",
+      "sha256": "c4f50ed62bb30890791e06c831c95e49d8e7091c17a22a1f05e07a1f14571aee"
+    },
+    {
+      "file": "docs/production-readiness-admin-explorer-v3.md",
+      "sha256": "af61e32650b394212dea2320ceaba144449030e0fe22182ee3f1fe709f458623"
+    },
+    {
+      "file": "docs/production-runbook-admin-explorer-v3.md",
+      "sha256": "b0be32366e833148f4bd0a87b1c72e7cc1e54479e9b2b2189c649530c7718ca9"
+    },
+    {
+      "file": "docs/reservation-link.md",
+      "sha256": "e9e819ad7c628145124bd45432492f0b3a3d8744b93de869e2fe00b0cd83ec53"
+    },
+    {
+      "file": "docs/social-inbox.md",
+      "sha256": "56e90215175bbb4013046c0a3810168acfe91dc1100dbccf1279ad6d6f59d179"
+    },
+    {
+      "file": "docs/stripe-webhook.md",
+      "sha256": "19ce4adbaab65d9b6798abc745d9245b3653ad55fa07cf391ba30818d59f408f"
+    },
+    {
+      "file": "explorer-partners-accommodation.html",
+      "sha256": "f012988d2e929f88a9d6f74602779a92256c64c7777441f35b01c1138d8fa0ca"
+    },
+    {
+      "file": "explorer-partners-ticket.html",
+      "sha256": "eadfdb9e89e204e68a32d91a75a7b93ac72c1644d8a86aa571687064113f50df"
+    },
+    {
+      "file": "explorer-partners-transport.html",
+      "sha256": "7d4baf323e46dec18c41260d2e756fe0a3d99e71072fe8e3760aa6c772b01b90"
+    },
+    {
+      "file": "explorer-partners.html",
+      "sha256": "27db8e08b31199a113c59cfcf5cb9d24a98b00aa5b991368ec933038a568b3b5"
+    },
+    {
+      "file": "explorer.html",
+      "sha256": "1990913a20a0903914f14aa5621815a68316d1606b2e3440a3ecbd74d704512f"
+    },
+    {
+      "file": "icons/myevent-192.png",
+      "sha256": "8966aee9c42bf11132aab67e674c692fd189f3e06e4f29b4ad90706260274ad0"
+    },
+    {
+      "file": "icons/myevent-512.png",
+      "sha256": "738ccb780ae7bb5bc1b0d075ac1181bc3cb36ac05907dc33bf63b1fb9f7915d0"
+    },
+    {
+      "file": "js/accommodation-search-contract.js",
+      "sha256": "624eea9853d46c936285dbd9b2b33087dc455fc03ecc1dcbab6dac71e7cf4363"
+    },
+    {
+      "file": "js/accommodation-search-runtime.js",
+      "sha256": "18b313b146668b2763380936338527d1965069c18990296a86c8f1917d9e8ac7"
+    },
+    {
+      "file": "js/additional-games.js",
+      "sha256": "dc05ea542e2abe7f6062f39c2a8d4bfd3b76f2eebe8776d12e3ed784d0f9d5c8"
+    },
+    {
+      "file": "js/admin-runtime.js",
+      "sha256": "0ba77244c2c93f0abe7a13d47f86a794bc530d1e6d68715b27c79485e01d5d20"
+    },
+    {
+      "file": "js/ads-placement.js",
+      "sha256": "8a7bc9f91a088b63c3279ea247f739a5297bce80a99a3ef2263260ac02f1431a"
+    },
+    {
+      "file": "js/ai-runtime.js",
+      "sha256": "d3c39984886968d155d8fcded2808a758a3e1fc9e8f88111ea9636366781ca22"
+    },
+    {
+      "file": "js/camera-ai-lenses.mjs",
+      "sha256": "c5849656f7f8398c902a30c5b79c72737b0c5bce035e55904af2b9733787fb28"
+    },
+    {
+      "file": "js/camera-ai-presets.mjs",
+      "sha256": "2e4eb261c5d68bbd74b3a8f41e1015df6c578cc382c30c587e9156c32270a20b"
+    },
+    {
+      "file": "js/camera-annotations.js",
+      "sha256": "39b7017b8a70fb120210f510549f4db3aae8eebb646755a195ec4620664ec74d"
+    },
+    {
+      "file": "js/camera-appearance-renderer.mjs",
+      "sha256": "eb452c2ce543935c6b89976d9d831ed5d7506aea73a7fa55aa5d693eff3dea9d"
+    },
+    {
+      "file": "js/camera-appearance.mjs",
+      "sha256": "ce717a7472dac1707e18b3ebef3bcf284b1fa5641c13e31ff75b9d6350c175dd"
+    },
+    {
+      "file": "js/camera-capture2-final.js",
+      "sha256": "961ca7bf1ea63e9e8bff8fdc094cace91a432e403cd32dcfee727f88694cb223"
+    },
+    {
+      "file": "js/camera-face-engine.mjs",
+      "sha256": "d0c8d2b28843bcf0755217c36e90faa735f70d5e95427ae340d5b53bff4a30e3"
+    },
+    {
+      "file": "js/camera-face-warp.mjs",
+      "sha256": "c8e091f4f126c9c478255f63d50a790495a4835dbdaba29c6cb55ca2dd40e3ab"
+    },
+    {
+      "file": "js/camera-face-worker.js",
+      "sha256": "486c830110d4cb68a6a517ee789a5d1f02b5b1cbf34556136a530f28287ec064"
+    },
+    {
+      "file": "js/core-runtime.js",
+      "sha256": "ba8c251b7b955a1a915cddebdf8b7939d1c6127b2477737619781d14281e276f"
+    },
+    {
+      "file": "js/discussion-runtime.js",
+      "sha256": "c7474d5ea23c9c22d96a38445e8ead204d07c5c5de8bb3a498f3a2c44b4acf85"
+    },
+    {
+      "file": "js/entertainment-lounge.js",
+      "sha256": "ca3f613f12ece81711c9f43b60672c2d1e35e77193d86bf9077119860130a357"
+    },
+    {
+      "file": "js/event-social-feed.js",
+      "sha256": "7cbbd6144a94a80cfe391c58cd9a7b1649f157cf3d8b1407a13f741d42092c97"
+    },
+    {
+      "file": "js/events-workspace.js",
+      "sha256": "293fea689a5d6e707946eceedbbcda6bd82156f9fa36b9a8161a12a67f7ad240"
+    },
+    {
+      "file": "js/explorer-event-reservations.js",
+      "sha256": "a33674f75488b8ef59a6625f042a5ab9456005576f5248d1d6948049aa0c8de8"
+    },
+    {
+      "file": "js/explorer-partners.mjs",
+      "sha256": "42064993cf1614a73bd575d22859e71171d08c1b3c970749cd00ce38122a4e91"
+    },
+    {
+      "file": "js/explorer.mjs",
+      "sha256": "7aaf3fa13cc251a39d34ad9a18c761726750632d207f018efb27f08e0a3259f3"
+    },
+    {
+      "file": "js/feed-composer-media.js",
+      "sha256": "0ad97836714e6bffea4a0b9320685b0578a51ff9e50b33c19ae455075502003b"
+    },
+    {
+      "file": "js/feed-interactions.js",
+      "sha256": "cd620bc75e4afaf4e014cb084f87f4062fbb260303e78bb54cab0ee15bbb2760"
+    },
+    {
+      "file": "js/feed-media-viewer.js",
+      "sha256": "90ba4663387bb935f366ca21718b2812950bf46a7a2aca8a1d99509669b5d177"
+    },
+    {
+      "file": "js/feed-post-actions.js",
+      "sha256": "8751b162cbd8b75d82b3780ebaf8e97cb571f084ddcfa2725fd3c78dde80f66f"
+    },
+    {
+      "file": "js/game-session.js",
+      "sha256": "99037b8f36b6cfdc5cf44903076f41cae7f4417a142a5be5b1aed7d96889ec2f"
+    },
+    {
+      "file": "js/hall-finances-runtime.js",
+      "sha256": "4e7cfcc59b8340cf6cef6ac0bb952d2ebc9a19b550a40dfa044cef36e3b68f57"
+    },
+    {
+      "file": "js/home-social-runtime.js",
+      "sha256": "dab42767eb59fb271a8a0151c3fc7f9b74662f7b5bba039c6067ffb1b94e9cc4"
+    },
+    {
+      "file": "js/invitation-context.js",
+      "sha256": "3a030657942f9f612af45b8648e2366a84eebf5cf52b8ce39852ff7d930ce999"
+    },
+    {
+      "file": "js/map-runtime.js",
+      "sha256": "78ef654008d5bb59522118a5e61a4463db4954c17b2f4bd2a1b7c0ecc8bce4d6"
+    },
+    {
+      "file": "js/marketplace-config.mjs",
+      "sha256": "3e90ef95769df141f3dba8e58a2c85af6881bfefd6016f5209f72ec13cccb4c6"
+    },
+    {
+      "file": "js/marketplace-data.mjs",
+      "sha256": "1f31a020964034d0b4a058cc4eaf628886147a5db6d880fb1f8a7b36d61bce3b"
+    },
+    {
+      "file": "js/marketplace.mjs",
+      "sha256": "61f78ae25980293d015e46fd75ee4b472a10d35cc9f43ab7a2d3750109f1cafd"
+    },
+    {
+      "file": "js/music-controller.js",
+      "sha256": "b863975eec15a81fff159177a34096d395dcc99eafa4d3c71dad9f4a8e497630"
+    },
+    {
+      "file": "js/music-runtime.js",
+      "sha256": "f496e32287286a2f7925d4e9287bf5252b37c144a1bafe000ba6404d56910754"
+    },
+    {
+      "file": "js/music-session.js",
+      "sha256": "ef864f105175350f23df5d8d950ee3aca48cdbb0fc6daa044a2aaefd38d5fd2b"
+    },
+    {
+      "file": "js/music-workspace.js",
+      "sha256": "ca72dff010cdabb94cb1e0a7c4da65743ce6771320723045e4b8afd144c2b1d0"
+    },
+    {
+      "file": "js/official-advert.js",
+      "sha256": "76e07289b1d1ca9606d4c55e6ec2896d2de089f30987ef551980638355721476"
+    },
+    {
+      "file": "js/orevami-brand.js",
+      "sha256": "044b3dd3ba148c55a6a0189e6676bd5334e9ae0556cb046ea1020f5caca29d77"
+    },
+    {
+      "file": "js/personal-reservations.js",
+      "sha256": "6e1a2ae5df8a82597ec0770f703b866c5ea4a8808ca68f0b46d2792111807d35"
+    },
+    {
+      "file": "js/planning-transport-runtime.js",
+      "sha256": "0e341e44217d889c823b46daafa7949f9e36673af039ba27463749fc8cef6c4e"
+    },
+    {
+      "file": "js/reservation-link-contract.js",
+      "sha256": "10b5084dac4c0214bc143cad8a0f931ba6f075ca1b4251c0fd808476e88d36f1"
+    },
+    {
+      "file": "js/reservation-link-runtime.js",
+      "sha256": "815dfd4934242964cf98425667bcbb94f8e5063f272deee1a8163e806a8183d1"
+    },
+    {
+      "file": "js/runtime-config.js",
+      "sha256": "ac8e6900910d8930f9eb5d95e6fd48f5ad883a14fe1479fb7f0dd0f2610610a4"
+    },
+    {
+      "file": "js/section-navigation.js",
+      "sha256": "79d95169bea3818fb0a73de1068d91bd1e20f1f74bd20eed55c98999528257a6"
+    },
+    {
+      "file": "js/social-friends-stories.js",
+      "sha256": "8109594323292ee3fa9b5740814f173d88dfc673900abd5b49fec2df0e2fc5e3"
+    },
+    {
+      "file": "js/social-inbox.js",
+      "sha256": "e9c3e919b4b03994e3885d40af7e34b56d927bd7602cc34b66062b071541aa52"
+    },
+    {
+      "file": "js/sorties-reservations-runtime.js",
+      "sha256": "d54b589e561789bf97be6020651ebb59674f384d612de93e5db9fb200da0dc14"
+    },
+    {
+      "file": "js/tasks-ai.js",
+      "sha256": "444aafb020539b90a5cdb0fafdfb5d25477d0dc3d053d57d34509a84e4f91460"
+    },
+    {
+      "file": "js/tasks-runtime.js",
+      "sha256": "38966778a1fdb15407f145a5f58716f34b82fbec5786e7d69b7ae1fb4a93f27b"
+    },
+    {
+      "file": "js/theme-runtime.js",
+      "sha256": "ab6f7c56e9c369cca1f099eebcfb4ab39e0f1509bb13e1f58602029c9a4b6953"
+    },
+    {
+      "file": "lib/accommodation-provider.js",
+      "sha256": "feb5a5237521ebe93e6af492da16732e8f51ad28b0df4a9907598433c70e33a0"
+    },
+    {
+      "file": "manifest.webmanifest",
+      "sha256": "5fa19bcfa88e0b17cccb83c20662f3b121a8697374ab334903eb3d23c12c7d5a"
+    },
+    {
+      "file": "marketplace.html",
+      "sha256": "bc31c1f7e84a44d5c84b23216b72d84d5b1c75bd1ebf0eb63d3c600c6db2114b"
+    },
+    {
+      "file": "scripts/check-test-environment.mjs",
+      "sha256": "54e53e4ceb8b0421285d3c3968464db7a5b9f7190903598ddd4040ea3d338cf1"
+    },
+    {
+      "file": "scripts/generate-explorer-partners.cjs",
+      "sha256": "2252566a9ca491ca7a5980768a704f7941e2ec6ba113bf1efb097bd6c0f4d07d"
+    },
+    {
+      "file": "scripts/prepare-admin-test.mjs",
+      "sha256": "a562203f39c6eab6f98a9ccbc3054e46ba6be95ccfbd3d9d87a37a284922943e"
+    },
+    {
+      "file": "scripts/request-test-service-key.ps1",
+      "sha256": "55dec74bb7e8507abdb79aad60d56bab98d3ef14357350cb73a509a1706cc72c"
+    },
+    {
+      "file": "scripts/run-storage-test.ps1",
+      "sha256": "8d076238be5fa63780d6d2fd9cfe114127d87b6994e69dfbee2c6a758082c6d4"
+    },
+    {
+      "file": "scripts/validate-event-storage-test.mjs",
+      "sha256": "54284c85d1429b5ddcd6881d413089e4d2d747158112797502a85898cbd5a0ac"
+    },
+    {
+      "file": "server/event-deletion-handler.mjs",
+      "sha256": "934bc2a13f6d3e33a44a6ef7c2f4730f2af75fae95ca556df8ea3cf722db1e12"
+    },
+    {
+      "file": "server/feed-post-deletion-handler.mjs",
+      "sha256": "80f68d3a03df3c72a95f3746a852923e98a883ab50145315bc1f6cb74b7b2519"
+    },
+    {
+      "file": "server/geoapify-places.js",
+      "sha256": "6ef4c1807c77ad159b7726f033963243ef04013a98447bd80ebca2993be9b12a"
+    },
+    {
+      "file": "server/outing-plan.js",
+      "sha256": "a1b12fcace02bfceab09ea697a61f24747ab7800a6b136c6b0b29db9528d25f7"
+    },
+    {
+      "file": "server/runtime-config-handler.mjs",
+      "sha256": "9c4c09cfc3b5c13de6c57c3bd8e10d32a990dd462e65ec52dc67e3e5546599c2"
+    },
+    {
+      "file": "server/search-accommodation.js",
+      "sha256": "a36cf9c6eb844b5416636d46b1f36fc86504883507ad5feded22856afdbc7ee9"
+    },
+    {
+      "file": "server/search-transport.js",
+      "sha256": "9d4513f7294fc33baafb0fcd760e43cc54e4b1b851653f65ac1926515cf5eba0"
+    },
+    {
+      "file": "server/supabase-environment.mjs",
+      "sha256": "7fdd462e56b0b0f554c67c36d6b6c0f544aed68d3bd30ec9d509ba29659c42e1"
+    },
+    {
+      "file": "server/tasks-ai-handler.mjs",
+      "sha256": "3c7be269d6fe99c711e8f0d4ceb57e73dada3d3c895bf46c3c4338b713f5fa8d"
+    },
+    {
+      "file": "supabase/admin/preflight.sql",
+      "sha256": "bf1500804fde1032d1d80ecfd6082d3744370d3877fb396d0efa4e456f8f81a1"
+    },
+    {
+      "file": "supabase/admin/production-readiness-v3.sql",
+      "sha256": "7a7dcefd3573e9fccdada363868e2820fc1990aac35bbd890a6ee96ecaf43766"
+    },
+    {
+      "file": "supabase/admin/rollback.sql",
+      "sha256": "d0e61a0a17883fc312f0702a317995bd569c02ed2a34c3688beff2d39ed01057"
+    },
+    {
+      "file": "supabase/migrations/20260923_music_v1.sql",
+      "sha256": "59838532886c2139da2c6f079d9248d3e85629b14ea1c652061ce6718eda3340"
+    },
+    {
+      "file": "supabase/migrations/20260923_social_camera_feed.sql",
+      "sha256": "dcf6916eebd69c21216e0797fb874b486a850934913f6687d733e7db2c00d96d"
+    },
+    {
+      "file": "supabase/migrations/20260924_music_integrity.sql",
+      "sha256": "001fd1cdc5b36124672d2d9c62b39495edb24aafbff751e93253f66124536260"
+    },
+    {
+      "file": "supabase/migrations/202609250001_marketplace.sql",
+      "sha256": "9627ebe10d69b482e355528595bf7b70fae845d8078128015d3d0dcb50b1d8af"
+    },
+    {
+      "file": "supabase/migrations/202609250002_friends_stories.sql",
+      "sha256": "5113238284f6aed674a3676486b8bba910a9102e9ef6038354bb8a8bdad8b427"
+    },
+    {
+      "file": "supabase/migrations/202609270001_friend_invite_links.sql",
+      "sha256": "e8bb963ee9b356cc8715dfce2300f1b9f3c28005c9c9e95ecd4db42c43f509c0"
+    },
+    {
+      "file": "supabase/migrations/202609270002_games_engine.sql",
+      "sha256": "d7a6d3878d12939044f860b7047cfb286fddacd8bdf9ef7a18bbac1bff667473"
+    },
+    {
+      "file": "supabase/migrations/202609270003_defis_game.sql",
+      "sha256": "412ee7ec7ff6f85ad8346777e7e7650220bfdf5b17221e6295e3ae18317ebb9f"
+    },
+    {
+      "file": "supabase/migrations/202609270004_event_member_profiles.sql",
+      "sha256": "0fef689cdc01dbcc1580d87b8c9fa5335d1a66b69425be4a0bb5ffaf9824be95"
+    },
+    {
+      "file": "supabase/migrations/202609270005_event_roles_visibility_feed.sql",
+      "sha256": "108b408d0f6dbe784ea1c62706d1a48fad534ebfeb39040db095509a14bf6234"
+    },
+    {
+      "file": "supabase/migrations/202609270006_event_member_identity.sql",
+      "sha256": "9e62064eb141f9599951b9d43803a76b2b8d08f076216a036458f69ac573cf72"
+    },
+    {
+      "file": "supabase/migrations/202609280001_social_inbox.sql",
+      "sha256": "64fa8c45d8bb8916f72a9c9b3bd55bcaaad75a59be4327ffade251369fdabe85"
+    },
+    {
+      "file": "supabase/migrations/202609280002_fix_event_creation_rls.sql",
+      "sha256": "f6d78da02c0a9e5fe25bda2e48b53965bcbb4b2bb12e6fd4271119e44bab5417"
+    },
+    {
+      "file": "supabase/migrations/202609280002_story_interactions.sql",
+      "sha256": "4a3cea4ee2e35633e58d9799f5198e48d0738f1b4ac5bd3e0aa370dfffdc2575"
+    },
+    {
+      "file": "supabase/migrations/202609280003_feed_interactions.sql",
+      "sha256": "b5f11706b818bcdc9571d81225ad1dea8ff7394ed411385d708feaa4b7b8168a"
+    },
+    {
+      "file": "supabase/migrations/202609290001_v1_realtime_modules.sql",
+      "sha256": "91b05dd77038e1cdc3955992d61a7ff09ea0b6d0420863d2815c8477b25bd866"
+    },
+    {
+      "file": "supabase/migrations/202609290002_marketplace_unread.sql",
+      "sha256": "1942baa357f0b4f79bf98bbaf6f74a10bf21889fef508bfd2ddcdba0dc4e3898"
+    },
+    {
+      "file": "supabase/migrations/202609290003_supply_quantities.sql",
+      "sha256": "e074203e104fc24a7f0cf2c53d4a4a2fd95b8ba4ddc60cfae888a9f1ca70982b"
+    },
+    {
+      "file": "supabase/migrations/202609300001_event_tasks.sql",
+      "sha256": "e65aca35bd4392b912abb432cbbc3ddcb78418c0092b36734a4668ac03bef9da"
+    },
+    {
+      "file": "supabase/migrations/202609300002_social_locations.sql",
+      "sha256": "83d731f158c770138faf91c2941a07e865a1780ae8c932c6b0b01805a6deb633"
+    },
+    {
+      "file": "supabase/migrations/202610030001_platform_admin.sql",
+      "sha256": "4abec55da6ffb5852561e7f559671f46f7dbffe1c88c0288b6897a9d8817a747"
+    },
+    {
+      "file": "supabase/migrations/202610030002_admin_partner_content.sql",
+      "sha256": "5942ee16f15a0733504d48723f9a8e9a4ff9aa6dc39f5930f8cfb1f42bbc4a1d"
+    },
+    {
+      "file": "supabase/migrations/202610030003_admin_v2.sql",
+      "sha256": "319f880db4fe8de3af614b4c72a6ba73c73c2989fcbdf464b71e158c78b5a6b3"
+    },
+    {
+      "file": "supabase/migrations/202610030004_admin_v21_request_gate.sql",
+      "sha256": "e3225b22231e5c1d082e7567d9100275c7023920679e87178ce678264540aa6b"
+    },
+    {
+      "file": "supabase/migrations/202610050001_personal_reservations.sql",
+      "sha256": "5954e44617172ece865549976498dc3d91a5ea8513c2282696876b828195a94b"
+    },
+    {
+      "file": "supabase/migrations/202610050002_admin_v3_dashboard_reservations.sql",
+      "sha256": "0ecaf87e5ed0f7311f08d7f4eccdcc0c00b53a6adc9b7f3f3a0b5ba1e201198c"
+    },
+    {
+      "file": "supabase/migrations/202610060001_story_music.sql",
+      "sha256": "5a1235bfd845ec0e5acba5b3ed50c7e512053fdc71cea734da6fe06d7bb2d9aa"
+    },
+    {
+      "file": "supabase/migrations/202610130001_additional_games_test.sql",
+      "sha256": "3257eef2343fc02d034dc6da9a23844a7fcd2a804a6037031c57fb7e3cf817da"
+    },
+    {
+      "file": "supabase/migrations/202610130002_games_event_membership_test.sql",
+      "sha256": "f4d9c5e0b4ea07accacd2ca765e7a59ee332a88ca22e8231922ba6d863cf0a12"
+    },
+    {
+      "file": "supabase/migrations/202610130003_event_delete_owner_cascade.sql",
+      "sha256": "fafb3e61f70b79f30514da7a32ef42f20e67e1e1aa632f2520508fb403c50b5d"
+    },
+    {
+      "file": "supabase/migrations/202610140001_event_storage_cleanup.sql",
+      "sha256": "d05966577ced156039edf838480c77f1666df5c80b38e7679636d5f0918559d2"
+    },
+    {
+      "file": "supabase/test/accounts.sql",
+      "sha256": "d9a645ebb665af950cf82c6d81b601be424b7543f20848781247a5f3d06132c7"
+    },
+    {
+      "file": "supabase/test/games-live-test-template.sql",
+      "sha256": "2eab741cba8af75d4f3f53880d6c73498aee5c47c93b940a0e5caa82289194a6"
+    },
+    {
+      "file": "supabase/test/games-preflight-readonly.sql",
+      "sha256": "c92d04b3e8deb5e33d18fe2846184a05cfab548395e524dae80d50d9f0768508"
+    },
+    {
+      "file": "supabase/test/metadata-export.sql",
+      "sha256": "24f61f8eb7b7d9e1dc94911b6e16ec3854c9a5ac9e4fd16499b4eeee71e3998b"
+    },
+    {
+      "file": "supabase/test/readiness.sql",
+      "sha256": "a54a8fa6833f9a0941a6ea9c31fa914351e37ac4d24d6c9c4fab3415b318e8d7"
+    },
+    {
+      "file": "supabase/test/storage-policy-export.sql",
+      "sha256": "1ae01ba29ed20b04fc747246ec033098ae633f1ab7869a275e938cd8cb692b64"
+    },
+    {
+      "file": "tests/accommodation-preview.cjs",
+      "sha256": "92ebbe873aaf35742195a348d962eb7568e210b816841b56d98372f36e69972e"
+    },
+    {
+      "file": "tests/accommodation-preview.html",
+      "sha256": "75b01b91e7ff888363932ee303ee5d93b4373d954d7c2d14476427e35f15c352"
+    },
+    {
+      "file": "tests/accommodation-search.test.mjs",
+      "sha256": "37746068c34a2f6b4fdcebf0278903fa341bed30a573bb07ca471b24782d21c6"
+    },
+    {
+      "file": "tests/accommodation-widget.test.mjs",
+      "sha256": "78c0ae3c78739940af9db8c911ba778155e5205fd02004020cdc3bec080c8e5d"
+    },
+    {
+      "file": "tests/active-event-selection.test.mjs",
+      "sha256": "ebd6eaf0c01e21c793ee0867c201b4568640647162909fb57a0eeea69f1b3dda"
+    },
+    {
+      "file": "tests/additional-games.test.mjs",
+      "sha256": "64aa56a816861f7ffcd7f44df77bd7597cb281fb220cfea1d6dc64836aafdaa5"
+    },
+    {
+      "file": "tests/admin-v2-ui.test.mjs",
+      "sha256": "01a5a2b702ec038c0ea1092ca3b1923150be9d2a574c3ec6ce3da9b2037da707"
+    },
+    {
+      "file": "tests/admin-v2.test.mjs",
+      "sha256": "7917c768cd2c9dc8d6e14e57d28a31487325685dd536999db289e49ebd61dc46"
+    },
+    {
+      "file": "tests/admin-v21-activation.test.mjs",
+      "sha256": "860c231f0b91421bb522048f7d42b6b966fa3ccba984f2e6f82edb431a09eefa"
+    },
+    {
+      "file": "tests/admin-v21-db.mjs",
+      "sha256": "0ecb7c062214f9cc35bc4630bf0a8f9df5dce32e1c459e382e40e20f6a5a9ded"
+    },
+    {
+      "file": "tests/admin-v21-fixture.html",
+      "sha256": "61e4b8b2e1c8158abcaaea1cfd062e2b1749e717abe31e800567461f2c1bae14"
+    },
+    {
+      "file": "tests/admin-v21-preview.html",
+      "sha256": "07428fbd2dd46d9580cf5332b6e1fe0865c31d4914416c477f5c2da294db87d0"
+    },
+    {
+      "file": "tests/admin-v21-regression.test.mjs",
+      "sha256": "04c026f12684a978a1158dbf84fa74a7b94c0740624a39d96f11843816fae379"
+    },
+    {
+      "file": "tests/admin-v22-environment.test.mjs",
+      "sha256": "c9c5faccff0cf21ebedbbd419820e1646b793947d0bba8aa7ee02a72de083ddd"
+    },
+    {
+      "file": "tests/admin-v3-db.test.mjs",
+      "sha256": "3cbc14ea900f5b9afbfafa71133afb0b212511e17d0df143378ea9138c2d9eaf"
+    },
+    {
+      "file": "tests/admin-v3.test.mjs",
+      "sha256": "713d795f9e7ad4e83d64a3d6c71f13848dfd8668ed25f9136b68c9f2b3ef8efc"
+    },
+    {
+      "file": "tests/camera-ai.browser.cjs",
+      "sha256": "ec13ed482781b2c095e393df17fe477a28906b09f5834c397457f3f304afcab1"
+    },
+    {
+      "file": "tests/camera-ai.test.mjs",
+      "sha256": "60c408145fa65d336c75f0c61b03ba1806a25abf31d3a9871000659624369c58"
+    },
+    {
+      "file": "tests/camera-appearance.test.mjs",
+      "sha256": "03be7866d2bbcb5fb848d29834fd033ee173f6fa205848fb38e52031e95f3816"
+    },
+    {
+      "file": "tests/camera-event-selection.test.mjs",
+      "sha256": "4477228a7daa485d545a55eedf34ab0026e7782db5b37c6b1759548d7bac55bf"
+    },
+    {
+      "file": "tests/camera-feed-fit.browser.cjs",
+      "sha256": "4efcea351c6d41c5eaaf1b20b504a4de7d3195a8f921371afa16afeaa2b677ae"
+    },
+    {
+      "file": "tests/camera-publication.test.mjs",
+      "sha256": "b4066e5fe0df473063585f0800a466fa6e15035d3b815274ba1f0f7daa67527c"
+    },
+    {
+      "file": "tests/camera-v2.browser.cjs",
+      "sha256": "26070d2e5350c7555dbef153a360a539d39d7da2a11b4f5573bc1cea3b4086ef"
+    },
+    {
+      "file": "tests/camera-v21.browser.cjs",
+      "sha256": "c371fe109e14d78c56ff995ab67e14d40e21d33986f481089d02ad8960d0cf35"
+    },
+    {
+      "file": "tests/camera-v23.browser.cjs",
+      "sha256": "c54c196eac46b4d16114b3e45a9d264a212cf1a406bbdb3d517967aa7306862a"
+    },
+    {
+      "file": "tests/defis-rls.mjs",
+      "sha256": "587cbeb244311cbba4a18927a0aca6f3d9329bf01c5a4ad909d4e93fb38822e3"
+    },
+    {
+      "file": "tests/event-loading-concurrency.test.mjs",
+      "sha256": "7e68073389b25ae2127c087e290839962e9a83efeb40b91208d06efc5af71314"
+    },
+    {
+      "file": "tests/event-loading.test.mjs",
+      "sha256": "7f41a6fa186aff499321f5d0ffff9ad147805d91eefd217fa12c4104bf7c051a"
+    },
+    {
+      "file": "tests/event-roles-rls.mjs",
+      "sha256": "8872a2103093a2c10b741c33a559eb3658290c616ba36cd3bcc53ba941689ef5"
+    },
+    {
+      "file": "tests/events-workspace.test.mjs",
+      "sha256": "62dcd60252e0f9493d5444517d59c96e8bdc5dff7ee5287275adbc7e9ffe4e31"
+    },
+    {
+      "file": "tests/expedia-flights-preview.html",
+      "sha256": "910ac75187545880b61932b9faf418a524d9eba55d57992baf6accc87d28d4b9"
+    },
+    {
+      "file": "tests/explorer-preview.html",
+      "sha256": "2286e9a2f66a6a45465fd98d4fba09b98e438fb3546829c20f97c8f5168de3ca"
+    },
+    {
+      "file": "tests/explorer-rls.mjs",
+      "sha256": "4a71c8cdb566519742bb8db9049270e39f36db1d3177d73338a64e33897715b1"
+    },
+    {
+      "file": "tests/explorer.test.mjs",
+      "sha256": "5cde580a1fb97a99be395a9f40d935d06218a73970a6eb4668f684f1901a9fff"
+    },
+    {
+      "file": "tests/feed-interactions-rls.mjs",
+      "sha256": "3ab4854aec639150d6804df845cc5d41b824deafd4ce4b53447c9a35d1fcc231"
+    },
+    {
+      "file": "tests/feed-post-deletion.test.mjs",
+      "sha256": "167a462345e6cd35d03ca68ccceb3e972dfd41f8dffe9372cc66723d9e4b81f7"
+    },
+    {
+      "file": "tests/friend-invites.mjs",
+      "sha256": "d0a456ffe1c1ed6ecd77819b01ee76ff558437dcf8f72d14b3be1727419e522f"
+    },
+    {
+      "file": "tests/game-session.test.mjs",
+      "sha256": "8b231f9ce1e5ace4d1ba6f0bac3c4f93e18d06d6ad6932a3c4ec78d2bc207e85"
+    },
+    {
+      "file": "tests/games-db.mjs",
+      "sha256": "3a3cabb3b319d5607e336c2641bb580da228d72109bf822189d0c24d265029df"
+    },
+    {
+      "file": "tests/games-preview.mjs",
+      "sha256": "91e9dfade295cea2edaf4c792fab0967c11d236a8344c49c4831e582883db015"
+    },
+    {
+      "file": "tests/games-rls.mjs",
+      "sha256": "180a29e34f398d071f7f1d7f759e31f19e24ebefbf33d46c4db82152a3eb5688"
+    },
+    {
+      "file": "tests/hall-search.test.mjs",
+      "sha256": "2dce266657e0589f24c3efe1e614a9e4f8f79dfcabd5531c56213f10ffae4b35"
+    },
+    {
+      "file": "tests/hall-selection-persistence.test.mjs",
+      "sha256": "6036e4868479d646ff7ec4c1f7f836c6829302d99bc00151feea87df251147e0"
+    },
+    {
+      "file": "tests/invitation-context.test.mjs",
+      "sha256": "104496b43017bf503b6cf55532c62aed4229b665a44cfc149ee66a39a189f4e7"
+    },
+    {
+      "file": "tests/launch-readiness.test.mjs",
+      "sha256": "69e6ad6d34bf9630f564b294121f19dae68bc863d497a47d584b35a0ccd07efd"
+    },
+    {
+      "file": "tests/marketplace-browser-fixture.js",
+      "sha256": "b9d3d9541253857271f3d97cd5e8494777495bee66c45082672772327e71a452"
+    },
+    {
+      "file": "tests/marketplace-rls.mjs",
+      "sha256": "c7006503e6b8a043623084ab8dafb37b37394307b11cba8369c106de8933cdcb"
+    },
+    {
+      "file": "tests/marketplace.test.mjs",
+      "sha256": "99d237782e699ebcc507c87e704d5210bef76edcbb7eeef763b6c96baa18a90e"
+    },
+    {
+      "file": "tests/material-ai-recovery.test.mjs",
+      "sha256": "e440e836f7093f682b6eae055516f04f2f866802e4b6543e503e0d250ded5b02"
+    },
+    {
+      "file": "tests/music-ai.test.mjs",
+      "sha256": "0f6003870563b5c863d82eff93d85b7cfc12374f794bf473b1eb73aa27e3855e"
+    },
+    {
+      "file": "tests/music-integrity.test.mjs",
+      "sha256": "dfb2b6f1a02a2cdb8c45ba53f3037b1b23907c6a2fc9c718093c12b0b64dfe8e"
+    },
+    {
+      "file": "tests/music-runtime.html",
+      "sha256": "2393ea2a423fe2e2b0f5ebd63bc8173ed5202864d18ba4982535978f75dc48f6"
+    },
+    {
+      "file": "tests/music-session.test.mjs",
+      "sha256": "41e4731b10aae84e63f2bea2505f049d974c2d31e8dc645623d235b2acbb7306"
+    },
+    {
+      "file": "tests/music-workspace.html",
+      "sha256": "2c6e5f56410dcd43ad09cbb970b8b6ef071394242d4e3169e72a3d98bd00bb5b"
+    },
+    {
+      "file": "tests/orevami-brand.test.mjs",
+      "sha256": "9eb937b5c47c88a6dd3c9fdea06d280a7cba247439d7e7ad7740403e9c42eea4"
+    },
+    {
+      "file": "tests/outing-more-options.test.mjs",
+      "sha256": "c25c61576ab04b487b5b4f6ba018fb250c115db499870f2b36cbcdf91f00f191"
+    },
+    {
+      "file": "tests/outing-pagination-correction.test.mjs",
+      "sha256": "fd462bcaabab1677e932d74356eae7859857ccede71331620b3ebb536883c097"
+    },
+    {
+      "file": "tests/outing-reliability.test.mjs",
+      "sha256": "5ebfcaf854453c522c84b4619840de1791c1e0bb287544b3875fb1f261380453"
+    },
+    {
+      "file": "tests/place-search.test.mjs",
+      "sha256": "e3cd81b431f25875e24f29d33297bcb51bc2cb9def64405090557376ed354af0"
+    },
+    {
+      "file": "tests/production-readiness.test.mjs",
+      "sha256": "c57f1003fe12f3f29b55074a7ef54bf7fe26e8c199a1ca72f4b906b9ed6d2070"
+    },
+    {
+      "file": "tests/reservation-link-preview.html",
+      "sha256": "01c44c175d0019e34f55276ed8b9e845b33d812e9ad318dec9592b1ab4128673"
+    },
+    {
+      "file": "tests/reservation-link-rls.mjs",
+      "sha256": "4de721e9dfa6afb6b9ea53627c3fe178813c8bab2c5e783062bbd7b61e6a3140"
+    },
+    {
+      "file": "tests/reservation-link.test.mjs",
+      "sha256": "6f943b8355a9e4e7a44d0d200fd718427880cb6cab91b3974b588555cfd65e96"
+    },
+    {
+      "file": "tests/section-navigation.test.mjs",
+      "sha256": "fb7e2bbd419df17f8772440efb043cfdb29accc71ac6d5944a0e09aa59dcf5f4"
+    },
+    {
+      "file": "tests/serve-marketplace.cjs",
+      "sha256": "afc7127d8cf6f6d419bf975e6d01ba7c8e6292e4827e672415176d82ec25fb96"
+    },
+    {
+      "file": "tests/social-friends-stories-rls.mjs",
+      "sha256": "a0b86525a1cf93dc4290a1839f33eb39270fe96880abfd773970acd499470b16"
+    },
+    {
+      "file": "tests/social-inbox-preview.mjs",
+      "sha256": "f3f18d6217dd860db302b242a998ca492e1c5af825e06c57d2fde035405a4f27"
+    },
+    {
+      "file": "tests/social-inbox-rls.mjs",
+      "sha256": "0b36a8789607cba4dc91e4abf8c86fd23adc0f2124d29d69ea7b739e9448c9f9"
+    },
+    {
+      "file": "tests/story-interactions-rls.mjs",
+      "sha256": "691bfab8e224182cd0aa435897463bfc41571e30a6581780faa091fe74921242"
+    },
+    {
+      "file": "tests/stripe-webhook.test.mjs",
+      "sha256": "15db666be0ecb60e81cdadddd3508732ef28cd1210bcdc13176e3fa8f5e2b63b"
+    },
+    {
+      "file": "tests/tasks-ai-client.test.mjs",
+      "sha256": "c6b0ac9ed95f4a8afec0a3054f2eac2b78f9aca9ab11c8530f82d92ea1e15d4d"
+    },
+    {
+      "file": "tests/tasks-ai-handler.test.mjs",
+      "sha256": "3ffbde1898faff0c9e074ac250e662a77ca416d9b7947dcddae39af9b1cb5db1"
+    },
+    {
+      "file": "tests/tasks-ai-runtime-regression.test.mjs",
+      "sha256": "7a6f0fe65ce40b7d1b2c78495b74fd34b12f5afc28b3ffa0d478cd007be90c90"
+    },
+    {
+      "file": "tests/theme-runtime.test.mjs",
+      "sha256": "5456c66e9cfc3da338ad08c37c0cb428dee8eae10205f8611ed1ab44dd031e3f"
+    },
+    {
+      "file": "tests/travel-partners.test.mjs",
+      "sha256": "1ceeb783956aab041cf1d237b4040c11ac14ab25b3e33ffb80f444ffcdc4a0ca"
+    },
+    {
+      "file": "tests/travel-routing.test.mjs",
+      "sha256": "db82bb4a2bd9f227f33bcb337031988b7f5c20d348c826c525baa42a2e2395a4"
+    },
+    {
+      "file": "tests/viator-outings.test.mjs",
+      "sha256": "f437e71c72a7be401670e84f1838bf5db88dedac467438ae6579b24b0410c450"
+    }
+  ]
+}

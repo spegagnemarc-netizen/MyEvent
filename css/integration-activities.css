@@ -1,0 +1,113 @@
+/* Scoped to new integration surfaces. Reuses Production body/card/input palette and accent. */
+#orevamiActivityFeed{background:#102131;color:#fff;border:1px solid #28445b;border-radius:18px;cursor:pointer}
+#orevamiActivityFeed:focus-visible{outline:3px solid var(--myevent-accent,#ff6a34);outline-offset:3px}
+#orevamiActivityFeed h3{color:inherit}
+#orevamiActivityFeed .activityFeedStatus,#orevamiActivityFeed small{color:#b7c9d7}
+#orevamiActivityFeed button{background:#0b1824;color:#fff;border-color:#36536a}
+#orevamiActivityFeed .activityFeedPost{background:#0b1824;color:#fff;border-color:#28445b}
+#orevamiActivityFeed .activityFeedCover{background:#102131}
+#orevamiActivityFeed .socialEventTitle,#orevamiActivityFeed .socialEventMeta{color:inherit}
+.activities{--act-bg:#07111b;--act-panel:#102131;--act-text:#fff;--act-muted:#b7c9d7;--act-line:#28445b;--act-blue:#80c6ff;--act-pink:var(--myevent-accent,#ff6a34);background:#07111b;color:#fff}
+.activities .act-wrap{max-width:1100px;min-height:calc(100dvh - 100px)}
+.activities .act-sheet,.activities .act-card,.activities .act-empty,.activities .act-catalog,.activities .act-venue-finder,.activities .act-venue-recap,.activities .act-venue-card,.activities .act-venue-selection,.activities .act-place-review{background:#102131;color:#fff;border-color:#28445b}
+.activities input:not([type=checkbox]),.activities textarea,.activities select,.activities button,.activities .act-place-action{background:#0b1824;color:#fff;border-color:#2b465d}
+.activities button.primary,.activities button[aria-pressed=true]{background:var(--myevent-accent-fill,#278cff);color:#fff}
+.activities .act-note,.activities .act-badge,.activities .act-place-art{background:#102131;color:#b7c9d7;border-color:#28445b}
+.activities .act-place-top,.activities .act-place-footer{background:#102131;color:#fff;border-color:#28445b}
+.activities .act-tabs button[aria-pressed=true],.activities .act-family-tabs button[aria-pressed=true],.activities .act-type-card[aria-pressed=true]{background:var(--myevent-accent-fill,#ff6a34);border-color:var(--myevent-accent,#ff6a34);color:#fff}
+.activities #act-close{white-space:normal;max-width:150px}
+@media(max-width:600px){.activities .act-wrap{min-height:calc(100dvh - 90px)}.activities #act-close{font-size:13px;max-width:110px}}
+
+.activities .act-detail-map{height:280px;min-width:0;margin:16px 0;isolation:isolate;border-radius:14px;overflow:hidden}
+.activities .act-preference-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;border:1px solid var(--act-line);border-radius:14px;min-width:0}
+.activities .act-preference-types label{display:flex;gap:8px;align-items:center;font-size:14px}
+.activities .act-preference-types legend{padding:8px}.activities #act-preferences{margin-bottom:16px}
+/* Shared compact showcase: home rail and existing full workspace. */
+#orevamiActivityFeed{cursor:default;background:linear-gradient(145deg,#101827,#0b111b);padding:16px;box-shadow:0 8px 28px #0003}
+#orevamiActivityFeed .activityShowcaseHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+#orevamiActivityFeed .activityShowcaseHeader h2{font-size:19px;line-height:1.3;margin:5px 0;color:#fff}
+#orevamiActivityFeed .activityShowcaseHeader small{font-size:10px;letter-spacing:.12em}
+#orevamiActivityFeed .activityBrowse{border:0;background:transparent;color:var(--myevent-accent,#ff6a34);padding:4px 0;font-weight:700;font-size:12px;text-align:left}
+#orevamiActivityFeed .activityAreaForm{display:grid;grid-template-columns:minmax(80px,1fr) 78px auto;gap:8px;align-items:end}
+#orevamiActivityFeed .activityAreaForm label{display:grid;gap:4px;color:#b7c9d7;font-size:11px;min-width:0}
+#orevamiActivityFeed .activityAreaForm input,#orevamiActivityFeed .activityAreaForm select{width:100%;min-width:0;height:40px;border:1px solid #344157;border-radius:10px;padding:8px;background:#0b1521;color:#fff;font:inherit;font-size:13px}
+#orevamiActivityFeed .activityAreaForm button{font-size:12px;padding:8px 10px;min-height:40px}
+#orevamiActivityFeed .activityLocate{grid-column:1/-1;justify-self:start;border:0;background:transparent;padding:0;min-height:30px}
+#orevamiActivityFeed .activityScope{font-size:12px;color:#b7c9d7;margin:6px 0 12px}
+#orevamiActivityFeed .activityRail{position:relative}
+#orevamiActivityFeed .activityFeedList{gap:12px;padding:0 0 10px}
+#orevamiActivityFeed .activityShowcaseCard{flex:0 0 268px;max-width:100%;scroll-snap-align:start}
+.activityShowcaseCard{min-width:0;overflow:hidden;border-radius:18px;border:1px solid #3c365a;background:#0c1220;color:#fff;display:flex;flex-direction:column;text-align:left;box-shadow:0 3px 14px #0003;cursor:pointer}
+.activityVisual{height:162px;position:relative;overflow:hidden;background:#182137;flex-shrink:0}
+.activityVisual>img{width:100%;height:100%;display:block;object-fit:cover}
+.activityVisual>small{position:absolute;bottom:8px;left:8px;right:8px;color:#fff!important;background:#080c15cc;padding:3px 6px;border-radius:5px;font-size:10px!important;line-height:1.3}
+.activityVisual>small[hidden]{display:none}
+.activityVisual .activityCategory,.activityVisual .activityDistance,.activityVisual .activityOwner{position:absolute;top:8px;left:8px;max-width:calc(100% - 16px);padding:4px 7px;border-radius:8px;font-size:11px;background:#101222db;color:#fff;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.activityVisual .activityDistance{left:auto;right:8px;top:40px}.activityVisual .activityOwner{top:auto;bottom:32px;font-size:10px}
+.activityShowcaseBody{display:flex;flex-direction:column;gap:6px;padding:12px;flex:1;min-width:0}
+#orevamiActivityFeed .activityShowcaseBody h3,.activities .activityShowcaseBody h3{font-size:17px;line-height:1.25;margin:0;color:#fff;overflow-wrap:anywhere}
+#orevamiActivityFeed .activityCity,.activities .activityCity{font-size:13px;color:#b7c9d7;margin:0}
+.activityFacts{display:grid;gap:5px;color:#cfcee1;font-size:12px;line-height:1.4}
+#orevamiActivityFeed .activityPrice,.activities .activityPrice{font-size:11px;line-height:1.4;color:#b7c9d7;margin:2px 0 5px}
+.activityShowcaseActions{margin-top:auto;display:grid;gap:6px}
+#orevamiActivityFeed .activityView,#orevamiActivityFeed .activityCreate,.activities .activityView{background:var(--myevent-accent-fill,#ff6a34);border:1px solid var(--myevent-accent,#ff6a34);color:#fff;font-weight:700;min-height:40px;font-size:13px;padding:9px 12px;border-radius:11px}
+#orevamiActivityFeed .activityCreate{width:100%;margin-top:10px}
+#orevamiActivityFeed .activityCarouselNext{position:absolute;right:-8px;top:58px;border-radius:50%;width:36px;height:36px;min-height:36px;padding:0;font-size:28px;box-shadow:0 2px 10px #0009;background:#20172f}
+#orevamiActivityFeed [hidden]{display:none!important}
+#orevamiActivityFeed button:disabled{opacity:.5;cursor:default}
+#orevamiActivityFeed :focus-visible,.activities .activityShowcaseCard :focus-visible{outline:2px solid var(--myevent-accent,#ff6a34);outline-offset:3px}
+.activities{padding-top:calc(24px + env(safe-area-inset-top))}
+.activities #act-close{position:sticky;top:0;align-self:start;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:0;font-size:30px;border-radius:50%;z-index:5;line-height:1}
+.activities .act-filters{grid-template-columns:repeat(4,minmax(0,1fr))}.activities .act-toolbar{margin:4px 0 10px}.activities .act-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.activities .act-catalog{padding:10px 14px;margin:8px 0 14px}.activities .act-catalog summary{font-size:14px}.activities .act-detail>.activityVisual{height:240px}.activities #act-detail>.activityVisual{height:240px;border-radius:16px;margin:14px 0}
+#activitiesShortcut.activitiesCard{border-color:var(--myevent-accent,#ff6a34)}
+@media(max-width:800px){.activities .act-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.activities .act-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){#orevamiActivityFeed{padding:12px}#orevamiActivityFeed .activityShowcaseCard{flex-basis:250px}.activities .act-grid{grid-template-columns:1fr}.activities .act-filters{gap:9px}.activities .act-toolbar button{font-size:12px;padding:9px}.activities header{gap:10px}.activities h1{font-size:27px}.activityVisual{height:150px}}
+#orevamiActivityFeed *,#orevamiActivityFeed *::before,#orevamiActivityFeed *::after{box-sizing:border-box}
+@media(min-width:600px){#orevamiActivityFeed .activityAreaForm{grid-template-columns:minmax(100px,1fr) 78px auto auto}#orevamiActivityFeed .activityLocate{grid-column:auto;align-self:end;min-height:40px;padding:8px}}
+/* Reference visual approved 2026-10-20: violet activity controls. */
+#orevamiActivityFeed,.activities,#activitiesShortcut{--myevent-accent:#c521ff;--myevent-accent-fill:linear-gradient(115deg,#8500f5,#dc00f5)}
+#socialHome .socialFilter.active,#socialHome .socialFilter[aria-pressed=true]{background:linear-gradient(115deg,#8500f5,#dc00f5)!important;border-color:#bd22ff!important;color:#fff!important;box-shadow:0 0 16px #a000f533}
+#activitiesShortcut.activitiesCard{background:linear-gradient(145deg,#131528,#241038);border-color:#a938ff;box-shadow:0 0 15px #9e28ff44}
+#orevamiActivityFeed{border-color:#4b2b70;background:linear-gradient(145deg,#101322,#0b0d19)}
+/* Compact home activity showcase only; ordinary social posts are untouched. */
+#orevamiActivityFeed{padding:10px;border-radius:16px;background:linear-gradient(135deg,#100c21,#061321);border-color:#4c246c}
+#orevamiActivityFeed .activityShowcaseHeader{margin:0 0 5px;gap:6px;flex-wrap:nowrap}
+#orevamiActivityFeed .activityShowcaseHeader small{display:none}
+#orevamiActivityFeed .activityShowcaseHeader h2{font-size:16px;margin:0;line-height:1.25}
+#orevamiActivityFeed .activityBrowse{font-size:10px;min-height:28px;white-space:nowrap;padding:3px 0}
+#orevamiActivityFeed .activitySector{margin:0 0 6px;color:#bcb3dc;font-size:11px}
+#orevamiActivityFeed .activitySector>summary{min-height:26px;cursor:pointer;list-style:none;display:flex;align-items:center}
+#orevamiActivityFeed .activitySector[open]{border:1px solid #29344b;border-radius:10px;padding:8px}
+#orevamiActivityFeed .activitySector .activityScope{margin:4px 0;font-size:10px}
+#orevamiActivityFeed .activityFeedStatus{font-size:11px;line-height:1.3;margin:3px 0 7px}
+#orevamiActivityFeed .activityFeedStatus:empty{display:none}
+#orevamiActivityFeed .activityFeedList{gap:8px;padding:0 0 5px;flex-wrap:nowrap}
+#orevamiActivityFeed .activityShowcaseCard{flex:0 0 clamp(110px,calc((100% - 16px)/3),240px);border-radius:12px;border-color:#4b256c;background:linear-gradient(#101126,#071022);min-width:0}
+#orevamiActivityFeed .activityVisual{height:96px}
+#orevamiActivityFeed .activityVisual>small{font-size:8px!important;left:4px;right:4px;bottom:4px;padding:2px 3px}
+#orevamiActivityFeed .activityCategory,#orevamiActivityFeed .activityOwner{display:none}
+#orevamiActivityFeed .activityDistance{top:5px;left:5px;right:auto;font-size:9px;padding:3px 5px}
+#orevamiActivityFeed .activityShowcaseBody{padding:7px;gap:4px}
+#orevamiActivityFeed .activityShowcaseBody h3{font-size:13px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityCity{font-size:10px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityFacts{font-size:10px;gap:3px;line-height:1.25}
+#orevamiActivityFeed .activityPrice{font-size:9px;line-height:1.2;margin:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#orevamiActivityFeed .activityView{font-size:11px;min-height:31px;padding:5px;border-radius:8px;width:100%}
+#orevamiActivityFeed .activityCreate{min-height:26px;margin:3px 0 0;padding:3px 0;border:0;background:none;color:#c9a6fa;font-size:10px;width:auto}
+#orevamiActivityFeed .activityCarouselNext{height:30px;min-height:30px;width:30px;top:36px;right:-5px;font-size:24px}
+@media(max-width:500px){#orevamiActivityFeed .activityVisual{height:80px}#orevamiActivityFeed .activityShowcaseHeader h2{font-size:14px}#orevamiActivityFeed .activityBrowse{font-size:9px}#orevamiActivityFeed .activityShowcaseBody h3{font-size:12px}}
+/* Only feed-origin details receive the approved photo-first presentation. */
+.activities.feed-detail-mode{padding-top:16px;background:#080d16}
+.activities.feed-detail-mode .act-wrap{max-width:780px;min-height:0}
+.activities.feed-detail-mode .act-wrap>header{position:fixed;right:12px;top:10px;z-index:2;padding:0;width:38px;height:38px}
+.activities.feed-detail-mode .act-wrap>header>div,.activities.feed-detail-mode .act-tabs,.activities.feed-detail-mode #act-gate{display:none}
+.activities.feed-detail-mode #act-close{position:static;min-height:36px;width:36px;height:36px;font-size:25px;background:#20283a}
+.activities.feed-detail-mode #act-detail{margin:0;padding:12px;background:#141820;border:1px solid #343647;border-radius:20px}
+.activities .feedDetailHead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;margin-bottom:10px;color:#f1f1fa}
+.activities .feedDetailHead button{min-height:28px;border:0;background:none;color:#b5b0e5;font-size:11px;padding:3px}
+.activities.feed-detail-mode #act-detail>.actDetailVisual{height:clamp(200px,40vw,400px);margin:0 0 10px;border-radius:12px}
+.activities.feed-detail-mode #act-detail h2{font-size:26px;line-height:1.2;margin:6px 0 10px}
+.activities .feedDetailCategory{color:#b5a4ee;font-weight:700;font-size:11px}
+.activities.feed-detail-mode #act-detail>p{font-size:14px;line-height:1.45;white-space:pre-line}
+@media(max-width:500px){.activities.feed-detail-mode{padding:52px 8px 20px}.activities.feed-detail-mode #act-detail{padding:10px}.activities.feed-detail-mode #act-detail>.actDetailVisual{height:220px}.activities.feed-detail-mode #act-detail h2{font-size:23px}}

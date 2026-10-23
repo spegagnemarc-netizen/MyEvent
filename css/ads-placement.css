@@ -1,0 +1,5 @@
+.orevamiSponsoredPlacement{box-sizing:border-box;grid-column:1/-1;max-width:100%;margin:14px 0 24px;padding:18px;border:1px solid #a886465c;border-radius:18px;background:linear-gradient(135deg,#25201999,#101722);color:#e4e8ef;box-shadow:0 0 18px #e9b55a0c;overflow-wrap:anywhere}
+.orevamiSponsoredPlacement .orevamiSponsoredLabel{display:block;margin-bottom:10px;color:#e8bd79;font:600 11px/1.4 system-ui;letter-spacing:.08em;text-transform:uppercase}
+.orevamiSponsoredPlacement strong{font:600 16px/1.5 system-ui}
+.orevamiSponsoredPlacement p{margin:8px 0 0;color:#a5b2c3;font:400 13px/1.5 system-ui}
+@media(max-width:430px){.orevamiSponsoredPlacement{padding:15px;border-radius:16px}}

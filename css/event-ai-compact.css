@@ -1,0 +1,73 @@
+/* Presentation only. Scoped to the two event panels on phone-sized screens. */
+@media (max-width:600px){
+ :is(#suppliesPanel,#eventTasksPanel){box-sizing:border-box;min-width:0;padding:5px;margin:6px 0;border-radius:12px}
+ :is(#suppliesPanel,#eventTasksPanel) .collapsibleBody{margin:4px!important}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesBox{margin-top:0;padding:6px;border-radius:12px;min-width:0}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesHead{gap:6px;flex-wrap:wrap;align-items:center}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesHead>div{flex:1 1 170px;min-width:0}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesHead b{font-size:16px;line-height:1.25}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesHead p{margin:4px 0;font-size:12px;line-height:1.35}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiBox{margin-top:6px;padding:6px;border-radius:10px;min-width:0}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiHead{gap:6px;align-items:stretch}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiHead b{font-size:15px;line-height:1.25}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiHead p{margin:3px 0;font-size:12px;line-height:1.35}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiBox .editEventBox{margin-top:6px!important;padding:0;border:0;background:transparent}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiBox .editEventBox>label{margin:0 0 6px;padding:0;border:0;background:transparent;font-size:12px;line-height:1.35}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiBox input:not([type=checkbox]){box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:44px;padding:7px 9px;margin:4px 0;font-size:16px;line-height:1.25}
+ #suppliesPanel #materialAiForm .fieldRow{display:grid;grid-template-columns:80px minmax(0,1fr);gap:6px}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiActions{flex-direction:row;gap:6px;margin-top:6px}
+ :is(#suppliesPanel,#eventTasksPanel) button{box-sizing:border-box;min-height:44px;max-width:100%;padding:7px 10px;font-size:13px;line-height:1.25;white-space:normal}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiActions button{flex:1 1 0;min-width:0;margin:0}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiHead button{margin:0;white-space:normal}
+ :is(#suppliesPanel,#eventTasksPanel) :is(#materialAiMsg,#tasksAiMsg,#suppliesMsg,#eventTasksMsg){margin:6px 0;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiResults{gap:6px;margin-top:6px;min-width:0}
+ #suppliesPanel .materialAiItem{grid-template-columns:24px minmax(0,1fr) 54px 44px;gap:5px;padding:6px;border-radius:8px}
+ #suppliesPanel .materialAiItem .aiNote{grid-column:2/5}
+ #suppliesPanel .materialAiItem button{min-width:44px;padding:6px;margin:0}
+ #tasksAiBox .taskAiSuggestion{gap:5px;padding:6px;border-radius:8px}
+ #tasksAiBox .taskAiSuggestion input{margin:0}
+ #tasksAiBox .taskAiNote{grid-column:2/4}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiResults input[type=checkbox]{width:44px;height:44px;margin:0;accent-color:#3d8bfd}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiResults>p{margin:2px 0;font-size:12px;line-height:1.35}
+ :is(#suppliesPanel,#eventTasksPanel) .materialAiAdd{margin-top:6px}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesSummary{gap:4px;margin:7px 0}
+ :is(#suppliesPanel,#eventTasksPanel) .suppliesList{gap:5px;margin-top:5px}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCard{padding:6px;border-radius:10px;min-width:0;overflow-wrap:anywhere}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactTitle{font-size:14px;line-height:1.3}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactMeta{gap:4px;margin-top:4px;flex-wrap:wrap}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyChip{max-width:100%;box-sizing:border-box;white-space:normal;font-size:11px;padding:2px 6px}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCard>.muted{margin-top:4px!important;font-size:12px!important;line-height:1.35}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactActions{gap:5px;margin-top:6px;flex-wrap:wrap;align-items:center}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactActions>*{min-width:0!important;max-width:100%;box-sizing:border-box;font-size:13px;line-height:1.25}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactActions :is(button,select){min-height:44px!important;padding:7px 9px}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactActions select{flex:1 1 100%!important;width:100%;margin:0}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyTakeQty{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12px}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyTakeQty input{width:58px;min-width:0;min-height:44px;font-size:16px;padding:6px}
+ #eventTasksPanel .taskMiniRemove{min-width:44px!important;min-height:44px!important;font-size:16px!important}
+
+ /* Full-width editable text; native single-line inputs cannot wrap. */
+ #suppliesPanel .materialAiItem{grid-template-columns:44px minmax(0,1fr) 44px;align-items:start}
+ #suppliesPanel .materialAiItem [data-ai-title]{grid-column:2/4;grid-row:1}
+ #suppliesPanel .materialAiItem [data-ai-qty]{grid-column:2;grid-row:2;width:72px;max-width:100%;margin:0}
+ #suppliesPanel .materialAiItem [data-ai-remove]{grid-column:3;grid-row:2}
+ #suppliesPanel .materialAiItem .aiNote{grid-column:1/-1}
+ #suppliesPanel .materialAiItem textarea{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:44px;margin:0;padding:7px 9px;font:inherit;font-size:16px;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;resize:vertical;overflow:hidden;field-sizing:content}
+ :is(#suppliesPanel,#eventTasksPanel) :is(.supplyCompactTitle,.supplyCard>.muted,.supplyCompactLeft,.supplyCompactMain){min-width:0;max-width:100%;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;-webkit-line-clamp:unset}
+ :is(#suppliesPanel,#eventTasksPanel) .supplyCompactLeft{flex:1}
+ #eventTasksPanel .supplyCard{padding:6px}
+ #eventTasksPanel .supplyCompactMeta{margin-top:2px;gap:3px}
+ #eventTasksPanel .supplyCard>.muted{margin-top:2px!important}
+ #eventTasksPanel .supplyCard>div[style]{margin-top:3px!important;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+ #eventTasksPanel .supplyCompactActions{margin-top:4px;gap:4px}
+ #eventTasksPanel .supplyCompactActions button{flex:1 1 auto!important;margin:0;min-height:44px!important}
+
+ /* Material drafts only: short text starts at one touch-height, long text grows. */
+ #suppliesPanel .materialAiResults{gap:4px}
+ #suppliesPanel .materialAiItem{padding:4px;gap:3px}
+ #suppliesPanel .materialAiItem [data-ai-title]{grid-column:1/-1;grid-row:1}
+ #suppliesPanel .materialAiItem [data-ai-check]{grid-column:1;grid-row:2;align-self:center}
+ #suppliesPanel .materialAiItem [data-ai-qty]{grid-column:2;grid-row:2;width:100%;min-height:44px;padding:5px 8px}
+ #suppliesPanel .materialAiItem [data-ai-remove]{grid-column:3;grid-row:2;min-width:44px;min-height:44px;padding:5px;margin:0}
+ #suppliesPanel .materialAiItem .aiNote{grid-column:1/-1;grid-row:3}
+ #suppliesPanel .materialAiItem textarea{min-height:44px;padding:5px 8px;line-height:1.25}
+}

@@ -48,13 +48,15 @@
 
 
 
-<script src="js/camera-annotations.js?v=camera-v23-1"></script>
+<script src="js/camera-annotations.js?v=orevami-signatures-2"></script>
 <script src="js/camera-capture2-final.js?v=camera-feed-ai-1"></script>
 
-  <link rel="stylesheet" href="css/inline-extracted.css?v=feed-publish-1">
+  <link rel="stylesheet" href="css/inline-extracted.css?v=approved-20261022">
+  <link rel="stylesheet" href="css/official-advert.css?v=1">
+  <script src="js/official-advert.js?v=1" defer></script>
   <link rel="stylesheet" href="css/camera.css?v=camera-feed-session-1">
 <link rel="stylesheet" href="css/camera-stories-creative.css?v=camera-v23-1">
-<link rel="stylesheet" href="css/music-workspace.css?v=playlists-image-v1">
+<link rel="stylesheet" href="css/music-workspace.css?v=rollout-20261020">
   <link rel="stylesheet" href="css/marketplace-entry.css?v=accent-v3">
 <!-- GetYourGuide official partner widget and analytics -->
 <script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="ZJ2NODE"></script>
@@ -74,7 +76,7 @@
 @media(max-width:390px){.myeventTicketDialog{padding:10px}.myeventTicketWidget .tnSearchWidget{width:100%!important}}
 </style>
 <link rel="stylesheet" href="css/section-navigation.css?v=8">
-<script src="js/section-navigation.js?v=6"></script>
+<script src="js/section-navigation.js?v=7-recovery"></script>
 
 <meta name="description" content="ORÉVAMI — Vos sorties prennent vie. Organisez vos événements et partagez vos moments ensemble.">
 <meta property="og:site_name" content="ORÉVAMI"><meta property="og:title" content="ORÉVAMI — Vos sorties prennent vie"><meta property="og:description" content="Organisez vos événements et partagez vos moments ensemble."><meta property="og:type" content="website"><meta property="og:image" content="/assets/orevami/logo-light.png"><meta property="og:image:alt" content="ORÉVAMI — Vos sorties prennent vie"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="ORÉVAMI — Vos sorties prennent vie"><meta name="twitter:image" content="/assets/orevami/logo-light.png">
@@ -135,6 +137,7 @@
     <button type="button" class="homeFeatureCard friendsCard" id="socialFriendsShortcut"><div class="homeFeatureIcon homeFriendsArt" id="homeFriendsPreview">👥</div><b>Amis</b></button>
     <button type="button" class="homeFeatureCard storyCard" id="socialStoriesShortcut" aria-controls="friendStoriesSection" aria-expanded="false"><div class="homeStoriesArt" aria-hidden="true"><span></span><span></span></div><b>Stories</b></button>
     <button type="button" class="homeFeatureCard eventsCard" id="socialHeaderEventsBtn"><img class="homeFeatureArt" src="assets/ui/calendar-star.svg" alt=""><b>Événements</b></button>
+    <button type="button" class="homeFeatureCard activitiesCard" id="activitiesShortcut" aria-haspopup="dialog" aria-controls="activitiesPanel"><div class="homeFeatureIcon" aria-hidden="true">🌍</div><b>Sorties &amp;<br>Rencontres</b></button>
     <button type="button" class="homeFeatureCard gamesCard" id="socialHeaderGamesBtn"><img class="homeFeatureArt" src="assets/ui/games-purple.svg" alt=""><b>Jeux</b></button>
     <a href="marketplace.html" class="homeFeatureCard marketCard"><img class="homeFeatureArt" src="assets/ui/market-bags.svg" alt=""><b>Marketplace</b></a>
     <button type="button" class="homeFeatureCard musicCard" id="socialHeaderMusicBtn"><img class="homeFeatureArt" src="assets/ui/music-pink.svg" alt=""><b>Musique</b></button>
@@ -453,8 +456,16 @@
     <ol><li><b>Créez votre événement</b> : choisissez son nom, sa date, son lieu et sa visibilité.</li><li><b>Invitez vos proches</b> : ajoutez vos amis et répartissez les rôles entre organisateurs et participants.</li><li><b>Organisez ensemble</b> : échangez, attribuez les tâches, préparez le matériel et construisez votre programme.</li><li><b>Profitez du moment</b> : découvrez les activités disponibles, écoutez de la musique et partagez vos photos et stories.</li></ol>
     <h4>Explorez les fonctionnalités</h4>
     <div class="myeventDiscoverFeatures"><p>🎉 <b>Événements</b><small>Invitations, participants et organisation.</small></p><p>👥 <b>Social</b><small>Amis, messages, publications et stories.</small></p><p>📋 <b>Préparation</b><small>Tâches, matériel et planning partagé.</small></p><p>🎵 <b>Musique</b><small>Playlists, suggestions IA et mode DJ.</small></p><p>📸 <b>Souvenirs</b><small>Caméra, photos et vidéos.</small></p><p>📍 <b>Découvertes</b><small>Carte, sorties et activités selon les services disponibles.</small></p></div>
-    <h4>▶️ Tutoriel ORÉVAMI</h4><div class="myeventDiscoverVideo" role="note">🎬 Vidéo de présentation complète à venir (~2 min).<br><small>De la création d’un événement au partage des souvenirs.</small></div>
-    <h4>✨ ORÉVAMI en 30 secondes</h4><div class="myeventDiscoverVideo" role="note">🎬 Bande-annonce à venir (30–45 secondes).</div>
+    <h4>▶️ Tutoriel ORÉVAMI</h4><div class="myeventDiscoverVideo" role="note">🎬 Vidéo de présentation complète à venir (~2 min 30).<br><small>De la création d’un événement au partage des souvenirs.</small></div>
+    <h4 id="myeventOfficialAdvertTitle">✨ ORÉVAMI en 30 secondes</h4>
+    <div class="myeventOfficialAdvert" aria-labelledby="myeventOfficialAdvertTitle">
+      <video id="myeventOfficialAdvertVideo" controls playsinline webkit-playsinline preload="metadata" width="1080" height="1920" poster="assets/orevami/logo-transparent.png" aria-label="Publicité officielle ORÉVAMI — 30 secondes" aria-describedby="myeventOfficialAdvertHelp">
+        <source src="assets/videos/orevami_publicite_croix_unique.mp4" type="video/mp4">
+        Votre navigateur ne peut pas lire cette vidéo MP4.
+      </video>
+      <p id="myeventOfficialAdvertHelp">Lancez la vidéo, puis utilisez les commandes pour le son et le plein écran.</p>
+      <p id="myeventOfficialAdvertStatus" role="status" hidden></p>
+    </div>
     <h4>Confidentialité et sécurité</h4><p>Choisissez la visibilité de vos événements. Le partage de position avec les amis est facultatif et doit être activé volontairement dans les réglages. Vérifiez les destinataires avant de publier du contenu personnel.</p>
     <h4>Aide et informations</h4><p>Pour toute question ou signalement, contactez <a href="mailto:contact@orevami.com">contact@orevami.com</a>. Les conditions d’utilisation et la politique de confidentialité seront accessibles ici après validation des documents définitifs.</p>
     <p class="myeventDiscoverVersion">ORÉVAMI · Présentation de la V1 en préparation</p>
@@ -1035,6 +1046,17 @@
 <div class="collapsibleBody">
   <div class="suppliesBox">
     <div class="suppliesHead"><div><b>✅ Qui fait quoi ?</b><p class="muted">Répartis les tâches entre les participants et suis leur avancement.</p></div><button type="button" id="eventTaskAddBtn">➕ Ajouter une tâche</button></div>
+    <div class="materialAiBox" id="tasksAiBox">
+      <div class="materialAiHead"><div><b>✨ Assistant IA</b><p class="muted">Propose des tâches d’organisation, sans attribuer de responsable automatiquement.</p></div><button type="button" id="tasksAiOpenBtn">✨ Proposer des tâches</button></div>
+      <div id="tasksAiForm" class="editEventBox hidden" style="margin-top:10px">
+        <label>Nombre de participants<input id="tasksAiPeople" type="number" min="1" max="5000" value="30"></label>
+        <label>Repas ou réception<input id="tasksAiMeal" maxlength="300" placeholder="Ex. Buffet dînatoire"></label>
+        <label>Précisions<input id="tasksAiDetails" maxlength="1500" placeholder="Ex. En salle, installation, accueil et rangement"></label>
+        <div class="materialAiActions"><button type="button" id="tasksAiGenerateBtn">✨ Générer les tâches</button><button type="button" id="tasksAiCancelBtn" class="secondary">Annuler</button></div>
+        <p id="tasksAiMsg" class="muted" role="status" aria-live="polite"></p>
+        <div id="tasksAiResults" class="materialAiResults"></div>
+      </div>
+    </div>
     <p id="eventTasksMsg" class="muted"></p>
     <div id="eventTaskForm" class="editEventBox hidden" style="margin-top:10px">
       <input id="eventTaskTitle" maxlength="180" placeholder="Ex. Réserver le restaurant, préparer la décoration…">
@@ -1133,7 +1155,7 @@
 
 
 <script src="js/invitation-context.js?v=1"></script>
-<script src="js/core-runtime.js?v=feed-composer-media-1"></script>
+<script src="js/core-runtime.js?v=password-recovery-2"></script>
 
 
 <script src="js/discussion-runtime.js"></script>
@@ -1229,8 +1251,10 @@
 
 
 
-<script src="js/hall-finances-runtime.js"></script>
-<script src="js/tasks-runtime.js"></script>
+<script src="js/hall-finances-runtime.js?v=hall-selection-compact-3"></script>
+<script src="js/tasks-runtime.js?v=tasks-load-recovery-1"></script>
+<script src="js/tasks-ai.js?v=1"></script>
+<link rel="stylesheet" href="css/tasks-ai.css?v=1">
 
 
 
@@ -1274,10 +1298,10 @@
 <link rel="stylesheet" href="css/event-social-feed.css?v=feed-delete-actions-1">
 <link rel="stylesheet" href="css/social-friends-stories.css?v=stories-toggle-1">
 <script src="js/social-friends-stories.js?v=camera-final-1"></script>
-<script src="js/music-session.js?v=1"></script>
-<script src="js/music-controller.js?v=1"></script>
+<script src="js/music-session.js?v=rollout-20261020"></script>
+<script src="js/music-controller.js?v=rollout-20261020"></script>
 <script src="js/music-runtime.js?v=music-10"></script>
-<script src="js/music-workspace.js?v=playlists-image-v1"></script>
+<script src="js/music-workspace.js?v=rollout-20261020"></script>
 <script src="js/theme-runtime.js?v=global-theme-2"></script>
 <link rel="stylesheet" href="css/entertainment-lounge.css?v=multiplayer-1">
 <link rel="stylesheet" href="css/theme-accent.css?v=accent-v4">
@@ -1450,6 +1474,14 @@
 <div id="myeventTicketModal" hidden role="dialog" aria-modal="true" aria-labelledby="myeventTicketTitle">
   <section class="myeventTicketDialog" tabindex="-1">
     <header class="myeventTicketHead"><h2 id="myeventTicketTitle">🎫 Billetterie</h2><button type="button" id="myeventTicketClose" aria-label="Fermer la billetterie">×</button></header>
+    <section id="ticketmasterDiscovery" aria-labelledby="ticketmasterTitle">
+      <h3 id="ticketmasterTitle">Événements en France · Ticketmaster</h3>
+      <p>Découvre des concerts, spectacles et événements sportifs. Les billets, disponibilités et paiements se vérifient sur Ticketmaster ; aucun achat ne s’effectue dans ORÉVAMI.</p>
+      <form><label>Artiste ou événement<input name="q" maxlength="100" type="search" placeholder="Tous les événements"></label><label>Ville en France<input name="city" maxlength="100" placeholder="Toutes les villes"></label><button type="submit">Rechercher sur Ticketmaster</button></form>
+      <p role="status" aria-live="polite">Lance une recherche pour découvrir les événements.</p>
+      <div data-results></div>
+    </section>
+    <h3>Autre partenaire · TicketNetwork</h3>
     <p>Recherche des billets pour des concerts, spectacles et événements sportifs. Les résultats et achats s'ouvrent sur TicketNetwork, partenaire externe. La disponibilité dépend notamment du pays et de l'événement.</p>
     <div class="myeventTicketWidget">
 <!-- TN Search Widget --><!-- DO NOT ALTER BELOW THIS POINT --><div class='tnSearchWidget' style='width:350px;'><script type='text/javascript' src='https://s3.amazonaws.com/ticketnetwork/affiliate-widget/js/scriptsretail-stringutils.js'></script><script type='text/javascript'>function addCss(cssUrl){var fileref=document.createElement('link');fileref.setAttribute('rel', 'stylesheet');fileref.setAttribute('type', 'text/css');fileref.setAttribute('href', cssUrl);document.getElementsByTagName('head')[0].appendChild(fileref);}addCss('https://fonts.googleapis.com/css?family=Open+Sans:400italic|Montserrat:700');addCss('https://s3.amazonaws.com/ticketnetwork/affiliate-widget/css/tn-widget.css');addCss('https://use.fontawesome.com/releases/v5.8.1/css/all.css');</script><div class='tnTopBanner' style='color:#000000;'>Find tickets for your event</div><div class='tnSearchContainer '><input class='search_text' id='txtTNSearchPhrase_7goh4vw8sx' type='text' placeholder='Search by artist, team, event, etc...' /><a class='search_button' href='javascript:' id='submitSearch_7goh4vw8sx'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/search-icon.png' alt='Rechercher'/></a></div><a target='_blank' rel='noopener noreferrer' href='https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=https%3A//www.ticketnetwork.com%3Futm_source%3DCJ+Affiliate%26utm_medium%3DWidget' class='tnBottomBanner'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/btm-logo.png' alt='TicketNetwork'/><span>Visit Site&nbsp;</span></a></div><script type='text/javascript'>function tn_SubmitSearch_7goh4vw8sx(){var SearchPhrase = document.getElementById('txtTNSearchPhrase_7goh4vw8sx').value;if(SearchPhrase != '') window.open('https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=' + escape('https://www.ticketnetwork.com/search?q='+Fixer(SearchPhrase ) +'&utm_source=CJ+Affiliate&utm_medium=Widget'),'_blank','noopener,noreferrer');}function tn_KeyDownHandler(e) { if (e == null) e = window.event;if (e.keyCode == 13) tn_SubmitSearch_7goh4vw8sx();}document.getElementById('txtTNSearchPhrase_7goh4vw8sx').onkeypress=tn_KeyDownHandler;document.getElementById('submitSearch_7goh4vw8sx').onclick=tn_SubmitSearch_7goh4vw8sx;</script><!-- TN Search box end -->
@@ -1457,6 +1489,8 @@
     <p>Affiliation CJ · Les réservations et paiements sont effectués directement auprès du partenaire.</p>
   </section>
 </div>
+<link rel="stylesheet" href="css/ticketmaster-discovery.css">
+<script src="js/ticketmaster-discovery.js" defer></script>
 <script id="myevent-ticket-controller">
 (function(){
  const trigger=document.getElementById('socialHeaderTicketsBtn'),modal=document.getElementById('myeventTicketModal'),close=document.getElementById('myeventTicketClose');
@@ -1598,7 +1632,24 @@ body.myeventAdminOpen{overflow:hidden}
     d.body.appendChild(widgetScript);
   })(document);
 </script>
-<link rel="stylesheet" href="css/events-workspace.css?v=accent-v3">
-<script src="js/events-workspace.js?v=20261011-icons" defer></script>
+<link rel="stylesheet" href="css/events-workspace.css?v=hall-selection-1">
+<link rel="stylesheet" href="css/event-ai-compact.css?v=3">
+<script src="js/events-workspace.js?v=hall-selection-1" defer></script>
+<link rel="stylesheet" href="css/ads-placement.css?v=1">
+<script src="js/ads-placement.js?v=1" defer></script>
+
+<!-- Isolated integration modules: exact Preview TEST only; Production components retained. -->
+
+<link rel="stylesheet" href="css/activities.css?v=mobile-layout-20261021">
+<link rel="stylesheet" href="css/integration-activities.css?v=compact-feed-20261021">
+<script src="js/activities-core.js?v=showcase-20261020"></script>
+<script src="js/venue-analysis-review.js?v=integration-1"></script>
+<script src="js/activity-venue-sheet.js?v=approved-20261022"></script>
+<script src="js/activities-widgets.js?v=approved-20261022"></script>
+<script src="js/activities-media.js?v=approved-20261022"></script>
+<script src="js/activity-discovery.js?v=mobile-layout-20261021"></script>
+<script src="js/activity-social-feed.js?v=compact-feed-20261021"></script>
+<script src="js/activities-runtime.js?v=approved-20261022"></script>
+
 </body>
 </html>

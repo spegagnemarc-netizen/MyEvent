@@ -173,3 +173,19 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 
 #socialHome #socialBottomNav.homeNavV2 .navCamera{grid-template-columns:1fr!important;grid-template-rows:1fr!important;justify-content:center!important;align-content:center!important}
 #socialHome #socialBottomNav.homeNavV2 .navCamera svg{transform:none!important}
+
+/* Actions keep the original handlers, permissions and confirmation dialogs. */
+#eventsWorkspace .ewEventActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;max-width:560px;margin:12px auto 24px}
+#eventsWorkspace .ewEventActions .ewEventAction{--action-rgb:168,144,255;display:flex;align-items:center;justify-content:center;min-height:58px;width:100%;min-width:0;margin:0;padding:14px 12px;border:1px solid rgba(var(--action-rgb),.7)!important;border-radius:16px;background:linear-gradient(145deg,rgba(var(--action-rgb),.13),#111722 75%)!important;color:#f3f5fc!important;font:600 15px/1.4 system-ui;box-shadow:inset 0 0 16px rgba(var(--action-rgb),.06),0 0 12px rgba(var(--action-rgb),.12);white-space:normal;overflow-wrap:anywhere;touch-action:manipulation}
+#eventsWorkspace .ewEventActions [data-event-action="invite"]{--action-rgb:83,216,201}
+#eventsWorkspace .ewEventActions [data-event-action="delete"],#eventsWorkspace .ewEventActions [data-event-action="leave"]{--action-rgb:255,110,130;grid-column:1/-1}
+#eventsWorkspace .ewEventActions .ewEventAction:focus-visible{outline:2px solid rgb(var(--action-rgb));outline-offset:4px}
+#eventsWorkspace .ewEventActions .ewEventAction:active{background:rgba(var(--action-rgb),.22)!important}
+#eventsWorkspace .ewEventActions .ewEventAction:disabled{opacity:.45;box-shadow:none}
+@media(max-width:350px){#eventsWorkspace .ewEventActions{grid-template-columns:1fr}}
+
+#eventsWorkspace .ewSelectedHall{padding:14px;margin:0 0 16px;border:1px solid #45758b;border-radius:14px;overflow-wrap:anywhere}
+#eventsWorkspace .ewSelectedHall:empty{display:none}
+#eventsWorkspace .ewSelectedHall p{margin:8px 0}
+#eventsWorkspace .ewSelectedHall a{display:inline-block;margin-right:12px}
+#eventsWorkspace .ewSelectedHall button{margin-top:8px;min-height:44px;max-width:100%}

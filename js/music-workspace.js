@@ -61,13 +61,16 @@
     await M.loadFavorites();
   }
   function personalPlaylists(body){
-    body.innerHTML='<p>Vos playlists personnelles sont séparées des files de groupe de vos événements.</p><div id="musicPersonal"></div>';
+    body.innerHTML='<p>Playlists personnelles enregistrées sur cet appareil, séparément pour chaque compte.</p><div id="musicPersonal"></div>';
     const s=S.get(),box=$('musicPersonal');
+    button('＋ Créer une playlist',()=>{const name=prompt('Nom de la playlist');if(!name?.trim())return;s.playlists.push({name:name.trim(),tracks:[]});S.save();go('playlists',false);},body);
     if(!s.playlists.length){const p=document.createElement('p');p.className='musicEmpty';p.textContent='Aucune playlist personnelle pour le moment.';box.appendChild(p);return;}
     s.playlists.forEach((list,i)=>{const section=document.createElement('details');const summary=document.createElement('summary');summary.textContent=list.name;section.appendChild(summary);
-      rows(list.tracks,section,(row,t,n)=>button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('playlists',false);},row));
+      rows(list.tracks,section,(row,t,n)=>{button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('playlists',false);},row);for(const [label,delta] of [['↑',-1],['↓',1]]){const move=button(label,()=>{const j=n+delta;[list.tracks[n],list.tracks[j]]=[list.tracks[j],list.tracks[n]];S.save();go('playlists',false);},row);move.disabled=!list.tracks[n+delta];move.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}});
       const actions=document.createElement('div');actions.className='musicPersonalActions';section.appendChild(actions);
-      const send=button('Envoyer à l’événement',async()=>{if(!list.tracks.length)return notice('Cette playlist est vide.');for(const track of list.tracks)await M.addTrackToEvent(track);notice('Playlist envoyée à l’événement.');},actions);send.disabled=!ctx().event?.id;
+      button('Renommer',()=>{const name=prompt('Nom de la playlist',list.name);if(!name?.trim())return;list.name=name.trim();S.save();go('playlists',false);},actions);
+      button('Ajouter des morceaux',()=>go('discover'),actions);
+      const send=button('Envoyer à l’événement',async e=>{if(!list.tracks.length)return notice('Cette playlist est vide.');const owner=ctx().user?.id,eventId=ctx().event?.id;let count=0;e.currentTarget.disabled=true;try{for(const track of list.tracks){if(ctx().user?.id!==owner||ctx().event?.id!==eventId||!await M.addTrackToEvent(track))break;count++;}notice(count+' / '+list.tracks.length+' morceau(x) ajouté(s) à l’événement.');}finally{e.target.disabled=false;}},actions);send.disabled=!ctx().event?.id;
       button('Supprimer la playlist',()=>{s.playlists.splice(i,1);S.save();go('playlists',false);},actions);box.appendChild(section);
     });
   }
@@ -82,8 +85,8 @@
       if(key==='dj'){
         row.classList.add('musicDJQueueCard');
         const lock=button(t.locked?'✓':'✓',()=>{t.locked=!t.locked;S.save();go(screen,false);},row);lock.classList.add('musicDJApprove');lock.title=t.locked?'Validé — toucher pour déverrouiller':'Valider ce morceau';lock.setAttribute('aria-label',lock.title);
-        const remove=button('✕',()=>{list.splice(i,1);S.save();go(screen,false);},row);remove.classList.add('musicDJReject');remove.title='Retirer ce morceau';remove.setAttribute('aria-label','Retirer ce morceau');
-        for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];S.save();go(screen,false);},row);b.classList.add('musicDJMove');b.disabled=!list[i+delta];b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
+        const remove=button('✕',()=>{list.splice(i,1);S.save();if(P.current)P.setQueue(list);go(screen,false);},row);remove.classList.add('musicDJReject');remove.title='Retirer ce morceau';remove.setAttribute('aria-label','Retirer ce morceau');
+        for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];S.save();if(P.current)P.setQueue(list);go(screen,false);},row);b.classList.add('musicDJMove');b.disabled=!list[i+delta];b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
         return;
       }
       const lockDraft=button(t.locked?'🔒':'🔓',e=>{e.preventDefault();e.stopPropagation();const item=S.get()[key]?.[i];if(!item)return;item.locked=!item.locked;S.save();go(screen,false);},row);lockDraft.classList.add('musicDraftLock');lockDraft.title=t.locked?'Déverrouiller le morceau':'Verrouiller le morceau';lockDraft.setAttribute('aria-label',lockDraft.title);lockDraft.setAttribute('aria-pressed',String(!!t.locked));
@@ -153,15 +156,21 @@
     button('Envoyer au Mode DJ',()=>{S.update({dj:S.get().draft.map(t=>({...t}))});go('dj');},body);
   }
   function dj(body){
-    const state=S.get(),queue=state.dj||[],current=queue[0]||null;
-    body.innerHTML='<section class="musicDJHero"><div><span class="musicDJEyebrow">ORÉVAMI DJ</span><h2>Mode DJ</h2><p>Anime la soirée et garde la main sur la file.</p></div><div class="musicDJMode"><button type="button" class="active">Manuel</button><button type="button" disabled title="DJ Auto sera activé avec le moteur IA">Auto · bientôt</button></div></section><section class="musicDJNow"><div id="musicDJNowTrack"></div><div id="musicDJTransport"></div></section><section class="musicDJQuick"><h3>Ambiance</h3><div id="musicDJMoods"></div></section><section class="musicDJPanel"><div class="musicDJPanelHead"><div><span class="musicDJEyebrow">FILE COMMUNE</span><h3>File d’attente</h3></div><button type="button" id="musicDJEvent">Votes du groupe</button></div><div id="musicDJImport"></div><div id="musicDJQueue"></div></section><section class="musicDJSettings"><details><summary>⚙ Paramètres DJ</summary><div class="musicDJSettingsGrid"><button type="button" disabled>Transitions · bientôt</button><button type="button" disabled>Normalisation · bientôt</button><button type="button" disabled>Effets · bientôt</button><button type="button" disabled>DJ IA · bientôt</button></div></details></section>';
+    const state=S.get(),queue=state.dj||[],current=queue.find(t=>P.current&&S.key(t)===S.key(P.current))||queue[0]||null;
+    body.innerHTML='<section class="musicDJHero"><div><span class="musicDJEyebrow">ORÉVAMI DJ</span><h2>Mode DJ</h2><p>Anime la soirée et garde la main sur la file.</p></div><div class="musicDJMode"><button type="button" class="active">Manuel</button><button type="button" disabled title="DJ Auto sera activé avec le moteur IA">Auto · bientôt</button></div></section><section class="musicDJNow"><div id="musicDJNowTrack"></div><div id="musicDJTransport"></div></section><section class="musicDJQuick"><h3>Ambiance</h3><div id="musicDJMoods"></div></section><section class="musicDJPanel"><div class="musicDJPanelHead"><div><span class="musicDJEyebrow">FILE SUR CET APPAREIL</span><h3>File d’attente</h3></div><button type="button" id="musicDJEvent">Votes du groupe</button></div><div id="musicDJImport"></div><div id="musicDJQueue"></div></section><section class="musicDJSettings"><details><summary>⚙ Paramètres DJ</summary><div class="musicDJSettingsGrid"><button type="button" disabled>Fondu indisponible · YouTube</button><button type="button" disabled>Normalisation · bientôt</button><button type="button" disabled>Effets · bientôt</button><button type="button" disabled>DJ IA · bientôt</button></div></details></section>';
     const now=$('musicDJNowTrack');
     if(current)now.innerHTML='<img alt="" src="'+esc(current.thumbnail_url||'')+'"><span><small>PRÊT À LIRE</small><strong>'+meta(current.title)+'</strong><em>'+meta(current.artist)+'</em></span>';
     else now.innerHTML='<div class="musicDJEmptyNow"><strong>Aucun morceau dans la file</strong><small>Importe la playlist de l’événement ou envoie une playlist depuis Music IA.</small></div>';
     const transport=$('musicDJTransport');
     button('⏮',()=>P.previous(),transport).setAttribute('aria-label','Précédent');
-    const play=button(queue.length?'▶ Lire':'▶',()=>{if(queue.length){M.openPlayer(queue[0],queue);P.play(queue[0],queue);}},transport);play.classList.add('musicDJPlay');play.disabled=!queue.length;
+    const play=button(P.playing?'⏸ Pause':'▶ Lire',()=>{if(queue.length){if(P.current&&queue.some(t=>S.key(t)===S.key(P.current))){P.setQueue(queue);P.toggle();}else{M.openPlayer(queue[0],queue);P.play(queue[0],queue);}}},transport);play.classList.add('musicDJPlay');play.disabled=!queue.length;
     button('⏭',()=>P.next(),transport).setAttribute('aria-label','Suivant');
+    const options=state.playbackSettings,settingsBox=root.querySelector('.musicDJSettingsGrid');
+    const auto=button(options.autoAdvance?'Enchaînement : oui':'Enchaînement : non',()=>{P.settings({autoAdvance:!S.get().playbackSettings.autoAdvance});go('dj',false);},settingsBox);auto.setAttribute('aria-pressed',String(options.autoAdvance));
+    const shuffle=button(options.shuffle?'Aléatoire : oui':'Aléatoire : non',()=>{P.settings({shuffle:!S.get().playbackSettings.shuffle});go('dj',false);},settingsBox);shuffle.setAttribute('aria-pressed',String(options.shuffle));
+    button('Répéter : '+({off:'non',all:'la file',one:'le titre'}[options.repeat]),()=>{const modes=['off','all','one'];P.settings({repeat:modes[(modes.indexOf(S.get().playbackSettings.repeat)+1)%3]});go('dj',false);},settingsBox);
+    const volume=document.createElement('label');volume.textContent='Volume du lecteur ';const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value=options.volume;slider.setAttribute('aria-label','Volume du lecteur');slider.oninput=()=>P.settings({volume:Number(slider.value)});volume.appendChild(slider);settingsBox.appendChild(volume);
+    const hint=document.createElement('p');hint.textContent='Sur iPhone, le son et la lecture peuvent nécessiter les commandes du téléphone et un appui sur la vidéo. Aucun fondu ni mixage YouTube.';settingsBox.appendChild(hint);
     const moods=['Chill','Soirée','Années 80','Rap','Électro','Variété'];
     moods.forEach((m,i)=>{const x=button(m,()=>{S.update({djMood:m});go('dj',false);},$('musicDJMoods'));if((state.djMood||'Soirée')===m)x.classList.add('active');});
     $('musicDJEvent').onclick=()=>go('event');
@@ -235,7 +244,8 @@
   window.addEventListener('music-artwork-change',()=>{if(screen==='home')renderHome();});
   window.addEventListener('music-user-change',()=>{aiController?.abort();history=[];results=[];nextPageToken=null;activeQuery='';eventData=null;revision++;page.replaceChildren();page.hidden=true;home.hidden=false;screen='home';for(const id of ['musicFavoritesPanel','musicEventPanel'])$(id)?.remove();M.closePlayer();$('musicTrending').replaceChildren();$('musicSearchInput').value=S.get().query;renderHome();});
   window.addEventListener('music-player-open',()=>{const panel=$('musicPlayer');if(panel&&!panel.querySelector('[data-full-menu]'))button('⋮ Actions du morceau',()=>menu(P.current),panel).dataset.fullMenu='true';});
-  window.addEventListener('music-track-change',e=>{if($('musicPlayer')?.classList.contains('open'))M.openPlayer(e.detail);});
+  window.addEventListener('music-playback-change',()=>{if(screen==='dj'){const b=root.querySelector('.musicDJPlay');if(b)b.textContent=P.playing?'⏸ Pause':'▶ Lire';}});
+  window.addEventListener('music-track-change',e=>{if(screen==='dj'){go('dj',false);}if($('musicPlayer')?.classList.contains('open'))M.openPlayer(e.detail);});
   window.addEventListener('music-storage-error',()=>notice('Stockage local indisponible : les changements restent valables pour cette session.'));
   // Contract for a future Selfie integration; it does not change Camera V1.
   M.createSelfieSelection=(track,options={})=>({track,segment:{start:Math.max(0,Number(options.start)||0),duration:[15,30,60].includes(options.duration)?options.duration:Math.max(1,Number(options.duration)||15)},musicVolume:1,originalVolume:1,fadeIn:0,fadeOut:0,renderable:false});

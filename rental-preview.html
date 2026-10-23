@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview · Documents de location</title><script src="/js/runtime-config.js?v=admin-v22"></script><link rel="stylesheet" href="css/marketplace.css"><link rel="stylesheet" href="css/rental-documents.css"></head>
+<body><div id="myeventMarketplace" data-theme="light"><main><p class="eyebrow">MYEVENT · PREVIEW UNIQUEMENT</p><h1>Documents de location</h1><p id="previewStatus">Vérification de l’environnement de test…</p><button id="previewOpen" class="primary" type="button" hidden>Essayer avec une annonce fictive</button><p><a href="marketplace.html">Ouvrir le Marketplace de test</a></p></main></div>
+<script defer src="js/vendor/pdf-lib-1.17.1.min.js"></script>
+<script type="module">
+import {openRentalDocuments} from './js/rental-documents.mjs';
+const status=document.getElementById('previewStatus'),button=document.getElementById('previewOpen');
+try{const config=await window.myeventRuntime.ready;if(!config.isTest)throw Error('Cette démonstration est réservée aux environnements de test.');status.textContent='Annonce fictive · aucune connexion à un compte ni écriture en base. Saisie effacée à la fermeture.';button.hidden=false;button.onclick=()=>openRentalDocuments({id:'DEMO-LOCATION',title:'Enceinte portable — exemple fictif',description:'Une enceinte, sa housse et son chargeur. Quantité : 1.',city:'Lyon',condition:'good',price_cents:3500});}catch(error){status.textContent=error.message;}
+</script></body></html>
