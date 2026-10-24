@@ -15,7 +15,7 @@ module.exports=async function handler(req,res){
    if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});
    let data=req.body;if(typeof data==='string'){if(data.length>3000)return send(res,400,{error:'Requête trop longue.'});try{data=JSON.parse(data);}catch{return send(res,400,{error:'Requête invalide.'});}}
    if(!data||typeof data.url!=='string'||data.url.length>2000)return send(res,400,{error:'Lien invalide.'});
-   return send(res,200,await require('../lib/restaurant-information').restaurantInformation(data.url));
+   return send(res,200,await require('../lib/restaurant-information').verifiedRestaurantInformation(data.url,data.venue));
   }
   if(req.method==='POST'&&mode==='analyse-venue'){
    if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});

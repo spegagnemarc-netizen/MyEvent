@@ -1,11 +1,11 @@
 (function(root){
   'use strict';
-  async function fetchInformation(website,{signal,catalog}={}){
+  async function fetchInformation(website,{signal,catalog,identity}={}){
     if(catalog?.information)return catalog.information;
     if(!website)return {status:'unavailable',opening_hours:[],prices:[],menus:[],booking_links:[],sources:[],checked_at:null,notice:'Information non disponible : site officiel non renseigné.'};
     const response=await fetch('/api/integration-venues?mode=restaurant-information',{
       method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:website}),signal
+      body:JSON.stringify({url:website,venue:identity}),signal
     });
     if(!response.ok)throw Error('Information non disponible');
     return response.json();
@@ -13,18 +13,18 @@
   // Shared bounded scheduler: list hydration and detailed sheets reuse the same request.
   const cache=new Map(),pending=new Map(),queue=[];let active=0;
   function drain(){while(active<2&&queue.length){active++;const job=queue.shift();job().finally(()=>{active--;drain();});}}
-  async function load(website,{signal,catalog,venue}={}){
+  async function load(website,{signal,catalog,venue,identity}={}){
     if(venue)return enrich(venue);
     if(catalog?.information)return catalog.information;
     if(!website)return fetchInformation(null);
-    let key;try{const u=new URL(website);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();u.hash='';key=u.href;}catch{return fetchInformation(null);}
+    let key;try{const u=new URL(website);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();u.hash='';key=u.href+'|'+JSON.stringify(identity||{});}catch{return fetchInformation(null);}
     const hit=cache.get(key);if(hit&&hit.expires>Date.now())return hit.value;
     // Caller cancellation must not abort a request shared by other visible cards.
     if(!pending.has(key)){
       if(pending.size>=20)return {status:'unavailable',notice:'Consultation différée : limite atteinte.'};
       const promise=new Promise(resolve=>{queue.push(async()=>{
         let value;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-        try{value=await fetchInformation(key,{signal:controller.signal});}catch{value={status:'unavailable',sources:[],warnings:[],notice:'Source indisponible ; données de recherche conservées.'};}finally{clearTimeout(timer);}
+        try{value=await fetchInformation(website,{signal:controller.signal,identity});}catch{value={status:'unavailable',sources:[],warnings:[],notice:'Source indisponible ; données de recherche conservées.'};}finally{clearTimeout(timer);}
         if(cache.size>=100)cache.delete(cache.keys().next().value);
         cache.set(key,{value,expires:Date.now()+(value.status==='available'?6*3600000:5*60000)});pending.delete(key);resolve(value);
       });drain();});pending.set(key,promise);
@@ -32,19 +32,21 @@
     return pending.get(key);
   }
   const discoveryPending=new Map();
-  const storageKey='orevami-restaurant-discovery-v2';
+  const storageKey='orevami-restaurant-discovery-v4';
   function readStored(){try{const raw=root.localStorage?.getItem(storageKey);return raw&&raw.length<1000000?JSON.parse(raw):{};}catch{return {};}}
   async function enrich(venue){
     if(!venue||typeof venue.name!=='string'||!Number.isFinite(venue.lat)||!Number.isFinite(venue.lon))return load(venue?.website,{catalog:venue?.restaurant_catalog});
-    const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.website||'']);
+    const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.address||'',venue.city||'',venue.website||'']);
     const stored=readStored(),hit=stored[key];if(hit&&Number.isFinite(hit.expires)&&hit.expires>Date.now())return hit.value;
     if(discoveryPending.has(key))return discoveryPending.get(key);
     if(discoveryPending.size>=2)return load(venue.website,{catalog:venue.restaurant_catalog});
     const task=(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
       try{const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}catch{}finally{clearTimeout(timer);}
       const website=venue.website||discovery.website;
-      const base=await load(website,{catalog:venue.restaurant_catalog});
-      const value={...base,website,authorized_photos:(discovery.photos||[]).filter(p=>root.MyEventPlaceCard?.photoAllowed(p)),sources:[...(base.sources||[]),...(discovery.sources||[])]};
+      const checked=await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
+      const base=venue.restaurant_catalog?.information?{...venue.restaurant_catalog.information,website_verified:checked.website_verified}:checked;
+      const verified=venue.website_verified===true&&venue.website===website||venue.restaurant_catalog?.website_verified===true&&!!venue.restaurant_catalog?.information?.website&&venue.restaurant_catalog.information.website===website||base.website_verified===true;
+      const value={...base,website:verified?website:null,website_verified:verified,authorized_photos:(discovery.photos||[]).filter(p=>root.MyEventPlaceCard?.photoAllowed(p)),sources:[...(base.sources||[]),...(discovery.sources||[])]};
       // Cache successful, sourced facts for 6 h, including provenance. Negative results 5 min.
       if(value.authorized_photos.length)value.status='available';
       const current=readStored();current[key]={value,expires:Date.now()+(value.status==='available'?21600000:300000)};
@@ -54,7 +56,7 @@
   }
   function applyInformation(venue,info){
     if(info.status!=='available')return venue;
-    return {...venue,website:venue.website||info.website,authorized_photos:info.authorized_photos||venue.authorized_photos,restaurant_information:info,sources:info.sources||venue.sources,
+    return {...venue,website:info.website_verified===true?info.website:venue.restaurant_catalog?.information?.website||null,website_verified:info.website_verified===true,authorized_photos:info.authorized_photos?.length?info.authorized_photos:venue.authorized_photos,restaurant_information:info,sources:info.sources||venue.sources,
       phone:venue.phone||info.phone||null,
       opening_hours:(info.opening_hours||[]).map(h=>h.heading+' : '+h.text).join(' · ')||venue.opening_hours,
       prices:(info.prices||[]).map(p=>p.text).join(' · ')||venue.prices,
@@ -65,7 +67,7 @@
   const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
     for(const entry of entries){if(!entry.isIntersecting)continue;const button=entry.target;observer.unobserve(button);if(observed>=12)continue;observed++;
       let venue;try{venue=JSON.parse(button.dataset.restaurantDetails);}catch{continue;}
-      enrich(venue).then(info=>{if(!button.isConnected)return;const updated=applyInformation(venue,info);button.dataset.restaurantDetails=JSON.stringify(updated);const card=button.closest('.restaurantMini');const cover=card?.querySelector('.restaurantMiniCover');const photo=updated.authorized_photos?.find(p=>root.MyEventPlaceCard?.photoAllowed(p));if(photo&&cover){const image=document.createElement('img');image.src=photo.url;image.alt=photo.alt||venue.name;image.loading='lazy';const credit=document.createElement('small');credit.textContent=photo.credit+' · '+photo.changes;cover.replaceChildren(image,credit);const links=document.createElement('div');for(const [label,url] of [['Source photo',photo.source_url],[photo.license||'Licence',photo.license_url]]){const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a);}card.append(links);}});
+      enrich(venue).then(info=>{if(!button.isConnected)return;const updated=applyInformation(venue,info);const cardNode=button.closest('.restaurantMini');if(updated.website&&root.MyEventPlaceCard?.websiteAllowed(updated)&&!cardNode?.querySelector('[data-restaurant-website]')){const a=document.createElement('a');a.dataset.restaurantWebsite='';a.textContent='Site web ↗';a.href=updated.website;a.target='_blank';a.rel='noopener noreferrer';cardNode?.querySelector('.restaurantMiniActions')?.append(a);}button.dataset.restaurantDetails=JSON.stringify(updated);const card=button.closest('.restaurantMini');const cover=card?.querySelector('.restaurantMiniCover');const photo=updated.authorized_photos?.find(p=>root.MyEventPlaceCard?.photoAllowed(p));if(photo&&cover){const image=document.createElement('img');image.src=photo.url;image.alt=photo.alt||venue.name;image.loading='lazy';const credit=document.createElement('small');credit.textContent=photo.credit+' · '+photo.changes;cover.replaceChildren(image,credit);const links=document.createElement('div');for(const [label,url] of [['Source photo',photo.source_url],[photo.license||'Licence',photo.license_url]]){const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a);}card.append(links);}});
     }
   },{rootMargin:'100px'}):null;
   function observe(){const list=document.getElementById('outingResults');if(!list)return;observed=0;for(const button of list.querySelectorAll('.restaurantMiniOpenButton'))observer?.observe(button);}
