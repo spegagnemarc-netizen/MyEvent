@@ -241,7 +241,7 @@ function renderOutingResults(){
     const selected=isSelectedOuting(p);
 
     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'">'+
-      (p.image?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:9px">':'')+
+      (p.image&&!p.restaurant_catalog?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:9px">':'')+
       '<div class="outingCardTop"><div class="outingName">'+
         (locationIcons[p.type]||'🎯')+' '+esc(p.name)+
         (selected?' <span class="outingSelectedBadge">⭐ Sélectionnée</span>':'')+

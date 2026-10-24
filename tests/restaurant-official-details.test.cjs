@@ -16,7 +16,7 @@ test('only the identified Gap restaurant receives dated official facts, never sl
   assert.equal(enriched.website, source);
   assert.equal(enriched.checked_at, '2026-10-24');
   assert.match(enriched.opening_hours, /Fermé dimanche et lundi/);
-  assert.match(enriched.prices, /15 €.*27 €.*9,50 €/);
+  assert.match(enriched.prices, /27 €.*35 €.*9,50 €/);
   assert.equal(enriched.booking_method, 'external_request');
   assert.equal(enriched.booking_verified, false);
   assert.equal(enriched.availability, undefined);
@@ -50,7 +50,7 @@ test('both existing presentations show sources, menu and request-only booking; s
     const sheet=w.OrevamiVenueSheet.create({host:doc.querySelector('main'), onAdd:()=>{}, onAnalyse:()=>{}});
     await sheet.open(enriched,{load:false});
     assert.match(sheet.element.textContent,/24\/10\/2026/);
-    assert.match(sheet.element.textContent,/15 €.*27 €.*9,50 €/);
+    assert.match(sheet.element.textContent,/27 €.*35 €.*9,50 €/);
     const link=sheet.element.querySelector('a[href="'+enriched.booking_url+'"]');
     assert.match(link.textContent,/Demander une réservation/);
     assert.ok(sheet.element.querySelector('a[href="'+enriched.menu_url+'"]'));
