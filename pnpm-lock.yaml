@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      nodemailer:
+        specifier: 10.2.1
+        version: 10.2.1
       '@napi-rs/canvas':
         specifier: 1.0.11
         version: 1.0.11
@@ -32,6 +35,9 @@ importers:
         version: 26.1.0
 
 packages:
+
+  nodemailer@10.2.1:
+    resolution: {integrity: sha512-ZrDNsPFoDMwefNs7sJwrYiEJ/CG4ClJWDZv05iNJsEBWa8GRDry1QJHTJxsuTAY9eDDKjX4k+q3SxslXJOao7w==}
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -357,6 +363,8 @@ packages:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
 snapshots:
+
+  nodemailer@10.2.1: {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:

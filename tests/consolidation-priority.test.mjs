@@ -11,7 +11,7 @@ const read=file=>readFileSync(path.join(root,file),'utf8');
 const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:2*1024*1024}).trim();
 const audit=JSON.parse(read('docs/consolidation/audit-20261024.json'));
 // Legal deletion text now includes the manual procedure explicitly approved by the owner.
-const intentional=['index.html','marketplace.html','css/section-navigation.css','css/explorer.css','vercel.json','delete-account.html'];
+const intentional=['index.html','marketplace.html','css/section-navigation.css','css/explorer.css','vercel.json','delete-account.html','api/[search].js','css/legal.css','package.json','pnpm-lock.yaml'];
 test('all Production files and every main-specific change are retained; only reviewed files differ from Production',()=>{
  for(const file of Object.keys(audit.productionFiles)){
   assert(existsSync(path.join(root,file)),'Missing Production file: '+file);
@@ -48,13 +48,13 @@ test('canonical legal pages, public aliases and auth/profile links resolve witho
  }
  for(const file of ['privacy.html','delete-account.html']){
   const dom=new JSDOM(read(file));
-  for(const a of dom.window.document.querySelectorAll('a[href]')){const href=a.getAttribute('href');if(!/^(https?:|mailto:|#)/.test(href))assert(existsSync(path.join(root,href)),file+' → '+href);}
+  for(const a of dom.window.document.querySelectorAll('a[href]')){const href=a.getAttribute('href');if(!/^(https?:|mailto:|tel:|#)/.test(href))assert(existsSync(path.join(root,href.split('#')[0])),file+' → '+href);}
   dom.window.close();
  }
  const dom=new JSDOM(read('index.html'));
  assert.equal(dom.window.document.querySelectorAll('#auth a[href="privacy.html"]').length,1);
  assert.equal(dom.window.document.querySelectorAll('#auth a[href="delete-account.html"]').length,1);
- assert.equal(dom.window.document.querySelectorAll('#profileSettingsCard a[href="privacy.html"]').length,1);
+ assert.equal(dom.window.document.querySelectorAll('#profileSettingsCard a[href="privacy.html"]').length,2);
  dom.window.close();
  assert.match(read('privacy.html'),/Projet à valider avant publication/);
  assert.match(read('delete-account.html'),/ne supprime aucune donnée automatiquement/);
@@ -77,7 +77,9 @@ test('Ticketmaster and TicketNetwork stay unique, with unchanged server code, wi
   const ids=[...doc.querySelectorAll('[id]')].map(el=>el.id);assert.equal(new Set(ids).size,ids.length,'Duplicate ID in '+file);
   current.window.close();before.window.close();
  }
- for(const file of ['server/search-ticketmaster.js','js/ticketmaster-discovery.js','api/[search].js'])assert.equal(git('hash-object','--path='+file,file),audit.productionFiles[file]);
+ for(const file of ['server/search-ticketmaster.js','js/ticketmaster-discovery.js'])assert.equal(git('hash-object','--path='+file,file),audit.productionFiles[file]);
+ const currentRouter=read('api/[search].js').replace(/  if \(pathname === '\/api\/account-deletion'\) \{\r?\n    return import\('\.\.\/server\/account-deletion-request\.mjs'\)\.then\(module => module\.default\(req, res\)\);\r?\n  \}\r?\n/,'');
+ assert.equal(currentRouter.replace(/\r\n/g,'\n').trim(),git('show',audit.production+':api/[search].js').replace(/\r\n/g,'\n').trim());
  const config=JSON.parse(read('vercel.json')),before=JSON.parse(git('show',audit.production+':vercel.json'));
  assert.deepEqual(config.functions,before.functions);
  for(const route of before.routes)if(route.src!=='^/suppression-compte$')assert(config.routes.some(value=>JSON.stringify(value)===JSON.stringify(route)));

@@ -11,6 +11,7 @@
     "jsdom": "26.1.0"
   },
   "dependencies": {
+    "nodemailer": "10.2.1",
     "stripe": "latest",
     "@napi-rs/canvas": "1.0.11",
     "cheerio": "1.2.0",

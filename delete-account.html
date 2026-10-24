@@ -2,6 +2,18 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><title>Demander la suppression de mon compte — ORÉVAMI</title><link rel="stylesheet" href="css/legal.css"></head><body><main>
 <nav aria-label="Navigation"><a href="index.html">ORÉVAMI</a><a href="privacy.html">Confidentialité</a></nav>
 <h1>Demander la suppression de mon compte ORÉVAMI</h1>
+<section id="secureDeletion" aria-labelledby="secureDeletionTitle">
+<h2 id="secureDeletionTitle">Demande sécurisée depuis votre compte</h2>
+<p>La demande porte sur votre compte entier et les données personnelles associées. Après vérification, leur suppression peut être irréversible ; les exceptions de conservation légales vous seront précisées. L’exécution et la confirmation de clôture restent manuelles.</p>
+<p id="accountDeletionStatus" role="status" aria-live="polite">Vérification de la disponibilité du formulaire…</p>
+<form id="accountDeletionForm" hidden>
+<label><input type="checkbox" name="confirm" required> Je demande la suppression de mon compte ORÉVAMI et de ses données personnelles associées ; je comprends que les obligations légales de conservation seront examinées.</label>
+<button type="submit" id="accountDeletionSubmit" disabled>Confirmer ma demande de suppression</button>
+</form>
+<p><a href="index.html#home">Se connecter à ORÉVAMI</a> · <a href="privacy.html">Informations sur vos données</a></p>
+<noscript>Le formulaire sécurisé nécessite JavaScript. Le canal e-mail ci-dessous reste accessible.</noscript>
+</section>
+<h2>Demande par e-mail sans connexion</h2>
 <aside class="notice"><strong>Traitement manuel par le responsable d'ORÉVAMI.</strong> Vous pouvez demander la suppression de votre compte et des données associées à contact@orevami.com. Cette page prépare un e-mail : vous devez l'envoyer depuis votre messagerie. Elle ne supprime aucune donnée automatiquement et n'affiche pas de confirmation de réception.</aside>
 <h2>Comment préparer votre demande</h2>
 <ol><li>Écrivez depuis l'adresse e-mail associée à votre compte à <a href="mailto:contact@orevami.com">contact@orevami.com</a>, avec l'objet « Suppression de mon compte et de mes données ORÉVAMI ».</li><li>Indiquez que vous demandez la suppression du compte et des données associées. Vous pouvez préciser votre pseudonyme et les événements dont vous êtes organisateur. Ne joignez ni mot de passe ni pièce d'identité à ce stade.</li><li>Envoyez l'e-mail depuis votre logiciel de messagerie. S'il ne s'ouvre pas, copiez l'adresse et l'objet ci-dessus. L'envoi et la réception ne sont pas vérifiés par cette page.</li></ol>
@@ -14,5 +26,8 @@
 <p>La demande porte sur le compte, le profil, les positions enregistrées et les contenus personnels associés : publications, messages, médias, Stories, annonces, réservations et justificatifs notamment. Les événements organisés, contenus partagés, fichiers associés et données de cagnotte nécessitent une analyse pour éviter de confondre effacement du compte et simple retrait de profil.</p>
 <p>Le responsable procède à la suppression du compte et des données personnelles associées, sous réserve des obligations légales de conservation. Les contenus partagés et les données financières font l'objet d'un examen pour identifier les éventuelles exceptions applicables. Les données effectivement supprimées ou anonymisées et les exceptions motivées sont précisées dans sa réponse. Les règles détaillées concernant les sauvegardes, journaux et données des prestataires restent à finaliser avant publication ; aucune suppression immédiate de toutes les copies n'est promise.</p>
 <p>Désinstaller l'application, se déconnecter ou vider le stockage local ne supprime pas le compte. Vous pouvez également demander l'effacement d'un contenu précis sans demander la fermeture du compte, en le décrivant dans votre message.</p>
-<footer><a href="privacy.html">Politique de confidentialité — projet à valider</a></footer>
+<footer><a href="privacy.html">Politique de confidentialité — projet à valider</a> · <a href="legal.html">Mentions légales</a></footer>
+<script src="js/runtime-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/account-deletion.js" defer></script>
 </main></body></html>

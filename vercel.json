@@ -15,6 +15,14 @@
   },
   "routes": [
     {
+      "src": "^/server/account-deletion-request\\.mjs$",
+      "status": 404
+    },
+    {
+      "src": "^/mentions-legales/?$",
+      "dest": "/legal.html"
+    },
+    {
       "src": "^/api/integration-venues$",
       "dest": "/api/search-places?integration_venues=1"
     },

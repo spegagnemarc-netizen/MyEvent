@@ -4,7 +4,7 @@ Version du 24 octobre 2026, validée dans son principe par l'exploitant. Documen
 
 ## Responsabilité et canal
 
-L'exploitant d'ORÉVAMI, entrepreneur individuel sous le régime de la micro-entreprise, assure personnellement la prise en charge. Il a confirmé que contact@orevami.com est une boîte OVH fonctionnelle qu'il consulte. Cette confirmation de l'exploitant ne vaut pas compte rendu d'un test de livraison réalisé par l'agent. Le nom complet et l'adresse professionnelle de domiciliation restent à fournir pour les textes publics.
+L'exploitant d'ORÉVAMI, entrepreneur individuel sous le régime de la micro-entreprise, assure personnellement la prise en charge. Il a confirmé que contact@orevami.com est une boîte OVH fonctionnelle qu'il consulte. Cette confirmation de l'exploitant ne vaut pas compte rendu d'un test de livraison réalisé par l'agent. Son identité et ses coordonnées sont renseignées dans les projets locaux de mentions légales et de confidentialité ; leur publication sur le dépôt public attend son autorisation.
 
 ## Traitement de chaque demande
 
@@ -33,6 +33,8 @@ Référence : [CNIL — délai de réponse aux demandes d'exercice des droits](h
 
 Google Play admet une demande par e-mail si le canal et le traitement sont effectifs et si le lien externe et l'accès depuis l'app sont présents. La fonctionnalité doit être déclarée fidèlement. [Google Play — suppression de compte](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en).
 
-Apple accepte qu'un effacement soit manuel et différé, mais une app ordinaire ne doit pas imposer un e-mail au support pour initier la suppression. Un parcours de demande accessible depuis l'app, ou une page web appropriée, reste donc à réaliser. Un formulaire sans réception serveur ne suffirait pas. [Apple — suppression de compte](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
+Apple accepte qu'un effacement soit manuel et différé, mais une app ordinaire ne doit pas imposer un e-mail au support pour initier la suppression. Le parcours préparé ouvre depuis le profil une page avec confirmation explicite et transmission serveur authentifiée, sans rédaction d'e-mail par l'utilisateur. Il reste désactivé tant que le canal SMTP n'est pas configuré. Son acceptation SMTP, sa réception et le traitement complet devront être éprouvés avec autorisation avant de le déclarer opérationnel. [Apple — suppression de compte](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
+
+Voir [configuration et limites du parcours](parcours-suppression-activation.md). Le message de prise en compte affiché après acceptation SMTP ne remplace ni l'accusé manuel du responsable ni la confirmation finale de suppression.
 
 La procédure de principe et le canal sont approuvés ; leur exécution technique complète et l'acceptabilité pour les stores ne sont pas certifiées. Aucune publication ou fusion dans main sans autorisation finale.
