@@ -500,10 +500,10 @@ async function searchOutings(){
 
   const km=Number($('outingRadius')?.value||5);
   const maxBudget=Number($('outingMaxBudget')?.value||0)||0;
-  const viatorApi='/api/search-places?mode=viator&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&count=60'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
+  const viatorApi='/api/search-places?mode=outings&lat='+encodeURIComponent(geo.lat)+'&lon='+encodeURIComponent(geo.lon)+'&radius='+encodeURIComponent(km)+'&count=60'+(maxBudget?'&maxPrice='+encodeURIComponent(maxBudget):'');
 
   try{
-    const response=await fetch(viatorApi,{headers:{Accept:'application/json'}});
+    const response=await fetch(viatorApi,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(55000)});
     const data=await response.json().catch(()=>null);
 
     if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
@@ -524,6 +524,7 @@ async function searchOutings(){
 
     renderOutingResults();
     renderOutingResultsMap(geo);
+    if(data.warnings?.length)msg('outingMsg',data.warnings.join(' '),'muted');
 
     if(searchVersion!==outingSearchVersion||event?.id!==searchEventId)return;
     await loadSelectedOuting();

@@ -189,3 +189,6 @@ body.eventsWorkspaceOpen #socialHome{container-type:inline-size;container-name:e
 #eventsWorkspace .ewSelectedHall p{margin:8px 0}
 #eventsWorkspace .ewSelectedHall a{display:inline-block;margin-right:12px}
 #eventsWorkspace .ewSelectedHall button{margin-top:8px;min-height:44px;max-width:100%}
+
+/* Existing searches restored as carousel cards. */
+#eventsWorkspace .ew-hall{--tool:#62b4f7}#eventsWorkspace .ew-outings{--tool:#f3a052}

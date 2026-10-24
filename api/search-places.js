@@ -672,6 +672,29 @@ module.exports =
         'nearby'
       ).toLowerCase();
 
+    if (mode === 'outings') {
+      const lat=number(req.query.lat),lon=number(req.query.lon),radius=number(req.query.radius)??5;
+      if(lat===null||lon===null||Math.abs(lat)>90||Math.abs(lon)>180||![5,20,50,100].includes(radius))return send(res,400,{error:'Coordonnées ou rayon invalide.'});
+      const {searchRestaurants}=require('../lib/geoapify-restaurants');
+      async function osmActivities(){
+        let data;
+        try{data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}catch(_){data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}
+        return {results:data.features.map(normalizeFeature).filter(p=>p&&p.name&&!['restaurant','cafe','fast_food','bar','pub'].includes(p.type)).map(p=>({...p,distance:distanceKm(lat,lon,p.lat,p.lon),source:'openstreetmap'}))};
+      }
+      async function bounded(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Provider timeout')),18000);})]);}finally{clearTimeout(timer);}}
+      const sources=await Promise.allSettled([searchRestaurants({lat,lon,radius}),bounded(searchViator(req,lat,lon)),osmActivities()]);
+      const buckets=sources.map(s=>s.status==='fulfilled'?s.value.results:[]),results=[];
+      for(let i=0;i<Math.max(...buckets.map(b=>b.length));i++)for(const bucket of buckets)if(bucket[i])results.push(bucket[i]);
+      const warnings=sources.flatMap((s,i)=>s.status==='rejected'?[['Restaurants','Activités Viator','Lieux OpenStreetMap'][i]+' temporairement indisponibles.']:[]);
+      return send(res,sources.every(s=>s.status==='rejected')?503:200,{results,count:results.length,radius,warnings,partial:warnings.length>0,fallbackUsed:sources.some(s=>s.status==='fulfilled'&&s.value.fallbackUsed)});
+    }
+
+    if (mode === 'restaurant') {
+      const {searchRestaurants}=require('../lib/geoapify-restaurants');
+      try { return send(res,200,await searchRestaurants({lat:number(req.query.lat),lon:number(req.query.lon),radius:number(req.query.radius)??5})); }
+      catch(error){return send(res,error.status||502,{error:error.message});}
+    }
+
     if (mode === 'viator') {
       const lat = number(req.query.lat);
       const lon = number(req.query.lon);
