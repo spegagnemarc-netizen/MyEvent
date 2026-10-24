@@ -267,7 +267,7 @@ function renderSelectedOutingBox(data){
     '<div class="outingActionsRow">'+
       (lat!=null&&lon!=null?'<button type="button" class="secondary" data-outing-selected-map="'+lat+'|'+lon+'" data-outing-selected-name="'+esc(data.name)+'">📍 Voir la localisation</button>':'')+
       (data.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(data.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+
-      '<button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button>'+
+      '<button type="button" class="secondary" id="outingReservationBtn">📅 Préparer la demande</button>'+
       '<button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button>'+
     '</div><div id="outingReservationHost"></div>';
 }
