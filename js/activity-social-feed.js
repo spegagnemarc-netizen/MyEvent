@@ -30,8 +30,15 @@ async function init(){
  const search=node('button','Rechercher','activityAreaSearch');search.type='submit';const gps=action('⌖ Ma position',async()=>{gps.disabled=true;status.textContent='Autorisez la localisation ou choisissez une ville.';const ok=await D.locate();gps.disabled=false;if(ok)sector.open=false;if(!ok)status.textContent='GPS indisponible : choisissez une ville. Les autres fonctions restent disponibles.';},'activityLocate');area.append(cityLabel,radiusLabel,search,gps);
  const scope=node('p','','activityScope'),status=node('p','Chargement…','activityFeedStatus');status.setAttribute('role','status');
  const list=node('div',null,'activityFeedList');list.setAttribute('role','list');list.setAttribute('aria-label','Sorties accessibles dans votre secteur');list.tabIndex=0;
- const next=action('›',()=>list.scrollBy({left:list.clientWidth*.85,behavior:'smooth'}),'activityCarouselNext');next.setAttribute('aria-label','Sorties suivantes');
- const rail=node('div',null,'activityRail');rail.append(list,next);
+ const rail=node('div',null,'activityRail');rail.append(list);
+ let drag=null,suppressClick=false;
+ list.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||e.target.closest('button,a,input,select'))return;drag={id:e.pointerId,x:e.clientX,start:list.scrollLeft,moved:false};});
+ list.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const delta=e.clientX-drag.x;if(!drag.moved&&Math.abs(delta)>6){drag.moved=true;list.setPointerCapture(e.pointerId);list.classList.add('is-dragging');}if(drag.moved){e.preventDefault();list.scrollLeft=drag.start-delta;}});
+ const finish=()=>{if(!drag)return;suppressClick=drag.moved;drag=null;list.classList.remove('is-dragging');if(suppressClick)root.setTimeout(()=>suppressClick=false,0);};
+ list.addEventListener('pointerup',finish);list.addEventListener('pointercancel',finish);list.addEventListener('lostpointercapture',finish);
+ list.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopImmediatePropagation();}},true);
+ list.addEventListener('dragstart',e=>e.preventDefault());
+ list.addEventListener('wheel',e=>{if(e.ctrlKey||e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)||list.scrollWidth<=list.clientWidth)return;const direction=e.deltaY;if(direction>0&&list.scrollLeft>=list.scrollWidth-list.clientWidth-1||direction<0&&list.scrollLeft<=0)return;e.preventDefault();list.scrollBy({left:Math.sign(direction)*((list.firstElementChild?.getBoundingClientRect().width||list.clientWidth)+12),behavior:'smooth'});},{passive:false});
  const footer=action('＋ Organiser une sortie ici',()=>root.myeventCreateActivity?.(),'activityCreate');const sector=node('details',null,'activitySector'),sectorSummary=node('summary','Choisir mon secteur');sector.append(sectorSummary,area,scope);section.append(header,status,rail,footer);feed.before(section);
  const names={foryou:'Pour vous',today:'Aujourd’hui',weekend:'Ce week-end',free:'Gratuit',nearby:'À proximité',discover:'Toutes les sorties',mine:'Mes activités'};
  const filters=[...document.querySelectorAll('#socialHome .socialFilter')],views=['foryou','today','weekend','free','nearby'];
@@ -41,7 +48,7 @@ async function init(){
   if(document.activeElement!==city)city.value=state.city;radius.value=String(state.radius);filters.forEach(b=>{const active=b.dataset.activityFilter===state.view;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
   const hasArea=state.city||state.position;sectorSummary.textContent='⌖ '+(state.geoSource==='gps'?'Ma position':state.city||'Choisir mon secteur')+' · '+state.radius+' km';if(!hasArea)sector.open=true;scope.textContent=(names[state.view]||'Toutes les sorties')+' · '+(state.geoSource==='gps'?'autour de ma position':state.city||'choisissez votre secteur')+(state.position?` · ${state.radius} km`:'');
   const rows=D.select().slice(0,3);list.replaceChildren();for(const a of rows){const item=card(a,{publicOnly:false,position:state.position,onOpen:id=>root.myeventOpenActivity?.(id,'view',{origin:'feed'})});if(item)list.append(item);}
-  next.hidden=list.childElementCount<2;footer.disabled=cap.can_create!==true;
+  footer.disabled=cap.can_create!==true;
   status.textContent=error||(loading?'Chargement des sorties…':!hasArea?'Choisissez une ville ou utilisez votre position pour découvrir les sorties de votre secteur.':!list.childElementCount?'Aucune sortie disponible pour ces critères. Élargissez le rayon ou découvrez toutes les sorties.':'');
   if(state.city&&!state.position&&!error&&!loading)scope.textContent+=' · rayon non appliqué : ville non localisée';
  }

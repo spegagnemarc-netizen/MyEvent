@@ -111,3 +111,15 @@
 .activities .feedDetailCategory{color:#b5a4ee;font-weight:700;font-size:11px}
 .activities.feed-detail-mode #act-detail>p{font-size:14px;line-height:1.45;white-space:pre-line}
 @media(max-width:500px){.activities.feed-detail-mode{padding:52px 8px 20px}.activities.feed-detail-mode #act-detail{padding:10px}.activities.feed-detail-mode #act-detail>.actDetailVisual{height:220px}.activities.feed-detail-mode #act-detail h2{font-size:23px}}
+
+/* Only the home Sorties & Rencontres rail and restaurant disclosures. */
+#orevamiActivityFeed .activityFeedList{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:2px;gap:12px;overscroll-behavior-x:contain;touch-action:pan-x pan-y;cursor:grab;padding-bottom:10px}
+#orevamiActivityFeed .activityShowcaseCard{flex:0 0 clamp(240px,42%,360px);scroll-snap-align:start;scroll-snap-stop:normal}
+#orevamiActivityFeed .activityFeedList.is-dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}
+.restaurantAccordion{margin:8px 0;border-top:1px solid #ffffff24}
+.restaurantAccordion>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:10px 0;font-size:13px}
+.restaurantAccordion>summary::-webkit-details-marker{display:none}
+.restaurantAccordion>summary span{transition:transform .15s}
+.restaurantAccordion[open]>summary span{transform:rotate(180deg)}
+.restaurantAccordionBody{font-size:13px;overflow-wrap:anywhere}
+@media(max-width:500px){#orevamiActivityFeed .activityShowcaseCard{flex-basis:85%}}
