@@ -6,6 +6,11 @@ module.exports=async function handler(req,res){
  if(!allowed)return send(res,404,{error:'Recherche indisponible dans cet environnement.'});
  const mode=String(req.query?.mode||'');
  try{
+  if(req.method==='POST'&&mode==='restaurant-discovery'){
+   if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'JSON requis.'});
+   let data=req.body;if(typeof data==='string'){if(data.length>3000)return send(res,400,{error:'Requête trop longue.'});try{data=JSON.parse(data);}catch{return send(res,400,{error:'JSON invalide.'});}}
+   return send(res,200,await require('../lib/restaurant-discovery').discoverRestaurant(data));
+  }
   if(req.method==='POST'&&mode==='restaurant-information'){
    if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});
    let data=req.body;if(typeof data==='string'){if(data.length>3000)return send(res,400,{error:'Requête trop longue.'});try{data=JSON.parse(data);}catch{return send(res,400,{error:'Requête invalide.'});}}

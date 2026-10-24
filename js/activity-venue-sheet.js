@@ -20,8 +20,8 @@ function create({host,onAdd,onAnalyse,onAccept,onClose=()=>{},readOnly=false}){
  if(dialog.classList.contains('restaurant-v2')){
   const gallery=section('Galerie','Aucune photo autorisée disponible.');gallery.classList.add('restaurant-gallery');
   // Explicit editorial authorization only; provider image fields never grant usage rights.
-  const photos=(v.authorized_photos||[]).filter(p=>p.authorization==='approved'&&p.evidence_url&&C.safeLink(p.evidence_url)&&p.credit&&/^\/assets\/restaurant-photos\/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png|webp)$/.test(p.url));
-  for(const photo of photos){const figure=node('figure'),img=node('img');img.src=photo.url;img.alt=photo.alt||v.name;img.loading='lazy';figure.append(img,node('figcaption',photo.credit));gallery.append(figure);}
+  const photos=(v.authorized_photos||[]).filter(p=>root.MyEventPlaceCard?.photoAllowed(p));
+  for(const photo of photos){const figure=node('figure'),img=node('img');img.src=photo.url;img.alt=photo.alt||v.name;img.loading='lazy';figure.append(img,node('figcaption',photo.credit));if(photo.source_url){const a=href('Source de la photo',photo.source_url);if(a)figure.append(a);}if(photo.license_url){const a=href(photo.license||'Licence',photo.license_url);if(a)figure.append(a);}figure.append(node('small',photo.changes||''));gallery.append(figure);}
   if(photos.length){gallery.querySelector('p').remove();const img=node('img');img.src=photos[0].url;img.alt=photos[0].alt||v.name;hero.replaceChildren(img,node('small',photos[0].credit));}
   content.append(gallery);
   const nav=node('nav',null,'restaurant-nav');nav.setAttribute('aria-label','Sections de la fiche');
@@ -62,10 +62,11 @@ function create({host,onAdd,onAnalyse,onAccept,onClose=()=>{},readOnly=false}){
   if(ticket!==revision||!dialog.open||current.category!=='restaurant'||!root.OrevamiRestaurantInformation)return;
   notice.textContent='Consultation du site du restaurant…';
   let info;
-  try{info=await root.OrevamiRestaurantInformation.load(current.website,{signal:detailController.signal,catalog:current.restaurant_catalog});}
+  try{info=await root.OrevamiRestaurantInformation.load(current.website,{signal:detailController.signal,catalog:current.restaurant_catalog,venue:current});}
   catch(e){if(ticket!==revision||e.name==='AbortError')return;info={status:'unavailable',opening_hours:[],prices:[],menus:[],booking_links:[],sources:[],notice:'Information non disponible : consultation du site impossible.'};}
   if(ticket!==revision||!dialog.open)return;
-  current={...current,official_restaurant:null,restaurant_information:info,
+  if(info.status!=='available'){notice.textContent=info.notice||'Source indisponible ; fiche conservée.';return;}
+  current={...current,website:current.website||info.website,phone:current.phone||info.phone,authorized_photos:info.authorized_photos||current.authorized_photos,official_restaurant:null,restaurant_information:info,
    opening_hours:(info.opening_hours||[]).map(h=>h.heading+' : '+h.text).join('\n')||'Information non disponible',
    prices:(info.prices||[]).map(p=>p.text).join('\n')||'Information non disponible',
    booking_url:info.booking_links?.[0]?.url||null,booking_verified:false,booking_method:'external_link',

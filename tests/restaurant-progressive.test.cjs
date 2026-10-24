@@ -1,0 +1,10 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+function setup(fetch){const window={};vm.runInNewContext(fs.readFileSync('js/restaurant-information.js','utf8'),{window,document:{readyState:'complete',getElementById:()=>null,addEventListener:()=>{}},fetch,URL,AbortController,setTimeout,clearTimeout,Map,Date});return window.OrevamiRestaurantInformation;}
+test('global sites share requests, keep attribution in cache and preserve facts on failure',async()=>{
+ let calls=0;const api=setup(async()=>{calls++;return {ok:true,json:async()=>({status:'available',phone:'0123456789',sources:[{url:'https://tokyo.example/menu',checked_at:'2026-10-24'}],prices:[{text:'Published price'}],menus:[],opening_hours:[],booking_links:[]})};});
+ const values=await Promise.all([api.load('https://tokyo.example/'),api.load('https://tokyo.example/')]);assert.equal(calls,1);await api.load('https://tokyo.example/');assert.equal(calls,1);assert.equal(values[0].sources[0].url,'https://tokyo.example/menu');
+ const venue={name:'Tokyo',opening_hours:'OSM hours'};const enriched=api.applyInformation(venue,values[0]);assert.equal(enriched.opening_hours,'OSM hours');assert.equal(enriched.phone,'0123456789');assert.equal(enriched.booking_verified,false);assert.equal(api.applyInformation(venue,{status:'unavailable'}),venue);
+});
+test('Pasturier keeps curated dated information without a network request or fabricated photos',async()=>{
+ const api=setup(()=>{throw Error('Unexpected network');});const {enrichRestaurant}=require('../lib/restaurant-official-details');const venue=enrichRestaurant({id:'geoapify-pasturier',name:'Le Pasturier',type:'restaurant',city:'Gap',lat:44.5603045,lon:6.0799698});const info=await api.load(venue.website,{catalog:venue.restaurant_catalog});assert.equal(info.checked_at,'2026-10-24');assert.match(info.prices[0].text,/27 €/);assert.equal(venue.restaurant_catalog.photo,null);assert.equal(info.availability.status,'not_provided');
+});
