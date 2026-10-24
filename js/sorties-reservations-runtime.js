@@ -251,6 +251,7 @@ function renderOutingResults(){
         '<span class="outingChip">👥 '+esc(String($('outingPeople')?.value||'1'))+' pers.</span></div>'+
       (isViator&&p.description?'<p class="muted">'+esc(p.description)+'</p>':'')+
       '<div class="outingAddress">📍 '+esc(p.address||'Adresse non disponible')+'</div>'+
+      (p.official_restaurant&&window.MyEventPlaceCard?'<p>Horaires : '+esc(p.opening_hours)+'</p>'+window.MyEventPlaceCard.officialDetails(p):'')+
       (isViator&&p.rating?'<div class="muted" style="margin-top:5px">⭐ '+esc(Number(p.rating).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1}))+(p.reviewCount?' · '+esc(Number(p.reviewCount).toLocaleString('fr-FR'))+' avis':'')+' · Viator</div>':'')+
       '<div class="outingActionsRow">'+
         '<button type="button" '+(selected?'class="secondary"':'')+' data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">'+
@@ -283,7 +284,7 @@ function renderSelectedOutingBox(data){
     '<div class="outingActionsRow">'+
       (lat!=null&&lon!=null?'<button type="button" class="secondary" data-outing-selected-map="'+lat+'|'+lon+'" data-outing-selected-name="'+esc(data.name)+'">📍 Voir la localisation</button>':'')+
       (data.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(data.website)+'" target="_blank" rel="noopener">↗️ Site</a>':'')+
-      '<button type="button" class="secondary" id="outingReservationBtn">📅 Réserver</button>'+
+      '<button type="button" class="secondary" id="outingReservationBtn">📅 Préparer la demande</button>'+
       '<button type="button" class="secondary" id="outingUnselectBtn">✕ Retirer</button>'+
     '</div><div id="outingReservationHost"></div>';
 }
