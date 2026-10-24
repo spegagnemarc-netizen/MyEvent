@@ -254,10 +254,11 @@ function renderOutingResults(){
       (window.MyEventPlaceCard?window.MyEventPlaceCard.accordion(p):'')+
       (isViator&&p.rating?'<div class="muted" style="margin-top:5px">⭐ '+esc(Number(p.rating).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1}))+(p.reviewCount?' · '+esc(Number(p.reviewCount).toLocaleString('fr-FR'))+' avis':'')+' · Viator</div>':'')+
       '<div class="outingActionsRow">'+
+        (cat==='restaurant'&&window.MyEventPlaceCard?window.MyEventPlaceCard.detailsButton(p,'Fiche détaillée'):'')+
         '<button type="button" '+(selected?'class="secondary"':'')+' data-outing-select="'+esc(p.id||((p.lat||'')+'|'+(p.lon||'')))+'">'+
           (selected?'🔄 Changer de sortie':'⭐ Ajouter à l’événement')+
         '</button>'+
-        (p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir</button>':'')+
+        (p.lat&&p.lon?'<button type="button" class="secondary" data-outing-map="'+p.lat+'|'+p.lon+'" data-outing-name="'+esc(p.name)+'">📍 Voir sur la carte</button>':'')+
         (p.website?'<a class="secondary" style="display:grid;place-items:center;text-decoration:none" href="'+esc(p.website)+'" target="_blank" rel="noopener">'+(isViator?'🎟️ Réserver sur Viator':'↗️ Site')+'</a>':'')+
       '</div></div>';
   }).join('')||'<div class="outingEmpty">Aucun lieu ne correspond à tes critères.</div>';

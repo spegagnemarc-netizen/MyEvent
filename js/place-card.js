@@ -7,9 +7,9 @@
     const date=String(p.official_restaurant.checked_at||'').split('-').reverse().join('/');
     return '<section aria-label="Informations du site officiel"><p>'+esc(p.prices)+'</p>'+link('Consulter la carte complète · site officiel',p.menu_url)+link('Demander une réservation · site officiel',p.booking_url)+'<p>Aucune disponibilité fournie. Demande soumise à la confirmation du restaurant ; aucune réservation effectuée dans ORÉVAMI.</p>'+(p.sources||[]).map(s=>link(s.type,s.url)).join('')+'<p>Consulté le '+esc(date)+' · horaires et prix publiés, à reconfirmer.</p></section>';
   }
-  function detailsButton(p){
+  function detailsButton(p,label='Voir horaires, carte et réservations'){
     const restaurant=p.type==='restaurant'||p.category==='restaurant';
-    return restaurant?'<button type="button" data-restaurant-details="'+esc(JSON.stringify({...Object.fromEntries(['id','name','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','restaurant_catalog'].map(k=>[k,p[k]])),category:'restaurant'}))+'">Voir horaires, carte et réservations</button>':'';
+    return restaurant?'<button type="button" data-restaurant-details="'+esc(JSON.stringify({...Object.fromEntries(['id','name','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','restaurant_catalog'].map(k=>[k,p[k]])),category:'restaurant'}))+'">'+esc(label)+'</button>':'';
   }
   function accordion(p){
     if(!['restaurant','fast_food'].includes(p.type||p.category))return '';
