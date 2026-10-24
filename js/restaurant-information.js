@@ -31,16 +31,18 @@
     }
     return pending.get(key);
   }
-  const discoveryPending=new Map();
-  const storageKey='orevami-restaurant-discovery-v4';
+  const discoveryPending=new Map(),discoveryQueue=[];let discoveryActive=0;
+  function scheduleDiscovery(task){return new Promise((resolve,reject)=>{discoveryQueue.push({task,resolve,reject});pumpDiscovery();});}
+  function pumpDiscovery(){while(discoveryActive<2&&discoveryQueue.length){const job=discoveryQueue.shift();discoveryActive++;Promise.resolve().then(job.task).then(job.resolve,job.reject).finally(()=>{discoveryActive--;pumpDiscovery();});}}
+  const storageKey='orevami-restaurant-discovery-v5';
   function readStored(){try{const raw=root.localStorage?.getItem(storageKey);return raw&&raw.length<1000000?JSON.parse(raw):{};}catch{return {};}}
   async function enrich(venue){
     if(!venue||typeof venue.name!=='string'||!Number.isFinite(venue.lat)||!Number.isFinite(venue.lon))return load(venue?.website,{catalog:venue?.restaurant_catalog});
     const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.address||'',venue.city||'',venue.website||'']);
     const stored=readStored(),hit=stored[key];if(hit&&Number.isFinite(hit.expires)&&hit.expires>Date.now())return hit.value;
     if(discoveryPending.has(key))return discoveryPending.get(key);
-    if(discoveryPending.size>=2)return load(venue.website,{catalog:venue.restaurant_catalog});
-    const task=(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+    if(discoveryPending.size>=20)return {status:'unavailable',website:null,website_verified:false,notice:'Consultation différée : limite atteinte.'};
+    const task=scheduleDiscovery(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
       try{const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}catch{}finally{clearTimeout(timer);}
       const website=venue.website||discovery.website;
       const checked=await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
@@ -52,10 +54,10 @@
       const current=readStored();current[key]={value,expires:Date.now()+(value.status==='available'?21600000:300000)};
       try{const rows=Object.entries(current).filter(([,v])=>v.expires>Date.now()).slice(-100);root.localStorage?.setItem(storageKey,JSON.stringify(Object.fromEntries(rows)));}catch{}
       return value;
-    })().finally(()=>discoveryPending.delete(key));discoveryPending.set(key,task);return task;
+    }).finally(()=>discoveryPending.delete(key));discoveryPending.set(key,task);return task;
   }
   function applyInformation(venue,info){
-    if(info.status!=='available')return venue;
+    if(info.status!=='available'&&info.website_verified!==true)return venue;
     return {...venue,website:info.website_verified===true?info.website:venue.restaurant_catalog?.information?.website||null,website_verified:info.website_verified===true,authorized_photos:info.authorized_photos?.length?info.authorized_photos:venue.authorized_photos,restaurant_information:info,sources:info.sources||venue.sources,
       phone:venue.phone||info.phone||null,
       opening_hours:(info.opening_hours||[]).map(h=>h.heading+' : '+h.text).join(' · ')||venue.opening_hours,
