@@ -239,6 +239,7 @@ function renderOutingResults(){
     const cat=outingCategory(p.type);
     const typeLabel=cat==='restaurant'?'Restaurant':cat==='culture'?'Culture':cat==='nature'?'Nature':'Activité';
     const selected=isSelectedOuting(p);
+    if(cat==='restaurant'&&!isViator&&window.MyEventPlaceCard?.restaurantMiniature)return window.MyEventPlaceCard.restaurantMiniature(p,{selected});
 
     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'">'+
       (p.image&&!p.restaurant_catalog?'<img src="'+esc(p.image)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:9px">':'')+
