@@ -1,10 +1,14 @@
 {
   "git": {
     "deploymentEnabled": {
-      "consolidation/orevami-priorites-20261024": false
+      "consolidation/orevami-priorites-20261024": false,
+      "temp/orevami-sorties-api-audit-20261025": false
     }
   },
   "functions": {
+    "api/sorties-api-audit.js": {
+      "maxDuration": 240
+    },
     "api/camera-ai.js": {
       "maxDuration": 180
     },
@@ -14,6 +18,10 @@
     }
   },
   "routes": [
+    {
+      "src": "^/server/sorties-api-audit\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/account-deletion-request\\.mjs$",
       "status": 404
