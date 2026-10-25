@@ -34,7 +34,7 @@
   const discoveryPending=new Map(),discoveryQueue=[];let discoveryActive=0;
   function scheduleDiscovery(task){return new Promise((resolve,reject)=>{discoveryQueue.push({task,resolve,reject});pumpDiscovery();});}
   function pumpDiscovery(){while(discoveryActive<2&&discoveryQueue.length){const job=discoveryQueue.shift();discoveryActive++;Promise.resolve().then(job.task).then(job.resolve,job.reject).finally(()=>{discoveryActive--;pumpDiscovery();});}}
-  const storageKey='orevami-restaurant-discovery-v5';
+  const storageKey='orevami-restaurant-discovery-v7';
   function readStored(){try{const raw=root.localStorage?.getItem(storageKey);return raw&&raw.length<1000000?JSON.parse(raw):{};}catch{return {};}}
   async function enrich(venue){
     if(!venue||typeof venue.name!=='string'||!Number.isFinite(venue.lat)||!Number.isFinite(venue.lon))return load(venue?.website,{catalog:venue?.restaurant_catalog});
@@ -43,15 +43,15 @@
     if(discoveryPending.has(key))return discoveryPending.get(key);
     if(discoveryPending.size>=20)return {status:'unavailable',website:null,website_verified:false,notice:'Consultation différée : limite atteinte.'};
     const task=scheduleDiscovery(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-      try{const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}catch{}finally{clearTimeout(timer);}
+      try{const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,address:venue.address,city:venue.city,website:venue.website,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}catch{}finally{clearTimeout(timer);}
       const website=venue.website||discovery.website;
-      const checked=await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
+      const checked=discovery.website_verified&&discovery.information?{...discovery.information,website_verified:true}:await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
       const base=venue.restaurant_catalog?.information?{...venue.restaurant_catalog.information,website_verified:checked.website_verified}:checked;
       const verified=venue.website_verified===true&&venue.website===website||venue.restaurant_catalog?.website_verified===true&&!!venue.restaurant_catalog?.information?.website&&venue.restaurant_catalog.information.website===website||base.website_verified===true;
       const value={...base,website:verified?website:null,website_verified:verified,authorized_photos:(discovery.photos||[]).filter(p=>root.MyEventPlaceCard?.photoAllowed(p)),sources:[...(base.sources||[]),...(discovery.sources||[])]};
       // Cache successful, sourced facts for 6 h, including provenance. Negative results 5 min.
       if(value.authorized_photos.length)value.status='available';
-      const current=readStored();current[key]={value,expires:Date.now()+(value.status==='available'?21600000:300000)};
+      const current=readStored();current[key]={value,expires:Date.now()+(value.website_verified===true?21600000:300000)};
       try{const rows=Object.entries(current).filter(([,v])=>v.expires>Date.now()).slice(-100);root.localStorage?.setItem(storageKey,JSON.stringify(Object.fromEntries(rows)));}catch{}
       return value;
     }).finally(()=>discoveryPending.delete(key));discoveryPending.set(key,task);return task;

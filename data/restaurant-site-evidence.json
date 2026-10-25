@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Kiyomi",
+    "address": "19 rue Carnot",
+    "city": "Gap",
+    "phone": "09 83 37 76 52",
+    "website": "https://www.kiyomisushi.fr/",
+    "sources": [
+      {
+        "name": "Kiyomi",
+        "address": "19 rue Carnot",
+        "city": "Gap",
+        "phone": "09 83 37 76 52",
+        "publisher": "Bottin",
+        "url": "https://www.bottin.fr/fiche-locale/bidciaggfeigccehefda--kiyomi--gap.htm",
+        "kind": "independent",
+        "access": "indexed",
+        "domain": "kiyomisushi.fr",
+        "reviewed": true,
+        "checked_at": "2026-10-25",
+        "expires_at": "2026-11-24"
+      },
+      {
+        "name": "Kiyomi",
+        "address": "19 rue Carnot",
+        "city": "Gap",
+        "phone": "09 83 37 76 52",
+        "publisher": "Tripadvisor",
+        "url": "https://www.tripadvisor.fr/Restaurant_Review-g196680-d14095965-Reviews-Kiyomi-Gap_Hautes_Alpes_Provence_Alpes_Cote_d_Azur.html",
+        "kind": "independent",
+        "access": "direct",
+        "domain": null,
+        "reviewed": true,
+        "checked_at": "2026-10-25",
+        "expires_at": "2026-11-24"
+      },
+      {
+        "name": "Kiyomi",
+        "address": "19 rue Carnot",
+        "city": "Gap",
+        "phone": "09 83 37 76 52",
+        "publisher": "Kiyomi · mentions de l’éditeur",
+        "url": "https://www.kiyomisushi.fr/index.php?route=information%2Fconditions",
+        "kind": "official",
+        "access": "indexed",
+        "domain": "kiyomisushi.fr",
+        "reviewed": true,
+        "checked_at": "2026-10-25",
+        "expires_at": "2026-11-24"
+      }
+    ]
+  }
+]

@@ -1,3 +1,4 @@
+let search;const siteSearch=v=>{if(!search)search=require('../lib/restaurant-site-search').createSiteSearch({information:require('../lib/restaurant-information').restaurantInformation});return search(v);};
 // Environment-isolated venue read endpoint. Existing Production search routes are untouched.
 function send(res,status,body){res.setHeader('Cache-Control','no-store, max-age=0');res.setHeader('X-Content-Type-Options','nosniff');return res.status(status).json(body);}
 module.exports=async function handler(req,res){
@@ -9,7 +10,13 @@ module.exports=async function handler(req,res){
   if(req.method==='POST'&&mode==='restaurant-discovery'){
    if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'JSON requis.'});
    let data=req.body;if(typeof data==='string'){if(data.length>3000)return send(res,400,{error:'Requête trop longue.'});try{data=JSON.parse(data);}catch{return send(res,400,{error:'JSON invalide.'});}}
-   return send(res,200,await require('../lib/restaurant-discovery').discoverRestaurant(data));
+   const corroborated=require('../lib/restaurant-site-evidence').corroborate(data);
+   if(corroborated)return send(res,200,{...corroborated,information:corroborated,photos:[]});
+   const known=require('../lib/restaurant-catalog').enrichCatalog({...data,type:'restaurant'});
+   const candidate=data?.website||known.website;
+   const result=await require('../lib/restaurant-discovery').discoverRestaurant(data);
+   if(!candidate&&!result.website){const found=await siteSearch(data);return send(res,200,{...result,...found,photos:result.photos||[],sources:[...(result.sources||[]),...(found.sources||[])]});}
+   return send(res,200,{...result,website:candidate||result.website});
   }
   if(req.method==='POST'&&mode==='restaurant-information'){
    if(!/^application\/json(?:;|$)/i.test(String(req.headers?.['content-type']||'')))return send(res,415,{error:'Envoyez une URL au format JSON.'});
