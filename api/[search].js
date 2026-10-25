@@ -6,6 +6,10 @@ const ticketmaster = require('../server/search-ticketmaster');
 // Dispatch only by pathname: query parameters cannot select another handler.
 module.exports = function handler(req, res) {
   const pathname = String(req.url || '').split('?')[0];
+  if (pathname === '/api/sorties-api-audit') {
+    // Load only for this exact path; the audit applies its own fail-closed guards.
+    return require('../server/sorties-api-audit').createHandler()(req, res);
+  }
   if (pathname === '/api/account-deletion') {
     return import('../server/account-deletion-request.mjs').then(module => module.default(req, res));
   }

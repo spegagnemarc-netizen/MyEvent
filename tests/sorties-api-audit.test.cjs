@@ -18,7 +18,7 @@ async function invoke({ config = env(), req = request(), fetchImpl = () => { thr
 }
 
 test('entry point is a Node/CommonJS handler with no calls at import', () => {
-  assert.equal(typeof require('../api/sorties-api-audit'), 'function');
+  assert.equal(typeof require('../api/[search]'), 'function');
 });
 test('fail-closed guards never call a provider', async t => {
   const cases = [
@@ -216,7 +216,8 @@ test('invalid provider object entries produce missing results instead of crashin
 test('Vercel config keeps branch auto-deployment off and blocks public server source', () => {
   const config = require('../vercel.json');
   assert.equal(config.git.deploymentEnabled['temp/orevami-sorties-api-audit-20261025'], false);
-  assert.equal(config.functions['api/sorties-api-audit.js'].maxDuration, 240);
+  assert.equal(config.functions['api/[search].js'].maxDuration, 240);
+  assert.equal(config.functions['api/sorties-api-audit.js'], undefined);
   const rule = config.routes.find(r => r.src && new RegExp(r.src).test('/server/sorties-api-audit.js'));
   assert.equal(rule.status, 404);
 });

@@ -4,8 +4,10 @@
 
 Branche locale : `temp/orevami-sorties-api-audit-20261025`.
 Base GitHub récupérée : `213c2036403ca742afaac27af3548f232bebccd2` (main).
-Développement et commit locaux seulement. Aucun push, déploiement, secret Vercel
-créé/modifié ou appel réel fournisseur pendant cette préparation.
+Le commit initial a été publié sur cette branche et son premier déploiement
+Preview a échoué sur la limite de 12 fonctions. Ce correctif de regroupement est
+autorisé à être commité et poussé sur la seule branche temporaire, sans nouveau
+déploiement, modification de secret ou appel réel fournisseur.
 
 Le projet Vercel est `my-event`, identifiant
 `prj_njkjpiO5evwffsbcqwfTpSHxJd8C`, équipe
@@ -17,11 +19,15 @@ Ces constats ne remplacent pas le contrôle du futur déploiement.
 
 ## Fichiers et isolation
 
-- `api/sorties-api-audit.js` : point d'entrée CommonJS conforme aux fonctions
-  JavaScript existantes, sans appel au chargement.
+- `api/[search].js` : route exacte `/api/sorties-api-audit`, avec chargement différé
+  du module serveur. Les routes préexistantes restent inchangées.
+- Le point d'entrée autonome `api/sorties-api-audit.js` a été retiré : le total
+  est de 12 fonctions JavaScript dans `api/`, sans perte d'URL ou de fonctionnalité.
 - `server/sorties-api-audit.js` : protection, scénario, client borné et rapport.
 - `tests/sorties-api-audit.test.cjs` : tests ciblés, réponses simulées uniquement.
-- `vercel.json` : plafond 240 s pour la nouvelle fonction, désactivation des
+- `tests/sorties-api-audit-routing.test.cjs` : contrôle du raccordement et des
+  contrats de routage avec traitements simulés, sans fournisseur.
+- `vercel.json` : plafond 240 s pour le routeur partagé, désactivation des
   déploiements Git automatiques sur cette branche, refus HTTP 404 pour la source
   du module serveur temporaire.
 - Ce document : procédure et suppression.
@@ -112,11 +118,12 @@ de recherche : aucune route transverse nécessitant un accès spécial n'est uti
 Ne pas exécuter ces étapes tant qu'elles ne sont pas autorisées.
 
 1. Vérifier l'arbre Git propre et le SHA livré, sur la branche temporaire.
-   Ne pas fusionner dans main et ne pas pousser la branche pour cet essai.
+   Ne pas fusionner dans main. La branche temporaire seule peut être publiée
+   avec autorisation ; ses déploiements Git automatiques restent désactivés.
 2. Dans Vercel, sélectionner `my-event` et son équipe. Vérifier Node.js 24.x,
    les limites de durée/nombre de fonctions du plan existant et Fluid Compute.
-   La branche ajoute une fonction : si une limite est atteinte, arrêter sans
-   supprimer d'autre fonction ni souscrire un forfait.
+   La branche comporte désormais 12 fonctions : si une limite est atteinte,
+   arrêter sans supprimer d'autre fonction ni souscrire un forfait.
 3. Vérifier que DATATOURISME_API_KEY et OPENAGENDA_API_KEY sont exclusivement
    en Preview et que GEOAPIFY_API_KEY y existe, sans révéler/exporter leurs valeurs.
 4. Après autorisation distincte de créer le jeton, générer 32 octets aléatoires
@@ -164,9 +171,14 @@ Après l'essai, avec autorisation de nettoyage :
    supprimer les clés fournisseurs existantes.
 3. Vérifier que l'ancienne URL n'exécute plus la fonction. Une suppression de
    variable seule ne révoque pas les secrets incorporés à un ancien déploiement.
-4. Supprimer les fichiers temporaires et les trois ajouts de configuration sur
-   la branche, ou supprimer la branche locale après conservation du rapport.
-   La branche n'étant pas fusionnée/poussée, aucun nettoyage Production n'est requis.
+4. Retirer uniquement le bloc de dispatch `/api/sorties-api-audit` du routeur
+   `api/[search].js` (ne pas supprimer ce routeur), le module serveur d'audit,
+   ses tests dédiés, sa documentation et les ajouts de configuration d'audit
+   (`functions["api/[search].js"]`, route 404 du module serveur, règle Git de la
+   branche temporaire). Les routes métier et les réglages préexistants restent.
+   Ou supprimer la branche locale après conservation du rapport.
+   La branche n'étant pas fusionnée dans main, aucun nettoyage Production n'est
+   requis. Sa suppression distante éventuelle demande une autorisation distincte.
 
 ## Validation locale ciblée
 
@@ -176,10 +188,22 @@ Le réseau réel est interdit par le banc de test et toutes les clés sont ficti
 La suite vérifie notamment les refus, les plafonds, l'arrêt fournisseur,
 l'expiration, les erreurs/réponses malformées, la non-divulgation, les doublons,
 les droits d'images et la configuration Vercel.
-Résultat final : **45 contrôles réussis, 0 échec**. `git diff --check` est propre.
+Validation initiale : **45 contrôles réussis, 0 échec** (historique).
+Après raccordement : **20 contrôles de routage et 2 contrôles adaptés réussis**,
+sans réexécuter la suite complète. Le module serveur d'audit est inchangé octet
+pour octet par rapport au commit approuvé. `git diff --check` est propre.
+Commandes ciblées :
+`node --experimental-vm-modules --test tests/sorties-api-audit-routing.test.cjs`
+et `node --test --test-name-pattern="entry point|Vercel config" tests/sorties-api-audit.test.cjs`.
+L'option VM sert uniquement à simuler l'import de suppression de compte dans
+le banc de test ; elle n'est pas requise dans la fonction Vercel.
 
 Une compilation Vercel et une vérification de plateforme restent à faire lors
 du futur déploiement autorisé ; les tests locaux ne certifient pas ce déploiement.
+Le premier déploiement a échoué sur la limite Hobby de 12 fonctions. Le correctif
+de routage supprime le treizième point d'entrée ; sa validation de compilation
+distante attend une nouvelle autorisation. Le SHA initial ci-dessus désigne la
+base historique, pas le futur commit corrigé.
 
 ## Références techniques utilisées
 

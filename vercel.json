@@ -6,7 +6,7 @@
     }
   },
   "functions": {
-    "api/sorties-api-audit.js": {
+    "api/[search].js": {
       "maxDuration": 240
     },
     "api/camera-ai.js": {
