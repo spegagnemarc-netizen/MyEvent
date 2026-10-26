@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "browser": "153.0.8010.0",
+  "checks": [
+    "12 fictional entries; search/filter/detail",
+    "responsive 390px, no overflow",
+    "lazy simulated placements; direct priority; shared cap 2",
+    "local refusal persisted; accept disabled without CMP",
+    "server suspension removed placements; UI cannot override",
+    "private cookie and localStorage absent on public origin",
+    "CSP blocked private fetch before request reached private server",
+    "CSP blocked script injection",
+    "COOP opener null",
+    "frame-ancestors and X-Frame-Options blocked embedding",
+    "no sensitive sentinel sent to public server",
+    "no page errors"
+  ],
+  "suspensionMs": 6,
+  "responsiveWidths": [
+    320,
+    390,
+    1440
+  ],
+  "realAdRequests": 0,
+  "externalDependencies": 0,
+  "screenshots": [
+    "discovery-desktop.png",
+    "discovery-mobile.png"
+  ]
+}

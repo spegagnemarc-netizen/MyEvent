@@ -16,6 +16,10 @@
   },
   "routes": [
     {
+      "src": "^/public-discovery(?:/.*)?$",
+      "status": 404
+    },
+    {
       "src": "^/server/orevami-restaurants\\.js$",
       "status": 404
     },
@@ -49,7 +53,8 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "feat/automatic-ads-v1-20261026": false
+      "feat/automatic-ads-v1-20261026": false,
+      "feat/public-ads-isolation-v12-20261026": false
     }
   }
 }

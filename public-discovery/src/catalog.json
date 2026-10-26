@@ -1,0 +1,14 @@
+[
+ {"id":"demo-01","title":"Un bol d’air au grand vert","category":"Nature","place":"Gap · lieu fictif","moment":"Exemple de sortie","description":"Une balade tranquille et une pause au bord du chemin.","tone":"sage","symbol":"✦"},
+ {"id":"demo-02","title":"Une table, de belles conversations","category":"Restaurants","place":"Gap · adresse fictive","moment":"Exemple de découverte","description":"L’idée d’un repas convivial, à adapter à toutes les envies.","tone":"peach","symbol":"◒"},
+ {"id":"demo-03","title":"La culture en petit comité","category":"Culture","place":"Gap · lieu fictif","moment":"Exemple de visite","description":"Prendre le temps de découvrir une exposition ensemble.","tone":"lilac","symbol":"▥"},
+ {"id":"demo-04","title":"À vous de jouer","category":"Jeux","place":"Gap · lieu fictif","moment":"Exemple de soirée","description":"Jeux de société, défis légers et bonne humeur autour de la table.","tone":"blue","symbol":"⚄"},
+ {"id":"demo-05","title":"L’heure des nouvelles rencontres","category":"Rencontres","place":"Gap · lieu fictif","moment":"Exemple de rendez-vous","description":"Un café et quelques nouvelles têtes, en toute simplicité.","tone":"rose","symbol":"◡"},
+ {"id":"demo-06","title":"Le son des bonnes soirées","category":"Concerts","place":"Gap · scène fictive","moment":"Exemple de concert","description":"Une idée de soirée musicale à partager.","tone":"night","symbol":"♫"},
+ {"id":"demo-07","title":"Un autre regard sur les sommets","category":"Nature","place":"Gap · parcours fictif","moment":"Exemple de balade","description":"Une promenade accessible pour profiter du paysage.","tone":"sage","symbol":"△"},
+ {"id":"demo-08","title":"Le prochain strike est pour vous","category":"Jeux","place":"Gap · bowling fictif","moment":"Exemple d’activité","description":"Des équipes improvisées et une partie pour le plaisir.","tone":"blue","symbol":"●"},
+ {"id":"demo-09","title":"Une parenthèse créative","category":"Culture","place":"Gap · atelier fictif","moment":"Exemple d’atelier","description":"Imaginer, essayer et repartir avec une nouvelle idée.","tone":"lilac","symbol":"✳"},
+ {"id":"demo-10","title":"L’apéro qui rassemble","category":"Rencontres","place":"Gap · terrasse fictive","moment":"Exemple de rencontre","description":"Un moment convivial avec boissons au choix, sans réservation réelle.","tone":"rose","symbol":"◌"},
+ {"id":"demo-11","title":"Une pause gourmande","category":"Restaurants","place":"Gap · adresse fictive","moment":"Exemple de découverte","description":"Une suggestion de sortie au restaurant, sans établissement réel.","tone":"peach","symbol":"◒"},
+ {"id":"demo-12","title":"Sur un air de week-end","category":"Concerts","place":"Gap · scène fictive","moment":"Exemple de soirée","description":"Une découverte musicale à imaginer entre amis.","tone":"night","symbol":"♫"}
+]

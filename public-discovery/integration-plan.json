@@ -1,0 +1,14 @@
+{
+  "environment": "TEST",
+  "releaseEnabled": false,
+  "provider": "AdSense",
+  "publisherId": null,
+  "slotId": null,
+  "certifiedCmpIdCandidate": 300,
+  "publicOrigin": null,
+  "placementMode": "top-level-public-document",
+  "iframeAdsAllowed": false,
+  "adsTxt": null,
+  "privateApiAccess": false,
+  "adminConnection": "server-only adapter required before rollout"
+}
