@@ -71,10 +71,12 @@ window.addEventListener('pagehide',()=>cmp.destroy(),{once:true});
 render();
 
 // Public, read-only operator signal. Contains no identity, private data or credentials.
-if(location.protocol==='http:'||location.protocol==='https:'){
+if((location.protocol==='http:'||location.protocol==='https:')&&document.body.dataset.hosting!=='static-preview'){
  operatorSuspended=true;render();
  const channel=new EventSource('/control-events');
  channel.onmessage=event=>{try{const data=JSON.parse(event.data);operatorSuspended=typeof data.suspended==='boolean'&&data.adsEnabled===false?data.suspended:true;}catch{operatorSuspended=true;}render();};
  channel.onerror=()=>{operatorSuspended=true;render();};
  window.addEventListener('pagehide',()=>channel.close(),{once:true});
 }
+
+if(document.body.dataset.hosting==='static-preview'){document.getElementById('demoStatus').textContent='Preview statique : simulation locale uniquement ; administration non raccordée. Aucune régie chargée.';}

@@ -1,0 +1,18 @@
+{
+  "status": "PREPARED_NOT_DEPLOYED",
+  "target": "preview",
+  "adsEnabled": false,
+  "remoteProjectCreated": false,
+  "files": [
+    {
+      "file": "index.html",
+      "bytes": 29791,
+      "sha256": "c3ce092c51eb1d8bd1df095010f4616d90d90cd2d6bae15da52eac022576141f"
+    },
+    {
+      "file": "vercel.json",
+      "bytes": 1381,
+      "sha256": "1533854c01e0074287403bf05d12dc4e5228d11c9fc2aa577428e95e8bc388fc"
+    }
+  ]
+}
