@@ -1,0 +1,7 @@
+.automaticAd{box-sizing:border-box;grid-column:1/-1;max-width:100%;min-width:0;margin:12px 0;padding:10px;border-radius:12px;overflow:hidden}
+.automaticAd>small{display:block;font:500 11px/1.4 system-ui;color:#aeb6c3;margin-bottom:6px}
+.automaticAd:has(ins[data-ad-status="unfilled"]){display:none}
+.automaticAdBody{width:100%;min-width:0}
+#orevamiAutomaticAdsAdmin label{display:block;margin:10px 0}
+#orevamiAutomaticAdsAdmin input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box}
+@media(max-width:430px){.automaticAd{padding:8px;margin:10px 0}}

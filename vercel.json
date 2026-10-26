@@ -15,7 +15,10 @@
     }
   },
   "routes": [
-    {"src":"^/server/orevami-restaurants\\.js$","status":404},
+    {
+      "src": "^/server/orevami-restaurants\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/ads-handler\\.js$",
       "status": 404
@@ -43,5 +46,10 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "feat/automatic-ads-v1-20261026": false
+    }
+  }
 }
