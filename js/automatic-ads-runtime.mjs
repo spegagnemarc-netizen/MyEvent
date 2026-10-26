@@ -1,4 +1,5 @@
-import {createAdSenseAdapter} from './ads-providers.mjs';
+import {createTcfConsentBridge} from './ads-consent.mjs';
+import {createAdSenseAdapter} from './ads-providers.mjs?v=private-document-blocked-2';
 import {normalizeSettings,automaticReady,planSlots,AUTOMATIC_ADS_RELEASE_APPROVED} from './automatic-ads-policy.mjs';
 const feed=document.getElementById('socialFeed');
 function refused(){try{return localStorage.getItem('orevami.autoAdsRefused')==='1'||document.cookie.split('; ').includes('orevami_auto_ads_refused=1');}catch{return true;}}
@@ -48,13 +49,28 @@ async function refresh(){
  else if(automaticReady(settings,environment)&&!adapter)configure();else reconcile();
  }catch{if(seq===generation){settings=normalizeSettings();stop();}}finally{busy=false;}
 }
-function suspend(){denied=true;try{localStorage.setItem('orevami.autoAdsRefused','1');}catch{}document.cookie='orevami_auto_ads_refused=1; Path=/; Max-Age=15552000; SameSite=Lax; Secure';stop();}
+function withdrawConsent(){denied=true;try{localStorage.setItem('orevami.autoAdsRefused','1');}catch{}document.cookie='orevami_auto_ads_refused=1; Path=/; Max-Age=15552000; SameSite=Lax; Secure';stop();}
 const withdraw=document.getElementById('orevamiWithdrawAdsConsent');
-withdraw?.addEventListener('click',()=>{suspend();withdraw.textContent='Publicités automatiques refusées sur cet appareil';});
+const consentStatus=document.getElementById('orevamiAdsConsentStatus');
+let reconsentRequested=false;
+const cmp=createTcfConsentBridge({onChange:state=>{
+ if(!state.accepted){stop();if(consentStatus)consentStatus.textContent='Consentement publicitaire absent ou refusé. Aucune régie chargée.';return;}
+ if(reconsentRequested&&state.eventStatus==='useractioncomplete'){
+  reconsentRequested=false;
+  try{localStorage.removeItem('orevami.autoAdsRefused');document.cookie='orevami_auto_ads_refused=; Path=/; Max-Age=0; SameSite=Lax; Secure';denied=refused();}catch{denied=true;}
+ }
+ if(consentStatus)consentStatus.textContent=denied?'Refus local conservé.':'Choix CMP reçu. Diffusion toujours bloquée pour protéger les données privées.';
+}});
+document.getElementById('orevamiAdsPreferences')?.addEventListener('click',()=>{
+ cmp.initialize();reconsentRequested=true;
+ if(!cmp.openPreferences()){reconsentRequested=false;if(consentStatus)consentStatus.textContent='CMP non configurée. Aucune acceptation enregistrée, aucune régie chargée.';}
+});
+withdraw?.addEventListener('click',()=>{withdrawConsent();withdraw.textContent='Publicités automatiques refusées sur cet appareil';});
 window.addEventListener('storage',e=>{if(e.key==='orevami.autoAdsRefused'&&e.newValue==='1'){denied=true;stop();}});
+function suspend(){stop();}
 window.orevamiAutomaticAds=Object.freeze({refresh,suspend});
 window.addEventListener('hashchange',()=>{if(!home())stop();else refresh();});
-window.addEventListener('orevami:ads-consent-withdrawn',suspend);
+window.addEventListener('orevami:ads-consent-withdrawn',withdrawConsent);
 window.addEventListener('pagehide',()=>{clearInterval(timer);timer=null;stop();});
 window.addEventListener('pageshow',()=>{if(environment){refresh();if(!timer&&AUTOMATIC_ADS_RELEASE_APPROVED)timer=setInterval(refresh,30000);}});
 if(feed)new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1&&(n.classList.contains('socialPost')||n.classList.contains('adSponsored')))))reconcile();}).observe(feed,{childList:true});

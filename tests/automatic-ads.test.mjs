@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import {PGlite} from '@electric-sql/pglite';
+import {createTcfConsentBridge} from '../js/ads-consent.mjs';
 import {normalizeSettings,planSlots,automaticReady} from '../js/automatic-ads-policy.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const config=normalizeSettings({enabled:true,feed_enabled:true,spacing:8,max_slots:2,publisher_id:'ca-pub-1234567890123456',slot_id:'1234567890',cmp_id:42,approved:true});
@@ -18,13 +19,14 @@ test('shared inventory respects direct priority, spacing, cap and short feeds',(
 });
 const settle=async()=>{for(let i=0;i<5;i++)await new Promise(r=>setImmediate(r));};
 async function fixture(released=false){
- const dom=new JSDOM('<div id="socialFeed">'+Array.from({length:24},()=>'<article class="socialPost">Post TEST</article>').join('')+'</div>',{url:'https://orevami.test/#home',runScripts:'outside-only'}),w=dom.window;
+ const dom=new JSDOM('<button id="orevamiAdsPreferences">Choix</button><button id="orevamiWithdrawAdsConsent">Refuser</button><span id="orevamiAdsConsentStatus"></span><div id="socialFeed">'+Array.from({length:24},()=>'<article class="socialPost">Post TEST</article>').join('')+'</div>',{url:'https://orevami.test/#home',runScripts:'outside-only'}),w=dom.window;
  let mounts=0,destroys=0;const observers=[];
  w.setInterval=()=>1;w.clearInterval=()=>{};
  w.sb={from:()=>({select:()=>({eq:()=>({single:async()=>({data:config})})})}),auth:{onAuthStateChange(){}}};
  w.myeventRuntime={ready:Promise.resolve({environment:'production'})};
  w.IntersectionObserver=class{constructor(cb){this.cb=cb;this.targets=[];observers.push(this);}observe(x){this.targets.push(x);}unobserve(){}disconnect(){this.targets=[];}};
  w.normalizeSettings=normalizeSettings;w.planSlots=planSlots;w.automaticReady=(c,e)=>automaticReady(c,e,released);w.AUTOMATIC_ADS_RELEASE_APPROVED=released;
+ w.createTcfConsentBridge=options=>createTcfConsentBridge(options,w);
  w.createAdSenseAdapter=()=>({initialize(){return true;},available(){return true;},mount(el){mounts++;const ins=w.document.createElement('ins');ins.dataset.adStatus='filled';el.append(ins);return true;},destroy(){destroys++;}});
  w.eval(read('js/automatic-ads-runtime.mjs').replace(/^import .*;\n/gm,''));await settle();
  return {w,observers,get mounts(){return mounts;},get destroys(){return destroys;}};
@@ -45,7 +47,7 @@ test('schema: only active administrators can update, readers cannot mutate setti
  create function public.myevent_is_admin() returns boolean language sql stable as $$select auth.uid()='admin'$$;
  create function public.myevent_account_active() returns boolean language sql stable as $$select auth.uid() in ('admin','member')$$;
  grant usage on schema auth to authenticated;`);
- await db.exec(read('docs/automatic-ads-v1-schema.sql'));
+ await db.exec(read('supabase/migrations/20261026164922_automatic_ads_v1_test_settings.sql'));
  const as=(uid,fn)=>db.transaction(async tx=>{await tx.exec('set local role authenticated');await tx.query("select set_config('test.uid',$1,true)",[uid]);return fn(tx);});
  assert.equal((await as('member',tx=>tx.query('select * from public.automatic_ad_settings'))).rows[0].enabled,false);
  assert.equal((await as('member',tx=>tx.query('update public.automatic_ad_settings set enabled=true returning id'))).rows.length,0);
@@ -66,4 +68,19 @@ test('automatic admin respects server permission and saves suspension through pr
   if(authorized){[...form.querySelectorAll('button')].find(b=>b.textContent==='Suspendre immédiatement').click();await settle();assert.deepEqual(JSON.parse(JSON.stringify(payload)),{enabled:false});assert.equal(suspended,1);}
   w.close();
  }
+});
+test('local withdrawal persists while administrative suspension does not change consent',async()=>{
+ const f=await fixture(),w=f.w;
+ w.orevamiAutomaticAds.suspend();assert.equal(w.localStorage.getItem('orevami.autoAdsRefused'),null);
+ w.document.getElementById('orevamiWithdrawAdsConsent').click();assert.equal(w.localStorage.getItem('orevami.autoAdsRefused'),'1');
+ assert(w.document.cookie.includes('orevami_auto_ads_refused=1'));assert.equal(f.mounts,0);w.close();
+});
+test('preferences do not invent acceptance without CMP; explicit CMP reconsent clears local refusal only',async()=>{
+ const f=await fixture(),w=f.w;
+ const button=w.document.getElementById('orevamiAdsPreferences');button.click();assert.match(w.document.getElementById('orevamiAdsConsentStatus').textContent,/CMP non configurée/);
+ w.document.getElementById('orevamiWithdrawAdsConsent').click();let callback;
+ w.__tcfapi=(cmd,_v,cb)=>{if(cmd==='addEventListener')callback=cb;};w.googlefc={callbackQueue:[],showRevocationMessage(){}};
+ button.click();const data={cmpId:300,cmpStatus:'loaded',eventStatus:'tcloaded',gdprApplies:true,tcString:'fake-test-record',vendor:{consents:{755:true}},purpose:{consents:{1:true,3:true,4:true}}};
+ callback(data,true);assert.equal(w.localStorage.getItem('orevami.autoAdsRefused'),'1');
+ callback({...data,eventStatus:'useractioncomplete'},true);assert.equal(w.localStorage.getItem('orevami.autoAdsRefused'),null);assert(!w.document.cookie.includes('orevami_auto_ads_refused=1'));assert.equal(f.mounts,0);w.close();
 });

@@ -1,3 +1,5 @@
+> **État actualisé :** la sécurisation TEST remplace les indications d’installation et de chargeur ci-dessous. La migration est appliquée uniquement dans TEST et le chargeur AdSense a été supprimé du document privé. Lire [le rapport de sécurité](automatic-ads-security-test-20261026.md) pour l’état courant.
+
 # ORÉVAMI — publicité automatique V1 (26 octobre 2026)
 
 État : préparation technique livrée, diffusion réellement verrouillée. Aucun compte ouvert, aucune annonce réelle, aucun déploiement ni SQL distant. Aucun revenu généré ou estimé.

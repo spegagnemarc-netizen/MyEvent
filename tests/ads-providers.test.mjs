@@ -1,12 +1,16 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {createAdSenseAdapter,createAdMobAdapter} from '../js/ads-providers.mjs';
-test('no fake Google ad or native adapter advertised as available',()=>{const a=createAdSenseAdapter();assert.equal(a.available(),false);assert.equal(a.initialize(),false);assert.equal(a.mount({}),false);assert.equal(createAdMobAdapter().available,false);});
-test('Google requires approved production configuration and consent from selected CMP',()=>{let listener,requests=0,removed=0;const scope={__tcfapi:(cmd,_v,cb)=>{if(cmd==='addEventListener')listener=cb;},document:{createElement:()=>({dataset:{},style:{},remove(){removed++;}}),head:{append(){requests++;}},querySelectorAll:()=>[]}};const config={environment:'production',productionAuthorized:true,publisherId:'ca-pub-1234567890123456',slotId:'1234567890',certifiedCmpId:42};const a=createAdSenseAdapter(config,scope),container={querySelector:()=>null,append(){}};assert(a.initialize());assert.equal(a.mount(container),false);const consent={listenerId:1,cmpId:42,cmpStatus:'loaded',eventStatus:'useractioncomplete',gdprApplies:true,vendor:{consents:{755:true}},purpose:{consents:{1:true,3:true,4:true}}};listener({...consent,cmpId:99},true);assert.equal(a.mount(container),false);listener(consent,true);assert(a.mount(container));assert.equal(requests,1);listener({...consent,vendor:{consents:{755:false}}},true);assert.equal(a.available(),false);assert.equal(a.mount(container),false);assert.equal(removed,1);});
-test('Preview never makes a Google request even with identifiers',()=>{const a=createAdSenseAdapter({environment:'preview',productionAuthorized:true,publisherId:'ca-pub-1234567890123456',slotId:'1234567890',certifiedCmpId:42},{__tcfapi(){throw Error('unexpected');}});assert.equal(a.initialize(),false);});
-test('withdrawal after a request stops the adapter and reloads to stop executed SDK code',()=>{
- let callback,reloads=0;
- const scope={location:{reload(){reloads++;}},__tcfapi:(cmd,_v,cb)=>{if(cmd==='addEventListener')callback=cb;},document:{createElement:()=>({dataset:{},style:{},remove(){}}),head:{append(){}},querySelectorAll:()=>[]}};
- const adapter=createAdSenseAdapter({environment:'production',productionAuthorized:true,publisherId:'ca-pub-1234567890123456',slotId:'1234567890',certifiedCmpId:42},scope);
- adapter.initialize();const data={listenerId:1,cmpId:42,cmpStatus:'loaded',eventStatus:'useractioncomplete',gdprApplies:true,vendor:{consents:{755:true}},purpose:{consents:{1:true,3:true,4:true}}};
- callback(data,true);adapter.mount({querySelector:()=>null,append(){}});callback({...data,vendor:{consents:{755:false}}},true);assert.equal(reloads,1);assert.equal(adapter.available(),false);
- adapter.destroy();callback(data,true);assert.equal(adapter.available(),false);
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createAdSenseAdapter,createAdMobAdapter} from '../js/ads-providers.mjs';
+test('private document cannot mount any advertising SDK, even with all approval flags',()=>{
+ const scope=new Proxy({}, {get(){throw Error('No window, document, storage or network access allowed');}});
+ for(const environment of ['preview','production']){
+  const adapter=createAdSenseAdapter({environment,productionAuthorized:true,isolationApproved:true,publisherId:'ca-pub-1234567890123456',slotId:'1234567890',certifiedCmpId:300},scope);
+  assert.equal(adapter.available(),false);assert.equal(adapter.initialize(),false);assert.equal(adapter.mount({}),false);adapter.destroy();assert.match(adapter.reason,/document privé/);
+ }
+ assert.equal(createAdMobAdapter().available,false);
+});
+test('private adapter contains no dormant advertising loader',()=>{
+ const source=readFileSync(new URL('../js/ads-providers.mjs',import.meta.url),'utf8');
+ assert(!/createElement|adsbygoogle|googlesyndication|fetch\s*\(|import\s*\(/.test(source));
 });

@@ -170,6 +170,8 @@
     </div>
 
     <label id="myEventAdsPrivacy" class="adPrivacy" hidden><input id="myEventAdsConsent" type="checkbox"> Autoriser la mesure agrégée des annonces ORÉVAMI (facultatif, sans profil publicitaire).</label><label id="myEventAdsAudience" class="adPrivacy" hidden>Département des publicités (facultatif, sans GPS)<input id="myEventAdsAudienceZone" maxlength="3" pattern="[0-9]{2,3}|2A|2B" placeholder="Vide : national"></label>
+    <button type="button" id="orevamiAdsPreferences">Choix publicitaires</button>
+    <span id="orevamiAdsConsentStatus" role="status">Publicités automatiques désactivées.</span>
     <button type="button" id="orevamiWithdrawAdsConsent">Refuser les publicités automatiques</button>
     <div class="socialFeed" id="socialFeed"><p class="muted" id="socialFeedEmpty">Aucune publication pour le moment.</p></div>
   </div>
@@ -1633,8 +1635,8 @@ body.myeventAdminOpen{overflow:hidden}
 <link rel="stylesheet" href="css/ads-placement.css?v=1">
 <script src="js/ads-placement.js?v=2" defer></script>
 <link rel="stylesheet" href="css/automatic-ads.css?v=1">
-<script type="module" src="js/automatic-ads-runtime.mjs?v=1"></script>
-<script type="module" src="js/automatic-ads-admin.mjs?v=1"></script>
+<script type="module" src="js/automatic-ads-runtime.mjs?v=2"></script>
+<script type="module" src="js/automatic-ads-admin.mjs?v=2"></script>
 <script src="js/activities-core.js"></script>
 <script src="js/venue-analysis-review.js"></script>
 <script src="js/activity-venue-sheet.js?v=automatic-venue-v1"></script>
