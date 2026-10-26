@@ -1,0 +1,629 @@
+[
+  {
+    "id": "le-pasturier-gap",
+    "name": "Le Pasturier",
+    "aliases": [],
+    "city": "Gap",
+    "address": "18 rue Pérolière",
+    "coordinates": [
+      44.5603045,
+      6.0799698
+    ],
+    "website": "https://www.restaurantlepasturier.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.restaurantlepasturier.com/contact-et-reservation/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Du mardi au samedi : 12 h–13 h 15 et 19 h 30–21 h 15. Fermé dimanche et lundi.",
+    "prices": "Exemples par plat : daurade 27 € ; bœuf 35 € ; tarte au citron 9,50 €.",
+    "menu_url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/",
+    "booking_url": "https://www.restaurantlepasturier.com/contact-et-reservation/",
+    "warnings": [],
+    "photo": null,
+    "hours_source_url": "https://www.restaurantlepasturier.com/contact-et-reservation/",
+    "prices_source_url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/"
+  },
+  {
+    "id": "menthe-poivree-gap",
+    "name": "La Menthe Poivrée",
+    "aliases": [],
+    "city": "Gap",
+    "address": "20 bis rue du Centre",
+    "coordinates": [
+      44.558898,
+      6.078523
+    ],
+    "website": "https://www.lamenthepoivree-gap.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/sejourner/manger/fiche-detail/la-menthe-poivree/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Office de tourisme : midi 27 €, Saveurs 40 €, Découverte 59 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Adresse, horaires saisonniers et tarifs à confirmer : les sites publics divergent (autre adresse publiée : 8 rue des 3 Frères Dorche ; site du restaurant : 25/27 €, 39 € et 58 €)."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.terresdegap.fr/sejourner/manger/fiche-detail/la-menthe-poivree/"
+  },
+  {
+    "id": "mes-elises-gap",
+    "name": "Mes Élises à Table",
+    "aliases": [],
+    "city": "Gap",
+    "address": "9 rue du Content",
+    "coordinates": null,
+    "website": "https://meselises-a-table.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://meselises-a-table.com/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Mardi–dimanche 12 h–14 h ; mercredi–samedi 19 h–22 h.",
+    "prices": "Formules 25/29 € ; dimanche 35 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Extrait indexé du site officiel : horaires et prix à reconfirmer ; page actuelle peu détaillée."
+    ],
+    "photo": null,
+    "hours_source_url": "https://meselises-a-table.com/",
+    "prices_source_url": "https://meselises-a-table.com/"
+  },
+  {
+    "id": "olivades-gap",
+    "name": "Les Olivades",
+    "aliases": [],
+    "city": "Gap",
+    "address": "10 route de Malcombe",
+    "coordinates": [
+      44.558942,
+      6.043768
+    ],
+    "website": "https://www.les-olivades-gap.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.les-olivades-gap.com/fr/restaurant/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Services à partir de 12 h et 19 h 30 ; jours à confirmer.",
+    "prices": "Midi 36 €, soir 44 €, dégustation 75 €, enfant 17 €.",
+    "menu_url": "https://www.les-olivades-gap.com/fr/restaurant/",
+    "booking_url": null,
+    "warnings": [
+      "Adresse touristique différente : 8 route de la Garde. Ouverture saisonnière à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.les-olivades-gap.com/fr/restaurant/",
+    "prices_source_url": "https://www.les-olivades-gap.com/fr/restaurant/"
+  },
+  {
+    "id": "pavillon-carina-gap",
+    "name": "Pavillon Carina",
+    "aliases": [
+      "Le Pavillon Carina"
+    ],
+    "city": "Gap",
+    "address": "27 route de Chabanas",
+    "coordinates": [
+      44.56164,
+      6.065565
+    ],
+    "website": "https://restaurantpavilloncarina.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://restaurantpavilloncarina.fr/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Site : tous les midis 12 h–14 h 30 ; lundi–samedi 19 h–22 h 30, dimanche 19 h–21 h 30.",
+    "prices": "Menu régional 25 €, choucroute 35 €, plats 19–25 €.",
+    "menu_url": "https://restaurantpavilloncarina.fr/",
+    "booking_url": null,
+    "warnings": [
+      "Horaires à confirmer : l’office de tourisme annonce une fermeture le lundi et le dimanche soir."
+    ],
+    "photo": null,
+    "hours_source_url": "https://restaurantpavilloncarina.fr/",
+    "prices_source_url": "https://restaurantpavilloncarina.fr/"
+  },
+  {
+    "id": "tiki-gap",
+    "name": "Le Tiki",
+    "aliases": [],
+    "city": "Gap",
+    "address": "28 rue Mazel",
+    "coordinates": null,
+    "website": "https://www.tiki-gap.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.tiki-gap.com/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.tiki-gap.com/menu",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Lundi–samedi 11 h–14 h et 18 h 30–22 h.",
+    "prices": "Pokés : végétarien 9,90 €, tikka 10,90 €, hawaïen 12,90 €.",
+    "menu_url": "https://www.tiki-gap.com/menu",
+    "booking_url": null,
+    "warnings": [
+      "Le site indique place de la Gavotte ; adresse à confirmer. La commande en ligne ne constitue pas une réservation de table."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.tiki-gap.com/",
+    "prices_source_url": "https://www.tiki-gap.com/menu"
+  },
+  {
+    "id": "domaine-napoleon-gap",
+    "name": "Restaurant du Domaine Napoléon",
+    "aliases": [
+      "Le Napoléon",
+      "Domaine Napoléon"
+    ],
+    "city": "Gap",
+    "address": "76 route de Grenoble",
+    "coordinates": [
+      44.582628,
+      6.082563
+    ],
+    "website": "https://www.campinglenapoleon.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.campinglenapoleon.fr/le-restaurant.htm",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Jeudi–dimanche 12 h–14 h ; lundi et mercredi–dimanche 19 h–21 h 30. Fermé mardi.",
+    "prices": null,
+    "menu_url": "https://www.campinglenapoleon.fr/le-restaurant.htm",
+    "booking_url": null,
+    "warnings": [
+      "Fermeture annoncée du 23 novembre au 6 décembre 2026 inclus. Carte annoncée août 2026 ; prix non relevés. Réservation du camping distincte des tables."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.campinglenapoleon.fr/le-restaurant.htm",
+    "prices_source_url": null
+  },
+  {
+    "id": "ethic-lunch-gap",
+    "name": "Ethic Lunch",
+    "aliases": [],
+    "city": "Gap",
+    "address": "place aux Herbes",
+    "coordinates": [
+      44.558525,
+      6.078627
+    ],
+    "website": "https://www.ethiclunch.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.ethiclunch.com/adresse-du-restaurant",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.ethiclunch.com/la-carte-de-saison",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Lundi–vendredi 9 h–15 h.",
+    "prices": null,
+    "menu_url": "https://www.ethiclunch.com/la-carte-de-saison",
+    "booking_url": null,
+    "warnings": [],
+    "photo": null,
+    "hours_source_url": "https://www.ethiclunch.com/adresse-du-restaurant",
+    "prices_source_url": null
+  },
+  {
+    "id": "belle-epoque-gap",
+    "name": "La Belle Époque",
+    "aliases": [],
+    "city": "Gap",
+    "address": "18 place aux Herbes",
+    "coordinates": [
+      44.558771,
+      6.078566
+    ],
+    "website": null,
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/la-belle-epoque/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Office de tourisme : plat 14 €, formule 18 €, régional 27 €, gourmand 39 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Site officiel et horaires non identifiés ; tarifs touristiques à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/la-belle-epoque/"
+  },
+  {
+    "id": "cafe-creme-gap",
+    "name": "Le Café Crème",
+    "aliases": [],
+    "city": "Gap",
+    "address": "5 rue du Colonel Roux",
+    "coordinates": [
+      44.558606,
+      6.079565
+    ],
+    "website": null,
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/le-cafe-creme/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Office de tourisme : burger 17,50 €, omelette 13,20 €, moules du vendredi 15,90 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Site officiel et horaires non identifiés ; tarifs touristiques à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/le-cafe-creme/"
+  },
+  {
+    "id": "petite-marmite-gap",
+    "name": "La Petite Marmite",
+    "aliases": [],
+    "city": "Gap",
+    "address": "79 rue Carnot",
+    "coordinates": [
+      44.556632,
+      6.077514
+    ],
+    "website": null,
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/la-petite-marmite/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Office de tourisme : midi 24/29 € ; soir 31/36 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Site officiel et horaires non identifiés ; tarifs touristiques à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/la-petite-marmite/"
+  },
+  {
+    "id": "bistrok-gap",
+    "name": "Le Bistrok",
+    "aliases": [
+      "Le Bistrok Gap"
+    ],
+    "city": "Gap",
+    "address": "8 avenue de Provence",
+    "coordinates": null,
+    "website": "https://lebistrok.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://lebistrok.com/restaurant-gap/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://lebistrok.com/menu-gap/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://lebistrok.com/contact/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Du mardi soir au dimanche midi ; heures non publiées dans le relevé.",
+    "prices": "Midi en semaine 19 €, plats 18–25 €, enfant 12 €.",
+    "menu_url": "https://lebistrok.com/menu-gap/",
+    "booking_url": null,
+    "warnings": [
+      "Menus consultés via extrait indexé : lecture directe impossible, prix à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": "https://lebistrok.com/contact/",
+    "prices_source_url": "https://lebistrok.com/menu-gap/"
+  },
+  {
+    "id": "auberge-pelleautier",
+    "name": "Auberge de Pelleautier",
+    "aliases": [],
+    "city": "Pelleautier",
+    "address": "83 rue de la Mairie",
+    "coordinates": [
+      44.515906,
+      6.018496
+    ],
+    "website": "https://www.auberge-de-pelleautier.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/auberge-de-pelleautier/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.auberge-de-pelleautier.com/cartes_menus_restaurant_gap_auberge_de_pelleautier/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Midi sauf mercredi ; vendredi et samedi soir.",
+    "prices": "Extrait du site : formule dès 21 €, spécialité d’octobre 31 €, Détente 36 €, enfant 16 €.",
+    "menu_url": "https://www.auberge-de-pelleautier.com/cartes_menus_restaurant_gap_auberge_de_pelleautier/",
+    "booking_url": null,
+    "warnings": [
+      "Lecture directe du site bloquée ; prix et lundi soir à confirmer."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/auberge-de-pelleautier/",
+    "prices_source_url": "https://www.auberge-de-pelleautier.com/cartes_menus_restaurant_gap_auberge_de_pelleautier/"
+  },
+  {
+    "id": "azur-freissinouse",
+    "name": "Restaurant de l’Hôtel Azur",
+    "aliases": [
+      "Hôtel Azur",
+      "Restaurant Azur"
+    ],
+    "city": "La Freissinouse",
+    "address": "quartier Saint André",
+    "coordinates": [
+      44.5417,
+      6.0131
+    ],
+    "website": "https://www.hotel-gap.com/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.hotel-gap.com/menu-hautesalpes-paca-bayard/",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Menus publiés non datés : 19/25/30/32/40 €. ",
+    "menu_url": "https://www.hotel-gap.com/menu-hautesalpes-paca-bayard/",
+    "booking_url": null,
+    "warnings": [
+      "Tarifs non datés divergents du guide Logis (24–35 €), à confirmer. Réservation hôtelière distincte."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.hotel-gap.com/menu-hautesalpes-paca-bayard/"
+  },
+  {
+    "id": "picorette-gap",
+    "name": "Picorette",
+    "aliases": [
+      "Picorette Cantine végétarienne"
+    ],
+    "city": "Gap",
+    "address": "20 bis rue Pérolière",
+    "coordinates": null,
+    "website": null,
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/toutourisme/fiche-detail/picorette-cantine-vegetarienne/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Office de tourisme : lundi–vendredi 11 h 30–14 h 30.",
+    "prices": "Plat 13 €, salé 4–13 €, sucré 1–5,50 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Horaires et prix touristiques à confirmer ; site autonome non identifié."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.terresdegap.fr/fr/sejourner/toutourisme/fiche-detail/picorette-cantine-vegetarienne/",
+    "prices_source_url": "https://www.terresdegap.fr/fr/sejourner/toutourisme/fiche-detail/picorette-cantine-vegetarienne/"
+  },
+  {
+    "id": "jump-tallard",
+    "name": "Le Jump",
+    "aliases": [],
+    "city": "Tallard",
+    "address": "700 rue Pierre Latécoère",
+    "coordinates": [
+      44.45494,
+      6.034161
+    ],
+    "website": null,
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/le-jump/",
+        "kind": "office_tourisme",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Tous les midis ; soirées selon saison, à confirmer.",
+    "prices": "Semaine hors jours fériés : plat + dessert 20 € ; plats dès 18 €.",
+    "menu_url": null,
+    "booking_url": null,
+    "warnings": [
+      "Maison de l’Air, aérodrome Gap Tallard. Source touristique : horaires du soir contradictoires ; site autonome non identifié."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/le-jump/",
+    "prices_source_url": "https://www.terresdegap.fr/fr/sejourner/manger/fiche-detail/le-jump/"
+  },
+  {
+    "id": "mas-estello-tallard",
+    "name": "Le Mas d’Estello",
+    "aliases": [],
+    "city": "Tallard",
+    "address": "612 avenue de l’Aérodrome",
+    "coordinates": [
+      44.44605,
+      6.0312581
+    ],
+    "website": "https://www.lemasdestello.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.lemasdestello.fr/en/restaurant",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "12 h–15 h et 19 h–22 h 30.",
+    "prices": "Midi en semaine : 16,90/18,90 €.",
+    "menu_url": "https://www.lemasdestello.fr/en/restaurant",
+    "booking_url": null,
+    "warnings": [
+      "Carte PDF printemps–été 2025 : tarifs à confirmer. Fermeture annoncée du 1er novembre au soir au 20 novembre 2026 inclus ; reprise le 21 à midi."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.lemasdestello.fr/en/restaurant",
+    "prices_source_url": "https://www.lemasdestello.fr/en/restaurant"
+  },
+  {
+    "id": "gm-gap",
+    "name": "Le GM",
+    "aliases": [],
+    "city": "Gap",
+    "address": "8 rue du Docteur Roubaud",
+    "coordinates": null,
+    "website": "https://www.restaurant-legm.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.restaurant-legm.fr/la-carte",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": null,
+    "prices": "Gnocchis pesto 20 €, truffe 24 €.",
+    "menu_url": "https://www.restaurant-legm.fr/la-carte",
+    "booking_url": null,
+    "warnings": [
+      "Extrait indexé officiel, lecture directe bloquée : tarifs à confirmer ; horaires introuvables."
+    ],
+    "photo": null,
+    "hours_source_url": null,
+    "prices_source_url": "https://www.restaurant-legm.fr/la-carte"
+  },
+  {
+    "id": "maison-jaune-gap",
+    "name": "La Maison Jaune",
+    "aliases": [],
+    "city": "Gap",
+    "address": "18 rue Pasteur",
+    "coordinates": null,
+    "website": "https://www.lamaison-jaune-gap.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.lamaison-jaune-gap.fr/contact",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.lamaison-jaune-gap.fr/la-carte",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Mardi–vendredi 12 h–13 h 30 et 19 h 30–21 h 45 ; samedi 12 h–13 h 30 et 19 h 30–21 h 30.",
+    "prices": "Charcuterie 8,50 €, fromage local 8 €, enfant 14,50 €.",
+    "menu_url": "https://www.lamaison-jaune-gap.fr/la-carte",
+    "booking_url": "https://www.lamaison-jaune-gap.fr/contact",
+    "warnings": [
+      "Extraits indexés officiels : lecture directe bloquée, horaires et tarifs à confirmer ; demande de réservation uniquement."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.lamaison-jaune-gap.fr/contact",
+    "prices_source_url": "https://www.lamaison-jaune-gap.fr/la-carte"
+  },
+  {
+    "id": "bouchon-gap",
+    "name": "Le Bouchon",
+    "aliases": [],
+    "city": "Gap",
+    "address": "4 La Placette",
+    "coordinates": null,
+    "website": "https://www.restaurant-lebouchon.fr/",
+    "checked_at": "2026-10-24",
+    "sources": [
+      {
+        "url": "https://www.restaurant-lebouchon.fr/contact-2",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      },
+      {
+        "url": "https://www.restaurant-lebouchon.fr/la-carte-2",
+        "kind": "site_officiel",
+        "checked_at": "2026-10-24"
+      }
+    ],
+    "hours": "Lundi–vendredi 12 h–13 h 30 et 19 h–21 h 30 ; week-end à confirmer.",
+    "prices": null,
+    "menu_url": "https://www.restaurant-lebouchon.fr/la-carte-2",
+    "booking_url": "https://www.restaurant-lebouchon.fr/contact-2",
+    "warnings": [
+      "Extraits indexés officiels : lecture directe bloquée. Prix introuvables ; demande de réservation uniquement."
+    ],
+    "photo": null,
+    "hours_source_url": "https://www.restaurant-lebouchon.fr/contact-2",
+    "prices_source_url": null
+  }
+]

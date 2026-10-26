@@ -616,6 +616,7 @@ function activityEnvironmentAllowed(){
 
 module.exports =
   async function handler(req, res) {
+    if(req.query?.restaurant_information==='1')return require('../server/restaurant-information')(req,res);
 
     if (req.method === 'POST' && req.query.mode === 'analyse-venue') {
       if(!activityEnvironmentAllowed())return send(res,404,{error:'Analyse indisponible dans cet environnement.'});

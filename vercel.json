@@ -15,7 +15,18 @@
     }
   },
   "routes": [
-    {"src":"^/server/orevami-restaurants\\.js$","status":404},
+    {
+      "src": "^/server/restaurant-information\\.js$",
+      "status": 404
+    },
+    {
+      "src": "^/api/integration-venues$",
+      "dest": "/api/search-places?restaurant_information=1"
+    },
+    {
+      "src": "^/server/orevami-restaurants\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/ads-handler\\.js$",
       "status": 404
@@ -43,5 +54,10 @@
       "src": "^/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "fix/restaurant-v2-v3-restore-20261026": false
+    }
+  }
 }
