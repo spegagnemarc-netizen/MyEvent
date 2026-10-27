@@ -57,7 +57,8 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "fix/restaurant-v2-v3-restore-20261026": false
+      "fix/restaurant-v2-v3-restore-20261026": false,
+      "fix/restaurant-parity-20261027": false
     }
   }
 }

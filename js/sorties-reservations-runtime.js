@@ -222,6 +222,7 @@ function renderOutingResults(){
   const arr=outingResultsData.filter(p=>{
     const cat=outingCategory(p.type);
     const okCat=outingFilter==='all'||cat===outingFilter;
+    if(cat==='restaurant'&&window.MyEventPlaceCard.matchesRestaurant)return okCat&&window.MyEventPlaceCard.matchesRestaurant(p,q,max);
     const hay=(String(p.name||'')+' '+String(p.type||'')+' '+String(p.address||'')).toLowerCase();
     const okQ=!q||hay.includes(q);
     const price=Number(p.price);
@@ -232,7 +233,7 @@ function renderOutingResults(){
   const status=$('outingMsg');
   if(status)status.textContent=arr.length+' résultat'+(arr.length>1?'s':'');
 
-  el.innerHTML=arr.slice(0,30).map(p=>{
+  el.innerHTML=arr.filter((p,index)=>index<30||outingCategory(p.type)==='restaurant').map(p=>{
     const selected=isSelectedOuting(p);
     if(outingCategory(p.type)==='restaurant'&&p.source!=='viator'&&window.MyEventPlaceCard?.restaurantMiniature)return window.MyEventPlaceCard.restaurantMiniature(p,{selected});
 

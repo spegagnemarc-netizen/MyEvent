@@ -136,7 +136,7 @@ async function rpc(name,args={}){
  const result=await sb.rpc(name,args);if(id!==session())throw Error('La session a changé.');if(result.error)throw result.error;return result.data;
 }
 let savedVenueSheet=null;
-function clearPrivate(){savedVenueSheet?.destroy();savedVenueSheet=null;organizerAccessNote.hidden=true;venueWidget?.destroy();venueWidget=null;epoch++;rows=[];current=null;enabled=false;position=null;identity=session();$('act-detail').replaceChildren();$('act-editor').replaceChildren();$('act-map').hidden=true;layer?.clearLayers();if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;}
+function clearPrivate(){restaurantDiscovery?.clear();savedVenueSheet?.destroy();savedVenueSheet=null;organizerAccessNote.hidden=true;venueWidget?.destroy();venueWidget=null;epoch++;rows=[];current=null;enabled=false;position=null;identity=session();$('act-detail').replaceChildren();$('act-editor').replaceChildren();$('act-map').hidden=true;layer?.clearLayers();if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;}
 function close(){clearPrivate();panel.hidden=true;document.body.style.overflow=bodyOverflow;previousFocus?.focus();}
 async function open(){previousFocus=document.activeElement;bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';panel.hidden=false;clearPrivate();$('act-close').focus();await load();const id=new URLSearchParams(location.hash.replace(/^#/,'' )).get('activity');if(id&&/^[0-9a-f-]{36}$/i.test(id))await detail(id);}
 window.myeventOpenActivities=async()=>{await open();switchTab('discover');};
@@ -150,8 +150,10 @@ async function load(){
  if(enabled){rows=await withPhotos(await rpc('activities_list'));if(version!==epoch)return;}else rows=[];message(enabled?'':'Aucune inscription ni publication n’est activée.');render();
  }catch(error){if(version!==epoch)return;enabled=false;rows=[];$('act-gate').textContent='Activités indisponibles. Aucune inscription ni publication activée.';message(session()?'Le stockage et les droits sont indisponibles.':'Connecte-toi pour continuer.');render();}
 }
+const restaurantDiscovery=window.OrevamiRestaurantDiscovery?.attach({host:$('act-browser'),read:()=>({...filters(),active:compactGroup==='food'||discoveryType==='restaurant'||$('act-search').elements.category.value==='restaurant',tab}),onCreate:venue=>{if(!enabled){message('Connecte-toi avec un compte autorisé pour organiser une sortie.');return;}switchTab('create');editor({category:'restaurant',activity_type:'restaurant',city:venue.city||'',venue:venue.name,address:venue.address||'',latitude:venue.lat,longitude:venue.lon,venue_sheet:venue});}});
 function filters(){const f=$('act-search').elements;return {activity_type:discoveryType,city:f.city.value,category:f.category.value,date:tab==='today'?C.localDate(new Date()):f.date.value,free:f.free.checked||tab==='free',available:f.available.checked,radius:Number(f.radius.value),position,weekend:tab==='weekend',mine:tab==='mine'};}
 function render(){
+ restaurantDiscovery?.render();
  const target=$('act-list');target.replaceChildren();const filtered=C.filter(rows,filters()).filter(compactMatch);resultsCount.textContent=filtered.length+' sortie(s)';
  for(const a of filtered)target.append(compactCard(a));
  if(!filtered.length)target.append(el('p','Aucune activité disponible pour le moment.','act-status'));
@@ -159,7 +161,7 @@ function render(){
 }
 function switchTab(value){organizerAccessNote.hidden=value!=='create';venueWidget?.destroy();venueWidget=null;panel.scrollTop=0;tab=value;panel.querySelectorAll('[data-act-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.actTab===value)));$('act-browser').hidden=value==='create';$('act-editor').hidden=value!=='create';$('act-detail').hidden=true;if(value==='create')editor();else{if(value==='nearby'&&!position)message('Touchez « Utiliser ma position » pour autoriser une recherche à proximité.');render();}}
 panel.querySelectorAll('[data-act-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.actTab)));
-$('act-search').addEventListener('submit',async e=>{e.preventDefault();await load();});
+$('act-search').addEventListener('submit',async e=>{e.preventDefault();await load();await restaurantDiscovery?.search();});
 $('act-gps').addEventListener('click',()=>{if(!navigator.geolocation){message('Géolocalisation indisponible. Recherchez par ville.');return;}const version=epoch;message('Autorisez la localisation dans votre navigateur pour rechercher autour de vous.');navigator.geolocation.getCurrentPosition(p=>{if(panel.hidden||version!==epoch)return;position={lat:p.coords.latitude,lon:p.coords.longitude};$('act-location-clear').hidden=false;message('Position utilisée pour cette recherche uniquement. Les points affichés restent approximatifs.');render();},()=>{if(version===epoch)message('Position non disponible. Vous pouvez chercher par ville.');},{enableHighAccuracy:false,timeout:12000,maximumAge:60000});});
 $('act-location-clear').addEventListener('click',()=>{position=null;$('act-location-clear').hidden=true;message('Position effacée.');render();});
 $('act-map-toggle').addEventListener('click',()=>{$('act-map').hidden=!$('act-map').hidden;$('act-map-toggle').setAttribute('aria-pressed',String(!$('act-map').hidden));render();});
