@@ -9,14 +9,15 @@ module.exports = ({ config }) => {
   return {
     ...config,
     name: release ? 'ORÉVAMI' : testPrivate ? 'ORÉVAMI TEST' : config.name,
+    version: release ? '1.0.0' : config.version,
     slug: release ? 'myevent-mobile' : config.slug,
     icon: './src/assets/orevami-icon.png',
     ios: { ...config.ios, bundleIdentifier: release ? 'app.myevent.mobile' : config.ios.bundleIdentifier },
     android: { ...config.android, package: release ? 'app.myevent.mobile' : config.android.package,
-      ...(release ? { allowBackup: false, blockedPermissions: [
-  'android.permission.SYSTEM_ALERT_WINDOW',
-  'android.permission.ACTIVITY_RECOGNITION'
-] } : {}),
+      ...(release ? { versionCode: 3, allowBackup: false, blockedPermissions: [
+        'android.permission.SYSTEM_ALERT_WINDOW',
+        'android.permission.ACTIVITY_RECOGNITION'
+      ] } : {}),
       adaptiveIcon: { foregroundImage: './src/assets/orevami-icon.png', backgroundColor: '#07131c' } },
     plugins: [...config.plugins.filter(plugin => (Array.isArray(plugin) ? plugin[0] : plugin) !== 'expo-splash-screen'), ['expo-splash-screen', {
       image: './src/assets/orevami-icon.png', imageWidth: 180,
