@@ -13,7 +13,10 @@ module.exports = ({ config }) => {
     icon: './src/assets/orevami-icon.png',
     ios: { ...config.ios, bundleIdentifier: release ? 'app.myevent.mobile' : config.ios.bundleIdentifier },
     android: { ...config.android, package: release ? 'app.myevent.mobile' : config.android.package,
-      ...(release ? { allowBackup: false, blockedPermissions: ['android.permission.SYSTEM_ALERT_WINDOW'] } : {}),
+      ...(release ? { allowBackup: false, blockedPermissions: [
+  'android.permission.SYSTEM_ALERT_WINDOW',
+  'android.permission.ACTIVITY_RECOGNITION'
+] } : {}),
       adaptiveIcon: { foregroundImage: './src/assets/orevami-icon.png', backgroundColor: '#07131c' } },
     plugins: [...config.plugins.filter(plugin => (Array.isArray(plugin) ? plugin[0] : plugin) !== 'expo-splash-screen'), ['expo-splash-screen', {
       image: './src/assets/orevami-icon.png', imageWidth: 180,
