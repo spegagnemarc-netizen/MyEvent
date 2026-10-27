@@ -9,7 +9,7 @@
   }
   function detailsButton(p,label='Voir horaires, carte et réservations'){
     const restaurant=p.type==='restaurant'||p.category==='restaurant';
-    return restaurant?'<button type="button" data-restaurant-details="'+esc(JSON.stringify({...Object.fromEntries(['id','name','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','website_verified','prices','menu_url','booking_url','booking_method','booking_verified','sources','checked_at','restaurant_information','authorized_photos','restaurant_catalog'].map(k=>[k,p[k]])),category:'restaurant'}))+'">'+esc(label)+'</button>':'';
+    return restaurant?'<button type="button" data-restaurant-details="'+esc(JSON.stringify({...Object.fromEntries(['id','name','description','cuisine','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','website_verified','prices','menu_url','booking_url','booking_method','booking_verified','sources','checked_at','restaurant_information','authorized_photos','restaurant_catalog'].map(k=>[k,p[k]])),category:'restaurant'}))+'">'+esc(label)+'</button>':'';
   }
   function websiteAllowed(p){return !!url(p.website)&&(p.website_verified===true||p.restaurant_catalog?.website_verified===true&&p.restaurant_catalog?.information?.website===p.website);}
   function photoAllowed(photo){
@@ -29,7 +29,7 @@
   }
   function accordion(p){
     if(!['restaurant','fast_food'].includes(p.type||p.category))return '';
-    const data=esc(JSON.stringify(Object.fromEntries(['id','name','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','website_verified','prices','menu_url','booking_url','booking_method','booking_verified','sources','checked_at','restaurant_information','authorized_photos','restaurant_catalog'].map(k=>[k,p[k]]))));
+    const data=esc(JSON.stringify(Object.fromEntries(['id','name','description','cuisine','city','address','lat','lon','website','phone','opening_hours','source','source_url','retrieved_at','distance','website_verified','prices','menu_url','booking_url','booking_method','booking_verified','sources','checked_at','restaurant_information','authorized_photos','restaurant_catalog'].map(k=>[k,p[k]]))));
     return '<details class="restaurantAccordion" data-restaurant-accordion="'+data+'"><summary>Horaires, menus et réservation <span aria-hidden="true">⌄</span></summary><div class="restaurantAccordionBody">'+(p.opening_hours?'<p>Horaires : '+esc(p.opening_hours)+'</p>':'')+officialDetails(p)+detailsButton(p)+'</div></details>';
   }
   function content(p){

@@ -34,16 +34,19 @@
   const discoveryPending=new Map(),discoveryQueue=[];let discoveryActive=0;
   function scheduleDiscovery(task){return new Promise((resolve,reject)=>{discoveryQueue.push({task,resolve,reject});pumpDiscovery();});}
   function pumpDiscovery(){while(discoveryActive<2&&discoveryQueue.length){const job=discoveryQueue.shift();discoveryActive++;Promise.resolve().then(job.task).then(job.resolve,job.reject).finally(()=>{discoveryActive--;pumpDiscovery();});}}
-  const storageKey='orevami-restaurant-discovery-v7';
+  const storageKey='orevami-restaurant-discovery-v8';
   function readStored(){try{const raw=root.localStorage?.getItem(storageKey);return raw&&raw.length<1000000?JSON.parse(raw):{};}catch{return {};}}
   async function enrich(venue){
+    // Public editorial facts are already available: no discovery or site call needed.
+    if(venue?.restaurant_catalog?.information)return {...venue.restaurant_catalog.information,website_verified:venue.restaurant_catalog.website_verified===true};
+    if(venue?.restaurant_information?.status==='available')return venue.restaurant_information;
     if(!venue||typeof venue.name!=='string'||!Number.isFinite(venue.lat)||!Number.isFinite(venue.lon))return load(venue?.website,{catalog:venue?.restaurant_catalog});
     const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.address||'',venue.city||'',venue.website||'']);
     const stored=readStored(),hit=stored[key];if(hit&&Number.isFinite(hit.expires)&&hit.expires>Date.now())return hit.value;
     if(discoveryPending.has(key))return discoveryPending.get(key);
     if(discoveryPending.size>=20)return {status:'unavailable',website:null,website_verified:false,notice:'Consultation différée : limite atteinte.'};
     const task=scheduleDiscovery(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-      try{const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,address:venue.address,city:venue.city,website:venue.website,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}catch{}finally{clearTimeout(timer);}
+      try{if(!venue.website){const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,address:venue.address,city:venue.city,website:venue.website,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}}catch{}finally{clearTimeout(timer);}
       const website=venue.website||discovery.website;
       const checked=discovery.website_verified&&discovery.information?{...discovery.information,website_verified:true}:await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
       const base=venue.restaurant_catalog?.information?{...venue.restaurant_catalog.information,website_verified:checked.website_verified}:checked;
@@ -56,14 +59,15 @@
       return value;
     }).finally(()=>discoveryPending.delete(key));discoveryPending.set(key,task);return task;
   }
-  function applyInformation(venue,info){
+  function applyInformation(venue,info={}){
     if(info.status!=='available'&&info.website_verified!==true)return venue;
-    return {...venue,website:info.website_verified===true?info.website:venue.restaurant_catalog?.information?.website||null,website_verified:info.website_verified===true,authorized_photos:info.authorized_photos?.length?info.authorized_photos:venue.authorized_photos,restaurant_information:info,sources:info.sources||venue.sources,
-      phone:venue.phone||info.phone||null,
-      opening_hours:(info.opening_hours||[]).map(h=>h.heading+' : '+h.text).join(' · ')||venue.opening_hours,
-      prices:(info.prices||[]).map(p=>p.text).join(' · ')||venue.prices,
-      menu_url:info.menus?.[0]?.url||venue.menu_url,
-      booking_url:info.booking_links?.[0]?.url||venue.booking_url,booking_verified:false};
+    const text=rows=>(Array.isArray(rows)?rows:[]).map(p=>[p.heading,p.text].filter(Boolean).join(' : ')).filter(Boolean).join(' · ');
+    const sources=[...new Map([...(venue.sources||[]),...(info.sources||[])].map(s=>[JSON.stringify(s),s])).values()];
+    return {...venue,description:info.description||venue.description,website:info.website_verified===true&&info.website?info.website:venue.website,
+      website_verified:info.website_verified===true||venue.website_verified===true,authorized_photos:info.authorized_photos?.length?info.authorized_photos:venue.authorized_photos,restaurant_information:info,sources,
+      phone:venue.phone||info.phone||null,opening_hours:text(info.opening_hours)||venue.opening_hours,
+      prices:text(info.prices)||venue.prices,menu_url:info.menus?.[0]?.url||venue.menu_url,
+      booking_url:info.booking_links?.[0]?.url||venue.booking_url,booking_verified:false,checked_at:info.checked_at||venue.checked_at};
   }
   let observed=0;
   const observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{
@@ -80,15 +84,17 @@
     const accordion=event.target;if(!accordion.matches?.('[data-restaurant-accordion]')||!accordion.open||accordion.dataset.loaded)return;
     accordion.dataset.loaded='loading';const body=accordion.querySelector('.restaurantAccordionBody'),status=document.createElement('p');status.textContent='Chargement des informations…';body.append(status);
     try{
-      const venue=JSON.parse(accordion.dataset.restaurantAccordion),info=await load(venue.website,{catalog:venue.restaurant_catalog});
+      const venue=JSON.parse(accordion.dataset.restaurantAccordion),info=await enrich(venue),updated=applyInformation(venue,info);
       const fragment=document.createDocumentFragment(),line=text=>{const p=document.createElement('p');p.textContent=text;fragment.append(p);};
       const link=(label,value)=>{let u;try{u=new URL(value);}catch{return;}if(!['https:','http:'].includes(u.protocol)||u.username||u.password)return;const p=document.createElement('p'),a=document.createElement('a');a.textContent=label;a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';p.append(a);fragment.append(p);};
-      line('Horaires : '+((info.opening_hours||[]).map(h=>h.heading+' : '+h.text).join(' · ')||'Information non disponible'));
-      line('Tarifs : '+((info.prices||[]).map(p=>p.text).join(' · ')||'Information non disponible'));
-      if(!info.menus?.length)line('Menu : Information non disponible');
-      for(const m of info.menus||[])link(m.label||'Carte / menu',m.url);
-      if(!info.booking_links?.length)line('Réservation : Information non disponible');
-      for(const b of info.booking_links||[])link('Consulter la réservation · site déclaré',b.url);
+      const missing=[];
+      if(updated.opening_hours)line('Horaires : '+updated.opening_hours);else missing.push('horaires');
+      if(updated.prices)line('Tarifs : '+updated.prices);else missing.push('tarifs');
+      const menus=info.menus?.length?info.menus:updated.menu_url?[{url:updated.menu_url,label:'Consulter la carte publiée'}]:[];
+      for(const m of menus)link(m.label||'Carte / menu',m.url);if(!menus.length)missing.push('menu');
+      const bookings=info.booking_links?.length?info.booking_links:updated.booking_url?[{url:updated.booking_url}]:[];
+      for(const b of bookings)link('Consulter la réservation · site déclaré',b.url);if(!bookings.length)missing.push('réservation');
+      if(missing.length)line('Informations absentes des sources consultées : '+missing.join(', ')+'.');
       line(info.notice||'Aucune disponibilité ni réservation confirmée.');
       for(const warning of info.warnings||[])line('À confirmer : '+warning);
       for(const source of info.sources||[]){link(source.type||'Source',source.url);const date=Date.parse(source.checked_at);line('Consulté : '+(Number.isFinite(date)?new Date(date).toLocaleDateString('fr-FR'):'date non disponible'));}
