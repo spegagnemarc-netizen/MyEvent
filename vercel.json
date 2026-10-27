@@ -59,7 +59,8 @@
     "deploymentEnabled": {
       "fix/restaurant-v2-v3-restore-20261026": false,
       "fix/restaurant-parity-20261027": false,
-      "fix/restaurant-sheet-information-20261027": false
+      "fix/restaurant-sheet-information-20261027": false,
+      "fix/restaurant-enrichment-official-20261027": false
     }
   }
 }

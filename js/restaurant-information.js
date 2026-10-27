@@ -14,7 +14,7 @@
   const cache=new Map(),pending=new Map(),queue=[];let active=0;
   function drain(){while(active<2&&queue.length){active++;const job=queue.shift();job().finally(()=>{active--;drain();});}}
   async function load(website,{signal,catalog,venue,identity}={}){
-    if(venue)return enrich(venue);
+    if(venue)return enrich(venue,{complete:true});
     if(catalog?.information)return catalog.information;
     if(!website)return fetchInformation(null);
     let key;try{const u=new URL(website);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();u.hash='';key=u.href+'|'+JSON.stringify(identity||{});}catch{return fetchInformation(null);}
@@ -34,27 +34,38 @@
   const discoveryPending=new Map(),discoveryQueue=[];let discoveryActive=0;
   function scheduleDiscovery(task){return new Promise((resolve,reject)=>{discoveryQueue.push({task,resolve,reject});pumpDiscovery();});}
   function pumpDiscovery(){while(discoveryActive<2&&discoveryQueue.length){const job=discoveryQueue.shift();discoveryActive++;Promise.resolve().then(job.task).then(job.resolve,job.reject).finally(()=>{discoveryActive--;pumpDiscovery();});}}
-  const storageKey='orevami-restaurant-discovery-v8';
+  const storageKey='orevami-restaurant-discovery-v9';
   function readStored(){try{const raw=root.localStorage?.getItem(storageKey);return raw&&raw.length<1000000?JSON.parse(raw):{};}catch{return {};}}
-  async function enrich(venue){
-    // Public editorial facts are already available: no discovery or site call needed.
-    if(venue?.restaurant_catalog?.information)return {...venue.restaurant_catalog.information,website_verified:venue.restaurant_catalog.website_verified===true};
-    if(venue?.restaurant_information?.status==='available')return venue.restaurant_information;
+  function mergeInformation(known,extra){
+    if(!known)return extra;
+    if(extra?.website_verified!==true)return known;
+    const merged={...extra,...known,website:known.website||extra.website,website_verified:known.website_verified===true||extra.website_verified===true};
+    for(const field of ['description','phone'])merged[field]=known[field]||extra[field]||null;
+    if(!known.description&&extra.description)merged.description_source=extra.description_source||{url:extra.website,checked_at:extra.checked_at};
+    for(const field of ['opening_hours','menus','prices','booking_links'])merged[field]=known[field]?.length?known[field]:extra[field]||[];
+    merged.sources=[...new Map([...(known.sources||[]),...(extra.sources||[])].map(v=>[JSON.stringify(v),v])).values()];
+    merged.warnings=[...new Set([...(known.warnings||[]),...(extra.warnings||[])])];return merged;
+  }
+  async function enrich(venue,{complete=false}={}){
+    const known=venue?.restaurant_catalog?.information?{...venue.restaurant_catalog.information,website_verified:venue.restaurant_catalog.website_verified===true}:venue?.restaurant_information?.status==='available'?venue.restaurant_information:null;
+    if(known&&!complete)return known;
+    if(known&&known.description&&(venue.phone||known.phone)&&known.opening_hours?.length&&known.prices?.length&&known.menus?.length&&known.booking_links?.length)return known;
     if(!venue||typeof venue.name!=='string'||!Number.isFinite(venue.lat)||!Number.isFinite(venue.lon))return load(venue?.website,{catalog:venue?.restaurant_catalog});
-    const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.address||'',venue.city||'',venue.website||'']);
+    const key=JSON.stringify([venue.name,venue.lat,venue.lon,venue.address||'',venue.city||'',venue.website||'',complete]);
     const stored=readStored(),hit=stored[key];if(hit&&Number.isFinite(hit.expires)&&hit.expires>Date.now())return hit.value;
     if(discoveryPending.has(key))return discoveryPending.get(key);
     if(discoveryPending.size>=20)return {status:'unavailable',website:null,website_verified:false,notice:'Consultation différée : limite atteinte.'};
     const task=scheduleDiscovery(async()=>{let discovery={photos:[],sources:[]};const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
       try{if(!venue.website){const r=await fetch('/api/integration-venues?mode=restaurant-discovery',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:venue.name,address:venue.address,city:venue.city,website:venue.website,lat:venue.lat,lon:venue.lon}),signal:controller.signal});if(r.ok)discovery=await r.json();}}catch{}finally{clearTimeout(timer);}
-      const website=venue.website||discovery.website;
-      const checked=discovery.website_verified&&discovery.information?{...discovery.information,website_verified:true}:await load(website,{catalog:venue.restaurant_catalog?.website_verified===true?venue.restaurant_catalog:null,identity:venue});
-      const base=venue.restaurant_catalog?.information?{...venue.restaurant_catalog.information,website_verified:checked.website_verified}:checked;
+      const website=venue.website||known?.website||discovery.website;
+      const checked=discovery.website_verified&&discovery.information?{...discovery.information,website_verified:true}:await load(website,{identity:venue});
+      const base=mergeInformation(known,checked);
       const verified=venue.website_verified===true&&venue.website===website||venue.restaurant_catalog?.website_verified===true&&!!venue.restaurant_catalog?.information?.website&&venue.restaurant_catalog.information.website===website||base.website_verified===true;
-      const value={...base,website:verified?website:null,website_verified:verified,authorized_photos:(discovery.photos||[]).filter(p=>root.MyEventPlaceCard?.photoAllowed(p)),sources:[...(base.sources||[]),...(discovery.sources||[])]};
+      const value={...base,website:verified?website:null,website_verified:verified,authorized_photos:[...(base.authorized_photos||[]),...(discovery.photos||[])].filter(p=>root.MyEventPlaceCard?.photoAllowed(p)),sources:[...(base.sources||[]),...(discovery.sources||[])]};
+      if(!website&&discovery.candidate_url)value.notice='Site candidat trouvé, mais identité du restaurant non confirmée. Données existantes conservées.';
       // Cache successful, sourced facts for 6 h, including provenance. Negative results 5 min.
       if(value.authorized_photos.length)value.status='available';
-      const current=readStored();current[key]={value,expires:Date.now()+(value.website_verified===true?21600000:300000)};
+      const current=readStored();current[key]={value,expires:Date.now()+(checked.website_verified===true?21600000:300000)};
       try{const rows=Object.entries(current).filter(([,v])=>v.expires>Date.now()).slice(-100);root.localStorage?.setItem(storageKey,JSON.stringify(Object.fromEntries(rows)));}catch{}
       return value;
     }).finally(()=>discoveryPending.delete(key));discoveryPending.set(key,task);return task;
@@ -63,7 +74,7 @@
     if(info.status!=='available'&&info.website_verified!==true)return venue;
     const text=rows=>(Array.isArray(rows)?rows:[]).map(p=>[p.heading,p.text].filter(Boolean).join(' : ')).filter(Boolean).join(' · ');
     const sources=[...new Map([...(venue.sources||[]),...(info.sources||[])].map(s=>[JSON.stringify(s),s])).values()];
-    return {...venue,description:info.description||venue.description,website:info.website_verified===true&&info.website?info.website:venue.website,
+    return {...venue,description:info.description||venue.description,description_source:info.description_source||venue.description_source,website:info.website_verified===true&&info.website?info.website:venue.website,
       website_verified:info.website_verified===true||venue.website_verified===true,authorized_photos:info.authorized_photos?.length?info.authorized_photos:venue.authorized_photos,restaurant_information:info,sources,
       phone:venue.phone||info.phone||null,opening_hours:text(info.opening_hours)||venue.opening_hours,
       prices:text(info.prices)||venue.prices,menu_url:info.menus?.[0]?.url||venue.menu_url,
@@ -84,7 +95,7 @@
     const accordion=event.target;if(!accordion.matches?.('[data-restaurant-accordion]')||!accordion.open||accordion.dataset.loaded)return;
     accordion.dataset.loaded='loading';const body=accordion.querySelector('.restaurantAccordionBody'),status=document.createElement('p');status.textContent='Chargement des informations…';body.append(status);
     try{
-      const venue=JSON.parse(accordion.dataset.restaurantAccordion),info=await enrich(venue),updated=applyInformation(venue,info);
+      const venue=JSON.parse(accordion.dataset.restaurantAccordion),info=await enrich(venue,{complete:true}),updated=applyInformation(venue,info);
       const fragment=document.createDocumentFragment(),line=text=>{const p=document.createElement('p');p.textContent=text;fragment.append(p);};
       const link=(label,value)=>{let u;try{u=new URL(value);}catch{return;}if(!['https:','http:'].includes(u.protocol)||u.username||u.password)return;const p=document.createElement('p'),a=document.createElement('a');a.textContent=label;a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';p.append(a);fragment.append(p);};
       const missing=[];
@@ -111,5 +122,5 @@
       sheet.open(venue);
     }catch{button.textContent='Information non disponible';}
   });
-  root.OrevamiRestaurantInformation=Object.freeze({load,enrich,applyInformation});
+  root.OrevamiRestaurantInformation=Object.freeze({load,enrich,applyInformation,mergeInformation});
 })(window);

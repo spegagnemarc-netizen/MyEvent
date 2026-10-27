@@ -8,7 +8,7 @@ test('targeted restoration: 20 sourced restaurants, V3 → V2 → accordion, pre
  const dom=new JSDOM('<div id="outingResults"></div><div id="outingMsg"></div><input id="outingMaxBudget" value="0">',{url:'https://preview.invalid',runScripts:'outside-only'});
  try{
  const catalog=require('../data/restaurant-catalog-gap.json');assert.equal(catalog.length,20);
- assert.equal(read('data/restaurant-catalog-gap.json'),cp.execFileSync('git',['show','213c203:data/restaurant-catalog-gap.json'],{encoding:'utf8'}));
+ const historical=JSON.parse(cp.execFileSync('git',['show','213c203:data/restaurant-catalog-gap.json'],{encoding:'utf8'}));assert.deepEqual(catalog.map(({description,description_source_url,description_checked_at,...facts})=>facts),historical);
  const features=catalog.map((r,i)=>({properties:{place_id:String(i),name:r.name,city:r.city,formatted:r.address,lat:r.coordinates?.[0]??44.55907,lon:r.coordinates?.[1]??6.07967}}));
  let providerMocks=0;const {results}=await require('../lib/geoapify-restaurants').searchRestaurants({lat:44.55907,lon:6.07967,radius:20},{key:'fixture',fetchImpl:async()=>{providerMocks++;return {ok:true,json:async()=>({features})};}});
  assert.equal(providerMocks,1);assert.equal(results.length,20);assert.equal(results.filter(r=>r.restaurant_catalog).length,20);

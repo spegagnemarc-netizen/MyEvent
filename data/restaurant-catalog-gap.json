@@ -30,7 +30,10 @@
     "warnings": [],
     "photo": null,
     "hours_source_url": "https://www.restaurantlepasturier.com/contact-et-reservation/",
-    "prices_source_url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/"
+    "prices_source_url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/",
+    "description": "Restaurant au cœur de Gap proposant une cuisine de saison à partir de produits frais et locaux, inspirée du terroir des Hautes-Alpes.",
+    "description_source_url": "https://www.restaurantlepasturier.com/carte-tradtionnelle-et-de-saison/",
+    "description_checked_at": "2026-10-27"
   },
   {
     "id": "menthe-poivree-gap",
