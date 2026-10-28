@@ -8,6 +8,7 @@ module.exports = ({ config }) => {
   }
   return {
     ...config,
+    ...(release ? { extra: { ...config.extra, eas: { ...config.extra?.eas, projectId: '643c0641-f24a-439d-af9f-bd3f75c77b29' } } } : {}),
     name: release ? 'ORÉVAMI' : testPrivate ? 'ORÉVAMI TEST' : config.name,
     version: release ? '1.0.0' : config.version,
     slug: release ? 'myevent-mobile' : config.slug,
