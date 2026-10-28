@@ -21,7 +21,7 @@
       "status": 404
     },
     {
-      "src": "^/server/search-(accommodation|transport)\\.js$",
+      "src": "^/server/search-(accommodation|transport|ticketmaster)\\.js$",
       "status": 404
     },
     {

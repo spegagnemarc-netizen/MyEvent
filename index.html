@@ -1457,6 +1457,14 @@
 <div id="myeventTicketModal" hidden role="dialog" aria-modal="true" aria-labelledby="myeventTicketTitle">
   <section class="myeventTicketDialog" tabindex="-1">
     <header class="myeventTicketHead"><h2 id="myeventTicketTitle">🎫 Billetterie</h2><button type="button" id="myeventTicketClose" aria-label="Fermer la billetterie">×</button></header>
+    <section id="ticketmasterDiscovery" aria-labelledby="ticketmasterTitle">
+      <h3 id="ticketmasterTitle">Événements en France · Ticketmaster</h3>
+      <p>Découvre des concerts, spectacles et événements sportifs. Les billets, disponibilités et paiements se vérifient sur Ticketmaster ; aucun achat ne s’effectue dans ORÉVAMI.</p>
+      <form><label>Artiste ou événement<input name="q" maxlength="100" type="search" placeholder="Tous les événements"></label><label>Ville en France<input name="city" maxlength="100" placeholder="Toutes les villes"></label><button type="submit">Rechercher sur Ticketmaster</button></form>
+      <p role="status" aria-live="polite">Lance une recherche pour découvrir les événements.</p>
+      <div data-results></div>
+    </section>
+    <h3>Autre partenaire · TicketNetwork</h3>
     <p>Recherche des billets pour des concerts, spectacles et événements sportifs. Les résultats et achats s'ouvrent sur TicketNetwork, partenaire externe. La disponibilité dépend notamment du pays et de l'événement.</p>
     <div class="myeventTicketWidget">
 <!-- TN Search Widget --><!-- DO NOT ALTER BELOW THIS POINT --><div class='tnSearchWidget' style='width:350px;'><script type='text/javascript' src='https://s3.amazonaws.com/ticketnetwork/affiliate-widget/js/scriptsretail-stringutils.js'></script><script type='text/javascript'>function addCss(cssUrl){var fileref=document.createElement('link');fileref.setAttribute('rel', 'stylesheet');fileref.setAttribute('type', 'text/css');fileref.setAttribute('href', cssUrl);document.getElementsByTagName('head')[0].appendChild(fileref);}addCss('https://fonts.googleapis.com/css?family=Open+Sans:400italic|Montserrat:700');addCss('https://s3.amazonaws.com/ticketnetwork/affiliate-widget/css/tn-widget.css');addCss('https://use.fontawesome.com/releases/v5.8.1/css/all.css');</script><div class='tnTopBanner' style='color:#000000;'>Find tickets for your event</div><div class='tnSearchContainer '><input class='search_text' id='txtTNSearchPhrase_7goh4vw8sx' type='text' placeholder='Search by artist, team, event, etc...' /><a class='search_button' href='javascript:' id='submitSearch_7goh4vw8sx'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/search-icon.png' alt='Rechercher'/></a></div><a target='_blank' rel='noopener noreferrer' href='https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=https%3A//www.ticketnetwork.com%3Futm_source%3DCJ+Affiliate%26utm_medium%3DWidget' class='tnBottomBanner'><img src='https://s3.amazonaws.com/ticketnetwork/Widgets/Images/btm-logo.png' alt='TicketNetwork'/><span>Visit Site&nbsp;</span></a></div><script type='text/javascript'>function tn_SubmitSearch_7goh4vw8sx(){var SearchPhrase = document.getElementById('txtTNSearchPhrase_7goh4vw8sx').value;if(SearchPhrase != '') window.open('https://www.tkqlhce.com/click-101891810-10796449?sid=myevent_billetterie&url=' + escape('https://www.ticketnetwork.com/search?q='+Fixer(SearchPhrase ) +'&utm_source=CJ+Affiliate&utm_medium=Widget'),'_blank','noopener,noreferrer');}function tn_KeyDownHandler(e) { if (e == null) e = window.event;if (e.keyCode == 13) tn_SubmitSearch_7goh4vw8sx();}document.getElementById('txtTNSearchPhrase_7goh4vw8sx').onkeypress=tn_KeyDownHandler;document.getElementById('submitSearch_7goh4vw8sx').onclick=tn_SubmitSearch_7goh4vw8sx;</script><!-- TN Search box end -->
@@ -1464,6 +1472,8 @@
     <p>Affiliation CJ · Les réservations et paiements sont effectués directement auprès du partenaire.</p>
   </section>
 </div>
+<link rel="stylesheet" href="css/ticketmaster-discovery.css">
+<script src="js/ticketmaster-discovery.js" defer></script>
 <script id="myevent-ticket-controller">
 (function(){
  const trigger=document.getElementById('socialHeaderTicketsBtn'),modal=document.getElementById('myeventTicketModal'),close=document.getElementById('myeventTicketClose');
