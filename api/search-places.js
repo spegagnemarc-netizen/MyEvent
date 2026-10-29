@@ -616,6 +616,8 @@ function activityEnvironmentAllowed(){
 
 module.exports =
   async function handler(req, res) {
+    if (['restaurant-discovery','restaurant-information'].includes(req.query?.mode)) return require('../server/integration-venues')(req,res);
+
 
     if (req.method === 'POST' && req.query.mode === 'analyse-venue') {
       if(!activityEnvironmentAllowed())return send(res,404,{error:'Analyse indisponible dans cet environnement.'});
@@ -670,7 +672,7 @@ module.exports =
       async function osmActivities(){
         let data;
         try{data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}catch(_){data=await fetchNearbyOverpass(lat,lon,Math.min(radius,20),6500);}
-        return {results:data.features.map(normalizeFeature).filter(p=>p&&p.name&&!['restaurant','cafe','fast_food','bar','pub'].includes(p.type)).map(p=>({...p,distance:distanceKm(lat,lon,p.lat,p.lon),source:'openstreetmap'}))};
+        return {results:data.features.map(normalizeFeature).filter(p=>p&&p.name&&!['restaurant','fast_food'].includes(p.type)).map(p=>({...p,distance:distanceKm(lat,lon,p.lat,p.lon),source:'openstreetmap'}))};
       }
       async function bounded(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Provider timeout')),18000);})]);}finally{clearTimeout(timer);}}
       const sources=await Promise.allSettled([searchRestaurants({lat,lon,radius}),bounded(searchViator(req,lat,lon)),osmActivities()]);
@@ -680,6 +682,12 @@ module.exports =
       return send(res,sources.every(s=>s.status==='rejected')?503:200,{results,count:results.length,radius,warnings,partial:warnings.length>0,fallbackUsed:sources.some(s=>s.status==='fulfilled'&&s.value.fallbackUsed)});
     }
 
+    if (mode === 'restaurant-source-diagnostic') {
+      if(process.env.VERCEL_ENV!=='preview'||!activityEnvironmentAllowed())return send(res,404,{error:'Diagnostic réservé au TEST.'});
+      const {searchRestaurants}=require('../lib/geoapify-restaurants');
+      const data=await searchRestaurants({lat:number(req.query.lat),lon:number(req.query.lon),radius:5},{diagnostics:true});
+      return send(res,200,{sourceDiagnostics:data.sourceDiagnostics});
+    }
     if (mode === 'restaurant') {
       const {searchRestaurants}=require('../lib/geoapify-restaurants');
       try { return send(res,200,await searchRestaurants({lat:number(req.query.lat),lon:number(req.query.lon),radius:number(req.query.radius)??5})); }

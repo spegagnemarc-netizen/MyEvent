@@ -1,0 +1,10 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require('jsdom');
+test('restored compact results open the common sheet, close, reopen and delegate event selection without losing the list',async()=>{
+ const d=new JSDOM('<main><div id="outingResults"></div></main>',{url:'https://preview.invalid',runScripts:'outside-only'}),w=d.window;
+ try{w.fetch=async()=>({ok:true,json:async()=>({status:'unavailable',photos:[],sources:[]})});for(const s of ['activities-core','place-card','activity-venue-sheet','restaurant-information'])w.eval(fs.readFileSync('js/'+s+'.js','utf8'));
+ const p={id:'test-venue',name:'Établissement de test',category:'bowling_alley',type:'bowling_alley',address:'Adresse de test',lat:44.56,lon:6.08,website:'https://example.org/',phone:'0492000000'};const list=w.document.getElementById('outingResults');list.innerHTML=w.MyEventPlaceCard.restaurantMiniature(p);let adds=0;list.addEventListener('click',e=>{if(e.target.closest('[data-outing-select]'))adds++;});
+ const button=list.querySelector('[data-restaurant-details]');button.click();await new Promise(r=>setTimeout(r,0));const dialog=w.document.querySelector('dialog');assert.ok(dialog.open);assert.match(dialog.textContent,/Adresse de test/);assert.ok(dialog.querySelector('a[href="https://example.org/"]'));assert.ok(dialog.querySelector('a[href^="tel:"]'));assert.ok(dialog.querySelector('.act-place-map'));assert.equal(dialog.querySelectorAll('img').length,0);assert.match(dialog.textContent,/Aucun avis ORÉVAMI/);
+ dialog.querySelector('[aria-label="Fermer la fiche établissement"]').click();assert.equal(dialog.open,false);assert.ok(list.contains(button));button.click();await new Promise(r=>setTimeout(r,0));dialog.querySelector('.act-place-footer button').click();assert.equal(adds,1);assert.equal(dialog.open,false);assert.equal(list.querySelectorAll('.restaurantMini').length,1);
+ assert.equal(w.MyEventPlaceCard.photoAllowed({url:'https://example.org/photo.jpg'}),false);assert.equal(w.MyEventPlaceCard.url('javascript:alert(1)'), '');
+ }finally{d.window.close();}
+});

@@ -234,6 +234,7 @@ function renderOutingResults(){
 
   el.innerHTML=arr.slice(0,30).map(p=>{
     const selected=isSelectedOuting(p);
+    if(window.MyEventPlaceCard?.restaurantMiniature)return window.MyEventPlaceCard.restaurantMiniature(p,{selected});
 
     return '<div class="outingCard '+(selected?'outingCardSelected':'')+'">'+
       window.MyEventPlaceCard.content(p)+

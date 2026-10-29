@@ -15,7 +15,14 @@
     }
   },
   "routes": [
-    {"src":"^/server/orevami-restaurants\\.js$","status":404},
+    {
+      "src": "^/server/integration-venues\\.js$",
+      "status": 404
+    },
+    {
+      "src": "^/server/orevami-restaurants\\.js$",
+      "status": 404
+    },
     {
       "src": "^/server/ads-handler\\.js$",
       "status": 404
