@@ -12,7 +12,8 @@ test('Preview is pinned, no source fallback, local and production scopes remain 
  {...env,SUPABASE_URL:`https://user:password@${ref}.supabase.co`},{...env,SUPABASE_PUBLISHABLE_KEY:'sb_secret_fake'},
  {...env,SUPABASE_PUBLISHABLE_KEY:'eyJ.fake.service_role'},{...env,SUPABASE_URL:env.SUPABASE_URL+'/auth'},
  {...env,VERCEL_ENV:'something'},{...env,VERCEL_ENV:'preview',MYEVENT_ENV:'production',MYEVENT_TEST_SUPABASE_REF:''}])assert.throws(()=>supabaseEnvironment(bad));
- assert.equal(supabaseEnvironment({...env,VERCEL_ENV:'production',MYEVENT_TEST_SUPABASE_REF:''}).authStorageKey,`sb-${ref}-auth-token`);
+ assert.throws(()=>supabaseEnvironment({...env,VERCEL_ENV:'production',MYEVENT_TEST_SUPABASE_REF:''}),/Production/);
+ assert.equal(supabaseEnvironment({...env,VERCEL_ENV:'production',SUPABASE_URL:'https://nxxvadbliinhvkirqkkl.supabase.co',MYEVENT_TEST_SUPABASE_REF:''}).authStorageKey,'sb-nxxvadbliinhvkirqkkl-auth-token');
  assert.equal(supabaseEnvironment({...env,VERCEL_ENV:'development',SUPABASE_URL:'http://127.0.0.1:54321',MYEVENT_TEST_SUPABASE_REF:'local'}).projectRef,'local');
  assert.equal(checkConfig(c,ref).isolated,true);assert.throws(()=>checkConfig({...c,environment:'production'},ref));assert.throws(()=>checkConfig({...c,service_role:'secret'},ref));
 });
