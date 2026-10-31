@@ -748,13 +748,25 @@
   }
   $s('cameraEventBtn')?.addEventListener('click',openCameraEventDestination);
   window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
+  function openFeedPhoto(source){
+    const dialog=document.createElement('dialog');dialog.className='socialFeedPhotoDialog';
+    dialog.setAttribute('aria-label','Photo en grand format');
+    const close=document.createElement('button');close.type='button';close.textContent='Fermer ×';
+    const image=document.createElement('img');image.src=source;image.alt='Photo ORÉVAMI en grand format';
+    close.onclick=()=>dialog.close();
+    dialog.append(close,image);document.body.append(dialog);
+    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+    dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+    dialog.showModal();
+  }
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
     if([...($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[])].some(post=>post.dataset.cameraPostId===item.id))return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
-    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo ORÉVAMI" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
+    post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><button type="button" class="socialFeedPhoto" aria-label="Afficher la photo en grand format"><img alt="Photo ORÉVAMI" loading="lazy"></button><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
     post.querySelector('img').src=item.image;post.querySelector('.socialPostText').textContent=item.content||'📸 Nouveau moment partagé sur ORÉVAMI.';post.querySelector('.socialPostMeta span').textContent=(item.created_at?new Date(item.created_at).toLocaleString('fr-FR'):'À l’instant')+' · 📍 ORÉVAMI';
+    post.querySelector('.socialFeedPhoto').onclick=()=>openFeedPhoto(post.querySelector('.socialFeedPhoto img').src);
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
