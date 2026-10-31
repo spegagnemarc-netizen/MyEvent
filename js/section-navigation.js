@@ -80,6 +80,9 @@
   for(const [section,id] of [['events','eventsWorkspace'],['music','musicHome'],['profile','profileSettingsCard']]){
    const root=document.getElementById(id);if(root){root.prepend(header(section));if(section==='profile'){const settings=document.createElement('button');settings.type='button';settings.className='secondary';settings.textContent='Paramètres et apparence';settings.onclick=()=>{visit('profile','settings');document.getElementById('myeventAppearanceCard')?.scrollIntoView({block:'start'});};root.querySelector('.meSectionHeader').after(settings);const appearance=document.getElementById('myeventAppearanceCard');if(appearance){const internalBack=document.createElement('button');internalBack.type='button';internalBack.textContent='‹ Retour au profil';internalBack.onclick=()=>api.back();appearance.prepend(internalBack);}}}
   }
+  // Keep the existing, already-bound logout control inside the visible profile.
+  const profile=document.getElementById('profileSettingsCard'),logout=document.getElementById('logoutBtn');
+  if(profile&&logout){logout.classList.add('profileLogout');profile.querySelector('.meSectionHeader')?.after(logout);}
   const market=document.getElementById('myeventMarketplace');
   if(market){
    const marketHead=market.querySelector('.marketHeader'),identity=document.createElement('div');identity.className='meMarketplaceIdentity';const brand=marketHead.querySelector('.brand');identity.append(brand);marketHead.append(header('marketplace').querySelector('.meSectionClose'));marketHead.prepend(identity);stack=[{section:'marketplace',page:'home'}];save();history.replaceState(state(),'',url(current()));

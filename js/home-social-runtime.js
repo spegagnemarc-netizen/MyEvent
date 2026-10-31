@@ -750,6 +750,7 @@
   window.addEventListener('myevent-release-camera-microphone',()=>{if(myeventCameraStream?.getAudioTracks().length)closeMyEventCamera();});
   function renderCameraFeedPost(item,prepend=true){
     if(!item?.image)return;
+    if([...($s('socialFeed')?.querySelectorAll('[data-camera-post-id]')||[])].some(post=>post.dataset.cameraPostId===item.id))return;
     if($s('socialFeedEmpty'))$s('socialFeedEmpty').hidden=true;
     const post=document.createElement('article');post.className='socialPost';post.dataset.cameraPostId=item.id||'';
     post.innerHTML='<div class="socialPostHead"><div class="socialPostAvatar">📸</div><div class="socialPostMeta"><b>Moi</b><span></span></div></div><div class="socialPostText"></div><img alt="Photo ORÉVAMI" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-top:1px solid #2a3035;border-bottom:1px solid #2a3035"><div class="socialActions"><button type="button" class="socialLikeBtn">♡ J’aime <span>0</span></button><button type="button" class="socialCommentBtn">💬 Commenter</button><button type="button" class="socialShareBtn">↗️ Partager</button></div><div class="socialCommentBox"><input placeholder="Écrire un commentaire…"><button type="button">Envoyer</button></div>';
@@ -757,11 +758,11 @@
     prepend?$s('socialFeed')?.prepend(post):$s('socialFeed')?.append(post);
     window.myeventFeedInteractions?.attach(post);
   }
-  async function loadCameraFeedPosts(){
-    if(typeof window.myeventLoadCameraPosts!=='function')return;
-    try{const rows=await window.myeventLoadCameraPosts(30);rows.slice().reverse().forEach(item=>renderCameraFeedPost(item,true));}catch(error){console.warn('Fil caméra Supabase indisponible:',error?.message||error);}
-  }
-  setTimeout(loadCameraFeedPosts,500);
+  window.myeventCameraFeed=window.createCameraFeedRefresh({
+    context:()=>window.myeventCameraContext?.(),
+    load:()=>window.myeventLoadCameraPosts(30),
+    render:item=>renderCameraFeedPost(item,true)
+  });
   $s('cameraPublishBtn')?.addEventListener('click',async()=>{
     if(!myeventCapturedDataUrl)return;
     const button=$s('cameraPublishBtn');button.disabled=true;

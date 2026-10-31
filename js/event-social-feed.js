@@ -47,7 +47,7 @@
       $('socialFeed')?.append(post);
       window.myeventFeedInteractions?.attach(post);
     }
-    const empty=$('socialFeedEmpty');if(empty)empty.hidden=!!rows.length||!!$('socialFeed')?.querySelector('[data-camera-post-id]');
+    const empty=$('socialFeedEmpty');if(empty)empty.hidden=!!rows.length||!!$('socialFeed')?.querySelector('[data-camera-post-id]')||['loading','error'].includes($('cameraFeedStatus')?.dataset.state);
   }
   window.myeventRefreshSocialFeed=refresh;
   window.myeventViewSocialEvent=async id=>{

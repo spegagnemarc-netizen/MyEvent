@@ -4,7 +4,8 @@
     "test:marketplace": "node --test tests/marketplace.test.mjs && node tests/marketplace-rls.mjs",
     "test:games": "node --test tests/invitation-context.test.mjs tests/game-session.test.mjs && node tests/games-rls.mjs",
     "preview:games": "node tests/games-preview.mjs",
-    "test:discovery": "node --test tests/geoapify-restaurants.test.mjs tests/outings-isolation.test.mjs tests/event-weather.test.mjs tests/camera-event-selection.test.mjs tests/voice-start.test.mjs"
+    "test:discovery": "node --test tests/geoapify-restaurants.test.mjs tests/outings-isolation.test.mjs tests/event-weather.test.mjs tests/camera-event-selection.test.mjs tests/voice-start.test.mjs",
+    "test:release": "node --test tests/release-regressions.test.mjs tests/additional-games.test.mjs tests/game-session.test.mjs tests/invitation-context.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",

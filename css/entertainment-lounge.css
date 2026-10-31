@@ -141,3 +141,10 @@
 #entertainmentLounge .gl-challenge-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 18px}
 #entertainmentLounge .gl-challenge-actions .gl-secondary{margin-top:0}
 @media(max-width:360px){#entertainmentLounge .gl-challenge-actions{grid-template-columns:1fr}}
+
+/* Additional games reuse the lounge layout and safe areas. */
+#entertainmentLounge #extra-status:empty{display:none}
+#entertainmentLounge #extra-status{padding:12px;background:#102e43;border-radius:12px;color:#bcecff;overflow-wrap:anywhere}
+#entertainmentLounge .gl-header [data-extra-action=back]{width:36px;min-width:36px;margin:0;padding:0;border:0;background:none;font-size:34px}
+#entertainmentLounge .extra-item{padding:16px;border:1px solid #22445b}
+#entertainmentLounge [data-extra-action]:disabled{opacity:.45}
