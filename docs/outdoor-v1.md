@@ -6,7 +6,7 @@ Référence demandée : `d1d08bb92153c20082d1ea7498e8dd7bed99ffa2`. La Productio
 
 Audit limité : Leaflet 1.9.4 est déjà chargé ; `myeventEventsBridge` expose contexte, formulaire et sélection ; le formulaire événement possède ses invitations et sa discussion opérationnelles. La discussion propre à Activities était désactivée : elle n'a pas été recréée. Le nouveau module utilise les événements existants.
 
-Aucun module jeux, fil, musique, caméra, restaurants, marketplace, administration, mobile ou juridique modifié. L'intégration dans `index.html` ajoute seulement une feuille de style et un module. Ce dernier refuse de monter hors de la Preview liée au projet TEST `ahyyknfjsielnqyoxqgh`. Aucun code existant n'a été remplacé par une ancienne branche TEST.
+Aucun module jeux, fil, musique, caméra, restaurants, marketplace, administration, mobile ou juridique modifié. L'intégration dans `index.html` ajoute seulement une feuille de style et un module. Le candidat final autorise uniquement les couples environnement/projet vérifiés : Preview TEST `ahyyknfjsielnqyoxqgh` ou Production `nxxvadbliinhvkirqkkl`. Aucun déploiement Production n’a été effectué ; la migration devra être autorisée avant publication. Aucun code existant n'a été remplacé par une ancienne branche TEST.
 
 ## Utilisation
 
@@ -58,3 +58,6 @@ Limites de validation : les tests DOM utilisent JSDOM et un adaptateur de carte 
 Faire valider la Preview avant toute proposition de publication. Ne jamais publier cette branche TEST entière ; extraire uniquement les fichiers outdoor et les deux ajouts d'intégration sur une future base Production actualisée. Préparer et revoir séparément toute migration Production : aucune n'est autorisée ici.
 
 Pour retirer l'interface TEST, revenir au déploiement Preview précédent. Les trois nouvelles tables peuvent rester présentes et inutilisées ; ne pas supprimer de schéma ou de données dans le cadre d'un rollback web. Aucun rollback Production nécessaire.
+
+
+Finalisation : intégration isolée sur la Production `6d83eee0a7c7097b065ee6fd35ccf51aea0891ef`. Voir `docs/outdoor-finalization.md`.
