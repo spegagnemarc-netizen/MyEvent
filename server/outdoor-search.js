@@ -60,14 +60,32 @@ async function discover(params) {
     } finally {activeProvider=false;}
   });
 }
+async function calculate(params){
+ const routing=require('./outdoor-routing'),input=routing.parameters(params);
+ // The public provider budget is shared with discovery; no automatic retries in the UI.
+ if(activeProvider||Date.now()-lastProvider<2000)throw fail('Calcul occupé. Réessayez dans quelques secondes.',429);
+ activeProvider=true;lastProvider=Date.now();
+ try{
+  const query=`[out:json][timeout:20][maxsize:16777216];way(${input.bbox.map(v=>v.toFixed(5)).join(',')})[highway];out geom 5000;`;
+  let data;
+  for(const endpoint of OVERPASS){
+   if(endpoint.includes('dresel')&&(input.bbox[1]<-25||input.bbox[3]>45||input.bbox[0]<34||input.bbox[2]>72))continue;
+   if((cooling.get(endpoint)||0)>Date.now())continue;
+   try{data=await json(endpoint+'?data='+encodeURIComponent(query),25000);if(data.remark||!Array.isArray(data.elements))throw fail('Réseau incomplet.');break;}catch{data=null;cooling.set(endpoint,Date.now()+60000);}
+  }
+  if(!data)throw fail('Réseau OSM indisponible : aucun itinéraire calculé. Réessayez plus tard.');
+  const result=routing.route(data.elements,input),core=await import('../js/outdoor-core.mjs');
+  return {...result,...core.metrics(result.geometry,input.mode),source_name:'Calcul sur réseau OpenStreetMap',source_url:'https://www.openstreetmap.org/copyright',license:'ODbL-1.0',checked_at:new Date().toISOString()};
+ }finally{activeProvider=false;}
+}
 async function handler(req,res){
   if(req.method!=='GET'){res.setHeader('Allow','GET');return res.status(405).json({error:'Méthode non autorisée.'});}
   try{
     const params=new URL(req.url,'https://orevami.com').searchParams;
-    const value=params.has('commune')?await communes(params.get('commune')):await discover(params);
-    res.setHeader('Cache-Control','public, max-age=0, s-maxage=21600');
+    const value=params.get('kind')==='routing'?await calculate(params):params.has('commune')?await communes(params.get('commune')):await discover(params);
+    res.setHeader('Cache-Control',params.get('kind')==='routing'?'private, no-store':'public, max-age=0, s-maxage=21600');
     return res.status(200).json(value);
   }catch(e){res.setHeader('Cache-Control','no-store');res.setHeader('Retry-After','60');return res.status(e.status||503).json({error:e.message||'Recherche géographique indisponible.'});}
 }
 module.exports=handler;
-module.exports._test={communes,discover,cache,pending,cooling};
+module.exports._test={communes,discover,calculate,cache,pending,cooling};

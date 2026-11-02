@@ -44,12 +44,12 @@ test('TEST interface geocodes Gap, displays returned traces, filters without pro
  w.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.includes('catalog')?[]:url.includes('commune=')?{communes:url.includes('Inexistante')?[]:[{nom:'Gap',code:'05061',codeDepartement:'05',centre:{coordinates:[6.0616,44.5797]}}]}:{routes:[Core.fromOSM(relation)],notice:'Source OSM',excluded:0,limited:false}};};
  const source=(await readFile(new URL('../js/outdoor-runtime.mjs',import.meta.url),'utf8')).replace(/^import .*?;\r?\n/,'const {modes,metrics,parseGPX,exportGPX,filterRoutes,validateGeometry}=window.OutdoorCore;\n');
  await w.eval('(async()=>{'+source+'})()');await w.OrevamiOutdoor.open();const f=w.document.getElementById('od-search');f.elements.city.value='Gap (05)';await f.onsubmit({preventDefault(){}});
- const choose=[...w.document.querySelectorAll('#od-tools button')].find(b=>b.textContent==='Choisir cette commune');choose.click();await new Promise(r=>setTimeout(r,20));assert.equal(w.document.querySelectorAll('.od-card').length,1);
+ const choose=[...w.document.querySelectorAll('#od-tools button')].find(b=>b.textContent==='Choisir cette commune');choose?.click();await new Promise(r=>setTimeout(r,20));assert.equal(w.document.querySelectorAll('.od-card').length,1);
  const count=calls.filter(u=>u.includes('?lon=')).length;f.elements.activity.value='gravel';await f.onsubmit({preventDefault(){}});assert.equal(w.document.querySelectorAll('.od-card').length,0);assert.equal(calls.filter(u=>u.includes('?lon=')).length,count);
  f.elements.city.value='Inexistante';await f.onsubmit({preventDefault(){}});assert.match(w.document.getElementById('od-status').textContent,/Aucune commune/);assert.equal(w.document.querySelectorAll('.od-card').length,0);
  w.fetch=async()=>({ok:false,json:async()=>({error:'Panne simulée'})});f.elements.city.value='Lyon';await f.onsubmit({preventDefault(){}});assert.match(w.document.getElementById('od-status').textContent,/Géocodage indisponible/);
  w.fetch=async url=>url.includes('commune=')?{ok:true,json:async()=>({communes:[{nom:'Lyon',code:'69123',codeDepartement:'69',centre:{coordinates:[4.8357,45.764]}}]})}:{ok:false,json:async()=>({error:'Panne fournisseur simulée'})};
- await f.onsubmit({preventDefault(){}});[...w.document.querySelectorAll('#od-tools button')].find(b=>b.textContent==='Choisir cette commune').click();await new Promise(r=>setTimeout(r,20));
+ await f.onsubmit({preventDefault(){}});[...w.document.querySelectorAll('#od-tools button')].find(b=>b.textContent==='Choisir cette commune')?.click();await new Promise(r=>setTimeout(r,20));
  assert.match(w.document.getElementById('od-discovery-status').textContent,/Fournisseur OSM indisponible/);assert.equal(w.document.querySelectorAll('.od-card').length,0);
  }finally{w.close();}
 });
