@@ -119,8 +119,43 @@ const filterToggle=button('☷ Filtres',()=>{advanced.hidden=!advanced.hidden;fi
 mapToggle.textContent='◫ Carte';main.append(filterToggle,mapToggle);
 const cityLabel=main.querySelector('.act-search-city'),cityInput=cityLabel.querySelector('input');cityInput.type='search';cityInput.placeholder='Ville ou secteur';const cityControls=el('div',null,'act-city-controls');cityControls.append(cityInput);const searchButton=el('button','⌕');searchButton.type='submit';searchButton.setAttribute('aria-label','Rechercher les sorties dans cette ville');gps.textContent='⌖';gps.setAttribute('aria-label','Utiliser ma position');gps.title='Utiliser ma position';cityControls.append(searchButton,gps);cityLabel.append(cityControls);
 search.append(main,advanced);search.before(quickCategories);search.classList.add('act-search-compact');
-search.addEventListener('change',e=>{if(['city','radius','date','category','free','available'].includes(e.target.name)){if(e.target.name==='category'){compactGroup='all';syncQuickCategories();}render();}});
+search.addEventListener('change',e=>{if(['city','radius','date','category','free','available'].includes(e.target.name)){if(e.target.name==='category'){compactGroup='all';syncQuickCategories();}if(e.target.name==='city'){clearPlaces();}render();if(e.target.name==='radius')void findPlaces();}});
 const resultsHead=el('div',null,'act-results-head'),resultsTitle=el('h2','Sorties près de chez vous'),resultsCount=el('span','', 'act-results-count');resultsCount.setAttribute('aria-live','polite');resultsHead.append(resultsTitle,resultsCount);$('act-list').before(resultsHead);
+// National venue discovery uses the same commune field and geographic service as Outdoor.
+const placeSection=el('section'),placeHeading=el('h2','Établissements et lieux réels'),placeCategory=el('select'),placeLabel=el('label','Type de lieu'),placeStatus=el('p','Choisissez une commune ou votre position. Les sorties des membres restent affichées séparément.','act-status'),placeChoices=el('div',null,'act-toolbar'),placeList=el('div',null,'act-grid');
+placeSection.id='act-places';placeStatus.setAttribute('role','status');
+for(const [value,label] of Object.entries({bowling:'Bowling',bars:'Bars / apéro',games:'Jeux de société et loisirs ludiques',music:'Lieux de concerts / musique',culture:'Culture',leisure:'Loisirs',meeting:'Cafés et lieux de rencontre',restaurant:'Restaurants'}))placeCategory.add(new Option(label,value));
+placeLabel.append(placeCategory);placeSection.append(placeHeading,placeLabel,placeStatus,placeChoices,placeList);$('act-list').after(placeSection);
+let placeRows=[],placeEpoch=0,placeCenter=null,placeCity='',placeSheet=null;
+const placeCache=new Map();
+function clearPlaces(){placeEpoch++;placeRows=[];placeCenter=null;placeCity='';placeChoices.replaceChildren();placeList.replaceChildren();placeSheet?.destroy();placeSheet=null;placeStatus.textContent='Choisissez une commune ou votre position.';}
+async function placeJSON(url){const r=await fetch(url,{signal:AbortSignal.timeout(60000)}),data=await r.json();if(!r.ok)throw Error(data.error||'Recherche indisponible.');return data;}
+function placeCard(v){const card=el('article',null,'act-card');card.append(el('h3',v.name),el('p',v.address||v.city||'Adresse non renseignée'),el('small','© contributeurs OpenStreetMap · lieu référencé, sans événement daté'));
+ card.append(button('Voir la fiche du lieu',()=>showPlace(v),true));return card;}
+function showPlace(v){placeSheet?.destroy();placeSheet=null;if(window.OrevamiVenueSheet){placeSheet=window.OrevamiVenueSheet.create({host:placeSection,readOnly:true});placeSheet.open(v,{load:false});}else{const a=el('a','Consulter la source OpenStreetMap');a.href=v.source_url;a.target='_blank';a.rel='noopener noreferrer';placeList.replaceChildren(placeCard(v),el('p',v.opening_hours||'Horaires non renseignés'),a);}}
+async function findPlaces(){
+ const ticket=++placeEpoch,city=search.elements.city.value.trim();placeRows=[];placeChoices.replaceChildren();placeList.replaceChildren();placeSheet?.destroy();placeSheet=null;render();
+ if(tab==='mine'){placeSection.hidden=true;return;}
+ placeSection.hidden=false;
+ if(!city&&!position){placeStatus.textContent='Saisissez une commune française ou utilisez votre position.';return;}
+ const radius=Number(search.elements.radius.value);if(![5,20,50].includes(radius)){placeStatus.textContent='Pour les établissements, choisissez un rayon de 5, 20 ou 50 km. Le rayon 100 km reste disponible pour les sorties des membres.';return;}
+ try{
+  if(city&&(!placeCenter||placeCity!==city)){
+   placeCenter=null;placeStatus.textContent='Recherche de la commune…';
+   const data=await placeJSON('/api/outdoor-search?commune='+encodeURIComponent(city));if(ticket!==placeEpoch)return;
+   if(!data.communes?.length){placeStatus.textContent='Aucune commune trouvée. Essayez le code postal ou le département.';return;}
+   const select=el('select');select.setAttribute('aria-label','Commune de recherche des établissements');for(const [i,c]of data.communes.entries())select.add(new Option(c.nom+' ('+c.codeDepartement+') · INSEE '+c.code,i));
+   placeChoices.append(select,button('Choisir cette commune',()=>{const c=data.communes[Number(select.value)];placeCenter=[...c.centre.coordinates];placeCity=city;placeChoices.replaceChildren();void findPlaces();}));placeStatus.textContent='Choisissez la commune pour éviter les homonymes.';return;
+  }
+  const point=city?placeCenter:[position.lon,position.lat],category=placeCategory.value,key=[...point,radius,category].join(':');placeStatus.textContent='Recherche des lieux référencés…';
+  let data=placeCache.get(key);if(!data||Date.now()-data.fetched>21600000){data={...await placeJSON('/api/outdoor-search?kind=places&lon='+point[0]+'&lat='+point[1]+'&radius='+radius+'&category='+category),fetched:Date.now()};placeCache.set(key,data);if(placeCache.size>20)placeCache.delete(placeCache.keys().next().value);}
+  if(ticket!==placeEpoch)return;placeRows=data.places||[];
+  // Date, free and availability filters apply to dated member outings, never to venues.
+  placeList.replaceChildren(...placeRows.map(placeCard));placeStatus.textContent=placeRows.length+' lieu(x) · '+data.attribution+' · consultés le '+new Date(data.checked_at).toLocaleDateString('fr-FR')+'. '+data.notice+(data.limited?' Limite de 200 objets atteinte : réduisez le rayon.':'')+(data.excluded?' '+data.excluded+' objet(s) sans nom, coordonnées valides ou hors rayon écarté(s).':'')+' Les filtres date, gratuité et places disponibles concernent uniquement les sorties des membres.';render();
+ }catch(error){if(ticket===placeEpoch){placeStatus.textContent='Aucun résultat confirmé : '+error.message;placeRows=[];placeList.replaceChildren();render();}}
+}
+placeCategory.addEventListener('change',()=>void findPlaces());
+
 function compactMatch(a){const group=compactGroups.find(g=>g[0]===compactGroup);return compactGroup==='music'?['concert','spectacle','karaoke'].includes(a.activity_type):!group?.[3]||group[3].includes(a.category);}
 function cardArtwork(a){if(['patinoire','bowling','velo','jeux_societe'].includes(a.activity_type))return a.activity_type;if(a.category==='restaurant')return 'restaurant';if(['randonnee','famille'].includes(a.category))return 'nature';if(a.category==='culture')return 'culture';return 'sport';}
 function cardFee(a){const group=a.cost_mode==='free'?'Groupe gratuit':Number.isFinite(Number(a.cost_amount))&&Number(a.cost_amount)>0?new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(Number(a.cost_amount))+' / personne':'Tarif du groupe à confirmer';return a.venue_cost_status==='free'?group:a.venue_cost_status==='on_site'?group+' · entrée en supplément':group+' · entrée à confirmer';}
@@ -136,7 +171,7 @@ async function rpc(name,args={}){
  const result=await sb.rpc(name,args);if(id!==session())throw Error('La session a changé.');if(result.error)throw result.error;return result.data;
 }
 let savedVenueSheet=null;
-function clearPrivate(){savedVenueSheet?.destroy();savedVenueSheet=null;organizerAccessNote.hidden=true;venueWidget?.destroy();venueWidget=null;epoch++;rows=[];current=null;enabled=false;position=null;identity=session();$('act-detail').replaceChildren();$('act-editor').replaceChildren();$('act-map').hidden=true;layer?.clearLayers();if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;}
+function clearPrivate(){clearPlaces();savedVenueSheet?.destroy();savedVenueSheet=null;organizerAccessNote.hidden=true;venueWidget?.destroy();venueWidget=null;epoch++;rows=[];current=null;enabled=false;position=null;identity=session();$('act-detail').replaceChildren();$('act-editor').replaceChildren();$('act-map').hidden=true;layer?.clearLayers();if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;}
 function close(){clearPrivate();panel.hidden=true;document.body.style.overflow=bodyOverflow;previousFocus?.focus();}
 async function open(){previousFocus=document.activeElement;bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';panel.hidden=false;clearPrivate();$('act-close').focus();await load();const id=new URLSearchParams(location.hash.replace(/^#/,'' )).get('activity');if(id&&/^[0-9a-f-]{36}$/i.test(id))await detail(id);}
 window.myeventOpenActivities=async()=>{await open();switchTab('discover');};
@@ -155,15 +190,15 @@ function render(){
  const target=$('act-list');target.replaceChildren();const filtered=C.filter(rows,filters()).filter(compactMatch);resultsCount.textContent=filtered.length+' sortie(s)';
  for(const a of filtered)target.append(compactCard(a));
  if(!filtered.length)target.append(el('p','Aucune activité disponible pour le moment.','act-status'));
- if(!$('act-map').hidden)renderMap(filtered);
+ placeSection.hidden=tab==='mine';if(!$('act-map').hidden)renderMap([...filtered,...(tab==='mine'?[]:placeRows.map(v=>({...v,title:v.name,position:{lat:v.lat,lon:v.lon},_place:v})))]);
 }
 function switchTab(value){organizerAccessNote.hidden=value!=='create';venueWidget?.destroy();venueWidget=null;panel.scrollTop=0;tab=value;panel.querySelectorAll('[data-act-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.actTab===value)));$('act-browser').hidden=value==='create';$('act-editor').hidden=value!=='create';$('act-detail').hidden=true;if(value==='create')editor();else{if(value==='nearby'&&!position)message('Touchez « Utiliser ma position » pour autoriser une recherche à proximité.');render();}}
 panel.querySelectorAll('[data-act-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.actTab)));
-$('act-search').addEventListener('submit',async e=>{e.preventDefault();await load();});
-$('act-gps').addEventListener('click',()=>{if(!navigator.geolocation){message('Géolocalisation indisponible. Recherchez par ville.');return;}const version=epoch;message('Autorisez la localisation dans votre navigateur pour rechercher autour de vous.');navigator.geolocation.getCurrentPosition(p=>{if(panel.hidden||version!==epoch)return;position={lat:p.coords.latitude,lon:p.coords.longitude};$('act-location-clear').hidden=false;message('Position utilisée pour cette recherche uniquement. Les points affichés restent approximatifs.');render();},()=>{if(version===epoch)message('Position non disponible. Vous pouvez chercher par ville.');},{enableHighAccuracy:false,timeout:12000,maximumAge:60000});});
-$('act-location-clear').addEventListener('click',()=>{position=null;$('act-location-clear').hidden=true;message('Position effacée.');render();});
+$('act-search').addEventListener('submit',async e=>{e.preventDefault();await Promise.allSettled([load(),findPlaces()]);});
+$('act-gps').addEventListener('click',()=>{if(!navigator.geolocation){message('Géolocalisation indisponible. Recherchez par ville.');return;}const version=epoch;message('Autorisez la localisation dans votre navigateur pour rechercher autour de vous.');navigator.geolocation.getCurrentPosition(p=>{if(panel.hidden||version!==epoch)return;position={lat:p.coords.latitude,lon:p.coords.longitude};$('act-location-clear').hidden=false;message('Position utilisée pour cette recherche uniquement. Les points affichés restent approximatifs.');clearPlaces();render();void findPlaces();},()=>{if(version===epoch)message('Position non disponible. Vous pouvez chercher par ville.');},{enableHighAccuracy:false,timeout:12000,maximumAge:60000});});
+$('act-location-clear').addEventListener('click',()=>{position=null;clearPlaces();$('act-location-clear').hidden=true;message('Position effacée.');render();});
 $('act-map-toggle').addEventListener('click',()=>{$('act-map').hidden=!$('act-map').hidden;$('act-map-toggle').setAttribute('aria-pressed',String(!$('act-map').hidden));render();});
-function renderMap(items){if(!window.L){message('Carte indisponible. La liste reste accessible.');return;}if(!map){map=L.map($('act-map')).setView([46.6,2.4],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:16}).addTo(map);layer=L.layerGroup().addTo(map);}layer.clearLayers();const points=[];for(const a of items){if(!a.position)continue;const p=[a.position.lat,a.position.lon],label=button(a.title,()=>detail(a.id));L.marker(p).addTo(layer).bindPopup(label);points.push(p);}map.invalidateSize();if(points.length)map.fitBounds(points,{maxZoom:13,padding:[25,25]});}
+function renderMap(items){if(!window.L){message('Carte indisponible. La liste reste accessible.');return;}if(!map){map=L.map($('act-map')).setView([46.6,2.4],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:16}).addTo(map);layer=L.layerGroup().addTo(map);}layer.clearLayers();const points=[];for(const a of items){if(!a.position)continue;const p=[a.position.lat,a.position.lon],label=button(a.title,()=>a._place?showPlace(a._place):detail(a.id));L.marker(p).addTo(layer).bindPopup(label);points.push(p);}map.invalidateSize();if(points.length)map.fitBounds(points,{maxZoom:13,padding:[25,25]});}
 function editor(a={}){organizerAccessNote.hidden=false;
  venueWidget?.destroy();venueWidget=null;
  const target=$('act-editor');target.replaceChildren(el('span','VOTRE PROCHAINE SORTIE','act-step'),el('h2',a.id?'Modifier l’activité':'Créer une activité'));

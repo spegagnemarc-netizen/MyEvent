@@ -60,6 +60,26 @@ async function discover(params) {
     } finally {activeProvider=false;}
   });
 }
+async function places(params){
+ const lon=Number(params.get('lon')),lat=Number(params.get('lat')),radius=Number(params.get('radius')||20),category=params.get('category')||'meeting';
+ if(!params.has('lon')||!params.has('lat')||!Number.isFinite(lon)||!Number.isFinite(lat)||Math.abs(lon)>180||Math.abs(lat)>85||![5,20,50].includes(radius))throw fail('Localisation ou rayon invalide (5, 20 ou 50 km).',400);
+ const core=require('./activity-places'),query=core.query(category,lat,lon,radius);
+ return memo(['places',lon.toFixed(4),lat.toFixed(4),radius,category].join(':'),async()=>{
+  if(activeProvider||Date.now()-lastProvider<2000)throw fail('Recherche occupée. Réessayez dans une minute.',429);
+  activeProvider=true;lastProvider=Date.now();
+  try{
+   let data;
+   for(const endpoint of OVERPASS){
+    if(endpoint.includes('dresel')&&(lon < -25||lon > 45||lat < 34||lat > 72))continue;
+    if((cooling.get(endpoint)||0)>Date.now())continue;
+    try{data=await json(endpoint+'?data='+encodeURIComponent(query),25000);if(data.remark||!Array.isArray(data.elements))throw fail('Réponse incomplète.');break;}catch{data=null;cooling.set(endpoint,Date.now()+60000);}
+   }
+   if(!data)throw fail('Découverte des lieux OpenStreetMap indisponible. Réessayez plus tard.');
+   const checked=new Date().toISOString();
+   return {...core.normalize(data.elements,{lat,lon,radius},checked),checked_at:checked,limited:data.elements.length>=200,attribution:'© contributeurs OpenStreetMap · ODbL-1.0',notice:'Couverture communautaire non exhaustive ; lieux parfois absents ou obsolètes. Horaires déclaratifs, tarifs et ouverture à confirmer auprès du lieu. Les lieux de concert ou de jeux ne constituent pas un agenda de soirées.'};
+  }finally{activeProvider=false;}
+ });
+}
 async function calculate(params){
  const routing=require('./outdoor-routing'),input=routing.parameters(params);
  // The public provider budget is shared with discovery; no automatic retries in the UI.
@@ -82,10 +102,10 @@ async function handler(req,res){
   if(req.method!=='GET'){res.setHeader('Allow','GET');return res.status(405).json({error:'Méthode non autorisée.'});}
   try{
     const params=new URL(req.url,'https://orevami.com').searchParams;
-    const value=params.get('kind')==='routing'?await calculate(params):params.has('commune')?await communes(params.get('commune')):await discover(params);
+    const value=params.get('kind')==='routing'?await calculate(params):params.has('commune')?await communes(params.get('commune')):params.get('kind')==='places'?await places(params):await discover(params);
     res.setHeader('Cache-Control',params.get('kind')==='routing'?'private, no-store':'public, max-age=0, s-maxage=21600');
     return res.status(200).json(value);
   }catch(e){res.setHeader('Cache-Control','no-store');res.setHeader('Retry-After','60');return res.status(e.status||503).json({error:e.message||'Recherche géographique indisponible.'});}
 }
 module.exports=handler;
-module.exports._test={communes,discover,calculate,cache,pending,cooling};
+module.exports._test={communes,discover,places,calculate,cache,pending,cooling};
