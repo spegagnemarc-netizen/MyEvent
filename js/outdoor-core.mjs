@@ -22,8 +22,30 @@ export function parseGPX(text,Parser=globalThis.DOMParser){
 const xml=v=>String(v??'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
 export function exportGPX(route){validateGeometry(route.geometry);return `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="OREVAMI" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>${xml(route.name)}</name><desc>${xml(route.source_name)} — ${xml(route.source_url)} — ${xml(route.license)}</desc></metadata><trk><name>${xml(route.name)}</name>${route.geometry.coordinates.map(line=>'<trkseg>'+line.map(p=>`<trkpt lon="${p[0]}" lat="${p[1]}">${p.length===3?'<ele>'+p[2]+'</ele>':''}</trkpt>`).join('')+'</trkseg>').join('')}</trk></gpx>`;}
 export function fromOSM(element,checkedAt=new Date().toISOString()){
- const tags=element.tags||{},seen=new Set(),lines=[];for(const m of element.members||[]){if(m.type!=='way'||seen.has(m.ref)||!m.geometry?.length)continue;seen.add(m.ref);const line=m.geometry.filter(p=>Number.isFinite(p?.lat)&&Number.isFinite(p?.lon)).map(p=>[p.lon,p.lat]);if(line.length>1)lines.push(line);}
+ const tags=element.tags||{},seen=new Set(),lines=[];
+ if(element.type!=='relation'||tags.type!=='route'||!(tags.name||tags.ref))throw Error('Relation nommée requise.');
+ let incomplete=false;
+ for(const m of element.members||[]){
+  if(m.type==='relation')incomplete=true;
+  if(m.type!=='way'||seen.has(m.ref))continue;seen.add(m.ref);
+  // Never bridge missing coordinates or stitch disjoint ways into an invented line.
+  if(!m.geometry||m.geometry.length<2||m.geometry.some(p=>!Number.isFinite(p?.lat)||!Number.isFinite(p?.lon))){incomplete=true;continue;}
+  lines.push(m.geometry.map(p=>[p.lon,p.lat]));
+ }
  const geometry=validateGeometry({type:'MultiLineString',coordinates:lines});const activity=({hiking:'hike',foot:'walk',bicycle:'cycle',mtb:'mtb'})[tags.route];if(!activity)throw Error('Pratique non prise en charge.');
- return {id:'osm-'+element.id,owner_id:null,name:(tags.name||tags.ref||'Itinéraire OSM '+element.id).slice(0,160),activity,difficulty:tags.sac_scale||tags['mtb:scale']||'unknown',geometry,...metrics(geometry,activity),visibility:'public',source_name:'© contributeurs OpenStreetMap',source_url:'https://www.openstreetmap.org/relation/'+element.id,license:'ODbL-1.0',checked_at:checkedAt,description:'Itinéraire cartographié par la communauté. Segments éventuellement disjoints. Durée estimée ; accès et état du terrain à vérifier.'};
+ const declared=activity==='mtb'?tags['mtb:scale']:['hike','walk'].includes(activity)?tags.sac_scale:null;
+ const difficulty=activity==='mtb'?({'0':'easy','1':'easy','2':'moderate','3':'hard','4':'hard','5':'hard','6':'hard'}[declared]||'unknown'):({hiking:'easy',mountain_hiking:'moderate',demanding_mountain_hiking:'hard',alpine_hiking:'hard',demanding_alpine_hiking:'hard',difficult_alpine_hiking:'hard'}[declared]||'unknown');
+ return {id:'osm-'+element.id,owner_id:null,name:(tags.name||tags.ref).slice(0,160),activity,difficulty,geometry,...metrics(geometry,activity),visibility:'public',source_name:'© contributeurs OpenStreetMap',source_url:'https://www.openstreetmap.org/relation/'+element.id,license:'ODbL-1.0',checked_at:checkedAt,extent_label:incomplete?'Relation OSM · géométrie partielle':'Relation OSM · continuité non vérifiée',description:'Itinéraire cartographié par la communauté, non vérifié sur le terrain. Segments conservés séparément ; aucun raccord inventé. '+(incomplete?'Géométrie partielle : longueur des seuls segments disponibles. ':'La longueur porte sur les segments disponibles, sans garantie de complétude. ')+(declared?'Difficulté déclarée OSM : '+declared+'. ':'Difficulté non renseignée. ')+'Durée indicative, sans altitudes ; accès et état du terrain à vérifier.'};
 }
-export function filterRoutes(rows,{query='',activity='',maxKm=0,maxMinutes=0,difficulty='',center=null,radius=20}={}){return rows.filter(r=>(!query||r.name.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr')))&&(!activity||r.activity===activity)&&(!difficulty||r.difficulty===difficulty)&&(!maxKm||r.distance_km<=maxKm)&&(!maxMinutes||r.duration_min<=maxMinutes)&&(!center||r.geometry.coordinates.some(line=>line.some(p=>distance(center,p)<=radius))));}
+// Great-circle distance to each actual segment, including routes crossing the radius
+// whose end vertices are both outside. No connection between separate segments.
+export function nearGeometry(g,center,radius){
+ const bearing=(a,b)=>Math.atan2(Math.sin(rad(b[0]-a[0]))*Math.cos(rad(b[1])),Math.cos(rad(a[1]))*Math.sin(rad(b[1]))-Math.sin(rad(a[1]))*Math.cos(rad(b[1]))*Math.cos(rad(b[0]-a[0])));
+ return g.coordinates.some(line=>line.some((b,i)=>{
+  if(distance(center,b)<=radius)return true;if(!i)return false;
+  const a=line[i-1],ab=distance(a,b)/6371,ap=distance(a,center)/6371,angle=bearing(a,center)-bearing(a,b);
+  const along=Math.atan2(Math.sin(ap)*Math.cos(angle),Math.cos(ap));
+  return along>=0&&along<=ab&&Math.abs(Math.asin(Math.max(-1,Math.min(1,Math.sin(ap)*Math.sin(angle)))))*6371<=radius;
+ }));
+}
+export function filterRoutes(rows,{query='',activity='',maxKm=0,maxMinutes=0,difficulty='',center=null,radius=20}={}){return rows.filter(r=>(!query||r.name.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr')))&&(!activity||r.activity===activity)&&(!difficulty||r.difficulty===difficulty)&&(!maxKm||r.distance_km<=maxKm)&&(!maxMinutes||r.duration_min<=maxMinutes)&&(!center||nearGeometry(r.geometry,center,radius)));}
