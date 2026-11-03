@@ -459,14 +459,7 @@ async function connect(){
   }
 }
 
-async function signup(){
-  msg('authmsg','Création du compte…');
-  try{
-    const r=await sb.auth.signUp({email:$('email').value.trim(),password:$('password').value,options:{emailRedirectTo:window.myeventInvitations?.redirect()||location.origin}});
-    if(r.error) throw r.error;
-    msg('authmsg','Compte créé. Vérifie ton email puis connecte-toi.','ok');
-  }catch(e){msg('authmsg',e.message||String(e),'err')}
-}
+async function signup(){return window.orevamiRegistration.open();}
 
 async function login(){
   msg('authmsg','Connexion…');
@@ -491,7 +484,7 @@ async function requestPasswordRecovery(){
 }
 
 function renderProfile(p){
-const name=p?.display_name||p?.username||user?.email?.split('@')[0]||'Membre';
+const name=p?.display_name||p?.username||'Membre';
 $('profileName').value=p?.display_name||name;
 $('profileUsername').value=p?.username||'';
 const av=p?.avatar||'';
@@ -541,7 +534,7 @@ async function dataUrlToBlob(dataUrl){ const r=await fetch(dataUrl); return awai
 
 async function saveProfile(){
 if(!user||!sb)return;
-const name=$('profileName').value.trim()||user.email.split('@')[0];
+const name=$('profileName').value.trim()||'Membre';
 const username=$('profileUsername').value.trim()||name;
 setBusy('saveProfileBtn',true,'Enregistrement…');
 try{
@@ -596,7 +589,7 @@ async function show(u){
     if(p.error) throw new Error('Profil : '+p.error.message);
 
     if(!p.data){
-      const name=(u.email||'membre').split('@')[0];
+      const name='membre_'+u.id.slice(0,8);
       const pr=await sb.from('profiles').upsert({
         id:u.id,display_name:name,username:name
       },{onConflict:'id'}).select().single();
@@ -604,7 +597,7 @@ async function show(u){
       $('who').textContent=name;
       renderProfile({display_name:name,username:name,avatar:''});
     }else {
-      $('who').textContent=p.data.display_name||p.data.username||u.email;
+      $('who').textContent=p.data.display_name||p.data.username||'Membre';
       renderProfile(p.data);
     }
 

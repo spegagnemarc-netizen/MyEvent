@@ -473,6 +473,7 @@
     avatarHost.replaceChildren();
     if(detail.avatar&&/^https:\/\//.test(detail.avatar)){const img=document.createElement('img');img.src=detail.avatar;img.alt='';avatarHost.append(img);}else avatarHost.textContent='👤';
     actions.replaceChildren();message.textContent='';sheet.hidden=false;
+    window.orevamiMemberDetails?.(actions,detail.id);
     if(detail.id===user.id||detail.self){message.textContent='C’est votre profil.';return;}
     if(detail.eventId&&detail.ownerId===user.id&&detail.id!==detail.ownerId&&detail.hasProfile&&detail.username){
       const promote=document.createElement('button');promote.type='button';

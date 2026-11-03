@@ -1,2 +1,5 @@
 # Preserve the exact upstream bytes and hashes on Windows and Unix checkouts.
 assets/vendor/mediapipe/** -text
+
+# Preserve the recovered, pinned upstream registration SDK verbatim.
+js/vendor/supabase-registration.js -text -whitespace

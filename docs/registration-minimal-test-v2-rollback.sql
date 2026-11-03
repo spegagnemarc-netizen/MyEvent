@@ -1,0 +1,75 @@
+begin;
+DO $$ begin if current_setting('app.settings.project_ref',true) is distinct from 'ahyyknfjsielnqyoxqgh' then raise exception 'Explicit TEST target required'; end if; end $$;
+CREATE OR REPLACE FUNCTION registration_private.validate(p jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+declare d date; item text;
+begin
+ if coalesce(p->>'email','') !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' or length(p->>'email')>254 then raise exception 'Adresse e-mail invalide'; end if;
+ if coalesce(p->>'phone','') !~ '^\+[1-9][0-9]{7,14}$' then raise exception 'Téléphone international requis (ex. +336…)'; end if;
+ if coalesce(p->>'primary_method','') not in ('email','phone') then raise exception 'Choisissez la première coordonnée à vérifier'; end if;
+ if jsonb_typeof(p)<>'object' or p is null then raise exception 'Fiche invalide'; end if;
+ if length(trim(coalesce(p->>'first_name',''))) not between 1 and 80
+ or length(trim(coalesce(p->>'last_name',''))) not between 1 and 80
+ or length(trim(coalesce(p->>'city',''))) not between 1 and 100 then raise exception 'Prénom, nom et ville requis (80/80/100 caractères maximum)'; end if;
+ if coalesce(p->>'username','') !~ '^[a-zA-Z0-9_]{3,30}$' then raise exception 'Pseudo : 3 à 30 lettres sans accent, chiffres ou _'; end if;
+ if coalesce(p->>'birth_date','') !~ '^\d{4}-\d{2}-\d{2}$' then raise exception 'Date de naissance invalide'; end if;
+ d:=(p->>'birth_date')::date;
+ if d>current_date or d<current_date-interval '120 years' then raise exception 'Date de naissance invalide'; end if;
+ if p->'terms' is distinct from 'true'::jsonb or p->'privacy' is distinct from 'true'::jsonb then raise exception 'Acceptation CGU et lecture confidentialité requises'; end if;
+ if coalesce(p->>'visibility','') not in ('private','members') or jsonb_typeof(p->'marketing') is distinct from 'boolean' then raise exception 'Préférences invalides'; end if;
+ if length(coalesce(p->>'bio',''))>500 or jsonb_typeof(p->'interests') is distinct from 'array' or jsonb_array_length(p->'interests')>10 then raise exception 'Présentation : 500 caractères ; 10 intérêts maximum'; end if;
+ for item in select jsonb_array_elements_text(p->'interests') loop
+  if length(trim(item)) not between 1 and 40 then raise exception 'Centre d’intérêt invalide'; end if;
+ end loop;
+end $function$;
+CREATE OR REPLACE FUNCTION registration_private.save(uid uuid, p jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+begin
+ perform registration_private.validate(p);
+ insert into registration_private.details(user_id,first_name,last_name,birth_date,city,expected_email,expected_phone,primary_method,bio,interests,visibility,marketing,terms_version,privacy_version)
+ values(uid,trim(p->>'first_name'),trim(p->>'last_name'),(p->>'birth_date')::date,trim(p->>'city'),lower(trim(p->>'email')),p->>'phone',p->>'primary_method',coalesce(p->>'bio',''),array(select jsonb_array_elements_text(p->'interests')),p->>'visibility',(p->>'marketing')::boolean,'2026-10-23-draft-v1','2026-10-23-draft-v1')
+ on conflict(user_id) do update set first_name=excluded.first_name,last_name=excluded.last_name,birth_date=excluded.birth_date,city=excluded.city,expected_email=excluded.expected_email,expected_phone=excluded.expected_phone,primary_method=excluded.primary_method,bio=excluded.bio,interests=excluded.interests,visibility=excluded.visibility,marketing=excluded.marketing,terms_version=excluded.terms_version,privacy_version=excluded.privacy_version,updated_at=now();
+ insert into public.profiles(id,username,display_name) values(uid,lower(p->>'username'),lower(p->>'username'))
+ on conflict(id) do update set username=excluded.username,display_name=coalesce(nullif(public.profiles.display_name,''),excluded.display_name);
+ insert into registration_private.consent_events(user_id,marketing,terms_version,privacy_version) values(uid,(p->>'marketing')::boolean,'2026-10-23-draft-v1','2026-10-23-draft-v1');
+end $function$;
+CREATE OR REPLACE FUNCTION public.registration_status_v1()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare u auth.users; d registration_private.details; legacy boolean; ev boolean; pv boolean;
+begin
+ if auth.uid() is null or not public.myevent_account_active() then raise exception 'Connexion requise'; end if;
+ select * into u from auth.users where id=auth.uid();
+ select * into d from registration_private.details where user_id=auth.uid();
+ legacy:=coalesce(u.created_at<(select cutoff from registration_private.settings),false);
+ ev:=coalesce(u.email_confirmed_at is not null and nullif(u.email,'') is not null and lower(u.email)=d.expected_email,false);
+ pv:=coalesce(u.phone_confirmed_at is not null and nullif(u.phone,'') is not null and regexp_replace(u.phone,'^\+','')=substring(d.expected_phone from 2),false);
+ return jsonb_build_object('legacy',legacy,'complete',ev and pv and d.user_id is not null,'email_verified',ev,'phone_verified',pv,'email',d.expected_email,'phone',d.expected_phone,'primary_method',d.primary_method,'has_details',d.user_id is not null);
+end $function$;
+CREATE OR REPLACE FUNCTION public.myevent_api_request_guard()
+ RETURNS void
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare s jsonb; path text:=current_setting('request.path',true);
+begin
+ if auth.uid() is not null then
+  if not public.myevent_account_active() then raise exception 'MYEVENT_ACCOUNT_SUSPENDED' using errcode='42501'; end if;
+  s:=public.registration_status_v1();
+  if not (s->>'legacy')::boolean and not (s->>'complete')::boolean and coalesce(path,'') not in ('/rpc/registration_access_v1','/rpc/registration_status_v1','/rpc/registration_self_v1','/rpc/registration_save_v1','/rpc/registration_username_available_v1','/rpc/myevent_report','/rpc/member_report_v1') then
+   raise exception 'OREVAMI_CONTACTS_REQUIRED' using errcode='42501';
+  end if;
+ end if;
+end $function$;
+commit;
