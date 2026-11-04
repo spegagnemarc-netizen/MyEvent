@@ -300,7 +300,7 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 #musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Monter"]{grid-column:3!important;grid-row:2!important}
 #musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove[aria-label^="Descendre"]{grid-column:4!important;grid-row:2!important}
 #musicScreen #musicDJQueue .musicDJQueueCard .musicDJMove{color:#dce2ea!important;background:#121922!important}
-#musicScreen #musicDJQueue .musicDJQueueCard:has(.musicDJApprove[title^="Validé"]){border-color:rgba(55,214,122,.38)!important}
+#musicScreen #musicDJQueue .musicDJQueueCard:has(.musicDJApprove[aria-pressed="true"]){border-color:rgba(55,214,122,.38)!important}
 @media(max-width:390px){
  #musicScreen #musicDJQueue .musicDJQueueCard{grid-template-columns:78px minmax(0,1fr) 38px 38px!important;column-gap:7px!important;padding:9px!important}
  #musicScreen #musicDJQueue .musicDJQueueCard .musicTrackOpen{grid-template-columns:78px minmax(0,1fr)!important;gap:9px!important}

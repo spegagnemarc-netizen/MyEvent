@@ -38,3 +38,23 @@ test('Personal playlist create, rename, reorder and delete persist without Supab
  w.prompt=()=> 'Anniversaire';click('Renommer');assert.equal(list.name,'Anniversaire');click('↓');assert.equal(list.tracks[0].provider_track_id,'b');click('Retirer');assert.equal(list.tracks.length,2);
  const saved=JSON.parse(w.localStorage.getItem('myevent.music.v2.alice'));assert.equal(saved.playlists[0].name,'Anniversaire');assert.equal(saved.playlists[0].tracks[0].provider_track_id,'a');click('Supprimer la playlist');assert.equal(w.MyEventMusicSession.get().playlists.length,0);dom.window.close();
 });
+
+
+test('DJ playlist transfer, approval locking, reordering and rejection persist locally',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+ const dom=new JSDOM(html,{url:'https://orevami.test',runScripts:'outside-only'}),w=dom.window;
+ w.myeventMusicContext=()=>({user:{id:'alice'}});w.fetch=async()=>({ok:false,json:async()=>({error:'offline test'})});w.eval(session);
+ w.eval(readFileSync(new URL('../js/music-runtime.js',import.meta.url),'utf8'));w.eval(controller);w.eval(readFileSync(new URL('../js/music-workspace.js',import.meta.url),'utf8'));
+ const S=w.MyEventMusicSession,W=w.MyEventMusicWorkspace;
+ S.update({playlists:[{name:'Soirée',tracks:tracks.map(t=>({...t}))}]});W.go('playlists',false);
+ [...w.document.querySelectorAll('button')].find(b=>b.textContent==='Envoyer au Mode DJ').click();
+ const rows=()=>[...w.document.querySelectorAll('#musicDJQueue .musicListRow')];
+ const action=(i,label)=>[...rows()[i].querySelectorAll('button')].find(b=>b.textContent===label);
+ assert.equal(S.get().dj.length,3);assert.notEqual(S.get().dj[0],S.get().playlists[0].tracks[0]);
+ action(0,'✓').click();assert.equal(action(0,'✓').getAttribute('aria-pressed'),'true');
+ assert(action(0,'✕').disabled);assert(action(0,'↓').disabled);assert(action(1,'↑').disabled);
+ action(1,'↓').click();assert.equal(S.get().dj[2].provider_track_id,'b');assert.equal(S.get().dj[0].provider_track_id,'a');
+ action(0,'✓').click();action(0,'✕').click();assert.equal(S.get().dj.length,2);
+ assert.equal(JSON.parse(w.localStorage.getItem('myevent.music.v2.alice')).dj.length,2);
+ assert.equal(S.get().playlists[0].tracks.length,3);dom.window.close();
+});
