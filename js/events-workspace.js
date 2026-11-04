@@ -17,9 +17,8 @@
   <div id="ewHero"></div>
   <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
   <div class="ewCarouselControls" aria-label="Pages des outils"><button data-tools-page="0" aria-label="Afficher les six premiers outils" aria-current="true">1</button><button data-tools-page="1" aria-label="Afficher les six autres outils" aria-current="false">2</button><span>Faire glisser pour voir les autres outils</span></div>
-  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
+  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['transport','▰','Trajets'],['documents','▤','Documents'],['accommodation','⌂','Hébergement'],['outings','✦','Sorties'],['localtravel','⌖','Déplacements']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}<button data-form="joinCard">Rejoindre avec un code</button></nav>
   <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
-  <div class="ewExtras"><button data-tool="accommodation">⌂ Hébergement</button><button data-tool="outings">✦ Sorties</button><button data-tool="localtravel">⌖ Déplacements</button><button data-form="joinCard">Rejoindre avec un code</button></div>
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
@@ -151,7 +150,7 @@
   $('ewSelectedEvent')?.addEventListener('change',e=>select(e.target.value));
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
-  root.querySelectorAll('.ewHallSearchAccess,.ewTools button,.ewSections button,.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
+  root.querySelectorAll('.ewHallSearchAccess,.ewTools button,.ewSections [data-tool],.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
   renderHero();renderProgramme();
  }
  async function openTool(key){
