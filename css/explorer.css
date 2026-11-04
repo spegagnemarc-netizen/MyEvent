@@ -3,14 +3,14 @@
 /* Explorer only: approved luminous mobile composition. */
 .explorer-page{background:#030e1c;color:#f7f8ff;font:14px/1.45 system-ui,-apple-system,sans-serif}
 .explorer-page main{max-width:430px;padding:0 16px calc(24px + env(safe-area-inset-bottom));min-height:100dvh;background:radial-gradient(ellipse at 100% 0,#10142e55,transparent 55%),#030f1e}
-.explorer-header{position:relative;isolation:isolate;margin:0 -16px;padding:12px 16px 17px;min-height:78px;overflow:hidden;background:radial-gradient(ellipse at 76% 90%,#6b0e7766,transparent 57%),linear-gradient(110deg,#08091e,#080e28 58%,#170a2c);border-bottom:1px solid #266aac66}
-.explorer-header::before,.explorer-header::after{content:"";position:absolute;z-index:-1;pointer-events:none;width:85%;height:37px;right:-15%;bottom:-9px;border-top:2px solid #b242db;border-radius:50%;transform:rotate(-9deg);box-shadow:0 -3px 8px #9128f4,inset 0 3px 8px #ec227e}
-.explorer-header::after{right:8%;bottom:-23px;transform:rotate(-13deg);border-color:#2cddff;box-shadow:0 -3px 8px #008bff,inset 0 3px 6px #147fff}
-.explorer-header .orevamiBrand{width:174px;max-width:calc(100% - 56px)}
-.explorer-close{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border:1px solid #6675b6;border-radius:50%;background:#10172988;color:#f3eeff;text-decoration:none;font:29px/1 system-ui;box-shadow:0 0 12px #8564c633}
-.explorer-page main>h1{display:flex;align-items:center;gap:12px;font-size:28px;line-height:1.2;letter-spacing:-.7px;margin:13px 10px 6px;color:#fff;font-weight:800}
-.explorer-compass{display:grid;place-items:center;width:33px;height:33px;border:2px solid #d5f6ff;border-radius:50%;font-size:23px;transform:rotate(-40deg);text-shadow:0 0 8px #32c9ff;box-shadow:0 0 8px #4ebafa}
-.explorer-page main>p{font-size:13px;margin:0 10px 20px;color:#e0e3ed}
+/* Match the shared section identity geometry; keep these rules Explorer-scoped. */
+.explorer-header{position:relative;display:block;margin:0 0 16px;padding:22px 0 18px;min-height:0;background:transparent;border:0;border-bottom:1px solid #266aac66;font-family:Inter,system-ui,sans-serif}
+.explorer-header .orevamiBrand{max-width:calc(100% - 56px)}
+.explorer-close{position:absolute;top:22px;right:0;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #355061;border-radius:50%;background:transparent;color:#bed1df;text-decoration:none;font:26px/1 system-ui;box-shadow:none}
+.explorer-title-row{min-height:44px;display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px;margin-top:2px}
+.explorer-title-row h1{font-family:Inter,system-ui,sans-serif;font-size:12.5px;font-weight:750;line-height:1.5;letter-spacing:2.1px;text-transform:uppercase;margin:0;color:#fff;text-shadow:0 1px 2px #0009}
+.explorer-page main>p{font-size:13px;margin:0 0 16px;color:#e0e3ed}
+@media(max-width:600px){.explorer-header{padding-top:16px}.explorer-close{top:16px}}
 .explorer-page .categories{gap:10px}
 .explorer-page .categories button{--card-a:#00d7fa;--card-b:#5f54f6;--card-fill:#066393;display:flex;align-items:center;gap:9px;min-height:60px;padding:10px 11px;border:1px solid transparent;border-radius:12px;background:linear-gradient(125deg,var(--card-fill),#09182ee8 85%) padding-box,linear-gradient(120deg,var(--card-a),var(--card-b)) border-box;box-shadow:inset 0 1px 9px #ffffff20,0 0 5px color-mix(in srgb,var(--card-a) 20%,transparent);font-size:14px;font-weight:750;line-height:1.2;letter-spacing:-.35px;color:#fff}
 .explorer-page .categories [data-category=accommodation]{--card-a:#e27beb;--card-b:#8b27e9;--card-fill:#56206f}
@@ -34,5 +34,5 @@
 .explorer-page #bookings>p{text-align:center;margin:10px 0 0;font-size:13px;color:#d6dbea}
 .explorer-page footer{margin:8px 15px 0;font-size:11px;line-height:1.5;color:#a9bfda}
 .explorer-page :is(button,a):focus-visible{outline:3px solid #c2eeff;outline-offset:3px}
-@media(min-width:700px){.explorer-page main{max-width:600px}.explorer-page .categories button{min-height:76px;font-size:16px}.explorer-page .explorer-header{min-height:90px}.explorer-page main>p{margin-bottom:24px}}
-@media(max-width:370px){.explorer-page main{padding-inline:12px}.explorer-header{margin-inline:-12px;padding-inline:12px}.explorer-page .categories{gap:8px}.explorer-page .categories button{padding:9px 7px;gap:6px;font-size:12px}.category-icon{font-size:24px}.explorer-page #reservations{padding:12px}.explorer-page #reservations h2{font-size:16px}}
+@media(min-width:700px){.explorer-page main{max-width:600px}.explorer-page .categories button{min-height:76px;font-size:16px}.explorer-page main>p{margin-bottom:24px}}
+@media(max-width:370px){.explorer-page main{padding-inline:12px}.explorer-page .categories{gap:8px}.explorer-page .categories button{padding:9px 7px;gap:6px;font-size:12px}.category-icon{font-size:24px}.explorer-page #reservations{padding:12px}.explorer-page #reservations h2{font-size:16px}}
