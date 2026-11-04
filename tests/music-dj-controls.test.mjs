@@ -34,7 +34,7 @@ test('Personal playlist create, rename, reorder and delete persist without Supab
  w.myeventMusicContext=()=>({user:{id:'alice'}});w.fetch=async()=>({ok:false,json:async()=>({error:'No external requests in focused test'})});w.eval(session);
  w.eval(readFileSync(new URL('../js/music-runtime.js',import.meta.url),'utf8'));w.eval(controller);w.eval(readFileSync(new URL('../js/music-workspace.js',import.meta.url),'utf8'));
  const go=()=>w.MyEventMusicWorkspace.go('playlists',false),click=text=>{const b=[...w.document.querySelectorAll('#musicScreen button')].find(x=>x.textContent===text);assert(b,text);b.click();};
- go();w.prompt=()=> 'Ma soirée';click('＋ Créer une playlist');const list=w.MyEventMusicSession.get().playlists[0];assert.equal(list.name,'Ma soirée');list.tracks.push(...tracks);go();
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};go();click('＋ Créer une playlist');w.document.querySelector('#musicPlaylistName').value='Ma soirée';w.document.querySelector('#musicCreatePlaylist form').dispatchEvent(new w.Event('submit',{cancelable:true}));const list=w.MyEventMusicSession.get().playlists[0];assert.equal(list.name,'Ma soirée');list.tracks.push(...tracks);go();
  w.prompt=()=> 'Anniversaire';click('Renommer');assert.equal(list.name,'Anniversaire');click('↓');assert.equal(list.tracks[0].provider_track_id,'b');click('Retirer');assert.equal(list.tracks.length,2);
  const saved=JSON.parse(w.localStorage.getItem('myevent.music.v2.alice'));assert.equal(saved.playlists[0].name,'Anniversaire');assert.equal(saved.playlists[0].tracks[0].provider_track_id,'a');click('Supprimer la playlist');assert.equal(w.MyEventMusicSession.get().playlists.length,0);dom.window.close();
 });
@@ -46,7 +46,14 @@ test('DJ playlist transfer, approval locking, reordering and rejection persist l
  w.myeventMusicContext=()=>({user:{id:'alice'}});w.fetch=async()=>({ok:false,json:async()=>({error:'offline test'})});w.eval(session);
  w.eval(readFileSync(new URL('../js/music-runtime.js',import.meta.url),'utf8'));w.eval(controller);w.eval(readFileSync(new URL('../js/music-workspace.js',import.meta.url),'utf8'));
  const S=w.MyEventMusicSession,W=w.MyEventMusicWorkspace;
- S.update({playlists:[{name:'Soirée',tracks:tracks.map(t=>({...t}))}]});W.go('playlists',false);
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
+ w.prompt=()=>{throw Error('Native prompt must not be used');};W.go('playlists',false);
+ const create=()=>[...w.document.querySelectorAll('button')].find(b=>b.textContent==='＋ Créer une playlist').click();
+ create();assert.equal(w.document.activeElement.id,'musicPlaylistName');w.document.querySelector('#musicCreatePlaylist [type="button"]').click();assert.equal(S.get().playlists.length,0);
+ create();const form=w.document.querySelector('#musicCreatePlaylist form'),input=w.document.querySelector('#musicPlaylistName');
+ input.value='   ';form.dispatchEvent(new w.Event('submit',{cancelable:true}));assert.equal(S.get().playlists.length,0);
+ input.value=' Soirée ';form.dispatchEvent(new w.Event('submit',{cancelable:true}));assert.equal(S.get().playlists[0].name,'Soirée');assert.equal(w.document.querySelector('#musicCreatePlaylist'),null);
+ S.get().playlists[0].tracks.push(...tracks.map(t=>({...t})));W.go('playlists',false);
  [...w.document.querySelectorAll('button')].find(b=>b.textContent==='Envoyer au Mode DJ').click();
  const rows=()=>[...w.document.querySelectorAll('#musicDJQueue .musicListRow')];
  const action=(i,label)=>[...rows()[i].querySelectorAll('button')].find(b=>b.textContent===label);

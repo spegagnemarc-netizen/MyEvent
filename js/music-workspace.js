@@ -63,7 +63,7 @@
   function personalPlaylists(body){
     body.innerHTML='<p>Playlists personnelles enregistrées sur cet appareil, séparément pour chaque compte.</p><div id="musicPersonal"></div>';
     const s=S.get(),box=$('musicPersonal');
-    button('＋ Créer une playlist',()=>{const name=prompt('Nom de la playlist');if(!name?.trim())return;s.playlists.push({name:name.trim(),tracks:[]});S.save();go('playlists',false);},body);
+    button('＋ Créer une playlist',()=>createPlaylist(),body);
     if(!s.playlists.length){const p=document.createElement('p');p.className='musicEmpty';p.textContent='Aucune playlist personnelle pour le moment.';box.appendChild(p);return;}
     s.playlists.forEach((list,i)=>{const section=document.createElement('details');const summary=document.createElement('summary');summary.textContent=list.name;section.appendChild(summary);
       rows(list.tracks,section,(row,t,n)=>{button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('playlists',false);},row);for(const [label,delta] of [['↑',-1],['↓',1]]){const move=button(label,()=>{const j=n+delta;[list.tracks[n],list.tracks[j]]=[list.tracks[j],list.tracks[n]];S.save();go('playlists',false);},row);move.disabled=!list.tracks[n+delta];move.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}});
@@ -74,6 +74,25 @@
       const send=button('Envoyer à l’événement',async e=>{if(!list.tracks.length)return notice('Cette playlist est vide.');const owner=ctx().user?.id,eventId=ctx().event?.id;let count=0;e.currentTarget.disabled=true;try{for(const track of list.tracks){if(ctx().user?.id!==owner||ctx().event?.id!==eventId||!await M.addTrackToEvent(track))break;count++;}notice(count+' / '+list.tracks.length+' morceau(x) ajouté(s) à l’événement.');}finally{e.target.disabled=false;}},actions);send.disabled=!ctx().event?.id;
       button('Supprimer la playlist',()=>{s.playlists.splice(i,1);S.save();go('playlists',false);},actions);box.appendChild(section);
     });
+  }
+  function createPlaylist(){
+    if($('musicCreatePlaylist'))return;
+    const owner=ctx().user?.id,trigger=document.activeElement;
+    const dialog=document.createElement('dialog');dialog.id='musicCreatePlaylist';dialog.className='musicChoose';
+    dialog.setAttribute('aria-labelledby','musicCreatePlaylistTitle');
+    dialog.innerHTML='<h3 id="musicCreatePlaylistTitle">Créer une playlist</h3><form><label for="musicPlaylistName">Nom de la playlist</label><input id="musicPlaylistName" name="name" required autocomplete="off" autofocus><p role="status" aria-live="polite"></p><div class="musicPersonalActions"><button type="button">Annuler</button><button type="submit">Créer</button></div></form>';
+    document.body.appendChild(dialog);
+    const form=dialog.querySelector('form'),input=dialog.querySelector('input');
+    form.onsubmit=e=>{
+      e.preventDefault();const name=input.value.trim();
+      if(!name){dialog.querySelector('[role="status"]').textContent='Saisis un nom pour la playlist.';input.focus();return;}
+      if(ctx().user?.id!==owner){dialog.close();return;}
+      S.get().playlists.push({name,tracks:[]});S.save();dialog.close();go('playlists',false);
+      [...page.querySelectorAll('button')].find(b=>b.textContent==='＋ Créer une playlist')?.focus();
+    };
+    dialog.querySelector('[type="button"]').onclick=()=>dialog.close();
+    dialog.onclose=()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();};
+    dialog.showModal();input.focus();
   }
   function discover(body){body.innerHTML='<form id="musicDiscoverForm"><label>Rechercher sur YouTube<input id="musicDiscoverQuery" type="search" minlength="2" required></label><button>Rechercher</button></form><div id="musicDiscoverResults"></div><button type="button" id="musicLoadMore" hidden>Afficher plus de résultats</button>';$('musicDiscoverQuery').value=S.get().query;rows(results,$('musicDiscoverResults'));const more=$('musicLoadMore');more.hidden=!nextPageToken;more.onclick=()=>search(activeQuery,null,true);
     $('musicDiscoverForm').onsubmit=e=>{e.preventDefault();search($('musicDiscoverQuery').value);};

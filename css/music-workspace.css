@@ -641,3 +641,5 @@ body.musicModeOpen:has(#musicPlayback:not([hidden])) #musicHome{
 #musicScreen .musicDJSettingsGrid input[type=range]{width:100%;min-width:0;min-height:44px}
 #musicScreen .musicDJSettingsGrid button,#musicScreen .musicPersonalActions button{min-height:44px;white-space:normal;overflow-wrap:anywhere}
 #musicScreen .musicDJSettingsGrid p{grid-column:1/-1;font-size:13px;color:#adc5d6}
+
+#musicCreatePlaylist{box-sizing:border-box}#musicCreatePlaylist input{font-size:16px;margin:8px 0}#musicCreatePlaylist .musicPersonalActions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
