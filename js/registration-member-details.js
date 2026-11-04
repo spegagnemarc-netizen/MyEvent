@@ -6,7 +6,7 @@ window.orevamiMemberDetails=async(host,id)=>{
  if(!account)return;
  const current=()=>ticket===generation&&host.isConnected&&window.myeventCameraContext?.().user?.id===account;
  try{
-  const config=await window.myeventRuntime.ready;if(!config.isTest)return;
+  const config=await window.myeventRuntime.ready;if(!config.isTest&&!(config.environment==='production'&&config.projectRef==='nxxvadbliinhvkirqkkl'))return;
   const {data,error}=await ctx.sb.rpc('registration_public_v1',{p_user:id});
   if(error||!data||!current())return;
   const details=document.createElement('div');
