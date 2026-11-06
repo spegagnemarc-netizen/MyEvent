@@ -3025,8 +3025,6 @@ body.musicModeOpen #socialBottomNav{position:fixed;z-index:2150}
   border:1px solid var(--myevent-accent,#ff6a00)!important;border-radius:999px!important;
   background:transparent!important;color:#f5f6f8!important;font-size:10px!important;font-weight:800!important;line-height:18px!important;
 }
-#musicHomeExtras .musicShelfHead button{font-size:0!important}
-#musicHomeExtras .musicShelfHead button::after{content:"Voir tout ›";font-size:10px}
 
 #musicHome .musicHead>button{
   display:grid!important;place-items:center!important;padding:0!important;
