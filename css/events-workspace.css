@@ -43,11 +43,11 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #eventsWorkspace .ew-call{--tool:#00e298}#eventsWorkspace .ew-discussion{--tool:#d662ff}#eventsWorkspace .ew-polls{--tool:#ff477e}#eventsWorkspace .ew-media{--tool:#ff8b2b}#eventsWorkspace .ew-tasks{--tool:#ffc43b}
 .ewToolIcon{width:49px;height:49px;flex:0 0 49px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(140deg,color-mix(in srgb,var(--tool) 70%,white),color-mix(in srgb,var(--tool) 65%,#000));box-shadow:inset 0 0 10px #ffffff50,0 0 14px color-mix(in srgb,var(--tool) 40%,transparent);font-size:28px;font-weight:800}
 .ewTool strong{font-size:17px;line-height:1.15;display:block}.ewTool small{display:block;color:#d7e5f0;font-size:12px;margin-top:6px;line-height:1.25}.ewArrow{margin-left:auto;font-size:27px;color:var(--tool)}
-#eventsWorkspace .ewSections{display:flex;flex-wrap:wrap;gap:8px;overflow:visible;margin:16px 0}
-#eventsWorkspace .ewSections button{min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;border:1px solid #284c60!important;border-radius:24px!important;background:#091720!important;padding:13px 16px!important;color:#a7c2d7!important;font-size:14px}
-#eventsWorkspace .ewSections button:first-child{border-color:var(--myevent-accent)!important;color:var(--myevent-accent)!important;background:linear-gradient(100deg,color-mix(in srgb,var(--myevent-accent) 25%,#07151f),#07151f)!important}
+#eventsWorkspace .ewSections{display:flex;gap:8px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;margin:16px 0;padding:3px 3px 8px}
+#eventsWorkspace .ewSections button{flex:none;min-height:44px;white-space:nowrap;scroll-snap-align:start;border:1px solid #284c60!important;border-radius:24px!important;background:#091720!important;padding:13px 16px!important;color:#a7c2d7!important;font-size:14px}
 .ewSection{border:1px solid #254555;border-radius:24px;padding:20px;background:linear-gradient(150deg,#0c1a22,#050d13);margin:14px 0}
 .ewSection>header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+#eventsWorkspace #ewProgrammeCard [data-outdoor-event]{display:block;width:100%;min-height:44px;margin-top:12px;padding:10px 14px;border:1px solid #849aff!important;border-radius:14px;background:linear-gradient(105deg,#2056b7,#6731a8)!important;color:#fff!important;font-weight:700;white-space:normal}
 #eventsWorkspace .ewSection h2{font-size:23px;margin:0;font-weight:800;color:#fff}
 #eventsWorkspace .ewSection>header button{padding:9px 13px!important;border-radius:24px!important;background:#142935!important;color:#afccdf!important;border:1px solid #203d4d!important;font-size:13px;white-space:nowrap}
 .ewParticipants{display:flex;gap:17px;overflow-x:auto;padding:2px 1px 7px;scrollbar-width:thin}
@@ -61,8 +61,6 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 .ewProgrammeRow .inlineEventTimelineDot{width:42px;height:45px;border-radius:12px;background:#18313e;display:grid;place-items:center;flex-shrink:0;font-size:23px}
 .ewProgrammeRow .inlineEventTimelineName{font-size:16px;font-weight:750;color:white;margin:5px 0}.ewProgrammeRow .inlineEventTimelineTime,.ewProgrammeRow .inlineEventTimelineMeta{color:#a9c5d6;font-size:12px;line-height:1.4}
 .ewEmpty{color:#9fb9c9;font-size:14px;line-height:1.5;margin:8px 0}.ewEmptyCard{border:1px solid #315261;border-radius:24px;background:linear-gradient(130deg,#112632,#080e16);padding:27px;margin:12px 0 18px}.ewEmptyCard>span{font-size:35px}.ewEmptyCard h2{font-size:25px;margin:12px 0}.ewEmptyCard p{color:#afc8d8;line-height:1.5}
-.ewExtras{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
-#eventsWorkspace .ewExtras button{color:#abc8db!important;background:#081822!important;border:1px solid #203c4b!important;border-radius:18px!important;padding:10px 14px!important;font-size:13px}
 .ewToolHead{display:flex;align-items:center;gap:18px;margin-bottom:20px}.ewToolHead h2{font-size:24px;margin:0}.ewToolHead button{background:#142631!important;color:#d0e4ee!important;border:1px solid #305568!important;border-radius:20px!important;padding:10px 15px!important}
 #ewToolBody .ewPanel{display:block!important;width:100%!important;margin:0!important;background:#07121b;border-radius:22px;border:1px solid #27485b;box-sizing:border-box;padding:16px!important}
 #ewToolBody .ewPanel>summary{display:none!important}#ewToolBody .ewPanel>.collapsibleBody{display:block!important}
