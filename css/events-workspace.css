@@ -39,15 +39,26 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #eventsWorkspace .ewDots button{width:8px;height:8px;padding:0!important;border:0!important;border-radius:50%!important;background:#829aa4!important;box-shadow:none!important}
 #eventsWorkspace .ewDots [aria-current=true]{background:var(--myevent-accent)!important;box-shadow:0 0 8px var(--myevent-accent)!important}
 .ewTools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0}
-#eventsWorkspace .ewTool{--tool:#00aaff;display:flex;align-items:center;gap:12px;min-height:104px;padding:17px!important;border:1px solid var(--tool)!important;border-radius:22px!important;background:linear-gradient(120deg,color-mix(in srgb,var(--tool) 20%,#03101a),#090e14)!important;box-shadow:inset 0 0 18px color-mix(in srgb,var(--tool) 9%,transparent),0 0 12px color-mix(in srgb,var(--tool) 9%,transparent)!important;text-align:left;color:white!important;min-width:0}
+#eventsWorkspace .ewTool{--tool:#00aaff;display:flex;align-items:center;gap:clamp(8px,2cqi,16px);min-height:106px;padding:clamp(10px,2cqi,20px)!important;border:1px solid var(--tool)!important;border-radius:20px!important;background:linear-gradient(135deg,color-mix(in srgb,var(--tool) 28%,#03101a),color-mix(in srgb,var(--tool) 9%,#070d19) 72%)!important;box-shadow:inset 0 0 20px color-mix(in srgb,var(--tool) 24%,transparent)!important;text-align:left;color:white!important;min-width:0}
 #eventsWorkspace .ew-call{--tool:#00e298}#eventsWorkspace .ew-discussion{--tool:#d662ff}#eventsWorkspace .ew-polls{--tool:#ff477e}#eventsWorkspace .ew-media{--tool:#ff8b2b}#eventsWorkspace .ew-tasks{--tool:#ffc43b}
 .ewToolIcon{width:49px;height:49px;flex:0 0 49px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(140deg,color-mix(in srgb,var(--tool) 70%,white),color-mix(in srgb,var(--tool) 65%,#000));box-shadow:inset 0 0 10px #ffffff50,0 0 14px color-mix(in srgb,var(--tool) 40%,transparent);font-size:28px;font-weight:800}
-.ewTool strong{font-size:17px;line-height:1.15;display:block}.ewTool small{display:block;color:#d7e5f0;font-size:12px;margin-top:6px;line-height:1.25}.ewArrow{margin-left:auto;font-size:27px;color:var(--tool)}
-#eventsWorkspace .ewSections{display:flex;gap:8px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;margin:16px 0;padding:3px 3px 8px}
-#eventsWorkspace .ewSections button{flex:none;min-height:44px;white-space:nowrap;scroll-snap-align:start;border:1px solid #284c60!important;border-radius:24px!important;background:#091720!important;padding:13px 16px!important;color:#a7c2d7!important;font-size:14px}
+.ewTool strong{font-size:clamp(13px,2.4cqi,20px);line-height:1.15;display:block}.ewTool small{display:block;color:#eef7ff;font-size:clamp(12px,2cqi,17px);margin-top:4px;line-height:1.25}.ewArrow{display:none}
+#eventsWorkspace .ewShortcutCarousel{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;margin:14px 0}
+#eventsWorkspace .ewShortcutArrow{display:grid;place-items:center;width:clamp(32px,5cqi,48px);aspect-ratio:1;padding:0!important;border:1px solid #789eb7!important;border-radius:50%!important;background:#102638!important;color:#fff!important;font-size:28px;line-height:1;box-shadow:0 0 10px #75bdff40!important}
+#eventsWorkspace .ewSections{display:flex;gap:8px;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#42d9ff #102638;padding-bottom:6px}
+#eventsWorkspace .ewSections button{--shortcut:#42d9ff;flex:0 0 calc((100% - 24px)/4);min-width:0;min-height:clamp(82px,14cqi,126px);display:grid;align-content:center;justify-items:center;gap:6px;scroll-snap-align:start;border:1px solid var(--shortcut)!important;border-radius:clamp(12px,2.8cqi,24px)!important;background:linear-gradient(145deg,color-mix(in srgb,var(--shortcut) 64%,#071323),color-mix(in srgb,var(--shortcut) 18%,#070d19) 72%)!important;box-shadow:inset 0 0 18px color-mix(in srgb,var(--shortcut) 32%,transparent)!important;padding:6px 2px!important;color:#fff!important;font-size:clamp(10px,2.1cqi,21px);font-weight:750;line-height:1.15;overflow-wrap:anywhere}
+#eventsWorkspace .ewSections button:nth-child(1){--shortcut:#008cff}
+#eventsWorkspace .ewSections button:nth-child(2){--shortcut:#00e3d5}
+#eventsWorkspace .ewSections button:nth-child(3){--shortcut:#00caff}
+#eventsWorkspace .ewSections button:nth-child(4){--shortcut:#dc35ff}
+#eventsWorkspace .ewSections svg{width:clamp(24px,5.5cqi,48px);height:auto;fill:none;stroke:#e3f5ff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--shortcut))}
+#eventsWorkspace .ewSections button:focus-visible{outline-offset:-4px}
 .ewSection{border:1px solid #254555;border-radius:24px;padding:20px;background:linear-gradient(150deg,#0c1a22,#050d13);margin:14px 0}
 .ewSection>header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
-#eventsWorkspace #ewProgrammeCard [data-outdoor-event]{display:block;width:100%;min-height:44px;margin-top:12px;padding:10px 14px;border:1px solid #849aff!important;border-radius:14px;background:linear-gradient(105deg,#2056b7,#6731a8)!important;color:#fff!important;font-weight:700;white-space:normal}
+#eventsWorkspace #ewProgrammeCard{border-color:#11caff;background:linear-gradient(145deg,#052942,#041122 75%);box-shadow:inset 0 2px 16px #00b4ff40;padding:clamp(14px,3.5cqi,30px)}
+#eventsWorkspace #ewProgrammeCard h2{font-size:clamp(22px,4.2cqi,36px)}
+#eventsWorkspace #ewProgrammeCard header button{border-color:#5fa3cc!important;color:#fff!important}
+#eventsWorkspace #ewProgrammeCard [data-outdoor-event]{display:block;width:94%;min-height:clamp(48px,8cqi,70px);margin:14px auto 0;padding:10px 14px!important;border:1px solid #8dddff!important;border-radius:999px!important;background:linear-gradient(100deg,#007df1 3%,#243fff 42%,#a900db 88%)!important;box-shadow:inset 12px 0 22px #00edff,inset -10px 0 18px #ed79ff!important;color:#fff!important;font-size:clamp(16px,3.2cqi,28px);font-weight:800;white-space:normal}
 #eventsWorkspace .ewSection h2{font-size:23px;margin:0;font-weight:800;color:#fff}
 #eventsWorkspace .ewSection>header button{padding:9px 13px!important;border-radius:24px!important;background:#142935!important;color:#afccdf!important;border:1px solid #203d4d!important;font-size:13px;white-space:nowrap}
 .ewParticipants{display:flex;gap:17px;overflow-x:auto;padding:2px 1px 7px;scrollbar-width:thin}
@@ -136,14 +147,15 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  .ewHeroCopy p{font-size:16px;gap:9px;margin:7px 0}.ewHeroCopy p span{font-size:12px}
  #eventsWorkspace .ewHeroBottom button{font-size:12px}
  .ewHeroAvatars .avatar{width:29px!important;height:29px!important;min-width:29px!important;font-size:18px}
- #eventsWorkspace .ewTool{display:grid;grid-template-columns:24px minmax(0,1fr);gap:5px;align-content:center;min-height:76px;padding:6px 5px!important;border-radius:15px!important}
+ #eventsWorkspace .ewTool{display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr;justify-items:center;align-content:start;gap:6px;min-height:120px;text-align:center;border-radius:15px!important}
  #eventsWorkspace .ewToolsPage{gap:7px}
- #eventsWorkspace .ewToolIcon{width:24px;height:24px;flex-basis:24px;font-size:14px;border-radius:8px}
+ #eventsWorkspace .ewToolIcon{width:36px;height:36px;border-radius:10px}
  #eventsWorkspace .ewTool>span:nth-child(2){min-width:0}
- #eventsWorkspace .ewTool strong{font-size:10px;line-height:1.2;overflow-wrap:normal}
- #eventsWorkspace .ewTool small{font-size:9px;line-height:1.2;margin-top:3px;overflow-wrap:normal}
- #eventsWorkspace .ewTool .ewArrow{display:none}
- .ewSections{gap:5px;margin:12px 0}#eventsWorkspace .ewSections button{font-size:11px;padding:10px 12px!important}
+ #eventsWorkspace .ewTool strong,#eventsWorkspace .ewTool small{overflow-wrap:anywhere}
+ #eventsWorkspace .ewShortcutCarousel{gap:4px}
+ #eventsWorkspace .ewShortcutArrow{width:26px;font-size:23px}
+ #eventsWorkspace .ewSections{gap:5px}
+ #eventsWorkspace .ewSections button{flex-basis:calc((100% - 15px)/4);letter-spacing:-.25px}
  .ewSection{padding:13px;border-radius:20px;margin:12px 0}.ewSection>header{margin-bottom:11px}
  #eventsWorkspace .ewSection h2{font-size:18px}#eventsWorkspace .ewSection>header button{font-size:11px;padding:7px 10px!important}
  .ewParticipants{gap:7px;padding-bottom:4px}#eventsWorkspace .ewPerson{flex-basis:68px;min-width:68px;gap:3px}
