@@ -1,0 +1,113 @@
+/* Home only: activity identity is violet; surfaces follow individual appearance. */
+#socialHome #orevamiActivityFeed {
+  background:rgba(var(--myevent-surface,14,19,24),var(--myevent-surface-opacity,.94));
+  color:var(--myevent-text,#f3f6f8);
+  border-color:#4c246c;
+}
+#socialHome #orevamiActivityFeed .activityFeedStatus,
+#socialHome #orevamiActivityFeed small {color:var(--myevent-muted,#9da7b0)}
+#socialHome #orevamiActivityFeed .activityFeedPost {
+  background:rgba(var(--myevent-surface,14,19,24),var(--myevent-surface-opacity,.94));
+  color:inherit;
+  border-color:#4c246c;
+}
+#socialHome #orevamiActivityFeed .socialSectionHead button {
+  color:#c521ff!important;
+}
+:root[data-myevent-theme="light"] #socialHome #orevamiActivityFeed .socialSectionHead button {
+  color:#7820a8!important;
+}
+
+/* Module colors from the TEST reference. The two metallic Stories tiles
+   already match the reference and keep their existing treatment. */
+#socialHome #activitiesShortcut {--home-rim-start:#f0a6f6;--home-rim-end:#8254d8;--home-glow:#8b5cf61c}
+#socialHome .eventsCard {--home-rim-start:#7fd1fa;--home-rim-end:#3069df;--home-glow:#2563eb18}
+#socialHome .gamesCard {--home-rim-start:#ff9a90;--home-rim-end:#bc304b;--home-glow:#d943501a}
+#socialHome .marketCard {--home-rim-start:#a3e6ae;--home-rim-end:#168e67;--home-glow:#16a34a18}
+#socialHome .musicCard {--home-rim-start:#ffc1e7;--home-rim-end:#a44de5;--home-glow:#ec48991a}
+#socialHome .ticketCard {--home-rim-start:#fff1a4;--home-rim-end:#c79425;--home-glow:#eab30818}
+#socialHome .explorerCard {--home-rim-start:#ffd09b;--home-rim-end:#e26c38;--home-glow:#f9731618}
+#socialHome .weatherCard {--home-rim-start:#b7f3ff;--home-rim-end:#2696cf;--home-glow:#06b6d418}
+#socialHome .friendsCard {--home-rim-start:#a2f5e5;--home-rim-end:#138f96;--home-glow:#14b8a618}
+#socialHome .nearbyCard {--home-rim-start:#dcf7a1;--home-rim-end:#78a92b;--home-glow:#84cc1618}
+#socialHome .popularCard {--home-rim-start:#ffc19b;--home-rim-end:#d94b65;--home-glow:#ef6a5318}
+
+#socialHome .homeFeatureCard:is(
+  #activitiesShortcut,.eventsCard,.gamesCard,.marketCard,.musicCard,.ticketCard,
+  .explorerCard,.weatherCard,.friendsCard,.nearbyCard,.popularCard
+) {
+  border:0!important;
+  background:linear-gradient(145deg,
+    rgba(var(--home-shortcut-surface,17,28,44),var(--myevent-surface-opacity,.94)),
+    rgba(var(--home-shortcut-surface,17,28,44),calc(var(--myevent-surface-opacity,.94) * .84))
+  )!important;
+  box-shadow:inset 0 1px 0 #ffffff13,0 3px 15px var(--home-glow)!important;
+  color:var(--myevent-text)!important;
+}
+#socialHome .homeFeatureCard:is(
+  #activitiesShortcut,.eventsCard,.gamesCard,.marketCard,.musicCard,.ticketCard,
+  .explorerCard,.weatherCard,.friendsCard,.nearbyCard,.popularCard
+)::after {
+  /* Draw only the rim, so the gradient does not fill transparent surfaces. */
+  content:"";
+  position:absolute;
+  inset:0;
+  padding:1px;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(125deg,var(--home-rim-start),var(--home-rim-end) 62%,var(--home-rim-start));
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+}
+#socialHome .homeFeatureCard:is(
+  #activitiesShortcut,.eventsCard,.gamesCard,.marketCard,.musicCard,.ticketCard,
+  .explorerCard,.weatherCard,.friendsCard,.nearbyCard,.popularCard
+) :is(b,small) {
+  color:inherit;
+}
+#socialHome .homeFeatureCard:focus-visible {
+  outline:2px solid var(--home-rim-end,var(--myevent-accent))!important;
+  outline-offset:-3px!important;
+}
+#socialHome .homeFeatureCard.nearbyCard .homeFeatureIcon {
+  filter:drop-shadow(0 0 6px #84cc1666);
+}
+:root[data-myevent-theme="light"] #socialHome {
+  --home-shortcut-surface:var(--myevent-surface);
+}
+:root[data-myevent-theme="light"] #socialHome .orevamiSectionTitle {
+  color:var(--myevent-text)!important;
+  text-shadow:none;
+}
+:root[data-myevent-theme="light"] #socialHome button.socialFilter:not(.active),
+:root[data-myevent-theme="light"] #socialHome .socialComposerInput {
+  background:rgba(var(--myevent-surface),var(--myevent-button-opacity))!important;
+  border-color:#c9d1da!important;
+  color:var(--myevent-text)!important;
+}
+:root[data-myevent-theme="light"] #socialHome .socialProfileAvatar {
+  background:rgba(var(--myevent-surface),var(--myevent-surface-opacity))!important;
+  border-color:#c9d1da;
+}
+:root[data-myevent-theme="light"] #socialHome :is(.socialProfileText span,.socialPostMeta span,.socialEventMeta) {
+  color:var(--myevent-muted)!important;
+}
+:root[data-myevent-theme="light"] #socialHome :is(.socialPostText,.socialPostMeta b,.socialEventTitle) {
+  color:var(--myevent-text)!important;
+}
+
+/* Desktop arrows are shared controls, not a module identity. */
+#socialHome .homeCarouselNavigation button {
+  background:var(--myevent-accent-fill);
+  border-color:var(--myevent-accent);
+}
+
+/* Only event posts carry the blue identity from the TEST stylesheet. */
+#socialHome #socialFeed .socialPost[data-event-feed-post] {
+  border-color:#5b9dee75!important;
+  background-image:linear-gradient(150deg,#2563eb17,transparent 65%)!important;
+  box-shadow:0 3px 16px #2563eb0f!important;
+}
+#socialHome #socialFeed .socialPost[data-event-feed-post] .socialEventCard {
+  border-color:#5b9dee52!important;
+}

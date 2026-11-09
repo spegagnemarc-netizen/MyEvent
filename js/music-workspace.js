@@ -63,16 +63,36 @@
   function personalPlaylists(body){
     body.innerHTML='<p>Playlists personnelles enregistrées sur cet appareil, séparément pour chaque compte.</p><div id="musicPersonal"></div>';
     const s=S.get(),box=$('musicPersonal');
-    button('＋ Créer une playlist',()=>{const name=prompt('Nom de la playlist');if(!name?.trim())return;s.playlists.push({name:name.trim(),tracks:[]});S.save();go('playlists',false);},body);
+    button('＋ Créer une playlist',()=>createPlaylist(),body);
     if(!s.playlists.length){const p=document.createElement('p');p.className='musicEmpty';p.textContent='Aucune playlist personnelle pour le moment.';box.appendChild(p);return;}
     s.playlists.forEach((list,i)=>{const section=document.createElement('details');const summary=document.createElement('summary');summary.textContent=list.name;section.appendChild(summary);
       rows(list.tracks,section,(row,t,n)=>{button('Retirer',()=>{list.tracks.splice(n,1);S.save();go('playlists',false);},row);for(const [label,delta] of [['↑',-1],['↓',1]]){const move=button(label,()=>{const j=n+delta;[list.tracks[n],list.tracks[j]]=[list.tracks[j],list.tracks[n]];S.save();go('playlists',false);},row);move.disabled=!list.tracks[n+delta];move.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}});
       const actions=document.createElement('div');actions.className='musicPersonalActions';section.appendChild(actions);
+      button('Envoyer au Mode DJ',()=>{S.update({dj:list.tracks.map(t=>({...t}))});go('dj');},actions).disabled=!list.tracks.length;
       button('Renommer',()=>{const name=prompt('Nom de la playlist',list.name);if(!name?.trim())return;list.name=name.trim();S.save();go('playlists',false);},actions);
       button('Ajouter des morceaux',()=>go('discover'),actions);
       const send=button('Envoyer à l’événement',async e=>{if(!list.tracks.length)return notice('Cette playlist est vide.');const owner=ctx().user?.id,eventId=ctx().event?.id;let count=0;e.currentTarget.disabled=true;try{for(const track of list.tracks){if(ctx().user?.id!==owner||ctx().event?.id!==eventId||!await M.addTrackToEvent(track))break;count++;}notice(count+' / '+list.tracks.length+' morceau(x) ajouté(s) à l’événement.');}finally{e.target.disabled=false;}},actions);send.disabled=!ctx().event?.id;
       button('Supprimer la playlist',()=>{s.playlists.splice(i,1);S.save();go('playlists',false);},actions);box.appendChild(section);
     });
+  }
+  function createPlaylist(){
+    if($('musicCreatePlaylist'))return;
+    const owner=ctx().user?.id,trigger=document.activeElement;
+    const dialog=document.createElement('dialog');dialog.id='musicCreatePlaylist';dialog.className='musicChoose';
+    dialog.setAttribute('aria-labelledby','musicCreatePlaylistTitle');
+    dialog.innerHTML='<h3 id="musicCreatePlaylistTitle">Créer une playlist</h3><form><label for="musicPlaylistName">Nom de la playlist</label><input id="musicPlaylistName" name="name" required autocomplete="off" autofocus><p role="status" aria-live="polite"></p><div class="musicPersonalActions"><button type="button">Annuler</button><button type="submit">Créer</button></div></form>';
+    document.body.appendChild(dialog);
+    const form=dialog.querySelector('form'),input=dialog.querySelector('input');
+    form.onsubmit=e=>{
+      e.preventDefault();const name=input.value.trim();
+      if(!name){dialog.querySelector('[role="status"]').textContent='Saisis un nom pour la playlist.';input.focus();return;}
+      if(ctx().user?.id!==owner){dialog.close();return;}
+      S.get().playlists.push({name,tracks:[]});S.save();dialog.close();go('playlists',false);
+      [...page.querySelectorAll('button')].find(b=>b.textContent==='＋ Créer une playlist')?.focus();
+    };
+    dialog.querySelector('[type="button"]').onclick=()=>dialog.close();
+    dialog.onclose=()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();};
+    dialog.showModal();input.focus();
   }
   function discover(body){body.innerHTML='<form id="musicDiscoverForm"><label>Rechercher sur YouTube<input id="musicDiscoverQuery" type="search" minlength="2" required></label><button>Rechercher</button></form><div id="musicDiscoverResults"></div><button type="button" id="musicLoadMore" hidden>Afficher plus de résultats</button>';$('musicDiscoverQuery').value=S.get().query;rows(results,$('musicDiscoverResults'));const more=$('musicLoadMore');more.hidden=!nextPageToken;more.onclick=()=>search(activeQuery,null,true);
     $('musicDiscoverForm').onsubmit=e=>{e.preventDefault();search($('musicDiscoverQuery').value);};
@@ -84,9 +104,9 @@
     const list=S.get()[key];rows(list,body,(row,t,i)=>{
       if(key==='dj'){
         row.classList.add('musicDJQueueCard');
-        const lock=button(t.locked?'✓':'✓',()=>{t.locked=!t.locked;S.save();go(screen,false);},row);lock.classList.add('musicDJApprove');lock.title=t.locked?'Validé — toucher pour déverrouiller':'Valider ce morceau';lock.setAttribute('aria-label',lock.title);
-        const remove=button('✕',()=>{list.splice(i,1);S.save();if(P.current)P.setQueue(list);go(screen,false);},row);remove.classList.add('musicDJReject');remove.title='Retirer ce morceau';remove.setAttribute('aria-label','Retirer ce morceau');
-        for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];S.save();if(P.current)P.setQueue(list);go(screen,false);},row);b.classList.add('musicDJMove');b.disabled=!list[i+delta];b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
+        const lock=button(t.locked?'✓':'✓',()=>{t.locked=!t.locked;S.save();go(screen,false);},row);lock.classList.add('musicDJApprove');lock.title=t.locked?'Déverrouiller le morceau validé':'Valider et verrouiller ce morceau';lock.setAttribute('aria-pressed',String(!!t.locked));lock.setAttribute('aria-label',lock.title);
+        const remove=button('✕',()=>{if(t.locked)return;list.splice(i,1);S.save();if(P.current)P.setQueue(list);go(screen,false);},row);remove.disabled=!!t.locked;remove.classList.add('musicDJReject');remove.title='Retirer ce morceau';remove.setAttribute('aria-label','Retirer ce morceau');
+        for(const [label,delta] of [['↑',-1],['↓',1]]){const b=button(label,()=>{const j=i+delta;if(j<0||j>=list.length||t.locked||list[j].locked)return;[list[i],list[j]]=[list[j],list[i]];S.save();if(P.current)P.setQueue(list);go(screen,false);},row);b.classList.add('musicDJMove');b.disabled=!!t.locked||!list[i+delta]||!!list[i+delta]?.locked;b.setAttribute('aria-label',delta<0?'Monter le morceau':'Descendre le morceau');}
         return;
       }
       const lockDraft=button(t.locked?'🔒':'🔓',e=>{e.preventDefault();e.stopPropagation();const item=S.get()[key]?.[i];if(!item)return;item.locked=!item.locked;S.save();go(screen,false);},row);lockDraft.classList.add('musicDraftLock');lockDraft.title=t.locked?'Déverrouiller le morceau':'Verrouiller le morceau';lockDraft.setAttribute('aria-label',lockDraft.title);lockDraft.setAttribute('aria-pressed',String(!!t.locked));
@@ -158,6 +178,7 @@
   function dj(body){
     const state=S.get(),queue=state.dj||[],current=queue.find(t=>P.current&&S.key(t)===S.key(P.current))||queue[0]||null;
     body.innerHTML='<section class="musicDJHero"><div><span class="musicDJEyebrow">ORÉVAMI DJ</span><h2>Mode DJ</h2><p>Anime la soirée et garde la main sur la file.</p></div><div class="musicDJMode"><button type="button" class="active">Manuel</button><button type="button" disabled title="DJ Auto sera activé avec le moteur IA">Auto · bientôt</button></div></section><section class="musicDJNow"><div id="musicDJNowTrack"></div><div id="musicDJTransport"></div></section><section class="musicDJQuick"><h3>Ambiance</h3><div id="musicDJMoods"></div></section><section class="musicDJPanel"><div class="musicDJPanelHead"><div><span class="musicDJEyebrow">FILE SUR CET APPAREIL</span><h3>File d’attente</h3></div><button type="button" id="musicDJEvent">Votes du groupe</button></div><div id="musicDJImport"></div><div id="musicDJQueue"></div></section><section class="musicDJSettings"><details><summary>⚙ Paramètres DJ</summary><div class="musicDJSettingsGrid"><button type="button" disabled>Fondu indisponible · YouTube</button><button type="button" disabled>Normalisation · bientôt</button><button type="button" disabled>Effets · bientôt</button><button type="button" disabled>DJ IA · bientôt</button></div></details></section>';
+    button('＋ Choisir des titres',()=>go('discover'),$('musicDJImport'));
     const now=$('musicDJNowTrack');
     if(current)now.innerHTML='<img alt="" src="'+esc(current.thumbnail_url||'')+'"><span><small>PRÊT À LIRE</small><strong>'+meta(current.title)+'</strong><em>'+meta(current.artist)+'</em></span>';
     else now.innerHTML='<div class="musicDJEmptyNow"><strong>Aucun morceau dans la file</strong><small>Importe la playlist de l’événement ou envoie une playlist depuis Music IA.</small></div>';
