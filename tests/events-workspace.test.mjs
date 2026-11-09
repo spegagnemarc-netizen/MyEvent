@@ -53,7 +53,7 @@ test('Twelve tools remain in six/six pages with participants and secondary navig
  const pages=[...w.document.querySelectorAll('.ewToolsPage')];
  assert.deepEqual(pages.map(page=>page.querySelectorAll('.ewTool').length),[6,6]);
  assert.deepEqual([...w.document.querySelectorAll('.ewTool')].map(b=>b.dataset.tool),['weather','call','discussion','polls','media','tasks','aioutings','fund','music','games','hall','outings']);
- assert.deepEqual([...w.document.querySelectorAll('.ewSections button')].map(b=>b.dataset.tool),['members','programme','locations','supplies','transport','documents']);
+ assert.deepEqual([...w.document.querySelectorAll('.ewSections [data-tool]')].map(b=>b.dataset.tool),['accommodation','outings','localtravel','members','locations','transport','documents']);
  assert.equal(w.document.querySelector('#ewParticipants'),null);
  assert(w.document.querySelector('.ewSections [data-tool="members"]'));
  assert(w.document.querySelector('#ewHero [data-tool="members"]'));
@@ -94,3 +94,11 @@ test('See and Locate use the selected accessible event and existing location loa
  await w.myeventEventsWorkspace.openTool('locations');assert.equal(loads,1);
  assert.equal(w.document.getElementById('locationsPanel').parentElement.id,'ewToolBody');dom.window.close();
 });
+
+ test('Grouped event navigation preserves clicks, join without selection and supplies through tasks',async()=>{
+ const {w,dom,ctx}=fixture();await w.myeventEventsWorkspace.open();const d=w.document,nav=d.querySelector('.ewSections');
+ assert.equal(nav.querySelector('[data-tool="supplies"]'),null);assert.equal(d.querySelector('.ewExtras'),null);assert(d.querySelector('#ewProgrammeCard').contains(d.getElementById('ewProgramme')));
+ for(const key of ['accommodation','outings','localtravel']){nav.querySelector('[data-tool="'+key+'"]').click();await flush();assert.equal(d.querySelector('[data-panel="'+key+'"]').parentElement.id,'ewToolBody');}
+ await w.myeventEventsWorkspace.openTool('tasks');d.querySelector('.ewTaskActions button').click();assert.equal(d.querySelector('[data-panel="supplies"]').parentElement.id,'ewToolBody');
+ ctx.event=null;ctx.events=[];await w.myeventEventsWorkspace.open();const join=nav.querySelector('[data-form="joinCard"]');assert.equal(join.disabled,false);join.click();assert.equal(d.getElementById('joinCard').parentElement.id,'ewToolBody');dom.window.close();
+ });

@@ -10,19 +10,46 @@
  const titles={weather:'Météo',call:'Appel de groupe',discussion:'Discussion',polls:'Sondages',media:'Photos et vidéos',tasks:'Tâches',members:'Participants',programme:'Programme',locations:'Lieux',supplies:'Matériel',transport:'Trajets',documents:'Documents',notifications:'Notifications de l’événement',createEventCard:'Créer un événement',joinCard:'Invitations',editEventBox:'Modifier l’événement',inviteCard:'Inviter des participants',fund:'Cagnotte',hall:'Salle',outings:'Sorties',accommodation:'Hébergement',localtravel:'Déplacements',aioutings:'Programme IA',music:'Musique',games:'Jeux'};
  const root=document.createElement('section');root.id='eventsWorkspace';root.hidden=true;
  root.setAttribute('aria-label','Événements');
+ const shortcuts=[
+  ['accommodation','Hébergement','M3 19V5m18 14v-7a2 2 0 0 0-2-2H9v6m-6 0h18M6 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'],
+  ['outings','Sorties','M4 19l5-1 3-5m-1-6L8 9H4m7-2 4 2 3 3h3m-9 1 5 3v5m-5-8 3-4m0-3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'],
+  ['localtravel','Déplacements','M3 17v-4l2-6h14l2 6v4m-18 0h18M5 17v2m14-2v2M3 13h18M7 15h1m8 0h1'],
+  ['joinCard','Code','m8 6-6 6 6 6m8-12 6 6-6 6m-2-15-4 18'],
+  ['members','Participants','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-4M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm4-4a4 4 0 0 1 0 8'],
+  ['locations','Lieux','M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Zm-5 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
+  ['transport','Trajets','M3 17v-4l2-6h14l2 6v4m-18 0h18M5 17v2m14-2v2M3 13h18M7 15h1m8 0h1'],
+  ['documents','Documents','M6 3h8l4 4v14H6zm8 0v5h4M9 12h6m-6 4h6']
+ ];
  root.innerHTML=`<div class="ewLanding">
   <header class="ewHeader"><div><h1><span aria-hidden="true">📅</span> Événements</h1><p>Organise, partage et profite ensemble !</p></div><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></header>
   <nav class="ewTabs" aria-label="Choisir les événements">${[['all','Mes événements'],['upcoming','À venir'],['past','Passés'],['invites','Invitations'],['discover','Découvrir']].map(([key,title])=>`<button data-filter="${key}" aria-pressed="${key==='all'}">${title}</button>`).join('')}</nav>
   <div id="ewEventPicker"></div><p id="ewStatus" role="status" aria-live="polite"></p>
   <div id="ewHero"></div>
+  <div class="ewShortcutCarousel">
+   <button type="button" class="ewShortcutArrow" data-shortcut-direction="-1" aria-label="Raccourcis précédents" aria-controls="ewShortcutTrack" disabled>‹</button>
+   <nav class="ewSections" id="ewShortcutTrack" aria-label="Raccourcis de l’événement" tabindex="0">
+    ${shortcuts.map(([key,label,path])=>`<button type="button" ${key==='joinCard'?'data-form="joinCard" aria-label="Code · Rejoindre un événement"':`data-tool="${key}"`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg><span>${label}</span></button>`).join('')}
+   </nav>
+   <button type="button" class="ewShortcutArrow" data-shortcut-direction="1" aria-label="Raccourcis suivants" aria-controls="ewShortcutTrack">›</button>
+  </div>
   <div class="ewToolsCarousel" aria-label="Outils de l’événement, faire glisser pour voir la suite"><div class="ewTools">${[tools.slice(0,6),tools.slice(6)].map((page,index)=>`<div class="ewToolsPage" aria-label="Page ${index+1} des outils">${page.map(([key,label,description])=>`<button class="ewTool ew-${key}" data-tool="${key}"><span class="ewToolIcon" aria-hidden="true">${icons[key]}</span><span><strong>${label}</strong><small>${description}</small></span><span class="ewArrow" aria-hidden="true">›</span></button>`).join('')}</div>`).join('')}</div></div>
   <div class="ewCarouselControls" aria-label="Pages des outils"><button data-tools-page="0" aria-label="Afficher les six premiers outils" aria-current="true">1</button><button data-tools-page="1" aria-label="Afficher les six autres outils" aria-current="false">2</button><span>Faire glisser pour voir les autres outils</span></div>
-  <nav class="ewSections" aria-label="Organisation de l’événement">${[['members','♟','Participants'],['programme','☷','Programme'],['locations','⌖','Lieux'],['supplies','▣','Matériel'],['transport','▰','Trajets'],['documents','▤','Documents']].map(([key,icon,label])=>`<button data-tool="${key}"><span aria-hidden="true">${icon}</span> ${label}</button>`).join('')}</nav>
-  <section class="ewSection"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
-  <div class="ewExtras"><button data-tool="accommodation">⌂ Hébergement</button><button data-tool="outings">✦ Sorties</button><button data-tool="localtravel">⌖ Déplacements</button><button data-form="joinCard">Rejoindre avec un code</button></div>
+  <section class="ewSection" id="ewProgrammeCard"><header><h2>📅 Programme</h2><button data-tool="programme">Voir tout ›</button></header><div id="ewProgramme"></div></section>
  </div>
  <div class="ewToolPage" hidden><header class="ewToolHead"><button data-back aria-label="Retour aux événements">‹ Retour</button><h2 id="ewToolTitle"></h2></header><div id="ewToolBody"></div></div><div id="ewDepot" hidden></div>`;
  home.insertBefore(root,nav);
+ const shortcutTrack=$('ewShortcutTrack');
+ const shortcutArrows=[...root.querySelectorAll('[data-shortcut-direction]')];
+ shortcutArrows.forEach(button=>button.addEventListener('click',()=>{
+  shortcutTrack.scrollBy({
+   left:Number(button.dataset.shortcutDirection)*shortcutTrack.clientWidth,
+   behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
+  });
+ }));
+ shortcutTrack.addEventListener('scroll',()=>{
+  shortcutArrows[0].disabled=shortcutTrack.scrollLeft<2;
+  shortcutArrows[1].disabled=shortcutTrack.scrollWidth-shortcutTrack.clientWidth-shortcutTrack.scrollLeft<2;
+ },{passive:true});
  const setNavActive=key=>nav.querySelectorAll('[data-bottom-tab],#socialBottomCreate').forEach(b=>{const active=(b.dataset.bottomTab||'camera')===key;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
  let cameraPreviousTab='feed',cameraWasOpen=false;
  nav.addEventListener('click',e=>{const b=e.target.closest('[data-bottom-tab]');if(b)queueMicrotask(()=>setNavActive(b.dataset.bottomTab));},true);
@@ -151,7 +178,7 @@
   $('ewSelectedEvent')?.addEventListener('change',e=>select(e.target.value));
   root.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===filter)));
   const selected=rows.some(e=>e.id===context().event?.id);
-  root.querySelectorAll('.ewHallSearchAccess,.ewTools button,.ewSections button,.ewExtras [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
+  root.querySelectorAll('.ewHallSearchAccess,.ewTools button,.ewSections [data-tool],.ewSection [data-form="inviteCard"],.ewSection [data-tool="programme"]').forEach(b=>{b.disabled=!selected;});
   renderHero();renderProgramme();
  }
  async function openTool(key){
