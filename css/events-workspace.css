@@ -39,10 +39,10 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #eventsWorkspace .ewDots button{width:8px;height:8px;padding:0!important;border:0!important;border-radius:50%!important;background:#829aa4!important;box-shadow:none!important}
 #eventsWorkspace .ewDots [aria-current=true]{background:var(--myevent-accent)!important;box-shadow:0 0 8px var(--myevent-accent)!important}
 .ewTools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0}
-#eventsWorkspace .ewTool{--tool:#00aaff;display:flex;align-items:center;gap:clamp(8px,2cqi,16px);min-height:106px;padding:clamp(10px,2cqi,20px)!important;border:1px solid var(--tool)!important;border-radius:20px!important;background:linear-gradient(135deg,color-mix(in srgb,var(--tool) 28%,#03101a),color-mix(in srgb,var(--tool) 9%,#070d19) 72%)!important;box-shadow:inset 0 0 20px color-mix(in srgb,var(--tool) 24%,transparent)!important;text-align:left;color:white!important;min-width:0}
+#eventsWorkspace .ewTool{--tool:#00aaff;display:flex;align-items:center;gap:clamp(6px,1.2cqi,12px);min-height:57px;padding:5px clamp(6px,1.5cqi,14px)!important;border:1px solid var(--tool)!important;border-radius:20px!important;background:linear-gradient(135deg,color-mix(in srgb,var(--tool) 28%,#03101a),color-mix(in srgb,var(--tool) 9%,#070d19) 72%)!important;box-shadow:inset 0 0 20px color-mix(in srgb,var(--tool) 24%,transparent)!important;text-align:left;color:white!important;min-width:0}
 #eventsWorkspace .ew-call{--tool:#00e298}#eventsWorkspace .ew-discussion{--tool:#d662ff}#eventsWorkspace .ew-polls{--tool:#ff477e}#eventsWorkspace .ew-media{--tool:#ff8b2b}#eventsWorkspace .ew-tasks{--tool:#ffc43b}
-.ewToolIcon{width:49px;height:49px;flex:0 0 49px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(140deg,color-mix(in srgb,var(--tool) 70%,white),color-mix(in srgb,var(--tool) 65%,#000));box-shadow:inset 0 0 10px #ffffff50,0 0 14px color-mix(in srgb,var(--tool) 40%,transparent);font-size:28px;font-weight:800}
-.ewTool strong{font-size:clamp(13px,2.4cqi,20px);line-height:1.15;display:block}.ewTool small{display:block;color:#eef7ff;font-size:clamp(12px,2cqi,17px);margin-top:4px;line-height:1.25}.ewArrow{display:none}
+.ewToolIcon{width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(140deg,color-mix(in srgb,var(--tool) 70%,white),color-mix(in srgb,var(--tool) 65%,#000));box-shadow:inset 0 0 10px #ffffff50,0 0 14px color-mix(in srgb,var(--tool) 40%,transparent);font-size:28px;font-weight:800}
+.ewTool strong{font-size:clamp(12px,1.7cqi,16px);line-height:1.15;display:block}.ewTool small{display:block;color:#eef7ff;font-size:clamp(11px,1.35cqi,13px);margin-top:2px;line-height:1.15}.ewArrow{display:none}
 #eventsWorkspace .ewShortcutCarousel{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;margin:14px 0}
 #eventsWorkspace .ewShortcutArrow{display:grid;place-items:center;width:clamp(32px,5cqi,48px);aspect-ratio:1;padding:0!important;border:1px solid #789eb7!important;border-radius:50%!important;background:#102638!important;color:#fff!important;font-size:28px;line-height:1;box-shadow:0 0 10px #75bdff40!important}
 #eventsWorkspace .ewSections{display:flex;gap:8px;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#42d9ff #102638;padding-bottom:6px}
@@ -51,6 +51,10 @@ body.eventsWorkspaceOpen #socialHome>:not(#eventsWorkspace):not(#socialBottomNav
 #eventsWorkspace .ewSections button:nth-child(2){--shortcut:#00e3d5}
 #eventsWorkspace .ewSections button:nth-child(3){--shortcut:#00caff}
 #eventsWorkspace .ewSections button:nth-child(4){--shortcut:#dc35ff}
+#eventsWorkspace .ewSections [data-tool="members"]{--shortcut:#00dfcf}
+#eventsWorkspace .ewSections [data-tool="locations"]{--shortcut:#ad63ff}
+#eventsWorkspace .ewSections [data-tool="transport"]{--shortcut:#ff8c32}
+#eventsWorkspace .ewSections [data-tool="documents"]{--shortcut:#43d66b}
 #eventsWorkspace .ewSections svg{width:clamp(24px,5.5cqi,48px);height:auto;fill:none;stroke:#e3f5ff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px var(--shortcut))}
 #eventsWorkspace .ewSections button:focus-visible{outline-offset:-4px}
 .ewSection{border:1px solid #254555;border-radius:24px;padding:20px;background:linear-gradient(150deg,#0c1a22,#050d13);margin:14px 0}
@@ -147,11 +151,12 @@ body.eventsWorkspaceOpen #socialBottomNav{width:min(1000px,100vw)!important;back
  .ewHeroCopy p{font-size:16px;gap:9px;margin:7px 0}.ewHeroCopy p span{font-size:12px}
  #eventsWorkspace .ewHeroBottom button{font-size:12px}
  .ewHeroAvatars .avatar{width:29px!important;height:29px!important;min-width:29px!important;font-size:18px}
- #eventsWorkspace .ewTool{display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr;justify-items:center;align-content:start;gap:6px;min-height:120px;text-align:center;border-radius:15px!important}
+ #eventsWorkspace .ewTool{display:grid;grid-template-columns:26px minmax(0,1fr);align-items:center;gap:5px;min-height:66px;text-align:center;border-radius:15px!important}
  #eventsWorkspace .ewToolsPage{gap:7px}
- #eventsWorkspace .ewToolIcon{width:36px;height:36px;border-radius:10px}
+ #eventsWorkspace .ewToolIcon{width:26px;height:26px;border-radius:10px}
  #eventsWorkspace .ewTool>span:nth-child(2){min-width:0}
- #eventsWorkspace .ewTool strong,#eventsWorkspace .ewTool small{overflow-wrap:anywhere}
+ #eventsWorkspace .ewTool strong{font-size:clamp(11px,2.9cqi,13px);overflow-wrap:anywhere}
+ #eventsWorkspace .ewTool small{font-size:clamp(10px,2.6cqi,12px);overflow-wrap:anywhere}
  #eventsWorkspace .ewShortcutCarousel{gap:4px}
  #eventsWorkspace .ewShortcutArrow{width:26px;font-size:23px}
  #eventsWorkspace .ewSections{gap:5px}
