@@ -1,1 +1,38 @@
 :root{color-scheme:dark;--accent:#ff6a34}*{box-sizing:border-box}body{margin:0;background:#081621;color:#edf5fb;font:16px/1.5 system-ui,-apple-system,sans-serif}main{max-width:850px;margin:auto;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}header,.row{display:flex;gap:12px;justify-content:space-between}header{align-items:center}a{color:#9ed9ff;overflow-wrap:anywhere}h1{font-size:30px}h2{font-size:22px}p{color:#bbccdb}button,input,select,textarea{font:inherit;min-height:48px;border-radius:12px;border:1px solid #3b5266;padding:11px;color:inherit;background:#142a3d;max-width:100%}button{cursor:pointer;font-weight:650}button:hover,button[aria-pressed=true]{border-color:var(--accent)}button:disabled{opacity:.55}button:focus-visible,a:focus-visible{outline:3px solid #ffb38e}input,select,textarea{width:100%;min-width:0}label{display:block;margin:12px 0}.row>label,.row>button{flex:1;min-width:0}.check{display:flex;align-items:flex-start;gap:10px}.check input{width:23px;min-height:23px;flex-shrink:0}.categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.categories button{text-align:left;min-height:95px;padding:18px}section{margin-top:24px;padding:18px;border:1px solid #294459;border-radius:20px}article{padding:16px;border:1px solid #294459;border-radius:16px;margin:12px 0;overflow-wrap:anywhere}article h3{margin-top:0}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions a{padding:12px}dialog{background:#0d2131;color:#edf5fb;border:1px solid #527088;border-radius:20px;width:min(94vw,620px);max-height:88dvh;overflow:auto;padding:20px}dialog::backdrop{background:#000b}#explorerMap{height:300px;margin:16px 0;border-radius:14px}iframe{border:0;width:100%;min-height:640px;background:#112739;border-radius:14px}footer{font-size:13px;margin-top:24px;color:#98afc1}[hidden]{display:none!important}@media(max-width:400px){main{padding:16px 12px}section{padding:14px}.row{flex-wrap:wrap}.row>label{flex-basis:100%}}
+
+/* Explorer only: approved luminous mobile composition. */
+.explorer-page{background:#030e1c;color:#f7f8ff;font:14px/1.45 system-ui,-apple-system,sans-serif}
+.explorer-page main{max-width:430px;padding:0 16px calc(24px + env(safe-area-inset-bottom));min-height:100dvh;background:radial-gradient(ellipse at 100% 0,#10142e55,transparent 55%),#030f1e}
+/* Match the shared section identity geometry; keep these rules Explorer-scoped. */
+.explorer-header{position:relative;display:block;margin:0 0 16px;padding:22px 0 18px;min-height:0;background:transparent;border:0;border-bottom:1px solid #266aac66;font-family:Inter,system-ui,sans-serif}
+.explorer-header .orevamiBrand{max-width:calc(100% - 56px)}
+.explorer-close{position:absolute;top:22px;right:0;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #355061;border-radius:50%;background:transparent;color:#bed1df;text-decoration:none;font:26px/1 system-ui;box-shadow:none}
+.explorer-title-row{min-height:44px;display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:12px;margin-top:2px}
+.explorer-title-row h1{font-family:Inter,system-ui,sans-serif;font-size:12.5px;font-weight:750;line-height:1.5;letter-spacing:2.1px;text-transform:uppercase;margin:0;color:#fff;text-shadow:0 1px 2px #0009}
+.explorer-page main>p{font-size:13px;margin:0 0 16px;color:#e0e3ed}
+@media(max-width:600px){.explorer-header{padding-top:16px}.explorer-close{top:16px}}
+.explorer-page .categories{gap:10px}
+.explorer-page .categories button{--card-a:#00d7fa;--card-b:#5f54f6;--card-fill:#066393;display:flex;align-items:center;gap:9px;min-height:60px;padding:10px 11px;border:1px solid transparent;border-radius:12px;background:linear-gradient(125deg,var(--card-fill),#09182ee8 85%) padding-box,linear-gradient(120deg,var(--card-a),var(--card-b)) border-box;box-shadow:inset 0 1px 9px #ffffff20,0 0 5px color-mix(in srgb,var(--card-a) 20%,transparent);font-size:14px;font-weight:750;line-height:1.2;letter-spacing:-.35px;color:#fff}
+.explorer-page .categories [data-category=accommodation]{--card-a:#e27beb;--card-b:#8b27e9;--card-fill:#56206f}
+.explorer-page .categories [data-category=transport]{--card-a:#02dcea;--card-b:#2479ff;--card-fill:#056581}
+.explorer-page .categories [data-category=activity]{--card-a:#ffae29;--card-b:#f22c5e;--card-fill:#713e21}
+.explorer-page .categories [data-category=ticket]{--card-a:#51d6c4;--card-b:#00bfd2;--card-fill:#13616b}
+.explorer-page .categories [data-category=nearby]{--card-a:#f71bbb;--card-b:#8c24db;--card-fill:#650b67}
+.category-icon{flex-shrink:0;font-size:28px;filter:drop-shadow(0 0 5px var(--card-a))}
+.category-chevron{margin-left:auto;font-size:25px;font-weight:400;flex-shrink:0}
+.explorer-reservations-shortcut{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.explorer-reservations-shortcut:focus{z-index:2;left:16px;top:12px;width:auto;height:auto;padding:12px;clip-path:none;background:#10253c}
+@media(min-width:371px) and (max-width:699px){.explorer-page .categories button{font-size:13px;gap:7px;padding-inline:10px}.category-icon{font-size:26px}}
+.explorer-page .categories button:hover,.explorer-page .categories button[aria-pressed=true]{filter:brightness(1.2);box-shadow:0 0 12px color-mix(in srgb,var(--card-a) 40%,transparent)}
+.explorer-page #reservations{margin-top:18px;padding:13px 15px 12px;border:1px solid #2e4b70;border-radius:17px;background:linear-gradient(135deg,#0c2138aa,#041020);box-shadow:inset 0 1px 9px #a3caff09}
+.explorer-page #reservations h2{display:flex;align-items:center;gap:9px;margin:0 0 8px;font-size:18px;line-height:1.3;letter-spacing:-.45px;font-weight:750}
+.explorer-page #reservations h2 span{font-size:26px;filter:drop-shadow(0 0 4px #00caff)}
+.explorer-page #reservations>p{margin:8px 0 10px;color:#d6dbea}
+.explorer-page #account{font-size:12px;line-height:1.4}
+.explorer-page #add{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:40px;padding:7px 8px;border:1px solid #91c6ff70;border-radius:24px;background:linear-gradient(105deg,#00c9f4,#1357bc 32%,#6325c3 70%,#c520df);box-shadow:inset 0 2px 7px #ffffff40,0 0 8px #167bd72a;font-size:13px;font-weight:750;letter-spacing:-.3px}
+.explorer-page #add span{font-size:22px;line-height:1}
+.explorer-page #bookings>p{text-align:center;margin:10px 0 0;font-size:13px;color:#d6dbea}
+.explorer-page footer{margin:8px 15px 0;font-size:11px;line-height:1.5;color:#a9bfda}
+.explorer-page :is(button,a):focus-visible{outline:3px solid #c2eeff;outline-offset:3px}
+@media(min-width:700px){.explorer-page main{max-width:600px}.explorer-page .categories button{min-height:76px;font-size:16px}.explorer-page main>p{margin-bottom:24px}}
+@media(max-width:370px){.explorer-page main{padding-inline:12px}.explorer-page .categories{gap:8px}.explorer-page .categories button{padding:9px 7px;gap:6px;font-size:12px}.category-icon{font-size:24px}.explorer-page #reservations{padding:12px}.explorer-page #reservations h2{font-size:16px}}
