@@ -1,0 +1,29 @@
+.karaoke-dialog {
+  box-sizing: border-box;
+  width: min(34rem, calc(100% - 2rem));
+  max-height: 90dvh;
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid #a88aed;
+  border-radius: 1.25rem;
+  background: #211735;
+  color: #f8f1ff;
+}
+.karaoke-dialog::backdrop { background: rgb(15 8 26 / 75%); }
+.karaoke-dialog button {
+  margin: .25rem .25rem .25rem 0;
+  padding: .55rem .85rem;
+  border: 1px solid #c4afff;
+  border-radius: .75rem;
+  background: #3a2857;
+  color: inherit;
+  cursor: pointer;
+}
+.karaoke-dialog button:disabled { opacity: .65; cursor: default; }
+.karaoke-dialog li { padding: .25rem .5rem; }
+.karaoke-dialog [aria-current="true"] {
+  background: #e2ccff;
+  color: #221435;
+  border-radius: .5rem;
+  font-weight: bold;
+}

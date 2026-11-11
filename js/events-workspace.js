@@ -21,7 +21,7 @@
   ['documents','Documents','M6 3h8l4 4v14H6zm8 0v5h4M9 12h6m-6 4h6']
  ];
  root.innerHTML=`<div class="ewLanding">
-  <header class="ewHeader"><div><h1><span aria-hidden="true">📅</span> Événements</h1><p>Organise, partage et profite ensemble !</p></div><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></header>
+  <header class="ewHeader"><div><h1><span aria-hidden="true">📅</span> Événements</h1><p>Organise, partage et profite ensemble !</p></div><div><button type="button" class="ewCreate" data-karaoke>🎤 Karaoké</button><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div></header>
   <nav class="ewTabs" aria-label="Choisir les événements">${[['all','Mes événements'],['upcoming','À venir'],['past','Passés'],['invites','Invitations'],['discover','Découvrir']].map(([key,title])=>`<button data-filter="${key}" aria-pressed="${key==='all'}">${title}</button>`).join('')}</nav>
   <div id="ewEventPicker"></div><p id="ewStatus" role="status" aria-live="polite"></p>
   <div id="ewHero"></div>
@@ -152,7 +152,7 @@
  }
  async function renderHero(){
   const ticket=++heroRevision,target=$('ewHero'),e=context().event;
-  if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div>';return;}
+  if(!e||!visibleEvents().some(row=>row.id===e.id)){target.innerHTML='<div class="ewEmptyCard"><span>📅</span><h2>'+ (visibleEvents().length?'Choisissez votre événement':'Vos moments à partager commencent ici')+'</h2><p>'+ (visibleEvents().length?'Sélectionnez un événement pour retrouver ses outils.':'Créez un événement ou rejoignez votre groupe avec un code d’invitation.')+'</p><div><button type="button" class="ewCreate" data-karaoke>🎤 Karaoké</button><button class="ewCreate" data-form="createEventCard">＋ Créer un événement</button></div></div>';return;}
   const date=Date.parse(e.event_date),upcoming=!Number.isFinite(date)||date>=Date.now(),canManage=['owner','coorganizer'].includes(context().role);
   target.innerHTML=`<article class="ewHeroCard"><div class="ewHeroShade"></div><div class="ewHeroTop"><span class="ewState ${upcoming?'':'ewPast'}">${upcoming?'À venir':'Passé'}</span><div>${canManage?'<button data-form="editEventBox">✎ Modifier</button>':''}<button data-tool="notifications" class="ewHeroNotifications" aria-label="Notifications de cet événement" title="Notifications">🔔</button><button data-event-menu aria-label="Actions de l’événement">•••</button></div></div><div class="ewHeroCopy"><h2>${esc(e.name||'Événement')}</h2><p>▦ <span>${Number.isFinite(date)?esc(new Date(date).toLocaleString('fr-FR',{dateStyle:'medium',timeStyle:'short'})):'Date à définir'}</span></p><p>⌖ <span>${esc(e.location||'Lieu à définir')}</span></p><div class="ewHeroBottom"><button data-tool="members">♟ ${members().length} participants</button><div class="ewHeroAvatars"></div></div></div><div class="ewDots">${visibleEvents().map(row=>`<button data-select="${esc(row.id)}" aria-label="Ouvrir ${esc(row.name)}" aria-current="${row.id===e.id}"></button>`).join('')}</div></article>`;
   const actions=document.createElement('div');actions.className='ewHeroActions';actions.innerHTML='<button type="button" data-event-details>👁 Voir</button><button type="button" data-tool="locations">📍 Localiser</button>';target.appendChild(actions);
@@ -224,6 +224,7 @@
  }
  root.addEventListener('click',event=>{
   const b=event.target.closest('button');if(!b||b.disabled)return;
+  if(b.hasAttribute('data-karaoke')){window.OrevamiKaraoke?.open();return;}
   if(b.hasAttribute('data-tools-page')){const track=root.querySelector('.ewTools');track.scrollTo({left:Number(b.dataset.toolsPage)*track.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
   if(b.hasAttribute('data-back')){if(window.MyEventSectionNavigation)window.MyEventSectionNavigation.back();else history.back();return;}
   if(b.hasAttribute('data-event-details')){openTool('details');return;}

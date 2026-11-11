@@ -75,7 +75,7 @@ test('additional game configuration, private answers, expiration and event membe
  }finally{await db.close();}
 });
 
-test('four real game forms open, custom steps editable, karaoke remains upcoming',async()=>{
+test('four real game forms open, custom steps editable, karaoke opens its own solo module',async()=>{
  const dom=new JSDOM('<div id="entertainmentLounge"></div>',{url:'https://preview.example/index.html',runScripts:'outside-only'});
  const w=dom.window;let options;
  w.myeventGameContext=()=>({user:{id:users[0]},sb:{}});
@@ -95,7 +95,7 @@ test('four real game forms open, custom steps editable, karaoke remains upcoming
  root.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
  await new Promise(resolve=>setTimeout(resolve,5));assert.equal(options.game_key,'quiz');
  const lounge=await readFile(new URL('../js/entertainment-lounge.js',import.meta.url),'utf8');
- assert.ok(lounge.includes("id==='karaoke'?'disabled':''"));
+ assert.ok(lounge.includes("if(b.dataset.game==='karaoke'){window.OrevamiKaraoke?.open();return;}"));
  assert.ok(lounge.includes("OrevamiExtraGames.resume(rid,key"));
  }finally{w.OrevamiExtraGames.stop();dom.window.close();}
 });
