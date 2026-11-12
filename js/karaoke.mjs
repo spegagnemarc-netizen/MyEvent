@@ -1,3 +1,4 @@
+import { mountKaraokeRooms } from './karaoke-rooms.mjs';
 import { phrases, frequency, detectPitch, summarize } from './karaoke-score.mjs';
 
 const beat = 0.8;
@@ -13,6 +14,7 @@ dialog.innerHTML = `
   <button type="button" data-listen>Écouter le morceau</button>
   <p data-status role="status"></p>
   <ol aria-label="Paroles">${phrases.map(({ words }) => `<li>${words}</li>`).join('')}</ol>
+  <section data-rooms hidden></section>
   <h3>Meilleurs scores de cette session</h3>
   <ol data-ranking></ol>
 `;
@@ -50,7 +52,7 @@ function playNote(audio, note, start, duration, volume, type) {
   oscillator.stop(start + duration);
 }
 
-async function play(withMic) {
+async function play(withMic, onResult) {
   if (attempt) return;
   const Audio = window.AudioContext || window.webkitAudioContext;
   if (!Audio || (withMic && !navigator.mediaDevices?.getUserMedia)) {
@@ -112,7 +114,8 @@ async function play(withMic) {
         status.textContent = score === null
           ? `Voix insuffisamment détectée pour calculer un score (${measured}).`
           : `Justesse ${score} / 100 · ${measured}`;
-        if (score !== null) {
+        if (onResult) onResult(score);
+        if (!onResult && score !== null) {
           scores.push(score);
           scores.sort((a, b) => b - a);
           scores.length = Math.min(scores.length, 5);
@@ -168,10 +171,17 @@ document.addEventListener('visibilitychange', () => {
     status.textContent = 'Partie interrompue. Vous pouvez recommencer.';
   }
 });
+const rooms = mountKaraokeRooms(dialog.querySelector('[data-rooms]'), play, stop);
+dialog.addEventListener('close', () => { stop(); rooms.close(); });
 window.OrevamiKaraoke = {
+  async resume(roomId) {
+    this.open();
+    await rooms.open(roomId);
+  },
   open() {
     if (dialog.open) return;
     status.textContent = '';
     dialog.showModal();
+    void rooms.open();
   },
 };

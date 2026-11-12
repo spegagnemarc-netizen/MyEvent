@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const files = new Map([
   ['/js/karaoke.mjs', 'text/javascript'],
+  ['/js/karaoke-rooms.mjs', 'text/javascript'],
   ['/js/karaoke-score.mjs', 'text/javascript'],
   ['/css/karaoke.css', 'text/css'],
 ]);
